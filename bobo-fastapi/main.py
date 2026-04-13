@@ -11,6 +11,14 @@ load_dotenv()
 
 app = FastAPI()
 
+# Add this block
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://test-bobo.netlify.app"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 line_bot_api = LineBotApi(os.getenv("LINE_CHANNEL_ACCESS_TOKEN"))
 handler = WebhookHandler(os.getenv("LINE_CHANNEL_SECRET"))
 
