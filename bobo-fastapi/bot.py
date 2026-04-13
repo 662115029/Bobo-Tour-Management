@@ -75,7 +75,7 @@ def handle_message(event):
 def send_job_list_message(api, reply_token):
     # this is a Flex Message — a rich card with a button
     # the button opens your LIFF app
-    LIFF_URL = "https://liff.line.me/YOUR_LIFF_ID_HERE"
+    LIFF_URL = "https://liff.line.me/2009771168-w9BjE7bI"
 
     flex_content = {
         "type": "bubble",
