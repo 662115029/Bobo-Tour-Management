@@ -5,6 +5,7 @@ from linebot.models import MessageEvent, TextMessage, TextSendMessage, FlexSendM
 from dotenv import load_dotenv
 from notification import notify_job_matched, notify_job_confirmed, notify_job_declined
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 import os
 
 load_dotenv()
