@@ -73,8 +73,6 @@ def handle_message(event):
 
 
 def send_job_list_message(api, reply_token):
-    # this is a Flex Message — a rich card with a button
-    # the button opens your LIFF app
     LIFF_URL = "https://liff.line.me/2009771168-w9BjE7bI"
 
     flex_content = {
@@ -142,7 +140,7 @@ def send_job_list_message(api, reply_token):
 
     api.reply_message(
         ReplyMessageRequest(
-            reply_token=event.reply_token,
+            reply_token=reply_token,
             messages=[
                 FlexMessage(
                     alt_text="งานที่มีอยู่ใน Bobo Tour",
