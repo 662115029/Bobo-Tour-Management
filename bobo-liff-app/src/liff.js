@@ -13,6 +13,13 @@ export async function initLiff() {
 
     await liff.init({ liffId: LIFF_ID, mock: IS_MOCK })
 
+    if (!IS_MOCK) {
+      if (!liff.isLoggedIn()) {
+        liff.login({ redirectUri: window.location.href })
+        return
+      }
+    }
+
     if (IS_MOCK) {
       return {
         lineUserId: mockProfile.userId,
