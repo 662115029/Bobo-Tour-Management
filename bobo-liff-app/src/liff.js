@@ -17,12 +17,10 @@ export async function initLiff() {
       withLoginOnExternalBrowser: true
     })
 
-    // if (!IS_MOCK) {
-    //   if (!liff.isLoggedIn()) {
-    //     liff.login({ redirectUri: window.location.href })
-    //     return null
-    //   }
-    // }
+    if (!IS_MOCK && !liff.isLoggedIn()) {
+      liff.login()
+      return null
+    }
 
     // in mock mode return fake profile
     // in production this calls real LINE API
