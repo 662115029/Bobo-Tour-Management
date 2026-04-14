@@ -5,12 +5,9 @@
   <div v-else-if="error" class="error">
     {{ errorMessage }}
   </div>
-  <div v-else-if="user">
+  <div v-else>
     <p>Welcome, {{ user.displayName }}</p>
     <RouterView :user="user" />
-  </div>
-  <div v-else>
-    <p>Initializing LINE login...</p>
   </div>
 </template>
 

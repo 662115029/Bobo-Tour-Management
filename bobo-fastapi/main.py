@@ -15,7 +15,7 @@ app = FastAPI()
 # Add this block
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://bobo-tour-management.netlify.app"],
+    allow_origins=["https://test-bobo.netlify.app"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -88,7 +88,7 @@ def handle_message(event):
                             "action": {
                                 "type": "uri",
                                 "label": "ดูงาน",
-                                "uri": "https://bobo-tour-management.netlify.app"
+                                "uri": "https://test-bobo.netlify.app"
                             },
                             "style": "primary"
                         }
