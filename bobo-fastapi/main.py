@@ -88,7 +88,7 @@ def handle_message(event):
                             "action": {
                                 "type": "uri",
                                 "label": "ดูงาน",
-                                "uri": "https://test-bobo.netlify.app"
+                                "uri": "https://bobo-tour-management.netlify.app"
                             },
                             "style": "primary"
                         }
