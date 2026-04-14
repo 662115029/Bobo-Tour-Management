@@ -11,23 +11,17 @@ export async function initLiff() {
       liff.use(new LiffMockPlugin())
     }
 
-    await liff.init({
-      liffId: LIFF_ID,
-      mock: IS_MOCK,
-      withLoginOnExternalBrowser: true
-    })
+    await liff.init({ liffId: LIFF_ID, mock: IS_MOCK })
 
-    if (!IS_MOCK && !liff.isLoggedIn()) {
-      liff.login()
-      return null
+    if (IS_MOCK) {
+      return {
+        lineUserId: mockProfile.userId,
+        displayName: mockProfile.displayName,
+        pictureUrl: mockProfile.pictureUrl
+      }
     }
 
-    // in mock mode return fake profile
-    // in production this calls real LINE API
-    const profile = IS_MOCK
-      ? mockProfile
-      : await liff.getProfile()
-
+    const profile = await liff.getProfile()
     return {
       lineUserId: profile.userId,
       displayName: profile.displayName,
