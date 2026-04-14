@@ -9,6 +9,9 @@
     <p>Welcome, {{ user.displayName }}</p>
     <RouterView :user="user" />
   </div>
+  <div v-else>
+    <p>Initializing LINE login...</p>
+  </div>
 </template>
 
 <script setup>
