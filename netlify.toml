@@ -1,7 +1,7 @@
 [build]
   base = "bobo-liff-app"
   command = "npm run build"
-  publish = "bobo-liff-app/dist"
+  publish = "dist"
 
 [[redirects]]
   from = "/*"
