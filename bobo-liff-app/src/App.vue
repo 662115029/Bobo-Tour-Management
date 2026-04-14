@@ -5,7 +5,7 @@
   <div v-else-if="error" class="error">
     {{ errorMessage }}
   </div>
-  <div v-else>
+  <div v-else-if="user">
     <p>Welcome, {{ user.displayName }}</p>
     <RouterView :user="user" />
   </div>

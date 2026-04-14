@@ -19,7 +19,7 @@ export async function initLiff() {
     if (!IS_MOCK) {
       if (!liff.isLoggedIn()) {
         liff.login({ redirectUri: window.location.href })
-        return
+        return null
       }
     }
 
