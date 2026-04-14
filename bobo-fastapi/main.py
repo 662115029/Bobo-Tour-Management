@@ -15,7 +15,7 @@ app = FastAPI()
 # Add this block
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://test-bobo.netlify.app"],
+    allow_origins=["https://bobo-tour-management.netlify.app"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
