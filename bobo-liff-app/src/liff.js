@@ -13,15 +13,16 @@ export async function initLiff() {
 
     await liff.init({
       liffId: LIFF_ID,
-      mock: IS_MOCK
+      mock: IS_MOCK,
+      withLoginOnExternalBrowser: true
     })
 
-    if (!IS_MOCK) {
-      if (!liff.isLoggedIn()) {
-        liff.login({ redirectUri: window.location.href })
-        return null
-      }
-    }
+    // if (!IS_MOCK) {
+    //   if (!liff.isLoggedIn()) {
+    //     liff.login({ redirectUri: window.location.href })
+    //     return null
+    //   }
+    // }
 
     // in mock mode return fake profile
     // in production this calls real LINE API
