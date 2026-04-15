@@ -7,6 +7,7 @@ from notification import notify_job_matched, notify_job_confirmed, notify_job_de
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 import os
+import bot
 
 load_dotenv()
 
