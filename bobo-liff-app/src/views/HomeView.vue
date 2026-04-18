@@ -11,18 +11,9 @@
       <p class="subtitle">Freelance Van Driver</p>
     </div>
 
-    <div class="availability-card">
-      <h3>Your Availability</h3>
-      <p v-if="availability">{{ availability }}</p>
-      <p v-else class="not-set">Not set yet</p>
-      <button @click="goToAvailability" class="btn-secondary">
+    <button @click="goToAvailability" class="btn-secondary">
         Edit Availability
       </button>
-    </div>
-
-    <button @click="goToJobs" class="btn-primary">
-      View Available Jobs
-    </button>
   </div>
 </template>
 
