@@ -4,7 +4,7 @@ import JobListView from '../views/JobListView.vue'
 import JobDetailView from '../views/JobDetailView.vue'
 
 const router = createRouter({
-  history: createWebHashHistory(import.meta.env.BASE_URL),
+  history: createWebHashHistory(),
   routes: [
     { path: '/', component: HomeView },
     { path: '/jobs', component: JobListView },
