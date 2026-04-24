@@ -21,7 +21,7 @@ load_dotenv()
 configuration = Configuration(
     access_token=os.getenv('LINE_CHANNEL_ACCESS_TOKEN')
 )
-handler = WebhookHandler(os.getenv('LINE_CHANNEL_SECRET'))
+handler = WebhookHandler(os.getenv('LINE_CHANNEL_SECRET') or "test")
 
 
 def get_messaging_api():

@@ -9,11 +9,14 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 import bot
 
+# 👇 DB
+from app.db.connection import get_connection
+
 load_dotenv()
 
 app = FastAPI()
 
-# Add this block
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["https://662115029.github.io"],
@@ -21,9 +24,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-line_bot_api = LineBotApi(os.getenv("LINE_CHANNEL_ACCESS_TOKEN"))
-handler = WebhookHandler(os.getenv("LINE_CHANNEL_SECRET"))
+# LINE
+line_bot_api = LineBotApi(os.getenv("LINE_CHANNEL_ACCESS_TOKEN") or "test")
+handler = WebhookHandler(os.getenv("LINE_CHANNEL_SECRET") or "test")
 
+# MOCK
 MOCK_JOB = {
     "id": 1,
     "title": "Chiang Mai City Tour",
@@ -42,10 +47,31 @@ class JobResponseRequest(BaseModel):
     line_user_id: str
     job_id: int
 
+# -----------------------
+# BASIC
+# -----------------------
 @app.get("/")
 def root():
     return {"status": "running"}
 
+# -----------------------
+# 🔥 TEST DB
+# -----------------------
+@app.get("/test-db")
+def test_db():
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM admins")
+    data = cursor.fetchall()
+
+    conn.close()
+
+    return data
+
+# -----------------------
+# LINE WEBHOOK
+# -----------------------
 @app.post("/webhook")
 async def webhook(request: Request):
     signature = request.headers.get("X-Line-Signature")
@@ -104,6 +130,9 @@ def handle_message(event):
             TextSendMessage(text=event.message.text)
         )
 
+# -----------------------
+# TEST NOTIFICATION
+# -----------------------
 @app.post("/test/notify-match")
 def test_notify_match(request: NotifyRequest):
     notify_job_matched(request.line_user_id, MOCK_JOB)
