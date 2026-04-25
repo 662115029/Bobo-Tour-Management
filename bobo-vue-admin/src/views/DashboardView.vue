@@ -1,6 +1,14 @@
 <template>
   <div>
     <h1 class="title">Dashboard</h1>
+
+    <div class="db-row">
+      <span class="db-label">DB STATUS</span>
+      <span class="db-value" :class="{ ok: dbConnected, bad: dbConnected === false }">
+        {{ dbConnected === null ? 'Checking...' : dbConnected ? 'Connected' : 'Not connected' }}
+      </span>
+      <span v-if="dbError" class="db-error">{{ dbError }}</span>
+    </div>
     
     <div class="stats-row">
       <div class="stat-card">
@@ -72,13 +80,89 @@
 </template>
 
 <script setup>
-import { mockJobs, mockVerifications, stats } from '../data/mockData'
+import { onMounted, ref } from 'vue'
+import { mockJobs, mockVerifications } from '../data/mockData'
+
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000'
+
+const dbConnected = ref(null)
+const dbError = ref('')
+
+const stats = ref({
+  totalJobs: 0,
+  pendingVerify: 0,
+  freelancers: 0,
+  employers: 0
+})
+
+onMounted(async () => {
+  try {
+    const pingRes = await fetch(`${API_BASE}/admin/db/ping`)
+    const ping = await pingRes.json()
+    dbConnected.value = !!ping.connected
+    dbError.value = ping.connected ? '' : (ping.error || 'Unknown error')
+  } catch (e) {
+    dbConnected.value = false
+    dbError.value = String(e)
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/admin/stats`)
+    const data = await res.json()
+    stats.value.pendingVerify = data.pendingVerify ?? 0
+    stats.value.freelancers = data.freelancers ?? 0
+    stats.value.employers = data.employers ?? 0
+  } catch {
+    // keep defaults
+  }
+})
 </script>
 
 <style scoped>
 .title {
   font-size: 24px;
   margin-bottom: 24px;
+}
+
+.db-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.db-label {
+  font-size: 12px;
+  color: #666;
+  font-weight: 600;
+}
+
+.db-value {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #f5f5f5;
+  color: #444;
+}
+
+.db-value.ok {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.db-value.bad {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.db-error {
+  font-size: 12px;
+  color: #c62828;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 60vw;
 }
 
 .stats-row {
