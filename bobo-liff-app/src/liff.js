@@ -1,33 +1,20 @@
 import liff from '@line/liff'
-import { LiffMockPlugin } from '@line/liff-mock'
-import { mockProfile } from './mockData.js'
 
 const LIFF_ID = '2009771168-w9BjE7bI'
-const IS_MOCK = import.meta.env.VITE_LIFF_MOCK === 'true'
 
 export async function initLiff() {
   try {
-    if (IS_MOCK) {
-      liff.use(new LiffMockPlugin())
-    }
-
     await liff.init({
       liffId: LIFF_ID,
-      mock: IS_MOCK
+      mock: false
     })
 
-    if (!IS_MOCK) {
-      if (!liff.isLoggedIn()) {
-        liff.login({ redirectUri: window.location.href })
-        return
-      }
+    if (!liff.isLoggedIn()) {
+      liff.login({ redirectUri: window.location.href })
+      return
     }
 
-    // in mock mode return fake profile
-    // in production this calls real LINE API
-    const profile = IS_MOCK
-      ? mockProfile
-      : await liff.getProfile()
+    const profile = await liff.getProfile()
 
     return {
       lineUserId: profile.userId,
@@ -41,4 +28,4 @@ export async function initLiff() {
   }
 }
 
-export { liff, IS_MOCK }
+export { liff }

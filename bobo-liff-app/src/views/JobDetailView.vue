@@ -86,21 +86,41 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { mockJobs } from '../mockData.js'
 
 const router = useRouter()
 const route = useRoute()
-const FASTAPI_URL = import.meta.env.VITE_FASTAPI_URL
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 const props = defineProps({
   user: Object
 })
 
+const allJobs = ref([])
+
 const job = computed(() =>
-  mockJobs.find(j => j.id === parseInt(route.params.id))
+  allJobs.value.find(j => j.id === parseInt(route.params.id))
 )
+
+onMounted(async () => {
+  try {
+    const res = await fetch(`${API_BASE}/jobs`)
+    const data = await res.json()
+    allJobs.value = (data.items || []).map(j => ({
+      id: j.job_id,
+      title: j.job_title,
+      date: j.job_start_date,
+      time: '08:00',
+      pickup: 'TBD',
+      destination: 'TBD',
+      passengers: j.job_required_seat,
+      employer: j.company
+    }))
+  } catch (e) {
+    console.error('Failed to fetch jobs:', e)
+  }
+})
 
 const submitting = ref(false)
 const responded = ref(false)
@@ -126,7 +146,7 @@ function formatDate(dateStr) {
 async function handleAccept() {
   submitting.value = true
   try {
-    await fetch(`${FASTAPI_URL}/jobs/${job.value.id}/accept`, {
+    await fetch(`${API_BASE}/jobs/${job.value.id}/accept`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -146,7 +166,7 @@ async function handleAccept() {
 async function handleDecline() {
   submitting.value = true
   try {
-    await fetch(`${FASTAPI_URL}/jobs/${job.value.id}/decline`, {
+    await fetch(`${API_BASE}/jobs/${job.value.id}/decline`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

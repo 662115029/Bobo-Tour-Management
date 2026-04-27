@@ -73,7 +73,6 @@
 
 <script setup>
 import { onMounted, ref } from 'vue'
-import { mockJobs, mockVerifications } from '../data/mockData'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000'
 

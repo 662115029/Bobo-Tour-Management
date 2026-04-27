@@ -33,17 +33,6 @@ app.add_middleware(
 line_bot_api = LineBotApi(os.getenv("LINE_CHANNEL_ACCESS_TOKEN"))
 handler = WebhookHandler(os.getenv("LINE_CHANNEL_SECRET"))
 
-MOCK_JOB = {
-    "id": 1,
-    "title": "Chiang Mai City Tour",
-    "date": "2026-05-01",
-    "time": "08:00",
-    "pickup": "Nimman Road, Chiang Mai",
-    "destination": "Doi Suthep Temple",
-    "passengers": 8,
-    "employer": "Bobo Tour Company"
-}
-
 class NotifyRequest(BaseModel):
     line_user_id: str
 
@@ -115,18 +104,70 @@ def handle_message(event):
 
 @app.post("/test/notify-match")
 def test_notify_match(request: NotifyRequest):
-    notify_job_matched(request.line_user_id, MOCK_JOB)
-    return {"status": "notification sent"}
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute(
+            """
+            SELECT j.job_id, j.job_title, em.em_name, j.job_start_date, j.job_price
+            FROM jobs j
+            JOIN employers em ON j.em_id = em.em_id
+            ORDER BY j.job_created_at DESC
+            LIMIT 1
+            """
+        )
+        job = cursor.fetchone()
+        conn.close()
+        if job:
+            notify_job_matched(request.line_user_id, job)
+            return {"status": "notification sent", "job": job}
+        return {"status": "no jobs found"}
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.post("/jobs/{job_id}/accept")
 def accept_job(job_id: int, request: JobResponseRequest):
-    notify_job_confirmed(request.line_user_id, MOCK_JOB)
-    return {"status": "accepted"}
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute(
+            """
+            SELECT j.job_id, j.job_title, em.em_name, j.job_start_date, j.job_price
+            FROM jobs j
+            JOIN employers em ON j.em_id = em.em_id
+            WHERE j.job_id = %s
+            """,
+            (job_id,)
+        )
+        job = cursor.fetchone()
+        if job:
+            notify_job_confirmed(request.line_user_id, job)
+        conn.close()
+        return {"status": "accepted", "job": job if job else None}
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.post("/jobs/{job_id}/decline")
 def decline_job(job_id: int, request: JobResponseRequest):
-    notify_job_declined(request.line_user_id, MOCK_JOB)
-    return {"status": "declined"}
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute(
+            """
+            SELECT j.job_id, j.job_title, em.em_name, j.job_start_date, j.job_price
+            FROM jobs j
+            JOIN employers em ON j.em_id = em.em_id
+            WHERE j.job_id = %s
+            """,
+            (job_id,)
+        )
+        job = cursor.fetchone()
+        if job:
+            notify_job_declined(request.line_user_id, job)
+        conn.close()
+        return {"status": "declined", "job": job if job else None}
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.get("/jobs")
 def get_jobs(limit: int = 50, offset: int = 0):
@@ -272,6 +313,30 @@ def admin_admins(limit: int = 50, offset: int = 0):
               status,
               created_at
             FROM admins
+            ORDER BY created_at DESC
+            LIMIT %s OFFSET %s
+            """,
+            (limit, offset),
+        )
+        rows = cursor.fetchall()
+        conn.close()
+        return {"items": rows, "limit": limit, "offset": offset}
+    except Exception as e:
+        return {"error": str(e), "items": []}
+
+@app.get("/admin/logs")
+def admin_logs(limit: int = 50, offset: int = 0):
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute(
+            """
+            SELECT
+              log_id,
+              admin_id,
+              action,
+              created_at
+            FROM admin_logs
             ORDER BY created_at DESC
             LIMIT %s OFFSET %s
             """,

@@ -52,12 +52,31 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { mockJobs } from '../mockData.js'
 
 const router = useRouter()
-const jobs = ref(mockJobs)
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const jobs = ref([])
+
+onMounted(async () => {
+  try {
+    const res = await fetch(`${API_BASE}/jobs`)
+    const data = await res.json()
+    jobs.value = (data.items || []).map(j => ({
+      id: j.job_id,
+      title: j.job_title,
+      date: j.job_start_date,
+      time: '08:00',
+      pickup: 'TBD',
+      destination: 'TBD',
+      passengers: j.job_required_seat,
+      employer: j.company
+    }))
+  } catch (e) {
+    console.error('Failed to fetch jobs:', e)
+  }
+})
 
 function goBack() {
   router.push('/')
