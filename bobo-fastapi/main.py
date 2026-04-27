@@ -524,51 +524,6 @@ def get_job_applications(limit: int = 50, offset: int = 0):
     except Exception as e:
         return {"error": str(e), "items": []}
 
-@app.get("/job-passengers")
-def get_job_passengers(limit: int = 50, offset: int = 0):
-    try:
-        conn = get_connection()
-        cursor = get_cursor(conn)
-        cursor.execute("""
-            SELECT job_passenger_id, job_customer_id, passenger_name
-            FROM job_passengers LIMIT %s OFFSET %s
-        """, (limit, offset))
-        rows = cursor.fetchall()
-        conn.close()
-        return {"items": rows, "limit": limit, "offset": offset}
-    except Exception as e:
-        return {"error": str(e), "items": []}
-
-@app.get("/job-inclusions")
-def get_job_inclusions(limit: int = 50, offset: int = 0):
-    try:
-        conn = get_connection()
-        cursor = get_cursor(conn)
-        cursor.execute("""
-            SELECT job_inclusion_id, job_id, inclusion_type, description, sequence
-            FROM job_inclusions ORDER BY job_id, sequence LIMIT %s OFFSET %s
-        """, (limit, offset))
-        rows = cursor.fetchall()
-        conn.close()
-        return {"items": rows, "limit": limit, "offset": offset}
-    except Exception as e:
-        return {"error": str(e), "items": []}
-
-@app.get("/job-entrance-fees")
-def get_job_entrance_fees(limit: int = 50, offset: int = 0):
-    try:
-        conn = get_connection()
-        cursor = get_cursor(conn)
-        cursor.execute("""
-            SELECT job_entrance_fee_id, job_id, place_name, thai_price, foreigner_price, note, sequence
-            FROM job_entrance_fees ORDER BY job_id, sequence LIMIT %s OFFSET %s
-        """, (limit, offset))
-        rows = cursor.fetchall()
-        conn.close()
-        return {"items": rows, "limit": limit, "offset": offset}
-    except Exception as e:
-        return {"error": str(e), "items": []}
-
 @app.get("/job-payments")
 def get_job_payments(limit: int = 50, offset: int = 0):
     try:
@@ -608,3 +563,155 @@ def get_em_reviews(limit: int = 50, offset: int = 0):
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
         return {"error": str(e), "items": []}
+
+# -----------------------
+# DOCUMENT REVIEW ENDPOINTS
+# -----------------------
+
+class DocReviewRequest(BaseModel):
+    status: str  # APPROVED or REJECTED
+    reviewed_by: str = "ad_001"
+
+@app.patch("/fl-documents/{doc_id}")
+def review_fl_document(doc_id: str, body: DocReviewRequest):
+    if body.status not in ("APPROVED", "REJECTED"):
+        raise HTTPException(status_code=400, detail="status must be APPROVED or REJECTED")
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT fl_doc_id, fl_id FROM fl_documents WHERE fl_doc_id = %s", (doc_id,))
+        doc = cursor.fetchone()
+        if not doc:
+            conn.close()
+            raise HTTPException(status_code=404, detail="Document not found")
+        cursor.execute(
+            """
+            UPDATE fl_documents
+            SET fl_doc_status = %s, reviewed_by = %s, reviewed_at = NOW()
+            WHERE fl_doc_id = %s
+            """,
+            (body.status, body.reviewed_by, doc_id)
+        )
+        # If all docs for this freelancer are APPROVED, update fl_verify_status
+        if body.status == "APPROVED":
+            cursor.execute(
+                """
+                SELECT COUNT(*) AS c FROM fl_documents
+                WHERE fl_id = %s AND is_latest = 1 AND fl_doc_status != 'APPROVED'
+                """,
+                (doc["fl_id"],)
+            )
+            remaining = cursor.fetchone()["c"]
+            if remaining == 0:
+                cursor.execute(
+                    "UPDATE freelancers SET fl_verify_status = 'VERIFIED' WHERE fl_id = %s",
+                    (doc["fl_id"],)
+                )
+        elif body.status == "REJECTED":
+            cursor.execute(
+                "UPDATE freelancers SET fl_verify_status = 'NOT_VERIFIED' WHERE fl_id = %s",
+                (doc["fl_id"],)
+            )
+        conn.commit()
+        conn.close()
+        return {"status": "updated", "doc_id": doc_id, "new_status": body.status}
+    except HTTPException:
+        raise
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.patch("/em-documents/{doc_id}")
+def review_em_document(doc_id: str, body: DocReviewRequest):
+    if body.status not in ("APPROVED", "REJECTED"):
+        raise HTTPException(status_code=400, detail="status must be APPROVED or REJECTED")
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT em_doc_id, em_id FROM em_documents WHERE em_doc_id = %s", (doc_id,))
+        doc = cursor.fetchone()
+        if not doc:
+            conn.close()
+            raise HTTPException(status_code=404, detail="Document not found")
+        cursor.execute(
+            """
+            UPDATE em_documents
+            SET em_doc_status = %s, reviewed_by = %s, reviewed_at = NOW()
+            WHERE em_doc_id = %s
+            """,
+            (body.status, body.reviewed_by, doc_id)
+        )
+        # If all docs for this employer are APPROVED, update em_verify_status
+        if body.status == "APPROVED":
+            cursor.execute(
+                """
+                SELECT COUNT(*) AS c FROM em_documents
+                WHERE em_id = %s AND is_latest = 1 AND em_doc_status != 'APPROVED'
+                """,
+                (doc["em_id"],)
+            )
+            remaining = cursor.fetchone()["c"]
+            if remaining == 0:
+                cursor.execute(
+                    "UPDATE employers SET em_verify_status = 'VERIFIED' WHERE em_id = %s",
+                    (doc["em_id"],)
+                )
+        elif body.status == "REJECTED":
+            cursor.execute(
+                "UPDATE employers SET em_verify_status = 'NOT_VERIFIED' WHERE em_id = %s",
+                (doc["em_id"],)
+            )
+        conn.commit()
+        conn.close()
+        return {"status": "updated", "doc_id": doc_id, "new_status": body.status}
+    except HTTPException:
+        raise
+    except Exception as e:
+        return {"error": str(e)}
+# -----------------------
+# BAN / UNBAN ENDPOINTS
+# -----------------------
+
+class BanRequest(BaseModel):
+    is_active: bool
+
+@app.patch("/freelancers/{fl_id}/ban")
+def ban_freelancer(fl_id: str, body: BanRequest):
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT fl_id FROM freelancers WHERE fl_id = %s", (fl_id,))
+        if not cursor.fetchone():
+            conn.close()
+            raise HTTPException(status_code=404, detail="Freelancer not found")
+        cursor.execute(
+            "UPDATE freelancers SET fl_is_active = %s WHERE fl_id = %s",
+            (body.is_active, fl_id)
+        )
+        conn.commit()
+        conn.close()
+        return {"status": "updated", "fl_id": fl_id, "is_active": body.is_active}
+    except HTTPException:
+        raise
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.patch("/employers/{em_id}/ban")
+def ban_employer(em_id: str, body: BanRequest):
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT em_id FROM employers WHERE em_id = %s", (em_id,))
+        if not cursor.fetchone():
+            conn.close()
+            raise HTTPException(status_code=404, detail="Employer not found")
+        cursor.execute(
+            "UPDATE employers SET em_is_active = %s WHERE em_id = %s",
+            (body.is_active, em_id)
+        )
+        conn.commit()
+        conn.close()
+        return {"status": "updated", "em_id": em_id, "is_active": body.is_active}
+    except HTTPException:
+        raise
+    except Exception as e:
+        return {"error": str(e)}    
