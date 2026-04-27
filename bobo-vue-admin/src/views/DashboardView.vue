@@ -30,15 +30,22 @@
             <th>COMPANY</th>
             <th>DATE</th>
             <th>STATUS</th>
+            <th>UPDATED</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="job in jobs.slice(0, 3)" :key="job.job_id">
+          <tr v-for="job in jobs.slice(0, 10)" :key="job.job_id">
             <td>{{ job.job_title }}</td>
             <td>{{ job.company }}</td>
             <td>{{ formatDate(job.job_created_at) }}</td>
             <td>
               <span class="badge" :class="job.job_status?.toLowerCase()">{{ job.job_status }}</span>
+            </td>
+            <td>
+              <span class="update-info">
+                {{ isJobUpdated(job) ? '🔄 Latest Updated' : '✨ Latest Created' }}
+                {{ formatDate(getLatestDate(job)) }}
+              </span>
             </td>
           </tr>
         </tbody>
@@ -54,15 +61,22 @@
             <th>TYPE</th>
             <th>SUBMITTED</th>
             <th>STATUS</th>
+            <th>UPDATED</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="v in verifications.slice(0, 2)" :key="v.id">
+          <tr v-for="v in verifications.slice(0, 10)" :key="v.id">
             <td>{{ v.name }}</td>
             <td>{{ v.type }}</td>
             <td>{{ v.submitted }}</td>
             <td>
               <span class="badge" :class="v.status.toLowerCase()">{{ v.status }}</span>
+            </td>
+            <td>
+              <span class="update-info">
+                {{ isVerificationUpdated(v) ? '🔄 Latest Updated' : '✨ Latest Created' }}
+                {{ formatDate(getLatestVerificationDate(v)) }}
+              </span>
             </td>
           </tr>
         </tbody>
@@ -72,6 +86,7 @@
 </template>
 
 <script setup>
+
 import { onMounted, ref } from 'vue'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000'
@@ -91,6 +106,30 @@ const stats = ref({
 const formatDate = (date) => {
   if (!date) return '-'
   return new Date(date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+const getLatestDate = (job) => {
+  const created = new Date(job.job_created_at || 0)
+  const updated = new Date(job.job_updated_at || 0)
+  return updated > created ? updated : created
+}
+
+const isJobUpdated = (job) => {
+  const created = new Date(job.job_created_at || 0)
+  const updated = new Date(job.job_updated_at || 0)
+  return updated > created
+}
+
+const getLatestVerificationDate = (v) => {
+  const created = new Date(v.created_at || 0)
+  const updated = new Date(v.updated_at || 0)
+  return updated > created ? updated : created
+}
+
+const isVerificationUpdated = (v) => {
+  const created = new Date(v.created_at || 0)
+  const updated = new Date(v.updated_at || 0)
+  return updated > created
 }
 
 onMounted(async () => {
@@ -131,10 +170,10 @@ onMounted(async () => {
     const flData = await flRes.json()
     const emData = await emRes.json()
     const pendingFl = (flData.items || []).filter(f => f.fl_verify_status === 'PENDING').map(f => ({
-      id: f.fl_id, name: f.fl_name || f.line_user_id, type: 'Freelancer', status: f.fl_verify_status, submitted: formatDate(f.fl_created_at)
+      id: f.fl_id, name: f.fl_name || f.line_user_id, type: 'Freelancer', status: f.fl_verify_status, submitted: formatDate(f.fl_created_at), created_at: f.fl_created_at, updated_at: f.fl_updated_at
     }))
     const pendingEm = (emData.items || []).filter(e => e.em_verify_status === 'PENDING').map(e => ({
-      id: e.em_id, name: e.em_name || e.em_username, type: 'Employer', status: e.em_verify_status, submitted: formatDate(e.em_created_at)
+      id: e.em_id, name: e.em_name || e.em_username, type: 'Employer', status: e.em_verify_status, submitted: formatDate(e.em_created_at), created_at: e.em_created_at, updated_at: e.em_updated_at
     }))
     verifications.value = [...pendingFl, ...pendingEm]
   } catch {
@@ -220,6 +259,21 @@ section {
   color: #2e7d32;
 }
 
+.badge.open {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.badge.selected {
+  background: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.badge.matching {
+  background: #e0f2f1;
+  color: #00695c;
+}
+
 .badge.closed {
   background: #f5f5f5;
   color: #666;
@@ -238,5 +292,11 @@ section {
 .badge.rejected {
   background: #ffebee;
   color: #c62828;
+}
+
+.update-info {
+  font-size: 12px;
+  color: #555;
+  font-weight: 500;
 }
 </style>
