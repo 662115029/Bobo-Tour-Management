@@ -1,12 +1,20 @@
 <template>
   <div>
     <h1 class="title">Users Management</h1>
-
+    
     <div class="tabs">
-      <button class="tab" :class="{ active: activeTab === 'Freelancer' }" @click="activeTab = 'Freelancer'">
+      <button 
+        class="tab" 
+        :class="{ active: activeTab === 'Freelancer' }"
+        @click="activeTab = 'Freelancer'"
+      >
         Freelancer
       </button>
-      <button class="tab" :class="{ active: activeTab === 'Employer' }" @click="activeTab = 'Employer'">
+      <button 
+        class="tab" 
+        :class="{ active: activeTab === 'Employer' }"
+        @click="activeTab = 'Employer'"
+      >
         Employer
       </button>
     </div>
@@ -36,6 +44,8 @@
             <th>SCORE</th>
             <th>JOBS</th>
             <th>ACTION</th>
+            <th>CREATED</th>
+            <th>LAST UPDATED</th>
           </tr>
         </thead>
         <tbody>
@@ -57,27 +67,28 @@
                 {{ user.isActive ? 'Ban' : 'Unban' }}
               </span>
             </td>
+            <td class="text-muted">{{ formatDateTime(user.createdAt) }}</td>
+            <td class="text-muted">{{ formatDateTime(user.updatedAt) }}</td>
           </tr>
         </tbody>
       </table>
     </div>
-    <!-- Ban Modal -->
-    <div v-if="showBanModal" class="modal-overlay" @click.self="showBanModal = false">
-      <div class="modal">
-        <div class="modal-icon">{{ banTarget?.isActive ? '🚫' : '✅' }}</div>
-        <h3>{{ banTarget?.isActive ? 'Ban User' : 'Unban User' }}</h3>
-        <p>Are you sure you want to {{ banTarget?.isActive ? 'ban' : 'unban' }}<br>
-          <strong>"{{ banTarget?.name }}"</strong>?
-        </p>
-        <p v-if="banTarget?.isActive" class="modal-warning">This user will not be able to accept any jobs.</p>
-        <div class="modal-actions">
-          <button class="btn-cancel" @click="showBanModal = false">Cancel</button>
-          <button class="btn-confirm" :class="banTarget?.isActive ? 'ban' : 'unban'" @click="confirmBan">
-            {{ banTarget?.isActive ? 'Ban' : 'Unban' }}
-          </button>
-        </div>
+  <!-- Ban Modal -->
+  <div v-if="showBanModal" class="modal-overlay" @click.self="showBanModal = false">
+    <div class="modal">
+      <div class="modal-icon">{{ banTarget?.isActive ? '🚫' : '✅' }}</div>
+      <h3>{{ banTarget?.isActive ? 'Ban User' : 'Unban User' }}</h3>
+      <p>Are you sure you want to {{ banTarget?.isActive ? 'ban' : 'unban' }}<br>
+        <strong>"{{ banTarget?.name }}"</strong>?</p>
+      <p v-if="banTarget?.isActive" class="modal-warning">This user will not be able to accept any jobs.</p>
+      <div class="modal-actions">
+        <button class="btn-cancel" @click="showBanModal = false">Cancel</button>
+        <button class="btn-confirm" :class="banTarget?.isActive ? 'ban' : 'unban'" @click="confirmBan">
+          {{ banTarget?.isActive ? 'Ban' : 'Unban' }}
+        </button>
       </div>
     </div>
+  </div>
   </div>
 </template>
 
@@ -133,6 +144,11 @@ const search = ref('')
 const verifyFilter = ref('All')
 const sortOrder = ref('newest')
 
+const formatDateTime = (date) => {
+  if (!date) return '-'
+  return new Date(date).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+}
+
 function initialsFromName(name) {
   if (!name) return '?'
   const parts = name.trim().split(/\s+/).slice(0, 2)
@@ -150,7 +166,8 @@ async function loadEmployers() {
     isActive: !!e.em_is_active,
     rating: Number(e.em_rating_avg || 0),
     imageUrl: e.em_profile_image_url || '',
-    createdAt: e.em_created_at || ''
+    createdAt: e.em_created_at || '',
+    updatedAt: e.em_updated_at || ''
   }))
 }
 
@@ -165,7 +182,8 @@ async function loadFreelancers() {
     isActive: !!f.fl_is_active,
     rating: Number(f.fl_rating_avg || 0),
     imageUrl: f.fl_profile_image_url || '',
-    createdAt: f.fl_created_at || ''
+    createdAt: f.fl_created_at || '',
+    updatedAt: f.fl_updated_at || ''
   }))
 }
 
@@ -274,26 +292,12 @@ watch(activeTab, async (tab) => {
   font-weight: 500;
 }
 
-.badge.verified {
-  background: #e8f5e9;
-  color: #2e7d32;
-}
-
-.badge.pending {
-  background: #fff3e0;
-  color: #f57c00;
-}
-
-.badge.rejected,
-.badge.not_verified {
+.badge.verified { background: #e8f5e9; color: #2e7d32; }
+.badge.pending { background: #fff3e0; color: #f57c00; }
+.badge.rejected, .badge.not_verified {
   background: #ffebee;
   color: #c62828;
-}
-
-.badge.unknown {
-  background: #f5f5f5;
-  color: #666;
-}
+}.badge.unknown { background: #f5f5f5; color: #666; }
 
 .action-link {
   color: #0066cc;
@@ -301,96 +305,35 @@ watch(activeTab, async (tab) => {
   margin-right: 12px;
   font-size: 13px;
 }
-
-.action-link.ban {
-  color: #dc3545;
-}
-
-.action-link.unban {
-  color: #2e7d32;
-}
+.action-link.ban { color: #dc3545; }
+.action-link.unban { color: #2e7d32; }
 
 /* Modal */
 .modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
+  position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+  display: flex; align-items: center; justify-content: center; z-index: 100;
 }
-
 .modal {
-  background: white;
-  border-radius: 12px;
-  padding: 32px;
-  width: 380px;
-  text-align: center;
+  background: white; border-radius: 12px; padding: 32px;
+  width: 380px; text-align: center;
 }
-
-.modal-icon {
-  font-size: 36px;
-  margin-bottom: 12px;
-}
-
-.modal h3 {
-  font-size: 20px;
-  margin: 0 0 12px;
-}
-
-.modal p {
-  color: #555;
-  margin: 0 0 8px;
-  line-height: 1.5;
-}
-
-.modal-warning {
-  font-size: 12px;
-  color: #dc3545 !important;
-  margin-bottom: 24px !important;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  margin-top: 20px;
-}
-
+.modal-icon { font-size: 36px; margin-bottom: 12px; }
+.modal h3 { font-size: 20px; margin: 0 0 12px; }
+.modal p { color: #555; margin: 0 0 8px; line-height: 1.5; }
+.modal-warning { font-size: 12px; color: #dc3545 !important; margin-bottom: 24px !important; }
+.modal-actions { display: flex; justify-content: center; gap: 12px; margin-top: 20px; }
 .btn-cancel {
-  padding: 10px 24px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background: white;
-  cursor: pointer;
-  font-size: 14px;
+  padding: 10px 24px; border: 1px solid #ddd;
+  border-radius: 6px; background: white; cursor: pointer; font-size: 14px;
 }
-
 .btn-confirm {
-  padding: 10px 24px;
-  border: none;
-  border-radius: 6px;
-  color: white;
-  cursor: pointer;
-  font-size: 14px;
+  padding: 10px 24px; border: none;
+  border-radius: 6px; color: white; cursor: pointer; font-size: 14px;
 }
-
-.btn-confirm.ban {
-  background: #dc3545;
-}
-
-.btn-confirm.ban:hover {
-  background: #b02a37;
-}
-
-.btn-confirm.unban {
-  background: #2e7d32;
-}
-
-.btn-confirm.unban:hover {
-  background: #1b5e20;
-}
+.btn-confirm.ban { background: #dc3545; }
+.btn-confirm.ban:hover { background: #b02a37; }
+.btn-confirm.unban { background: #2e7d32; }
+.btn-confirm.unban:hover { background: #1b5e20; }
 
 .filter-row {
   display: flex;
@@ -406,6 +349,8 @@ watch(activeTab, async (tab) => {
   width: 280px;
   font-size: 14px;
 }
+
+.text-muted { color: #999; font-size: 13px; }
 
 .filter-group {
   display: flex;
