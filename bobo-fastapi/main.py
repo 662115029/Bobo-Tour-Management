@@ -16,7 +16,13 @@ app = FastAPI()
 # Add this block
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://662115029.github.io"],
+    allow_origins=[
+        "https://662115029.github.io",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -118,3 +124,158 @@ def accept_job(job_id: int, request: JobResponseRequest):
 def decline_job(job_id: int, request: JobResponseRequest):
     notify_job_declined(request.line_user_id, MOCK_JOB)
     return {"status": "declined"}
+
+@app.get("/jobs")
+def get_jobs(limit: int = 50, offset: int = 0):
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT
+              j.job_id,
+              j.job_title,
+              em.em_name AS company,
+              j.job_created_at,
+              j.job_status
+            FROM jobs j
+            JOIN employers em ON j.em_id = em.em_id
+            ORDER BY j.job_created_at DESC
+            LIMIT %s OFFSET %s
+            """,
+            (limit, offset),
+        )
+        rows = cursor.fetchall()
+        conn.close()
+        return {"items": rows, "limit": limit, "offset": offset}
+    except Exception as e:
+        return {"error": str(e), "items": []}
+
+# -----------------------
+# ADMIN ENDPOINTS
+# -----------------------
+@app.get("/admin/db/ping")
+def admin_db_ping():
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1 AS ok")
+        row = cursor.fetchone()
+        conn.close()
+        return {"db": "mysql", "connected": True, "ok": row["ok"]}
+    except Exception as e:
+        return {"db": "mysql", "connected": False, "error": str(e)}
+
+@app.get("/admin/stats")
+def admin_stats():
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT COUNT(*) AS c FROM jobs")
+        totalJobs = int(cursor.fetchone()["c"])
+
+        cursor.execute("SELECT COUNT(*) AS c FROM employers")
+        employers = int(cursor.fetchone()["c"])
+
+        cursor.execute("SELECT COUNT(*) AS c FROM freelancers")
+        freelancers = int(cursor.fetchone()["c"])
+
+        cursor.execute("SELECT COUNT(*) AS c FROM employers WHERE em_verify_status = 'PENDING'")
+        pending_employers = int(cursor.fetchone()["c"])
+
+        cursor.execute("SELECT COUNT(*) AS c FROM freelancers WHERE fl_verify_status = 'PENDING'")
+        pending_freelancers = int(cursor.fetchone()["c"])
+
+        conn.close()
+
+        return {
+            "totalJobs": totalJobs,
+            "employers": employers,
+            "freelancers": freelancers,
+            "pendingVerify": pending_employers + pending_freelancers,
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/admin/employers")
+def admin_employers(limit: int = 50, offset: int = 0):
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT
+              em_id,
+              em_username,
+              em_name,
+              em_verify_status,
+              em_is_active,
+              em_rating_avg,
+              em_profile_image_url,
+              em_created_at,
+              em_updated_at
+            FROM employers
+            ORDER BY em_updated_at DESC
+            LIMIT %s OFFSET %s
+            """,
+            (limit, offset),
+        )
+        rows = cursor.fetchall()
+        conn.close()
+        return {"items": rows, "limit": limit, "offset": offset}
+    except Exception as e:
+        return {"error": str(e), "items": []}
+
+@app.get("/admin/freelancers")
+def admin_freelancers(limit: int = 50, offset: int = 0):
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT
+              fl_id,
+              line_user_id,
+              fl_name,
+              fl_verify_status,
+              fl_is_active,
+              fl_rating_avg,
+              fl_profile_image_url,
+              fl_created_at,
+              fl_updated_at
+            FROM freelancers
+            ORDER BY fl_updated_at DESC
+            LIMIT %s OFFSET %s
+            """,
+            (limit, offset),
+        )
+        rows = cursor.fetchall()
+        conn.close()
+        return {"items": rows, "limit": limit, "offset": offset}
+    except Exception as e:
+        return {"error": str(e), "items": []}
+
+@app.get("/admin/admins")
+def admin_admins(limit: int = 50, offset: int = 0):
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT
+              admin_id,
+              name,
+              status,
+              created_at
+            FROM admins
+            ORDER BY created_at DESC
+            LIMIT %s OFFSET %s
+            """,
+            (limit, offset),
+        )
+        rows = cursor.fetchall()
+        conn.close()
+        return {"items": rows, "limit": limit, "offset": offset}
+    except Exception as e:
+        return {"error": str(e), "items": []}

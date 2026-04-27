@@ -33,12 +33,12 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="job in mockJobs.slice(0, 3)" :key="job.id">
-            <td>{{ job.title }}</td>
+          <tr v-for="job in jobs.slice(0, 3)" :key="job.job_id">
+            <td>{{ job.job_title }}</td>
             <td>{{ job.company }}</td>
-            <td>{{ job.date }}</td>
+            <td>{{ formatDate(job.job_created_at) }}</td>
             <td>
-              <span class="badge" :class="job.status.toLowerCase()">{{ job.status }}</span>
+              <span class="badge" :class="job.job_status?.toLowerCase()">{{ job.job_status }}</span>
             </td>
           </tr>
         </tbody>
@@ -57,7 +57,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="v in mockVerifications.slice(0, 2)" :key="v.id">
+          <tr v-for="v in verifications.slice(0, 2)" :key="v.id">
             <td>{{ v.name }}</td>
             <td>{{ v.type }}</td>
             <td>{{ v.submitted }}</td>
@@ -72,7 +72,76 @@
 </template>
 
 <script setup>
-import { mockJobs, mockVerifications, stats } from '../data/mockData'
+import { onMounted, ref } from 'vue'
+import { mockJobs, mockVerifications } from '../data/mockData'
+
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000'
+
+const dbConnected = ref(null)
+const dbError = ref('')
+const jobs = ref([])
+const verifications = ref([])
+
+const stats = ref({
+  totalJobs: 0,
+  pendingVerify: 0,
+  freelancers: 0,
+  employers: 0
+})
+
+const formatDate = (date) => {
+  if (!date) return '-'
+  return new Date(date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+onMounted(async () => {
+  try {
+    const pingRes = await fetch(`${API_BASE}/admin/db/ping`)
+    const ping = await pingRes.json()
+    dbConnected.value = !!ping.connected
+    dbError.value = ping.connected ? '' : (ping.error || 'Unknown error')
+  } catch (e) {
+    dbConnected.value = false
+    dbError.value = String(e)
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/admin/stats`)
+    const data = await res.json()
+    stats.value.totalJobs = data.totalJobs ?? 0
+    stats.value.pendingVerify = data.pendingVerify ?? 0
+    stats.value.freelancers = data.freelancers ?? 0
+    stats.value.employers = data.employers ?? 0
+  } catch {
+    // keep defaults
+  }
+
+  try {
+    const jobsRes = await fetch(`${API_BASE}/jobs`)
+    const jobsData = await jobsRes.json()
+    jobs.value = jobsData.items || []
+  } catch {
+    // keep empty
+  }
+
+  try {
+    const [flRes, emRes] = await Promise.all([
+      fetch(`${API_BASE}/admin/freelancers`),
+      fetch(`${API_BASE}/admin/employers`)
+    ])
+    const flData = await flRes.json()
+    const emData = await emRes.json()
+    const pendingFl = (flData.items || []).filter(f => f.fl_verify_status === 'PENDING').map(f => ({
+      id: f.fl_id, name: f.fl_name || f.line_user_id, type: 'Freelancer', status: f.fl_verify_status, submitted: formatDate(f.fl_created_at)
+    }))
+    const pendingEm = (emData.items || []).filter(e => e.em_verify_status === 'PENDING').map(e => ({
+      id: e.em_id, name: e.em_name || e.em_username, type: 'Employer', status: e.em_verify_status, submitted: formatDate(e.em_created_at)
+    }))
+    verifications.value = [...pendingFl, ...pendingEm]
+  } catch {
+    // keep empty
+  }
+})
 </script>
 
 <style scoped>

@@ -19,6 +19,15 @@
       </button>
     </div>
 
+    <div class="filter-row">
+      <select v-model="verifyFilter" class="filter-select">
+        <option value="All">All Status</option>
+        <option value="VERIFIED">Verified</option>
+        <option value="PENDING">Pending</option>
+        <option value="NOT_VERIFIED">Not Verified</option>
+      </select>
+    </div>
+
     <div class="table-container">
       <table class="table">
         <thead>
@@ -59,6 +68,61 @@ import { ref } from 'vue'
 import { mockUsers } from '../data/mockData'
 
 const activeTab = ref('Freelancer')
+
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000'
+const employers = ref([])
+const freelancers = ref([])
+const verifyFilter = ref('All')
+
+function initialsFromName(name) {
+  if (!name) return '?'
+  const parts = name.trim().split(/\s+/).slice(0, 2)
+  return parts.map(p => p[0]?.toUpperCase() || '').join('')
+}
+
+async function loadEmployers() {
+  const res = await fetch(`${API_BASE}/admin/employers?limit=50&offset=0`)
+  const data = await res.json()
+  employers.value = (data.items || []).map(e => ({
+    id: e.em_id,
+    name: e.em_name || e.em_username || e.em_id,
+    initials: initialsFromName(e.em_name || e.em_username || ''),
+    verifyStatus: e.em_verify_status || 'UNKNOWN',
+    isActive: !!e.em_is_active,
+    rating: Number(e.em_rating_avg || 0),
+    imageUrl: e.em_profile_image_url || ''
+  }))
+}
+
+async function loadFreelancers() {
+  const res = await fetch(`${API_BASE}/admin/freelancers?limit=50&offset=0`)
+  const data = await res.json()
+  freelancers.value = (data.items || []).map(f => ({
+    id: f.fl_id,
+    name: f.fl_name || f.fl_id,
+    initials: initialsFromName(f.fl_name || ''),
+    verifyStatus: f.fl_verify_status || 'UNKNOWN',
+    isActive: !!f.fl_is_active,
+    rating: Number(f.fl_rating_avg || 0),
+    imageUrl: f.fl_profile_image_url || ''
+  }))
+}
+
+const users = computed(() => {
+  const list = activeTab.value === 'Employer' ? employers.value : freelancers.value
+  if (verifyFilter.value === 'All') return list
+  return list.filter(u => u.verifyStatus === verifyFilter.value)
+})
+
+onMounted(async () => {
+  await Promise.allSettled([loadEmployers(), loadFreelancers()])
+})
+
+watch(activeTab, async (tab) => {
+  // refresh only the active list
+  if (tab === 'Employer' && employers.value.length === 0) await loadEmployers()
+  if (tab === 'Freelancer' && freelancers.value.length === 0) await loadFreelancers()
+})
 </script>
 
 <style scoped>
@@ -141,23 +205,22 @@ const activeTab = ref('Freelancer')
   font-weight: 500;
 }
 
-.badge.active {
-  background: #e8f5e9;
-  color: #2e7d32;
-}
-
-.badge.banned {
+.badge.verified { background: #e8f5e9; color: #2e7d32; }
+.badge.pending { background: #fff3e0; color: #f57c00; }
+.badge.rejected, .badge.not_verified {
   background: #ffebee;
   color: #c62828;
+}.badge.unknown { background: #f5f5f5; color: #666; }
+
+.filter-row {
+  margin-bottom: 16px;
 }
 
-.action-link {
-  color: #0066cc;
-  cursor: pointer;
-  margin-right: 12px;
-}
-
-.action-link.delete {
-  color: #dc3545;
+.filter-select {
+  padding: 10px 14px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  min-width: 140px;
 }
 </style>

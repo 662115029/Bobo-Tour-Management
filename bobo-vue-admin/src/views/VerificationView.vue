@@ -25,9 +25,9 @@
     <div class="filter-row">
       <select v-model="statusFilter" class="filter-select full">
         <option value="All">All Status</option>
-        <option value="Pending">Pending</option>
-        <option value="Verified">Verified</option>
-        <option value="Rejected">Rejected</option>
+        <option value="VERIFIED">Verified</option>
+        <option value="PENDING">Pending</option>
+        <option value="NOT_VERIFIED">Not Verified</option>
       </select>
     </div>
 
@@ -45,7 +45,7 @@
           <tr v-for="v in filteredVerifications" :key="v.id">
             <td>{{ v.name }}</td>
             <td>
-              <span class="badge" :class="v.status.toLowerCase()">{{ v.status }}</span>
+              <span class="badge" :class="v.status?.toLowerCase()">{{ v.status }}</span>
             </td>
             <td>{{ v.submitted }}</td>
             <td><span class="action-link">View</span></td>
@@ -59,18 +59,52 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { mockVerifications } from '../data/mockData'
+import { ref, computed, onMounted } from 'vue'
 
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000'
 const activeTab = ref('Freelancer')
 const statusFilter = ref('All')
+const freelancers = ref([])
+const employers = ref([])
+
+const formatDate = (date) => {
+  if (!date) return '-'
+  return new Date(date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+}
 
 const filteredVerifications = computed(() => {
-  return mockVerifications.filter(v => {
-    const matchType = v.type === activeTab.value
+  const list = activeTab.value === 'Freelancer' ? freelancers.value : employers.value
+  return list.filter(v => {
     const matchStatus = statusFilter.value === 'All' || v.status === statusFilter.value
-    return matchType && matchStatus
+    return matchStatus
   })
+})
+
+onMounted(async () => {
+  try {
+    const [flRes, emRes] = await Promise.all([
+      fetch(`${API_BASE}/admin/freelancers`),
+      fetch(`${API_BASE}/admin/employers`)
+    ])
+    const flData = await flRes.json()
+    const emData = await emRes.json()
+    
+    freelancers.value = (flData.items || []).map(f => ({
+      id: f.fl_id,
+      name: f.fl_name || f.line_user_id,
+      status: f.fl_verify_status,
+      submitted: formatDate(f.fl_created_at)
+    }))
+    
+    employers.value = (emData.items || []).map(e => ({
+      id: e.em_id,
+      name: e.em_name || e.em_username,
+      status: e.em_verify_status,
+      submitted: formatDate(e.em_created_at)
+    }))
+  } catch (e) {
+    console.error('Failed to load verifications:', e)
+  }
 })
 </script>
 
@@ -171,7 +205,7 @@ const filteredVerifications = computed(() => {
   color: #2e7d32;
 }
 
-.badge.rejected {
+.badge.rejected, .badge.not_verified {
   background: #ffebee;
   color: #c62828;
 }

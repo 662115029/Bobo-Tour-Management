@@ -11,8 +11,12 @@
       />
       <select v-model="statusFilter" class="filter-select">
         <option value="All">All Status</option>
-        <option value="Active">Active</option>
-        <option value="Closed">Closed</option>
+        <option value="OPEN">Open</option>
+        <option value="MATCHING">Matching</option>
+        <option value="SELECTED">Selected</option>
+        <option value="IN_PROGRESS">In Progress</option>
+        <option value="COMPLETED">Completed</option>
+        <option value="CANCELLED">Cancelled</option>
       </select>
     </div>
 
@@ -28,12 +32,12 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="job in filteredJobs" :key="job.id">
-            <td>{{ job.title }}</td>
+          <tr v-for="job in filteredJobs" :key="job.job_id">
+            <td>{{ job.job_title }}</td>
             <td>{{ job.company }}</td>
-            <td>{{ job.date }}</td>
+            <td>{{ formatDate(job.job_created_at) }}</td>
             <td>
-              <span class="badge" :class="job.status.toLowerCase()">{{ job.status }}</span>
+              <span class="badge" :class="job.job_status?.toLowerCase()">{{ job.job_status }}</span>
             </td>
             <td>
               <span class="action-link">View</span>
@@ -47,18 +51,34 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { mockJobs } from '../data/mockData'
+import { ref, computed, onMounted } from 'vue'
 
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000'
 const search = ref('')
 const statusFilter = ref('All')
+const jobs = ref([])
+
+const formatDate = (date) => {
+  if (!date) return '-'
+  return new Date(date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+}
 
 const filteredJobs = computed(() => {
-  return mockJobs.filter(job => {
-    const matchSearch = job.title.toLowerCase().includes(search.value.toLowerCase())
-    const matchStatus = statusFilter.value === 'All' || job.status === statusFilter.value
+  return jobs.value.filter(job => {
+    const matchSearch = (job.job_title || '').toLowerCase().includes(search.value.toLowerCase())
+    const matchStatus = statusFilter.value === 'All' || job.job_status === statusFilter.value
     return matchSearch && matchStatus
   })
+})
+
+onMounted(async () => {
+  try {
+    const res = await fetch(`${API_BASE}/jobs`)
+    const data = await res.json()
+    jobs.value = data.items || []
+  } catch (e) {
+    console.error('Failed to load jobs:', e)
+  }
 })
 </script>
 
@@ -123,14 +143,29 @@ const filteredJobs = computed(() => {
   font-weight: 500;
 }
 
-.badge.active {
+.badge.open, .badge.matching {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.badge.selected {
   background: #e8f5e9;
   color: #2e7d32;
 }
 
-.badge.closed {
+.badge.in_progress {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
+.badge.completed {
   background: #f5f5f5;
   color: #666;
+}
+
+.badge.cancelled {
+  background: #ffebee;
+  color: #c62828;
 }
 
 .action-link {

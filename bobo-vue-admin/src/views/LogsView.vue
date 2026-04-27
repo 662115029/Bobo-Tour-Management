@@ -1,42 +1,25 @@
 <template>
   <div>
-    <div class="header">
-      <h1 class="title">Admin Logs</h1>
-      <span class="more-icon">...</span>
-    </div>
+    <h1 class="title">Admins</h1>
     
-    <div class="filter-row">
-      <div class="date-input">
-        <input type="text" value="04/20/2026" class="date-field" />
-        <span class="calendar-icon">📅</span>
-      </div>
-      <select v-model="actionFilter" class="filter-select">
-        <option value="All">All Actions</option>
-        <option value="VERIFY">VERIFY</option>
-        <option value="REJECT">REJECT</option>
-        <option value="BAN">BAN</option>
-        <option value="DELETE">DELETE</option>
-      </select>
-    </div>
-
     <div class="table-container">
       <table class="table">
         <thead>
           <tr>
-            <th>ADMIN</th>
-            <th>ACTION</th>
-            <th>TARGET</th>
-            <th>TIME</th>
+            <th>ID</th>
+            <th>NAME</th>
+            <th>STATUS</th>
+            <th>CREATED AT</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="log in filteredLogs" :key="log.id">
-            <td>{{ log.admin }}</td>
+          <tr v-for="admin in admins" :key="admin.admin_id">
+            <td>{{ admin.admin_id }}</td>
+            <td>{{ admin.name }}</td>
             <td>
-              <span class="action-badge" :class="log.action.toLowerCase()">{{ log.action }}</span>
+              <span class="badge" :class="admin.status">{{ admin.status }}</span>
             </td>
-            <td>{{ log.target }}</td>
-            <td>{{ log.time }}</td>
+            <td>{{ formatDate(admin.created_at) }}</td>
           </tr>
         </tbody>
       </table>
@@ -45,65 +28,35 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { mockLogs } from '../data/mockData'
+import { ref, onMounted } from 'vue'
 
-const actionFilter = ref('All')
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000'
+const admins = ref([])
 
-const filteredLogs = computed(() => {
-  if (actionFilter.value === 'All') return mockLogs
-  return mockLogs.filter(log => log.action === actionFilter.value)
+const formatDate = (date) => {
+  if (!date) return '-'
+  return new Date(date).toLocaleDateString('en-GB', { 
+    day: '2-digit', 
+    month: 'short', 
+    year: 'numeric'
+  })
+}
+
+onMounted(async () => {
+  try {
+    const res = await fetch(`${API_BASE}/admin/admins`)
+    const data = await res.json()
+    admins.value = data.items || []
+  } catch (e) {
+    console.error('Failed to load admins:', e)
+  }
 })
 </script>
 
 <style scoped>
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
 .title {
   font-size: 24px;
   margin-bottom: 24px;
-}
-
-.more-icon {
-  font-size: 24px;
-  cursor: pointer;
-}
-
-.filter-row {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-
-.date-input {
-  position: relative;
-}
-
-.date-field {
-  padding: 10px 14px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
-  width: 180px;
-}
-
-.calendar-icon {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.filter-select {
-  padding: 10px 14px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
-  min-width: 140px;
 }
 
 .table-container {
@@ -131,7 +84,7 @@ const filteredLogs = computed(() => {
   background: #f9f9f9;
 }
 
-.action-badge {
+.badge {
   display: inline-block;
   padding: 4px 10px;
   border-radius: 12px;
@@ -139,22 +92,12 @@ const filteredLogs = computed(() => {
   font-weight: 500;
 }
 
-.action-badge.verify {
+.badge.active {
   background: #e8f5e9;
   color: #2e7d32;
 }
 
-.action-badge.reject {
-  background: #ffebee;
-  color: #c62828;
-}
-
-.action-badge.ban {
-  background: #fff3e0;
-  color: #f57c00;
-}
-
-.action-badge.delete {
+.badge.inactive {
   background: #ffebee;
   color: #c62828;
 }
