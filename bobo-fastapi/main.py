@@ -16,7 +16,6 @@ load_dotenv()
 
 app = FastAPI()
 
-# Add this block
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -65,17 +64,8 @@ def handle_message(event):
                     "type": "box",
                     "layout": "vertical",
                     "contents": [
-                        {
-                            "type": "text",
-                            "text": "Bobo Tour Management",
-                            "weight": "bold",
-                            "size": "xl"
-                        },
-                        {
-                            "type": "text",
-                            "text": "คลิกเพื่อดูตำแหน่งงานที่เปิดรับ",
-                            "wrap": True
-                        }
+                        {"type": "text", "text": "Bobo Tour Management", "weight": "bold", "size": "xl"},
+                        {"type": "text", "text": "คลิกเพื่อดูตำแหน่งงานที่เปิดรับ", "wrap": True}
                     ]
                 },
                 "footer": {
@@ -97,10 +87,11 @@ def handle_message(event):
         )
         line_bot_api.reply_message(event.reply_token, flex_message)
     else:
-        line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage(text=event.message.text)
-        )
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=event.message.text))
+
+# -----------------------
+# LINE NOTIFY ENDPOINTS
+# -----------------------
 
 @app.post("/test/notify-match")
 def test_notify_match(request: NotifyRequest):
@@ -133,8 +124,7 @@ def accept_job(job_id: int, request: JobResponseRequest):
         cursor.execute(
             """
             SELECT j.job_id, j.job_title, em.em_name, j.job_start_date, j.job_price
-            FROM jobs j
-            JOIN employers em ON j.em_id = em.em_id
+            FROM jobs j JOIN employers em ON j.em_id = em.em_id
             WHERE j.job_id = %s
             """,
             (job_id,)
@@ -155,8 +145,7 @@ def decline_job(job_id: int, request: JobResponseRequest):
         cursor.execute(
             """
             SELECT j.job_id, j.job_title, em.em_name, j.job_start_date, j.job_price
-            FROM jobs j
-            JOIN employers em ON j.em_id = em.em_id
+            FROM jobs j JOIN employers em ON j.em_id = em.em_id
             WHERE j.job_id = %s
             """,
             (job_id,)
@@ -169,35 +158,10 @@ def decline_job(job_id: int, request: JobResponseRequest):
     except Exception as e:
         return {"error": str(e)}
 
-@app.get("/jobs")
-def get_jobs(limit: int = 50, offset: int = 0):
-    try:
-        conn = get_connection()
-        cursor = get_cursor(conn)
-        cursor.execute(
-            """
-            SELECT
-              j.job_id,
-              j.job_title,
-              em.em_name AS company,
-              j.job_created_at,
-              j.job_status
-            FROM jobs j
-            JOIN employers em ON j.em_id = em.em_id
-            ORDER BY j.job_created_at DESC
-            LIMIT %s OFFSET %s
-            """,
-            (limit, offset),
-        )
-        rows = cursor.fetchall()
-        conn.close()
-        return {"items": rows, "limit": limit, "offset": offset}
-    except Exception as e:
-        return {"error": str(e), "items": []}
+# -----------------------
+# ADMINS (2 tables)
+# -----------------------
 
-# -----------------------
-# ADMIN ENDPOINTS
-# -----------------------
 @app.get("/admin/db/ping")
 def admin_db_ping():
     try:
@@ -215,24 +179,17 @@ def admin_stats():
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
-
         cursor.execute("SELECT COUNT(*) AS c FROM jobs")
         totalJobs = int(cursor.fetchone()["c"])
-
         cursor.execute("SELECT COUNT(*) AS c FROM employers")
         employers = int(cursor.fetchone()["c"])
-
         cursor.execute("SELECT COUNT(*) AS c FROM freelancers")
         freelancers = int(cursor.fetchone()["c"])
-
         cursor.execute("SELECT COUNT(*) AS c FROM employers WHERE em_verify_status = 'PENDING'")
         pending_employers = int(cursor.fetchone()["c"])
-
         cursor.execute("SELECT COUNT(*) AS c FROM freelancers WHERE fl_verify_status = 'PENDING'")
         pending_freelancers = int(cursor.fetchone()["c"])
-
         conn.close()
-
         return {
             "totalJobs": totalJobs,
             "employers": employers,
@@ -242,82 +199,12 @@ def admin_stats():
     except Exception as e:
         return {"error": str(e)}
 
-@app.get("/admin/employers")
-def admin_employers(limit: int = 50, offset: int = 0):
-    try:
-        conn = get_connection()
-        cursor = get_cursor(conn)
-        cursor.execute(
-            """
-            SELECT
-              em_id,
-              em_username,
-              em_name,
-              em_verify_status,
-              em_is_active,
-              em_rating_avg,
-              em_profile_image_url,
-              em_created_at,
-              em_updated_at
-            FROM employers
-            ORDER BY em_updated_at DESC
-            LIMIT %s OFFSET %s
-            """,
-            (limit, offset),
-        )
-        rows = cursor.fetchall()
-        conn.close()
-        return {"items": rows, "limit": limit, "offset": offset}
-    except Exception as e:
-        return {"error": str(e), "items": []}
-
-@app.get("/admin/freelancers")
-def admin_freelancers(limit: int = 50, offset: int = 0):
-    try:
-        conn = get_connection()
-        cursor = get_cursor(conn)
-        cursor.execute(
-            """
-            SELECT
-              fl_id,
-              line_user_id,
-              fl_name,
-              fl_verify_status,
-              fl_is_active,
-              fl_rating_avg,
-              fl_profile_image_url,
-              fl_created_at,
-              fl_updated_at
-            FROM freelancers
-            ORDER BY fl_updated_at DESC
-            LIMIT %s OFFSET %s
-            """,
-            (limit, offset),
-        )
-        rows = cursor.fetchall()
-        conn.close()
-        return {"items": rows, "limit": limit, "offset": offset}
-    except Exception as e:
-        return {"error": str(e), "items": []}
-
 @app.get("/admin/admins")
 def admin_admins(limit: int = 50, offset: int = 0):
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
-        cursor.execute(
-            """
-            SELECT
-              admin_id,
-              name,
-              status,
-              created_at
-            FROM admins
-            ORDER BY created_at DESC
-            LIMIT %s OFFSET %s
-            """,
-            (limit, offset),
-        )
+        cursor.execute("SELECT * FROM admins ORDER BY created_at DESC LIMIT %s OFFSET %s", (limit, offset))
         rows = cursor.fetchall()
         conn.close()
         return {"items": rows, "limit": limit, "offset": offset}
@@ -329,19 +216,286 @@ def admin_logs(limit: int = 50, offset: int = 0):
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
+        cursor.execute("SELECT * FROM admin_logs ORDER BY created_at DESC LIMIT %s OFFSET %s", (limit, offset))
+        rows = cursor.fetchall()
+        conn.close()
+        return {"items": rows, "limit": limit, "offset": offset}
+    except Exception as e:
+        return {"error": str(e), "items": []}
+
+# -----------------------
+# EMPLOYERS (3 tables)
+# -----------------------
+
+@app.get("/employers")
+@app.get("/admin/employers")
+def get_employers(limit: int = 50, offset: int = 0):
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT * FROM employers ORDER BY em_updated_at DESC LIMIT %s OFFSET %s", (limit, offset))
+        rows = cursor.fetchall()
+        conn.close()
+        return {"items": rows, "limit": limit, "offset": offset}
+    except Exception as e:
+        return {"error": str(e), "items": []}
+
+@app.get("/em-documents")
+def get_em_documents(limit: int = 50, offset: int = 0):
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT * FROM em_documents ORDER BY em_uploaded_at DESC LIMIT %s OFFSET %s", (limit, offset))
+        rows = cursor.fetchall()
+        conn.close()
+        return {"items": rows, "limit": limit, "offset": offset}
+    except Exception as e:
+        return {"error": str(e), "items": []}
+
+@app.get("/em-verification")
+def get_em_verification(limit: int = 50, offset: int = 0):
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT * FROM em_verification ORDER BY em_submitted_at DESC LIMIT %s OFFSET %s", (limit, offset))
+        rows = cursor.fetchall()
+        conn.close()
+        return {"items": rows, "limit": limit, "offset": offset}
+    except Exception as e:
+        return {"error": str(e), "items": []}
+
+# -----------------------
+# FREELANCERS (8 tables)
+# -----------------------
+
+@app.get("/freelancers")
+@app.get("/admin/freelancers")
+def get_freelancers(limit: int = 50, offset: int = 0):
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT * FROM freelancers ORDER BY fl_updated_at DESC LIMIT %s OFFSET %s", (limit, offset))
+        rows = cursor.fetchall()
+        conn.close()
+        return {"items": rows, "limit": limit, "offset": offset}
+    except Exception as e:
+        return {"error": str(e), "items": []}
+
+@app.get("/fl-vehicle")
+def get_fl_vehicle(limit: int = 50, offset: int = 0):
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT * FROM fl_vehicle LIMIT %s OFFSET %s", (limit, offset))
+        rows = cursor.fetchall()
+        conn.close()
+        return {"items": rows, "limit": limit, "offset": offset}
+    except Exception as e:
+        return {"error": str(e), "items": []}
+
+@app.get("/fl-vehicle-images")
+def get_fl_vehicle_images(limit: int = 50, offset: int = 0):
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT * FROM fl_vehicle_images LIMIT %s OFFSET %s", (limit, offset))
+        rows = cursor.fetchall()
+        conn.close()
+        return {"items": rows, "limit": limit, "offset": offset}
+    except Exception as e:
+        return {"error": str(e), "items": []}
+
+@app.get("/fl-languages")
+def get_fl_languages(limit: int = 50, offset: int = 0):
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT * FROM fl_languages LIMIT %s OFFSET %s", (limit, offset))
+        rows = cursor.fetchall()
+        conn.close()
+        return {"items": rows, "limit": limit, "offset": offset}
+    except Exception as e:
+        return {"error": str(e), "items": []}
+
+@app.get("/fl-pickup-areas")
+def get_fl_pickup_areas(limit: int = 50, offset: int = 0):
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT * FROM fl_pickup_areas LIMIT %s OFFSET %s", (limit, offset))
+        rows = cursor.fetchall()
+        conn.close()
+        return {"items": rows, "limit": limit, "offset": offset}
+    except Exception as e:
+        return {"error": str(e), "items": []}
+
+@app.get("/fl-availability")
+def get_fl_availability(limit: int = 50, offset: int = 0):
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT * FROM fl_availability LIMIT %s OFFSET %s", (limit, offset))
+        rows = cursor.fetchall()
+        conn.close()
+        return {"items": rows, "limit": limit, "offset": offset}
+    except Exception as e:
+        return {"error": str(e), "items": []}
+
+@app.get("/fl-documents")
+def get_fl_documents(limit: int = 50, offset: int = 0):
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT * FROM fl_documents ORDER BY fl_uploaded_at DESC LIMIT %s OFFSET %s", (limit, offset))
+        rows = cursor.fetchall()
+        conn.close()
+        return {"items": rows, "limit": limit, "offset": offset}
+    except Exception as e:
+        return {"error": str(e), "items": []}
+
+@app.get("/fl-verification")
+def get_fl_verification(limit: int = 50, offset: int = 0):
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT * FROM fl_verification ORDER BY fl_submitted_at DESC LIMIT %s OFFSET %s", (limit, offset))
+        rows = cursor.fetchall()
+        conn.close()
+        return {"items": rows, "limit": limit, "offset": offset}
+    except Exception as e:
+        return {"error": str(e), "items": []}
+
+# -----------------------
+# JOBS (8 tables)
+# -----------------------
+
+@app.get("/jobs")
+def get_jobs(limit: int = 50, offset: int = 0):
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
         cursor.execute(
             """
-            SELECT
-              log_id,
-              admin_id,
-              action,
-              created_at
-            FROM admin_logs
-            ORDER BY created_at DESC
+            SELECT j.*, em.em_name AS company
+            FROM jobs j
+            JOIN employers em ON j.em_id = em.em_id
+            ORDER BY j.job_created_at DESC
             LIMIT %s OFFSET %s
             """,
             (limit, offset),
         )
+        rows = cursor.fetchall()
+        conn.close()
+        return {"items": rows, "limit": limit, "offset": offset}
+    except Exception as e:
+        return {"error": str(e), "items": []}
+
+@app.get("/job-required-languages")
+def get_job_required_languages(limit: int = 50, offset: int = 0):
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT * FROM job_required_languages LIMIT %s OFFSET %s", (limit, offset))
+        rows = cursor.fetchall()
+        conn.close()
+        return {"items": rows, "limit": limit, "offset": offset}
+    except Exception as e:
+        return {"error": str(e), "items": []}
+
+@app.get("/job-pickups")
+def get_job_pickups(limit: int = 50, offset: int = 0):
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT * FROM job_pickups ORDER BY job_id, sequence LIMIT %s OFFSET %s", (limit, offset))
+        rows = cursor.fetchall()
+        conn.close()
+        return {"items": rows, "limit": limit, "offset": offset}
+    except Exception as e:
+        return {"error": str(e), "items": []}
+
+@app.get("/job-customers")
+def get_job_customers(limit: int = 50, offset: int = 0):
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT * FROM job_customers LIMIT %s OFFSET %s", (limit, offset))
+        rows = cursor.fetchall()
+        conn.close()
+        return {"items": rows, "limit": limit, "offset": offset}
+    except Exception as e:
+        return {"error": str(e), "items": []}
+
+@app.get("/job-customer-pickups")
+def get_job_customer_pickups(limit: int = 50, offset: int = 0):
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT * FROM job_customer_pickups LIMIT %s OFFSET %s", (limit, offset))
+        rows = cursor.fetchall()
+        conn.close()
+        return {"items": rows, "limit": limit, "offset": offset}
+    except Exception as e:
+        return {"error": str(e), "items": []}
+
+@app.get("/job-itineraries")
+def get_job_itineraries(limit: int = 50, offset: int = 0):
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT * FROM job_itineraries LIMIT %s OFFSET %s", (limit, offset))
+        rows = cursor.fetchall()
+        conn.close()
+        return {"items": rows, "limit": limit, "offset": offset}
+    except Exception as e:
+        return {"error": str(e), "items": []}
+
+@app.get("/job-applications")
+def get_job_applications(limit: int = 50, offset: int = 0):
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT * FROM job_applications ORDER BY applied_at DESC LIMIT %s OFFSET %s", (limit, offset))
+        rows = cursor.fetchall()
+        conn.close()
+        return {"items": rows, "limit": limit, "offset": offset}
+    except Exception as e:
+        return {"error": str(e), "items": []}
+
+@app.get("/job-payments")
+def get_job_payments(limit: int = 50, offset: int = 0):
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT * FROM job_payments LIMIT %s OFFSET %s", (limit, offset))
+        rows = cursor.fetchall()
+        conn.close()
+        return {"items": rows, "limit": limit, "offset": offset}
+    except Exception as e:
+        return {"error": str(e), "items": []}
+
+# -----------------------
+# REVIEWS (2 tables)
+# -----------------------
+
+@app.get("/fl-reviews")
+def get_fl_reviews(limit: int = 50, offset: int = 0):
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT * FROM fl_reviews ORDER BY reviewed_at DESC LIMIT %s OFFSET %s", (limit, offset))
+        rows = cursor.fetchall()
+        conn.close()
+        return {"items": rows, "limit": limit, "offset": offset}
+    except Exception as e:
+        return {"error": str(e), "items": []}
+
+@app.get("/em-reviews")
+def get_em_reviews(limit: int = 50, offset: int = 0):
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT * FROM em_reviews ORDER BY reviewed_at DESC LIMIT %s OFFSET %s", (limit, offset))
         rows = cursor.fetchall()
         conn.close()
         return {"items": rows, "limit": limit, "offset": offset}
