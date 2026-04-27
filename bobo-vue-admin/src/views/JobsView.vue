@@ -51,25 +51,42 @@
               <span class="badge" :class="job.job_status?.toLowerCase()">{{ job.job_status }}</span>
             </td>
             <td>
-              <span class="action-link">View</span>
-              <span class="action-link delete">Delete</span>
+              <span class="action-link" @click="viewJob(job.job_id)">View</span>
+              <span class="action-link delete" @click="deleteJob(job.job_id)">Delete</span>
             </td>
             <td class="text-muted">{{ formatDateTime(job.job_updated_at) }}</td>
           </tr>
         </tbody>
       </table>
     </div>
+
+    <!-- Delete Confirm Modal -->
+    <div v-if="showDeleteModal" class="modal-overlay" @click.self="showDeleteModal = false">
+      <div class="modal">
+        <h3>Confirm Delete</h3>
+        <p>Are you sure you want to delete <strong>"{{ deleteTargetTitle }}"</strong>? This action cannot be undone.</p>
+        <div class="modal-actions">
+          <button class="btn-cancel" @click="showDeleteModal = false">Cancel</button>
+          <button class="btn-delete" @click="confirmDelete">Delete</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { API_BASE } from '../data/api'
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000'
+const router = useRouter()
 const search = ref('')
 const statusFilter = ref('All')
 const sortOrder = ref('newest')
 const jobs = ref([])
+const showDeleteModal = ref(false)
+const deleteTargetId = ref(null)
+const deleteTargetTitle = ref('')
 
 const formatDate = (date) => {
   if (!date) return '-'
@@ -87,15 +104,35 @@ const filteredJobs = computed(() => {
     const matchStatus = statusFilter.value === 'All' || job.job_status === statusFilter.value
     return matchSearch && matchStatus
   })
-
   result = [...result].sort((a, b) => {
     const dateA = new Date(a.job_created_at)
     const dateB = new Date(b.job_created_at)
     return sortOrder.value === 'newest' ? dateB - dateA : dateA - dateB
   })
-
   return result
 })
+
+const viewJob = (id) => {
+  router.push({ name: 'JobDetail', params: { id } })
+}
+
+const deleteJob = (id) => {
+  deleteTargetId.value = id
+  deleteTargetTitle.value = jobs.value.find(j => j.job_id === id)?.job_title || id
+  showDeleteModal.value = true
+}
+
+const confirmDelete = async () => {
+  try {
+    await fetch(`${API_BASE}/jobs/${deleteTargetId.value}`, { method: 'DELETE' })
+    jobs.value = jobs.value.filter(j => j.job_id !== deleteTargetId.value)
+  } catch (e) {
+    console.error('Failed to delete job:', e)
+  } finally {
+    showDeleteModal.value = false
+    deleteTargetId.value = null
+  }
+}
 
 onMounted(async () => {
   try {
@@ -213,5 +250,56 @@ onMounted(async () => {
 .text-muted {
   color: #999;
   font-size: 13px;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal {
+  background: white;
+  border-radius: 10px;
+  padding: 28px;
+  width: 360px;
+}
+
+.modal h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.modal p {
+  color: #555;
+  margin: 0 0 24px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn-cancel {
+  padding: 8px 18px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+}
+
+.btn-delete {
+  padding: 8px 18px;
+  border: none;
+  border-radius: 6px;
+  background: #dc3545;
+  color: white;
+  cursor: pointer;
 }
 </style>

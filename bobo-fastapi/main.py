@@ -158,6 +158,68 @@ def decline_job(job_id: int, request: JobResponseRequest):
     except Exception as e:
         return {"error": str(e)}
 
+
+# -----------------------
+# JOBS DELETE
+# -----------------------
+
+@app.delete("/jobs/{job_id}")
+def delete_job(job_id: str):
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+
+        # Check job exists
+        cursor.execute("SELECT job_id FROM jobs WHERE job_id = %s", (job_id,))
+        job = cursor.fetchone()
+        if not job:
+            conn.close()
+            raise HTTPException(status_code=404, detail="Job not found")
+
+        # 1. Delete job_customer_pickups (FK -> job_customers + job_pickups)
+        cursor.execute("""
+            DELETE jcp FROM job_customer_pickups jcp
+            JOIN job_customers jc ON jcp.job_customer_id = jc.job_customer_id
+            WHERE jc.job_id = %s
+        """, (job_id,))
+
+        # 2. Delete job_customers
+        cursor.execute("DELETE FROM job_customers WHERE job_id = %s", (job_id,))
+
+        # 3. Delete job_pickups
+        cursor.execute("DELETE FROM job_pickups WHERE job_id = %s", (job_id,))
+
+        # 4. Delete job_required_languages
+        cursor.execute("DELETE FROM job_required_languages WHERE job_id = %s", (job_id,))
+
+        # 5. Delete job_itineraries
+        cursor.execute("DELETE FROM job_itineraries WHERE job_id = %s", (job_id,))
+
+        # 6. Delete job_applications
+        cursor.execute("DELETE FROM job_applications WHERE job_id = %s", (job_id,))
+
+        # 7. Delete job_payments
+        cursor.execute("DELETE FROM job_payments WHERE job_id = %s", (job_id,))
+
+        # 8. Delete fl_reviews
+        cursor.execute("DELETE FROM fl_reviews WHERE job_id = %s", (job_id,))
+
+        # 9. Delete em_reviews
+        cursor.execute("DELETE FROM em_reviews WHERE job_id = %s", (job_id,))
+
+        # 10. Delete the job itself
+        cursor.execute("DELETE FROM jobs WHERE job_id = %s", (job_id,))
+
+        conn.commit()
+        conn.close()
+        return {"status": "deleted", "job_id": job_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        conn.rollback()
+        conn.close()
+        return {"error": str(e)}
+
 # -----------------------
 # ADMINS (2 tables)
 # -----------------------
