@@ -28,25 +28,29 @@
           <tr>
             <th>JOB TITLE</th>
             <th>COMPANY</th>
-            <th>DATE</th>
+            <th>JOB START</th>
+            <th>JOB END</th>
+            <th>PRICE</th>
             <th>STATUS</th>
-            <th>UPDATED</th>
+            <th>ACTION</th>
+            <th>LAST UPDATED</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="job in jobs.slice(0, 10)" :key="job.job_id">
             <td>{{ job.job_title }}</td>
             <td>{{ job.company }}</td>
-            <td>{{ formatDate(job.job_created_at) }}</td>
+            <td>{{ formatDate(job.job_start_date) }}</td>
+            <td>{{ formatDate(job.job_end_date) }}</td>
+            <td>{{ job.job_price ? '฿' + Number(job.job_price).toLocaleString() : '-' }}</td>
             <td>
               <span class="badge" :class="job.job_status?.toLowerCase()">{{ job.job_status }}</span>
             </td>
             <td>
-              <span class="update-info">
-                {{ isJobUpdated(job) ? '🔄 Latest Updated' : '✨ Latest Created' }}
-                {{ formatDate(getLatestDate(job)) }}
-              </span>
+              <span class="action-link" @click="viewJob(job.job_id)">View</span>
+              <span class="action-link delete" @click="deleteJob(job.job_id, job.job_title)">Delete</span>
             </td>
+            <td class="text-muted">{{ formatDateTime(job.job_updated_at) }}</td>
           </tr>
         </tbody>
       </table>
@@ -59,37 +63,78 @@
           <tr>
             <th>NAME</th>
             <th>TYPE</th>
-            <th>SUBMITTED</th>
             <th>STATUS</th>
-            <th>UPDATED</th>
+            <th>ACTION</th>
+            <th>SUBMITTED</th>
+            <th>LAST UPDATED</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="v in verifications.slice(0, 10)" :key="v.id">
             <td>{{ v.name }}</td>
             <td>{{ v.type }}</td>
-            <td>{{ v.submitted }}</td>
             <td>
               <span class="badge" :class="v.status.toLowerCase()">{{ v.status }}</span>
             </td>
             <td>
-              <span class="update-info">
-                {{ isVerificationUpdated(v) ? '🔄 Latest Updated' : '✨ Latest Created' }}
-                {{ formatDate(getLatestVerificationDate(v)) }}
-              </span>
+              <span class="action-link" @click="router.push('/verification')">View</span>
             </td>
+            <td class="text-muted">{{ formatDateTime(v.created_at) }}</td>
+            <td class="text-muted">{{ formatDateTime(v.updated_at) }}</td>
           </tr>
         </tbody>
       </table>
     </section>
+  <!-- Delete Modal -->
+  <div v-if="showDeleteModal" class="modal-overlay" @click.self="showDeleteModal = false">
+    <div class="modal">
+      <div class="modal-icon">🗑</div>
+      <h3>Delete Job</h3>
+      <p>Are you sure you want to delete<br><strong>"{{ deleteTargetTitle }}"</strong>?</p>
+      <p class="modal-warning">This action cannot be undone.</p>
+      <div class="modal-actions">
+        <button class="btn-cancel" @click="showDeleteModal = false">Cancel</button>
+        <button class="btn-confirm-delete" @click="confirmDelete">Delete</button>
+      </div>
+    </div>
+  </div>
   </div>
 </template>
 
 <script setup>
 
 import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000'
+const router = useRouter()
+const showDeleteModal = ref(false)
+const deleteTargetId = ref(null)
+const deleteTargetTitle = ref('')
+
+const viewJob = (id) => {
+  router.push({ name: 'JobDetail', params: { id } })
+}
+
+const deleteJob = (id, title) => {
+  deleteTargetId.value = id
+  deleteTargetTitle.value = title
+  showDeleteModal.value = true
+}
+
+const confirmDelete = async () => {
+  try {
+    await fetch(`${API_BASE}/jobs/${deleteTargetId.value}`, { method: 'DELETE' })
+    jobs.value = jobs.value.filter(j => j.job_id !== deleteTargetId.value)
+    stats.value.totalJobs = Math.max(0, stats.value.totalJobs - 1)
+  } catch (e) {
+    console.error('Failed to delete job:', e)
+  } finally {
+    showDeleteModal.value = false
+    deleteTargetId.value = null
+    deleteTargetTitle.value = ''
+  }
+}
 
 const dbConnected = ref(null)
 const dbError = ref('')
@@ -106,6 +151,11 @@ const stats = ref({
 const formatDate = (date) => {
   if (!date) return '-'
   return new Date(date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+const formatDateTime = (date) => {
+  if (!date) return '-'
+  return new Date(date).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
 const getLatestDate = (job) => {
@@ -294,9 +344,71 @@ section {
   color: #c62828;
 }
 
+.text-muted {
+  color: #999;
+  font-size: 13px;
+}
+
 .update-info {
   font-size: 12px;
   color: #555;
   font-weight: 500;
 }
+
+.action-link {
+  color: #0066cc;
+  cursor: pointer;
+  margin-right: 12px;
+  font-size: 13px;
+}
+
+.action-link.delete {
+  color: #dc3545;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal {
+  background: white;
+  border-radius: 12px;
+  padding: 32px;
+  width: 380px;
+  text-align: center;
+}
+
+.modal-icon { font-size: 36px; margin-bottom: 12px; }
+.modal h3 { font-size: 20px; margin: 0 0 12px; }
+.modal p { color: #555; margin: 0 0 8px; line-height: 1.5; }
+.modal-warning { font-size: 12px; color: #dc3545 !important; margin-bottom: 24px !important; }
+.modal-actions { display: flex; justify-content: center; gap: 12px; }
+
+.btn-cancel {
+  padding: 10px 24px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-confirm-delete {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 6px;
+  background: #dc3545;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-confirm-delete:hover { background: #b02a37; }
 </style>
