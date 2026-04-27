@@ -40,7 +40,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="user in mockUsers" :key="user.id">
+          <tr v-for="user in users" :key="user.id">
             <td>
               <div class="user-cell">
                 <span class="avatar">{{ user.initials }}</span>
@@ -48,13 +48,13 @@
               </div>
             </td>
             <td>
-              <span class="badge" :class="user.status.toLowerCase()">{{ user.status }}</span>
+              <span class="badge" :class="user.verifyStatus?.toLowerCase()">{{ user.verifyStatus }}</span>
             </td>
-            <td>{{ user.score.toFixed(1) }}</td>
-            <td>{{ user.jobs }}</td>
+            <td>{{ user.rating.toFixed(1) }}</td>
+            <td>{{ user.jobs || 0 }}</td>
             <td>
               <span class="action-link">View</span>
-              <span class="action-link delete">{{ user.status === 'Active' ? 'Ban' : 'Unban' }}</span>
+              <span class="action-link delete">{{ user.isActive ? 'Ban' : 'Unban' }}</span>
             </td>
           </tr>
         </tbody>
@@ -64,8 +64,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { mockUsers } from '../data/mockData'
+import { ref, computed, onMounted, watch } from 'vue'
 
 const activeTab = ref('Freelancer')
 

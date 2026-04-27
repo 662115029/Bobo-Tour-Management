@@ -9,6 +9,9 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 import bot
 
+# DB
+from app.db.connection import get_connection, get_cursor
+
 load_dotenv()
 
 app = FastAPI()
@@ -129,7 +132,7 @@ def decline_job(job_id: int, request: JobResponseRequest):
 def get_jobs(limit: int = 50, offset: int = 0):
     try:
         conn = get_connection()
-        cursor = conn.cursor()
+        cursor = get_cursor(conn)
         cursor.execute(
             """
             SELECT
@@ -158,7 +161,7 @@ def get_jobs(limit: int = 50, offset: int = 0):
 def admin_db_ping():
     try:
         conn = get_connection()
-        cursor = conn.cursor()
+        cursor = get_cursor(conn)
         cursor.execute("SELECT 1 AS ok")
         row = cursor.fetchone()
         conn.close()
@@ -170,7 +173,7 @@ def admin_db_ping():
 def admin_stats():
     try:
         conn = get_connection()
-        cursor = conn.cursor()
+        cursor = get_cursor(conn)
 
         cursor.execute("SELECT COUNT(*) AS c FROM jobs")
         totalJobs = int(cursor.fetchone()["c"])
@@ -202,7 +205,7 @@ def admin_stats():
 def admin_employers(limit: int = 50, offset: int = 0):
     try:
         conn = get_connection()
-        cursor = conn.cursor()
+        cursor = get_cursor(conn)
         cursor.execute(
             """
             SELECT
@@ -231,7 +234,7 @@ def admin_employers(limit: int = 50, offset: int = 0):
 def admin_freelancers(limit: int = 50, offset: int = 0):
     try:
         conn = get_connection()
-        cursor = conn.cursor()
+        cursor = get_cursor(conn)
         cursor.execute(
             """
             SELECT
@@ -260,7 +263,7 @@ def admin_freelancers(limit: int = 50, offset: int = 0):
 def admin_admins(limit: int = 50, offset: int = 0):
     try:
         conn = get_connection()
-        cursor = conn.cursor()
+        cursor = get_cursor(conn)
         cursor.execute(
             """
             SELECT
