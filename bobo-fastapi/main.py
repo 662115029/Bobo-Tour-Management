@@ -55,9 +55,9 @@ async def webhook(request: Request):
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    if event.message.text == "งาน":
+    if event.message.text.lower() == "jobs":
         flex_message = FlexSendMessage(
-            alt_text="ดูงานของเรา",
+            alt_text="View available jobs",
             contents={
                 "type": "bubble",
                 "body": {
@@ -65,7 +65,7 @@ def handle_message(event):
                     "layout": "vertical",
                     "contents": [
                         {"type": "text", "text": "Bobo Tour Management", "weight": "bold", "size": "xl"},
-                        {"type": "text", "text": "คลิกเพื่อดูตำแหน่งงานที่เปิดรับ", "wrap": True}
+                        {"type": "text", "text": "Click to view available job listings", "wrap": True}
                     ]
                 },
                 "footer": {
@@ -76,7 +76,7 @@ def handle_message(event):
                             "type": "button",
                             "action": {
                                 "type": "uri",
-                                "label": "ดูงาน",
+                                "label": "View Jobs",
                                 "uri": "https://662115029.github.io/Bobo-Tour-Management/"
                             },
                             "style": "primary"
@@ -518,6 +518,51 @@ def get_job_applications(limit: int = 50, offset: int = 0):
         conn = get_connection()
         cursor = get_cursor(conn)
         cursor.execute("SELECT * FROM job_applications ORDER BY applied_at DESC LIMIT %s OFFSET %s", (limit, offset))
+        rows = cursor.fetchall()
+        conn.close()
+        return {"items": rows, "limit": limit, "offset": offset}
+    except Exception as e:
+        return {"error": str(e), "items": []}
+
+@app.get("/job-passengers")
+def get_job_passengers(limit: int = 50, offset: int = 0):
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("""
+            SELECT job_passenger_id, job_customer_id, passenger_name
+            FROM job_passengers LIMIT %s OFFSET %s
+        """, (limit, offset))
+        rows = cursor.fetchall()
+        conn.close()
+        return {"items": rows, "limit": limit, "offset": offset}
+    except Exception as e:
+        return {"error": str(e), "items": []}
+
+@app.get("/job-inclusions")
+def get_job_inclusions(limit: int = 50, offset: int = 0):
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("""
+            SELECT job_inclusion_id, job_id, inclusion_type, description, sequence
+            FROM job_inclusions ORDER BY job_id, sequence LIMIT %s OFFSET %s
+        """, (limit, offset))
+        rows = cursor.fetchall()
+        conn.close()
+        return {"items": rows, "limit": limit, "offset": offset}
+    except Exception as e:
+        return {"error": str(e), "items": []}
+
+@app.get("/job-entrance-fees")
+def get_job_entrance_fees(limit: int = 50, offset: int = 0):
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("""
+            SELECT job_entrance_fee_id, job_id, place_name, thai_price, foreigner_price, note, sequence
+            FROM job_entrance_fees ORDER BY job_id, sequence LIMIT %s OFFSET %s
+        """, (limit, offset))
         rows = cursor.fetchall()
         conn.close()
         return {"items": rows, "limit": limit, "offset": offset}
