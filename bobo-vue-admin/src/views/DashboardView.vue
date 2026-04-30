@@ -70,8 +70,8 @@
         <thead>
           <tr>
             <th style="width:28%">NAME</th>
-            <th style="width:14%">TYPE</th>
-            <th style="width:14%">STATUS</th>
+            <th style="width:26%">TYPE</th>
+            <th style="width:10%">STATUS</th>
             <th style="width:12%">ACTION</th>
             <th style="width:16%">LAST UPDATED</th>
           </tr>
@@ -91,7 +91,7 @@
             </td>
             <td>
               <div class="action-btns">
-                <button class="btn-action view" @click="openVerifyModal(v)">View</button>
+                <button class="btn-action view" @click="goToVerifyFull(v)">View</button>
               </div>
             </td>
             <td class="text-muted">{{ formatDateTime(v.updated_at) }}</td>
@@ -352,6 +352,14 @@ const openVerifyModal = async (v) => {
     verifyDetail.value = allEmployers.value.find(e => e.em_id === v.id) || null
   }
   verifyLoading.value = false
+}
+
+const goToVerifyFull = (v) => {
+  if (v.type === 'Freelancer') {
+    router.push({ name: 'FreelancerDetail', params: { id: v.id } })
+  } else {
+    router.push({ name: 'EmployerDetail', params: { id: v.id } })
+  }
 }
 
 const goToVerifyDetail = () => {
