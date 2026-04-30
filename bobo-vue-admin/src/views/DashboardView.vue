@@ -91,7 +91,7 @@
             </td>
             <td>
               <div class="action-btns">
-                <button class="btn-action view" @click="goToVerifyFull(v)">View</button>
+                <button class="btn-action view" @click="openVerifyDocs(v)">View Docs</button>
               </div>
             </td>
             <td class="text-muted">{{ formatDateTime(v.updated_at) }}</td>
@@ -273,6 +273,38 @@
         </div>
       </div>
     </div>
+
+    <!-- Verification Documents Modal -->
+    <div v-if="selectedVerifyUser" class="modal-overlay" @click.self="selectedVerifyUser = null">
+      <div class="docs-modal">
+        <div class="modal-header">
+          <div>
+            <h3>{{ selectedVerifyUser.name }} - Documents</h3>
+          </div>
+          <button class="close-btn" @click="selectedVerifyUser = null">✕</button>
+        </div>
+
+        <div v-if="selectedVerifyDocs.length === 0" class="no-docs">No documents found.</div>
+
+        <div v-else class="doc-grid">
+          <div v-for="doc in selectedVerifyDocs" :key="doc.id" class="doc-card">
+            <div class="doc-title">{{ doc.type }}</div>
+            <div class="doc-image-container">
+              <a :href="doc.file_url" target="_blank" class="doc-image-link">
+                <div class="doc-image">📄</div>
+              </a>
+            </div>
+            <div class="doc-status">
+              <span class="doc-badge" :class="doc.status?.toLowerCase()">{{ doc.status }}</span>
+            </div>
+            <div class="doc-actions-vertical">
+              <button class="btn-approve-sm" :disabled="doc.status === 'APPROVED'" @click="reviewVerifyDoc(doc, 'APPROVED')">✅ Approve</button>
+              <button class="btn-reject-sm" :disabled="doc.status === 'REJECTED'" @click="reviewVerifyDoc(doc, 'REJECTED')">❌ Reject</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -288,6 +320,10 @@ const jobs = ref([])
 const verifications = ref([])
 const allEmployers = ref([])
 const allFreelancers = ref([])
+const flDocs = ref([])
+const emDocs = ref([])
+const selectedVerifyUser = ref(null)
+const selectedVerifyDocs = ref([])
 
 const showDeleteModal = ref(false)
 const deleteTargetId = ref(null)
@@ -372,6 +408,55 @@ const goToVerifyDetail = () => {
   verifyModal.value = null
 }
 
+const openVerifyDocs = (v) => {
+  selectedVerifyUser.value = v
+  if (v.type === 'Freelancer') {
+    selectedVerifyDocs.value = flDocs.value
+      .filter(d => d.fl_id === v.id && d.is_latest)
+      .map(d => ({
+        id: d.fl_doc_id,
+        type: d.fl_doc_type,
+        status: d.fl_doc_status,
+        file_url: d.file_url,
+        uploaded: formatDateTime(d.fl_uploaded_at),
+        reviewed: d.reviewed_at ? formatDateTime(d.reviewed_at) : null,
+        _type: 'fl'
+      }))
+  } else {
+    selectedVerifyDocs.value = emDocs.value
+      .filter(d => d.em_id === v.id && d.is_latest)
+      .map(d => ({
+        id: d.em_doc_id,
+        type: d.em_doc_type,
+        status: d.em_doc_status,
+        file_url: d.file_url,
+        uploaded: formatDateTime(d.em_uploaded_at),
+        reviewed: d.reviewed_at ? formatDateTime(d.reviewed_at) : null,
+        _type: 'em'
+      }))
+  }
+}
+
+const reviewVerifyDoc = async (doc, newStatus) => {
+  const endpoint = doc._type === 'fl'
+    ? `${API_BASE}/fl-documents/${doc.id}`
+    : `${API_BASE}/em-documents/${doc.id}`
+  try {
+    const res = await fetch(endpoint, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus, reviewed_by: 'ad_001' })
+    })
+    const data = await res.json()
+    if (data.status === 'updated') {
+      doc.status = newStatus
+      doc.reviewed = formatDateTime(new Date().toISOString())
+    }
+  } catch (e) {
+    console.error('Failed to review doc:', e)
+  }
+}
+
 onMounted(async () => {
   try {
     const pingRes = await fetch(`${API_BASE}/admin/db/ping`)
@@ -395,14 +480,20 @@ onMounted(async () => {
   } catch { }
 
   try {
-    const [flRes, emRes] = await Promise.all([
+    const [flRes, emRes, flDocRes, emDocRes] = await Promise.all([
       fetch(`${API_BASE}/freelancers?limit=500`),
-      fetch(`${API_BASE}/employers?limit=500`)
+      fetch(`${API_BASE}/employers?limit=500`),
+      fetch(`${API_BASE}/fl-documents?limit=500`),
+      fetch(`${API_BASE}/em-documents?limit=500`)
     ])
     const flData = await flRes.json()
     const emData = await emRes.json()
+    const flDocData = await flDocRes.json()
+    const emDocData = await emDocRes.json()
     allFreelancers.value = flData.items || []
     allEmployers.value = emData.items || []
+    flDocs.value = flDocData.items || []
+    emDocs.value = emDocData.items || []
 
     const pendingFl = allFreelancers.value.filter(f => f.fl_verify_status === 'PENDING').map(f => ({
       id: f.fl_id, name: f.fl_name || f.line_user_id, type: 'Freelancer',
@@ -567,4 +658,137 @@ section {
   background: #dc3545; color: white; cursor: pointer; font-size: 14px;
 }
 .btn-confirm-delete:hover { background: #b02a37; }
+
+.docs-modal {
+  background: white;
+  border-radius: 12px;
+  padding: 28px;
+  width: 1000px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.doc-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px;
+}
+
+.doc-card {
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.doc-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #222;
+  text-align: center;
+  width: 100%;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.doc-image-container {
+  width: 100%;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  border-radius: 6px;
+}
+
+.doc-image-link {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.doc-image {
+  font-size: 36px;
+  cursor: pointer;
+}
+
+.doc-status {
+  width: 100%;
+  text-align: center;
+}
+
+.doc-badge {
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.doc-badge.pending {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
+.doc-badge.approved {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.doc-badge.rejected {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.doc-actions-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.btn-approve-sm {
+  padding: 5px 8px;
+  border-radius: 5px;
+  border: none;
+  background: #e8f5e9;
+  color: #2e7d32;
+  font-size: 11px;
+  cursor: pointer;
+  font-weight: 500;
+  width: 100%;
+}
+
+.btn-approve-sm:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-reject-sm {
+  padding: 5px 8px;
+  border-radius: 5px;
+  border: none;
+  background: #ffebee;
+  color: #c62828;
+  font-size: 11px;
+  cursor: pointer;
+  font-weight: 500;
+  width: 100%;
+}
+
+.btn-reject-sm:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.no-docs {
+  color: #999;
+  text-align: center;
+  padding: 24px 0;
+}
 </style>
