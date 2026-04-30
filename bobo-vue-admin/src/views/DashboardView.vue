@@ -286,20 +286,19 @@
 
         <div v-if="selectedVerifyDocs.length === 0" class="no-docs">No documents found.</div>
 
-        <div v-else class="doc-grid">
-          <div v-for="doc in selectedVerifyDocs" :key="doc.id" class="doc-card">
-            <div class="doc-title">{{ doc.type }}</div>
-            <div class="doc-image-container">
-              <a :href="doc.file_url" target="_blank" class="doc-image-link">
-                <div class="doc-image">📄</div>
-              </a>
+        <div v-else class="doc-list">
+          <div v-for="doc in selectedVerifyDocs" :key="doc.id" class="doc-row">
+            <div class="doc-type-cell">{{ doc.type }}</div>
+            <div class="doc-file-cell">
+              <img :src="doc.file_url" class="doc-thumbnail" :alt="doc.type" />
             </div>
-            <div class="doc-status">
+            <div class="doc-status-cell">
               <span class="doc-badge" :class="doc.status?.toLowerCase()">{{ doc.status }}</span>
             </div>
-            <div class="doc-actions-vertical">
-              <button class="btn-approve-sm" :disabled="doc.status === 'APPROVED'" @click="reviewVerifyDoc(doc, 'APPROVED')">✅ Approve</button>
-              <button class="btn-reject-sm" :disabled="doc.status === 'REJECTED'" @click="reviewVerifyDoc(doc, 'REJECTED')">❌ Reject</button>
+            <div class="doc-uploaded-cell">{{ doc.uploaded }}</div>
+            <div class="doc-actions-cell">
+              <button class="btn-approve-row" :disabled="doc.status === 'APPROVED'" @click="reviewVerifyDoc(doc, 'APPROVED')">✅ Approve</button>
+              <button class="btn-reject-row" :disabled="doc.status === 'REJECTED'" @click="reviewVerifyDoc(doc, 'REJECTED')">❌ Reject</button>
             </div>
           </div>
         </div>
@@ -411,29 +410,39 @@ const goToVerifyDetail = () => {
 const openVerifyDocs = (v) => {
   selectedVerifyUser.value = v
   if (v.type === 'Freelancer') {
-    selectedVerifyDocs.value = flDocs.value
-      .filter(d => d.fl_id === v.id && d.is_latest)
-      .map(d => ({
-        id: d.fl_doc_id,
-        type: d.fl_doc_type,
-        status: d.fl_doc_status,
-        file_url: d.file_url,
-        uploaded: formatDateTime(d.fl_uploaded_at),
-        reviewed: d.reviewed_at ? formatDateTime(d.reviewed_at) : null,
-        _type: 'fl'
-      }))
+    const allDocs = flDocs.value.filter(d => d.fl_id === v.id)
+    const docsByType = {}
+    allDocs.forEach(d => {
+      if (!docsByType[d.fl_doc_type] || new Date(d.fl_uploaded_at) > new Date(docsByType[d.fl_doc_type].fl_uploaded_at)) {
+        docsByType[d.fl_doc_type] = d
+      }
+    })
+    selectedVerifyDocs.value = Object.values(docsByType).map(d => ({
+      id: d.fl_doc_id,
+      type: d.fl_doc_type,
+      status: d.fl_doc_status,
+      file_url: d.file_url,
+      uploaded: formatDateTime(d.fl_uploaded_at),
+      reviewed: d.reviewed_at ? formatDateTime(d.reviewed_at) : null,
+      _type: 'fl'
+    }))
   } else {
-    selectedVerifyDocs.value = emDocs.value
-      .filter(d => d.em_id === v.id && d.is_latest)
-      .map(d => ({
-        id: d.em_doc_id,
-        type: d.em_doc_type,
-        status: d.em_doc_status,
-        file_url: d.file_url,
-        uploaded: formatDateTime(d.em_uploaded_at),
-        reviewed: d.reviewed_at ? formatDateTime(d.reviewed_at) : null,
-        _type: 'em'
-      }))
+    const allDocs = emDocs.value.filter(d => d.em_id === v.id)
+    const docsByType = {}
+    allDocs.forEach(d => {
+      if (!docsByType[d.em_doc_type] || new Date(d.em_uploaded_at) > new Date(docsByType[d.em_doc_type].em_uploaded_at)) {
+        docsByType[d.em_doc_type] = d
+      }
+    })
+    selectedVerifyDocs.value = Object.values(docsByType).map(d => ({
+      id: d.em_doc_id,
+      type: d.em_doc_type,
+      status: d.em_doc_status,
+      file_url: d.file_url,
+      uploaded: formatDateTime(d.em_uploaded_at),
+      reviewed: d.reviewed_at ? formatDateTime(d.reviewed_at) : null,
+      _type: 'em'
+    }))
   }
 }
 
@@ -663,64 +672,107 @@ section {
   background: white;
   border-radius: 12px;
   padding: 28px;
-  width: 1000px;
+  width: 1200px;
   max-height: 80vh;
   overflow-y: auto;
 }
 
-.doc-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 20px;
-}
-
-.doc-card {
-  border: 1px solid #eee;
-  border-radius: 10px;
-  padding: 12px;
+.doc-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
+}
+
+.doc-row {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 14px;
+  display: grid;
+  grid-template-columns: 120px 150px 100px 150px 1fr;
+  gap: 16px;
   align-items: center;
 }
 
-.doc-title {
-  font-size: 12px;
+.doc-type-cell {
   font-weight: 600;
   color: #222;
-  text-align: center;
-  width: 100%;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #eee;
+  font-size: 14px;
 }
 
-.doc-image-container {
-  width: 100%;
-  height: 100px;
+.doc-file-cell {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f5f5f5;
-  border-radius: 6px;
 }
 
-.doc-image-link {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-}
-
-.doc-image {
-  font-size: 36px;
+.doc-thumbnail {
+  max-width: 120px;
+  max-height: 100px;
+  border-radius: 5px;
+  object-fit: cover;
   cursor: pointer;
+  transition: transform 0.2s;
 }
 
-.doc-status {
-  width: 100%;
+.doc-thumbnail:hover {
+  transform: scale(1.05);
+}
+
+.doc-status-cell {
   text-align: center;
+}
+
+.doc-uploaded-cell {
+  font-size: 12px;
+  color: #666;
+}
+
+.doc-actions-cell {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.btn-approve-row {
+  padding: 6px 12px;
+  border-radius: 5px;
+  border: none;
+  background: #e8f5e9;
+  color: #2e7d32;
+  font-size: 12px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-approve-row:hover:not(:disabled) {
+  background: #c8e6c9;
+}
+
+.btn-approve-row:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-reject-row {
+  padding: 6px 12px;
+  border-radius: 5px;
+  border: none;
+  background: #ffebee;
+  color: #c62828;
+  font-size: 12px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-reject-row:hover:not(:disabled) {
+  background: #ffcdd2;
+}
+
+.btn-reject-row:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .doc-badge {
@@ -743,47 +795,6 @@ section {
 .doc-badge.rejected {
   background: #ffebee;
   color: #c62828;
-}
-
-.doc-actions-vertical {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  width: 100%;
-}
-
-.btn-approve-sm {
-  padding: 5px 8px;
-  border-radius: 5px;
-  border: none;
-  background: #e8f5e9;
-  color: #2e7d32;
-  font-size: 11px;
-  cursor: pointer;
-  font-weight: 500;
-  width: 100%;
-}
-
-.btn-approve-sm:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.btn-reject-sm {
-  padding: 5px 8px;
-  border-radius: 5px;
-  border: none;
-  background: #ffebee;
-  color: #c62828;
-  font-size: 11px;
-  cursor: pointer;
-  font-weight: 500;
-  width: 100%;
-}
-
-.btn-reject-sm:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
 }
 
 .no-docs {
