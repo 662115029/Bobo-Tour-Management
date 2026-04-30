@@ -28,10 +28,6 @@
           <option value="PENDING">Pending</option>
           <option value="NOT_VERIFIED">Not Verified</option>
         </select>
-        <select v-model="sortOrder" class="filter-select">
-          <option value="newest">Newest First</option>
-          <option value="oldest">Oldest First</option>
-        </select>
       </div>
     </div>
 
@@ -39,36 +35,41 @@
       <table class="table">
         <thead>
           <tr>
-            <th>NAME</th>
-            <th>STATUS</th>
-            <th>SCORE</th>
-            <th>JOBS</th>
-            <th>ACTION</th>
-            <th>CREATED</th>
-            <th>LAST UPDATED</th>
+            <th style="width:28%">NAME</th>
+            <th style="width:16%">RATING</th>
+            <th style="width:10%">JOBS</th>
+            <th style="width:10%">STATUS</th>
+            <th style="width:12%">ACTION</th>
+            <th style="width:16%">LAST UPDATED</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="user in users" :key="user.id">
-            <td>
+            <td class="truncate-cell">
               <div class="user-cell">
                 <span class="avatar">{{ user.initials }}</span>
-                <span>{{ user.name }}</span>
+                <span class="clickable-title" @click="viewUser(user)" :title="user.name">
+                  {{ user.name }}
+                </span>
               </div>
             </td>
+            <td>⭐ {{ Number(user.rating || 0).toFixed(1) }}</td>
+            <td>{{ jobsDoneById[user.id] || 0 }}</td>
             <td>
               <span class="badge" :class="user.verifyStatus?.toLowerCase()">{{ user.verifyStatus }}</span>
             </td>
-            <td>{{ user.rating.toFixed(1) }}</td>
-            <td>{{ user.jobs || 0 }}</td>
             <td>
-              <span class="action-link" @click="viewUser(user)">View</span>
-              <span class="action-link" :class="user.isActive ? 'ban' : 'unban'" @click="openBanModal(user)">
-                {{ user.isActive ? 'Ban' : 'Unban' }}
-              </span>
+              <div class="action-btns">
+                <button class="btn-action view" @click="viewUser(user)">View</button>
+                <button class="btn-action" :class="user.isActive ? 'ban' : 'unban'" @click="openBanModal(user)">
+                  {{ user.isActive ? 'Ban' : 'Unban' }}
+                </button>
+              </div>
             </td>
-            <td class="text-muted">{{ formatDateTime(user.createdAt) }}</td>
             <td class="text-muted">{{ formatDateTime(user.updatedAt) }}</td>
+          </tr>
+          <tr v-if="users.length === 0">
+            <td colspan="6" class="empty">No users found.</td>
           </tr>
         </tbody>
       </table>
@@ -102,6 +103,8 @@ const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000'
 const router = useRouter()
 const showBanModal = ref(false)
 const banTarget = ref(null)
+const jobsDoneByFreelancer = ref({})
+const jobsDoneByEmployer = ref({})
 
 const viewUser = (user) => {
   if (activeTab.value === 'Freelancer') {
@@ -140,9 +143,9 @@ const confirmBan = async () => {
 }
 const employers = ref([])
 const freelancers = ref([])
+const jobs = ref([])
 const search = ref('')
 const verifyFilter = ref('All')
-const sortOrder = ref('newest')
 
 const formatDateTime = (date) => {
   if (!date) return '-'
@@ -187,6 +190,37 @@ async function loadFreelancers() {
   }))
 }
 
+async function loadJobs() {
+  try {
+    const res = await fetch(`${API_BASE}/jobs?limit=500`)
+    const data = await res.json()
+    jobs.value = data.items || []
+
+    const flMap = {}
+    const emMap = {}
+
+    for (const j of jobs.value) {
+      if (j?.job_status !== 'COMPLETED') continue
+      const flId = j.selected_fl_id
+      const emId = j.em_id
+      if (flId) flMap[flId] = (flMap[flId] || 0) + 1
+      if (emId) emMap[emId] = (emMap[emId] || 0) + 1
+    }
+
+    jobsDoneByFreelancer.value = flMap
+    jobsDoneByEmployer.value = emMap
+  } catch (e) {
+    console.error('Failed to load jobs:', e)
+    jobs.value = []
+    jobsDoneByFreelancer.value = {}
+    jobsDoneByEmployer.value = {}
+  }
+}
+
+const jobsDoneById = computed(() => (
+  activeTab.value === 'Employer' ? jobsDoneByEmployer.value : jobsDoneByFreelancer.value
+))
+
 const users = computed(() => {
   const list = activeTab.value === 'Employer' ? employers.value : freelancers.value
   let result = list.filter(u => {
@@ -197,12 +231,12 @@ const users = computed(() => {
   return [...result].sort((a, b) => {
     const dateA = new Date(a.createdAt || 0)
     const dateB = new Date(b.createdAt || 0)
-    return sortOrder.value === 'newest' ? dateB - dateA : dateA - dateB
+    return dateB - dateA
   })
 })
 
 onMounted(async () => {
-  await Promise.allSettled([loadEmployers(), loadFreelancers()])
+  await Promise.allSettled([loadEmployers(), loadFreelancers(), loadJobs()])
 })
 
 watch(activeTab, async (tab) => {
@@ -249,6 +283,7 @@ watch(activeTab, async (tab) => {
 .table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
 .table th,
@@ -269,6 +304,7 @@ watch(activeTab, async (tab) => {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
 }
 
 .avatar {
@@ -299,14 +335,34 @@ watch(activeTab, async (tab) => {
   color: #c62828;
 }.badge.unknown { background: #f5f5f5; color: #666; }
 
-.action-link {
-  color: #0066cc;
+.truncate-cell { max-width: 0; }
+
+.clickable-title {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   cursor: pointer;
-  margin-right: 12px;
-  font-size: 13px;
+  color: #0066cc;
+  font-size: 14px;
 }
-.action-link.ban { color: #dc3545; }
-.action-link.unban { color: #2e7d32; }
+.clickable-title:hover { text-decoration: underline; }
+
+.action-btns { display: flex; gap: 6px; }
+.btn-action {
+  padding: 4px 10px;
+  border-radius: 5px;
+  border: none;
+  font-size: 12px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.btn-action.view { background: #e3f2fd; color: #1976d2; }
+.btn-action.view:hover { background: #bbdefb; }
+.btn-action.ban { background: #ffebee; color: #c62828; }
+.btn-action.ban:hover { background: #ffcdd2; }
+.btn-action.unban { background: #e8f5e9; color: #2e7d32; }
+.btn-action.unban:hover { background: #c8e6c9; }
 
 /* Modal */
 .modal-overlay {
@@ -364,4 +420,6 @@ watch(activeTab, async (tab) => {
   font-size: 14px;
   min-width: 140px;
 }
+
+.empty { text-align: center; color: #999; padding: 32px; }
 </style>
