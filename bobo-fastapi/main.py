@@ -45,6 +45,7 @@ class DocReviewRequest(BaseModel):
 
 class BanRequest(BaseModel):
     is_active: bool
+    admin_id: str
 
 # =============================================================================
 # LINE WEBHOOK
@@ -242,19 +243,33 @@ def admin_admins(limit: int = 50, offset: int = 0):
         return {"error": str(e), "items": []}
 
 @app.get("/admin/logs")
-def admin_logs(limit: int = 50, offset: int = 0):
+def admin_logs(limit: int = 50, offset: int = 0,
+               action_type: str = None, target_type: str = None):
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
+        where = []
+        params = []
+        if action_type:
+            where.append("al.action_type = %s")
+            params.append(action_type)
+        if target_type:
+            where.append("al.target_type = %s")
+            params.append(target_type)
+        where_clause = ("WHERE " + " AND ".join(where)) if where else ""
         cursor.execute(
-            """
-            SELECT al.log_id, a.name AS admin_name, al.action, al.created_at
+            f"""
+            SELECT al.log_id, a.name AS admin_name,
+                   al.action_type, al.target_type,
+                   al.target_id, al.target_name, al.note,
+                   al.created_at
             FROM admin_logs al
             JOIN admins a ON al.admin_id = a.admin_id
+            {where_clause}
             ORDER BY al.created_at DESC
             LIMIT %s OFFSET %s
             """,
-            (limit, offset)
+            (*params, limit, offset)
         )
         rows = cursor.fetchall()
         conn.close()
@@ -949,6 +964,48 @@ def review_fl_document(doc_id: str, body: DocReviewRequest):
                 """,
                 (doc["fl_id"],)
             )
+        # Log the action
+        cursor.execute(
+            """
+            SELECT f.fl_name, fd.fl_doc_type
+            FROM fl_documents fd
+            JOIN freelancers f ON fd.fl_id = f.fl_id
+            WHERE fd.fl_doc_id = %s
+            """,
+            (doc_id,)
+        )
+        doc_info = cursor.fetchone()
+        if doc_info:
+            action = 'APPROVE_DOCUMENT' if body.status == 'APPROVED' else 'REJECT_DOCUMENT'
+            cursor.execute(
+                """
+                INSERT INTO admin_logs
+                    (admin_id, action_type, target_type, target_id, target_name, note)
+                VALUES (%s, %s, 'DOCUMENT', %s, %s, %s)
+                """,
+                (body.reviewed_by, action, doc_id,
+                 doc_info["fl_name"], doc_info["fl_doc_type"])
+            )
+            # If just verified, add VERIFY_FREELANCER log too
+            if body.status == "APPROVED":
+                cursor.execute(
+                    "SELECT COUNT(*) AS c FROM fl_documents WHERE fl_id = %s AND is_latest = 1 AND fl_doc_status != 'APPROVED'",
+                    (doc["fl_id"],)
+                )
+                if cursor.fetchone()["c"] == 0:
+                    cursor.execute(
+                        "SELECT fl_name FROM freelancers WHERE fl_id = %s",
+                        (doc["fl_id"],)
+                    )
+                    fl_info = cursor.fetchone()
+                    cursor.execute(
+                        """
+                        INSERT INTO admin_logs
+                            (admin_id, action_type, target_type, target_id, target_name, note)
+                        VALUES (%s, 'VERIFY_FREELANCER', 'FREELANCER', %s, %s, 'All 5 documents approved')
+                        """,
+                        (body.reviewed_by, doc["fl_id"], fl_info["fl_name"])
+                    )
         conn.commit()
         conn.close()
         return {"status": "updated", "doc_id": doc_id, "new_status": body.status}
@@ -1012,6 +1069,47 @@ def review_em_document(doc_id: str, body: DocReviewRequest):
                 """,
                 (doc["em_id"],)
             )
+        # Log the action
+        cursor.execute(
+            """
+            SELECT e.em_name, ed.em_doc_type
+            FROM em_documents ed
+            JOIN employers e ON ed.em_id = e.em_id
+            WHERE ed.em_doc_id = %s
+            """,
+            (doc_id,)
+        )
+        doc_info = cursor.fetchone()
+        if doc_info:
+            action = 'APPROVE_DOCUMENT' if body.status == 'APPROVED' else 'REJECT_DOCUMENT'
+            cursor.execute(
+                """
+                INSERT INTO admin_logs
+                    (admin_id, action_type, target_type, target_id, target_name, note)
+                VALUES (%s, %s, 'DOCUMENT', %s, %s, %s)
+                """,
+                (body.reviewed_by, action, doc_id,
+                 doc_info["em_name"], doc_info["em_doc_type"])
+            )
+            if body.status == "APPROVED":
+                cursor.execute(
+                    "SELECT COUNT(*) AS c FROM em_documents WHERE em_id = %s AND is_latest = 1 AND em_doc_status != 'APPROVED'",
+                    (doc["em_id"],)
+                )
+                if cursor.fetchone()["c"] == 0:
+                    cursor.execute(
+                        "SELECT em_name FROM employers WHERE em_id = %s",
+                        (doc["em_id"],)
+                    )
+                    em_info = cursor.fetchone()
+                    cursor.execute(
+                        """
+                        INSERT INTO admin_logs
+                            (admin_id, action_type, target_type, target_id, target_name, note)
+                        VALUES (%s, 'VERIFY_EMPLOYER', 'EMPLOYER', %s, %s, 'All 5 documents approved')
+                        """,
+                        (body.reviewed_by, doc["em_id"], em_info["em_name"])
+                    )
         conn.commit()
         conn.close()
         return {"status": "updated", "doc_id": doc_id, "new_status": body.status}
@@ -1039,6 +1137,18 @@ def ban_freelancer(fl_id: str, body: BanRequest):
             "UPDATE freelancers SET fl_is_active = %s WHERE fl_id = %s",
             (body.is_active, fl_id)
         )
+        # Log ban/unban
+        cursor.execute("SELECT fl_name FROM freelancers WHERE fl_id = %s", (fl_id,))
+        fl_info = cursor.fetchone()
+        action = 'UNBAN_USER' if body.is_active else 'BAN_USER'
+        cursor.execute(
+            """
+            INSERT INTO admin_logs
+                (admin_id, action_type, target_type, target_id, target_name, note)
+            VALUES (%s, %s, 'FREELANCER', %s, %s, NULL)
+            """,
+            (body.admin_id, action, fl_id, fl_info["fl_name"] if fl_info else fl_id)
+        )
         conn.commit()
         conn.close()
         return {"status": "updated", "fl_id": fl_id, "is_active": body.is_active}
@@ -1059,6 +1169,18 @@ def ban_employer(em_id: str, body: BanRequest):
         cursor.execute(
             "UPDATE employers SET em_is_active = %s WHERE em_id = %s",
             (body.is_active, em_id)
+        )
+        # Log ban/unban
+        cursor.execute("SELECT em_name FROM employers WHERE em_id = %s", (em_id,))
+        em_info = cursor.fetchone()
+        action = 'UNBAN_USER' if body.is_active else 'BAN_USER'
+        cursor.execute(
+            """
+            INSERT INTO admin_logs
+                (admin_id, action_type, target_type, target_id, target_name, note)
+            VALUES (%s, %s, 'EMPLOYER', %s, %s, NULL)
+            """,
+            (body.admin_id, action, em_id, em_info["em_name"] if em_info else em_id)
         )
         conn.commit()
         conn.close()
