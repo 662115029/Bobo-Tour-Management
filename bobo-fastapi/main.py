@@ -678,8 +678,84 @@ def get_jobs(limit: int = 50, offset: int = 0):
     except Exception as e:
         return {"error": str(e), "items": []}
 
-@app.get("/jobs/{job_id}")
-def get_job(job_id: str):
+@app.post("/jobs")
+def create_job(data: dict):
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        
+        job_id = data.get('job_id')
+        em_id = data.get('em_id')
+        job_title = data.get('job_title')
+        job_description = data.get('job_description')
+        job_start_date = data.get('job_start_date')
+        job_end_date = data.get('job_end_date')
+        job_required_vehicle_type = data.get('job_required_vehicle_type', 'VAN')
+        job_required_seat = data.get('job_required_seat', 9)
+        job_price = data.get('job_price', 0)
+        driver_name = data.get('driver_name')
+        driver_phone = data.get('driver_phone')
+        
+        cursor.execute("""
+            INSERT INTO jobs (job_id, em_id, job_title, job_description, job_start_date, job_end_date,
+                           job_required_vehicle_type, job_required_seat, job_price, driver_name, driver_phone)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (job_id, em_id, job_title, job_description, job_start_date, job_end_date,
+             job_required_vehicle_type, job_required_seat, job_price, driver_name, driver_phone))
+        
+        languages = data.get('job_required_languages', [])
+        for lang in languages:
+            cursor.execute("INSERT INTO job_required_languages (job_req_lg_id, job_id, language_name) VALUES (%s, %s, %s)",
+                          (f"LG{job_id[-6:]}", job_id, lang))
+        
+        itineraries = data.get('job_itineraries', [])
+        for idx, it in enumerate(itineraries):
+            if it.get('place_name'):
+                cursor.execute("""
+                    INSERT INTO job_itineraries (job_itinerary_id, job_id, place_name, start_time, end_time, note)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """, (f"IT{job_id[-6:]}{idx}", job_id, it.get('place_name'), it.get('start_time'), it.get('end_time'), it.get('note')))
+        
+        pickups = data.get('job_pickups', [])
+        for idx, p in enumerate(pickups):
+            if p.get('pickup_location'):
+                cursor.execute("""
+                    INSERT INTO job_pickups (job_pickup_id, job_id, hotel_name, pickup_location, pickup_time, sequence)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """, (f"PK{job_id[-6:]}{idx}", job_id, p.get('hotel_name'), p.get('pickup_location'), p.get('pickup_time'), idx + 1))
+        
+        customers = data.get('job_customers', [])
+        for idx, c in enumerate(customers):
+            if c.get('customer_name'):
+                cursor.execute("""
+                    INSERT INTO job_customers (job_customer_id, job_id, customer_name, pax_count, note)
+                    VALUES (%s, %s, %s, %s, %s)
+                """, (f"CUS{job_id[-6:]}{idx}", job_id, c.get('customer_name'), c.get('pax_count'), c.get('note')))
+        
+        inclusions = data.get('job_inclusions', [])
+        for idx, inc in enumerate(inclusions):
+            if inc.get('description'):
+                cursor.execute("""
+                    INSERT INTO job_inclusions (job_inclusion_id, job_id, inclusion_type, description, sequence)
+                    VALUES (%s, %s, %s, %s, %s)
+                """, (f"INC{job_id[-6:]}{idx}", job_id, inc.get('inclusion_type'), inc.get('description'), idx + 1))
+        
+        entrance_fees = data.get('job_entrance_fees', [])
+        for idx, fee in enumerate(entrance_fees):
+            if fee.get('place_name'):
+                cursor.execute("""
+                    INSERT INTO job_entrance_fees (job_entrance_fee_id, job_id, place_name, thai_price, foreigner_price, sequence)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """, (f"EF{job_id[-6:]}{idx}", job_id, fee.get('place_name'), fee.get('thai_price'), fee.get('foreigner_price'), idx + 1))
+        
+        conn.commit()
+        conn.close()
+        return {"success": True, "job_id": job_id}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/job-required-languages")
+def get_job_required_languages(limit: int = 50, offset: int = 0):
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
