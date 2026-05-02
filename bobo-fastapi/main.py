@@ -48,6 +48,62 @@ class BanRequest(BaseModel):
     admin_id: str
 
 # =============================================================================
+# STORAGE / IMAGE UPLOAD
+# =============================================================================
+from fastapi import UploadFile, File
+from app.db.storage_service import upload_image_to_supabase
+
+ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp"}
+
+@app.post("/upload/image")
+async def upload_image(file: UploadFile = File(...)):
+    if file.content_type not in ALLOWED_TYPES:
+        raise HTTPException(status_code=400, detail="Invalid file type. Only JPEG, PNG, and WebP allowed.")
+    try:
+        url = await upload_image_to_supabase(file)
+        return {"url": url}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/fl-vehicle/{vehicle_id}/images")
+async def upload_vehicle_image(vehicle_id: str, file: UploadFile = File(...)):
+    if file.content_type not in ALLOWED_TYPES:
+        raise HTTPException(status_code=400, detail="Invalid file type. Only JPEG, PNG, and WebP allowed.")
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+
+        # Check vehicle exists
+        cursor.execute("SELECT fl_vehicle_id FROM fl_vehicle WHERE fl_vehicle_id = %s", (vehicle_id,))
+        if not cursor.fetchone():
+            conn.close()
+            raise HTTPException(status_code=404, detail="Vehicle not found")
+
+        # Upload to Supabase
+        image_url = await upload_image_to_supabase(file)
+
+        # Store URL in MySQL
+        cursor.execute(
+            """
+            INSERT INTO fl_vehicle_images (fl_vehicle_id, fl_vehicle_image_url)
+            VALUES (%s, %s)
+            """,
+            (vehicle_id, image_url)
+        )
+        conn.commit()
+        new_id = cursor.lastrowid
+        conn.close()
+
+        return {
+            "fl_vehicle_image_id": new_id,
+            "fl_vehicle_id": vehicle_id,
+            "fl_vehicle_image_url": image_url
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        return {"error": str(e)}
+# =============================================================================
 # LINE WEBHOOK
 # =============================================================================
 
