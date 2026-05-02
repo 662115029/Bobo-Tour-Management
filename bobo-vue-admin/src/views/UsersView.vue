@@ -21,30 +21,42 @@
 
     <div class="filter-row">
       <input type="text" v-model="search" placeholder="Search name..." class="search-input" />
-      <div class="filter-group">
-        <select v-model="verifyFilter" class="filter-select">
-          <option value="All">All Status</option>
-          <option value="VERIFIED">Verified</option>
-          <option value="PENDING">Pending</option>
-          <option value="NOT_VERIFIED">Not Verified</option>
-        </select>
-      </div>
     </div>
 
     <div class="table-container">
       <table class="table">
         <thead>
           <tr>
-            <th style="width:28%">NAME</th>
-            <th style="width:16%">RATING</th>
+            <th style="width:28%">
+              NAME
+              <button class="col-filter-btn" :class="{ active: nameSort !== '' }" @click.stop="toggleNameDropdown($event)">
+                {{ nameSort === 'asc' ? 'A→Z' : nameSort === 'desc' ? 'Z→A' : 'Sort' }}
+              </button>
+            </th>
+            <th style="width:16%">
+              RATING
+              <button class="col-filter-btn" :class="{ active: ratingSort !== '' }" @click.stop="toggleRatingDropdown($event)">
+                {{ ratingSort === 'desc' ? 'High' : ratingSort === 'asc' ? 'Low' : 'Sort' }}
+              </button>
+            </th>
             <th style="width:10%">JOBS</th>
-            <th style="width:10%">STATUS</th>
+            <th style="width:10%">
+              STATUS
+              <button class="col-filter-btn" :class="{ active: verifyFilter !== 'All' }" @click.stop="toggleStatusDropdown($event)">
+                {{ verifyFilter === 'All' ? 'Filter' : verifyFilter }}
+              </button>
+            </th>
             <th style="width:12%">ACTION</th>
-            <th style="width:16%">LAST UPDATED</th>
+            <th style="width:16%">
+              LAST UPDATED
+              <button class="col-filter-btn" :class="{ active: dateSort !== '' }" @click.stop="toggleDateDropdown($event)">
+                {{ dateSort === 'desc' ? 'Latest' : dateSort === 'asc' ? 'Oldest' : 'Sort' }}
+              </button>
+            </th>
           </tr>
         </thead>
-        <tbody>
-          <tr v-for="user in users" :key="user.id">
+<tbody>
+          <tr v-for="user in filteredUsers" :key="user.id">
             <td class="truncate-cell">
               <div class="user-cell">
                 <span class="avatar">{{ user.initials }}</span>
@@ -68,11 +80,36 @@
             </td>
             <td class="text-muted">{{ formatDateTime(user.updatedAt) }}</td>
           </tr>
-          <tr v-if="users.length === 0">
+          <tr v-if="filteredUsers.length === 0">
             <td colspan="6" class="empty">No users found.</td>
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- Column Filter Dropdowns -->
+    <div v-if="showNameDropdown" class="col-dropdown" :style="nameDropdownStyle">
+      <button class="col-dropdown-item" @click="setNameSort('')">Sort</button>
+      <button class="col-dropdown-item" @click="setNameSort('asc')">A → Z</button>
+      <button class="col-dropdown-item" @click="setNameSort('desc')">Z → A</button>
+    </div>
+
+    <div v-if="showRatingDropdown" class="col-dropdown" :style="ratingDropdownStyle">
+      <button class="col-dropdown-item" @click="setRatingSort('')">Sort</button>
+      <button class="col-dropdown-item" @click="setRatingSort('desc')">High → Low</button>
+      <button class="col-dropdown-item" @click="setRatingSort('asc')">Low → High</button>
+    </div>
+
+    <div v-if="showStatusDropdown" class="col-dropdown" :style="statusDropdownStyle">
+      <button class="col-dropdown-item" @click="setVerifyFilter('All')">All Status</button>
+      <button class="col-dropdown-item" @click="setVerifyFilter('VERIFIED')">Verified</button>
+      <button class="col-dropdown-item" @click="setVerifyFilter('PENDING')">Pending</button>
+      <button class="col-dropdown-item" @click="setVerifyFilter('NOT_VERIFIED')">Not Verified</button>
+    </div>
+
+    <div v-if="showDateDropdown" class="col-dropdown" :style="dateDropdownStyle">
+      <button class="col-dropdown-item" @click="setDateSort('desc')">Latest</button>
+      <button class="col-dropdown-item" @click="setDateSort('asc')">Oldest</button>
     </div>
   <!-- Ban Modal -->
   <div v-if="showBanModal" class="modal-overlay" @click.self="showBanModal = false">
@@ -105,6 +142,67 @@ const showBanModal = ref(false)
 const banTarget = ref(null)
 const jobsDoneByFreelancer = ref({})
 const jobsDoneByEmployer = ref({})
+
+// Sort states
+const nameSort = ref('')
+const ratingSort = ref('')
+const verifyFilter = ref('All')
+const dateSort = ref('')
+
+// Dropdown visibility
+const showNameDropdown = ref(false)
+const showRatingDropdown = ref(false)
+const showStatusDropdown = ref(false)
+const showDateDropdown = ref(false)
+
+// Dropdown positions
+const nameDropdownStyle = ref({})
+const ratingDropdownStyle = ref({})
+const statusDropdownStyle = ref({})
+const dateDropdownStyle = ref({})
+
+const toggleNameDropdown = (e) => {
+  closeAllDropdowns()
+  showNameDropdown.value = true
+  const rect = e.target.getBoundingClientRect()
+  nameDropdownStyle.value = { position: 'fixed', top: (rect.bottom + window.scrollY) + 'px', left: rect.left + 'px' }
+}
+
+const setNameSort = (val) => { nameSort.value = val; showNameDropdown.value = false }
+
+const toggleRatingDropdown = (e) => {
+  closeAllDropdowns()
+  showRatingDropdown.value = true
+  const rect = e.target.getBoundingClientRect()
+  ratingDropdownStyle.value = { position: 'fixed', top: (rect.bottom + window.scrollY) + 'px', left: rect.left + 'px' }
+}
+
+const setRatingSort = (val) => { ratingSort.value = val; showRatingDropdown.value = false }
+
+const toggleStatusDropdown = (e) => {
+  closeAllDropdowns()
+  showStatusDropdown.value = true
+  const rect = e.target.getBoundingClientRect()
+  statusDropdownStyle.value = { position: 'fixed', top: (rect.bottom + window.scrollY) + 'px', left: rect.left + 'px' }
+}
+
+const setVerifyFilter = (val) => { verifyFilter.value = val; showStatusDropdown.value = false }
+
+const toggleDateDropdown = (e) => {
+  closeAllDropdowns()
+  showDateDropdown.value = true
+  const rect = e.target.getBoundingClientRect()
+  dateDropdownStyle.value = { position: 'fixed', top: (rect.bottom + window.scrollY) + 'px', left: rect.left + 'px' }
+}
+
+const setDateSort = (val) => { dateSort.value = val; showDateDropdown.value = false }
+
+const closeAllDropdowns = () => {
+  showNameDropdown.value = false
+  showRatingDropdown.value = false
+  showStatusDropdown.value = false
+  showDateDropdown.value = false
+}
 
 const viewUser = (user) => {
   if (activeTab.value === 'Freelancer') {
@@ -145,7 +243,6 @@ const employers = ref([])
 const freelancers = ref([])
 const jobs = ref([])
 const search = ref('')
-const verifyFilter = ref('All')
 
 const formatDateTime = (date) => {
   if (!date) return '-'
@@ -221,18 +318,42 @@ const jobsDoneById = computed(() => (
   activeTab.value === 'Employer' ? jobsDoneByEmployer.value : jobsDoneByFreelancer.value
 ))
 
-const users = computed(() => {
+const filteredUsers = computed(() => {
   const list = activeTab.value === 'Employer' ? employers.value : freelancers.value
   let result = list.filter(u => {
     const matchSearch = (u.name || '').toLowerCase().includes(search.value.toLowerCase())
     const matchStatus = verifyFilter.value === 'All' || u.verifyStatus === verifyFilter.value
     return matchSearch && matchStatus
   })
-  return [...result].sort((a, b) => {
-    const dateA = new Date(a.createdAt || 0)
-    const dateB = new Date(b.createdAt || 0)
-    return dateB - dateA
-  })
+
+  if (nameSort.value) {
+    result = [...result].sort((a, b) => {
+      const cmp = (a.name || '').localeCompare(b.name || '')
+      return nameSort.value === 'desc' ? -cmp : cmp
+    })
+  }
+
+  if (ratingSort.value) {
+    result = [...result].sort((a, b) => {
+      return ratingSort.value === 'desc' ? b.rating - a.rating : a.rating - b.rating
+    })
+  }
+
+  if (dateSort.value) {
+    result = [...result].sort((a, b) => {
+      const dateA = new Date(a.updatedAt) || 0
+      const dateB = new Date(b.updatedAt) || 0
+      return dateSort.value === 'desc' ? dateB - dateA : dateA - dateB
+    })
+  } else {
+    result = [...result].sort((a, b) => {
+      const dateA = new Date(a.updatedAt) || 0
+      const dateB = new Date(b.updatedAt) || 0
+      return dateB - dateA
+    })
+  }
+
+  return result
 })
 
 onMounted(async () => {
@@ -422,4 +543,24 @@ watch(activeTab, async (tab) => {
 }
 
 .empty { text-align: center; color: #999; padding: 32px; }
+
+.col-filter-btn {
+  margin-left: 8px; padding: 3px 6px; border: none;
+  border-radius: 4px; font-size: 10px; background: transparent; color: #888;
+  cursor: pointer; font-weight: 500;
+}
+.col-filter-btn:hover { color: #06C755; }
+.col-filter-btn.active { color: #06C755; font-weight: 600; }
+
+.col-dropdown {
+  background: white; border: 1px solid #ddd; border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 50; min-width: 120px;
+}
+.col-dropdown-item {
+  display: block; width: 100%; padding: 8px 14px; border: none;
+  background: none; text-align: left; font-size: 13px; cursor: pointer;
+}
+.col-dropdown-item:hover { background: #f5f5f5; }
+.col-dropdown-item:first-child { border-radius: 6px 6px 0 0; }
+.col-dropdown-item:last-child { border-radius: 0 0 6px 6px; }
 </style>
