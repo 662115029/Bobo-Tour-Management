@@ -103,6 +103,70 @@ async def upload_vehicle_image(vehicle_id: str, file: UploadFile = File(...)):
         raise
     except Exception as e:
         return {"error": str(e)}
+    
+@app.post("/fl-documents/{fl_id}/upload")
+async def upload_fl_document(
+    fl_id: str,
+    doc_type: str,
+    file: UploadFile = File(...),
+    vehicle_id: str = None
+):
+    if file.content_type not in ALLOWED_TYPES:
+        raise HTTPException(status_code=400, detail="Invalid file type. Only JPEG, PNG, and WebP allowed.")
+    
+    valid_doc_types = {"PERSONAL_ID", "DRIVER_LICENSE", "PUBLIC_DRIVER_LICENSE", "VEHICLE_REGISTRATION", "VEHICLE_INSPECTION"}
+    if doc_type not in valid_doc_types:
+        raise HTTPException(status_code=400, detail=f"Invalid doc_type. Must be one of: {valid_doc_types}")
+    
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+
+        # Check freelancer exists
+        cursor.execute("SELECT fl_id FROM freelancers WHERE fl_id = %s", (fl_id,))
+        if not cursor.fetchone():
+            conn.close()
+            raise HTTPException(status_code=404, detail="Freelancer not found")
+
+        # Upload to Supabase
+        image_url = await upload_image_to_supabase(file)
+
+        # Mark previous document of same type as not latest
+        cursor.execute(
+            """
+            UPDATE fl_documents
+            SET is_latest = 0
+            WHERE fl_id = %s AND fl_doc_type = %s AND is_latest = 1
+            """,
+            (fl_id, doc_type)
+        )
+
+        # Insert new document record
+        import uuid
+        new_doc_id = str(uuid.uuid4())
+        cursor.execute(
+            """
+            INSERT INTO fl_documents 
+                (fl_doc_id, fl_id, fl_vehicle_id, fl_doc_type, file_url, fl_doc_status, is_latest)
+            VALUES (%s, %s, %s, %s, %s, 'PENDING', 1)
+            """,
+            (new_doc_id, fl_id, vehicle_id, doc_type, image_url)
+        )
+
+        conn.commit()
+        conn.close()
+
+        return {
+            "fl_doc_id": new_doc_id,
+            "fl_id": fl_id,
+            "fl_doc_type": doc_type,
+            "file_url": image_url,
+            "fl_doc_status": "PENDING"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        return {"error": str(e)}
 # =============================================================================
 # LINE WEBHOOK
 # =============================================================================
