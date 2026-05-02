@@ -24,15 +24,6 @@
           <option value="11">November</option>
           <option value="12">December</option>
         </select>
-        <select v-model="statusFilter" class="filter-select">
-          <option value="All">All Status</option>
-          <option value="OPEN">Open</option>
-          <option value="MATCHING">Matching</option>
-          <option value="SELECTED">Selected</option>
-          <option value="IN_PROGRESS">In Progress</option>
-          <option value="COMPLETED">Completed</option>
-          <option value="CANCELLED">Cancelled</option>
-        </select>
       </div>
     </div>
 
@@ -40,12 +31,37 @@
       <table class="table">
         <thead>
           <tr>
-            <th style="width:28%">JOB TITLE</th>
-            <th style="width:16%">COMPANY</th>
-            <th style="width:10%">PRICE</th>
-            <th style="width:10%">STATUS</th>
+            <th style="width:28%">
+              JOB TITLE
+              <button class="col-filter-btn" :class="{ active: titleSort !== '' }" @click.stop="toggleTitleDropdown($event)">
+                {{ titleSort === 'asc' ? 'A→Z' : titleSort === 'desc' ? 'Z→A' : 'Sort' }}
+              </button>
+            </th>
+            <th style="width:16%">
+              COMPANY
+              <button class="col-filter-btn" :class="{ active: companySort !== '' }" @click.stop="toggleCompanyDropdown($event)">
+                {{ companySort === 'asc' ? 'A→Z' : companySort === 'desc' ? 'Z→A' : 'Sort' }}
+              </button>
+            </th>
+            <th style="width:10%">
+              PRICE
+              <button class="col-filter-btn" :class="{ active: priceSort !== '' }" @click.stop="togglePriceDropdown($event)">
+                {{ priceSort === 'asc' ? '↑' : priceSort === 'desc' ? '↓' : 'Sort' }}
+              </button>
+            </th>
+            <th style="width:10%">
+              STATUS
+              <button class="col-filter-btn" :class="{ active: statusFilter !== 'All' }" @click.stop="toggleStatusDropdown($event)">
+                {{ statusFilter === 'All' ? 'Filter' : statusFilter }}
+              </button>
+            </th>
             <th style="width:12%">ACTION</th>
-            <th style="width:16%">LAST UPDATED</th>
+            <th style="width:16%">
+              LAST UPDATED
+              <button class="col-filter-btn" :class="{ active: dateSort !== '' }" @click.stop="toggleDateDropdown($event)">
+                {{ dateSort === 'desc' ? 'Latest' : dateSort === 'asc' ? 'Oldest' : 'Sort' }}
+              </button>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -77,6 +93,40 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- Column Filter Dropdowns -->
+    <div v-if="showTitleDropdown" class="col-dropdown" :style="titleDropdownStyle">
+      <button class="col-dropdown-item" @click="setTitleSort('')">Sort</button>
+      <button class="col-dropdown-item" @click="setTitleSort('asc')">A → Z</button>
+      <button class="col-dropdown-item" @click="setTitleSort('desc')">Z → A</button>
+    </div>
+
+    <div v-if="showCompanyDropdown" class="col-dropdown" :style="companyDropdownStyle">
+      <button class="col-dropdown-item" @click="setCompanySort('')">Sort</button>
+      <button class="col-dropdown-item" @click="setCompanySort('asc')">A → Z</button>
+      <button class="col-dropdown-item" @click="setCompanySort('desc')">Z → A</button>
+    </div>
+
+    <div v-if="showPriceDropdown" class="col-dropdown" :style="priceDropdownStyle">
+      <button class="col-dropdown-item" @click="setPriceSort('')">Sort</button>
+      <button class="col-dropdown-item" @click="setPriceSort('asc')">Low → High</button>
+      <button class="col-dropdown-item" @click="setPriceSort('desc')">High → Low</button>
+    </div>
+
+    <div v-if="showStatusDropdown" class="col-dropdown" :style="statusDropdownStyle">
+      <button class="col-dropdown-item" @click="setStatusFilter('All')">All Status</button>
+      <button class="col-dropdown-item" @click="setStatusFilter('OPEN')">Open</button>
+      <button class="col-dropdown-item" @click="setStatusFilter('MATCHING')">Matching</button>
+      <button class="col-dropdown-item" @click="setStatusFilter('SELECTED')">Selected</button>
+      <button class="col-dropdown-item" @click="setStatusFilter('IN_PROGRESS')">In Progress</button>
+      <button class="col-dropdown-item" @click="setStatusFilter('COMPLETED')">Completed</button>
+      <button class="col-dropdown-item" @click="setStatusFilter('CANCELLED')">Cancelled</button>
+    </div>
+
+    <div v-if="showDateDropdown" class="col-dropdown" :style="dateDropdownStyle">
+      <button class="col-dropdown-item" @click="setDateSort('desc')">Latest</button>
+      <button class="col-dropdown-item" @click="setDateSort('asc')">Oldest</button>
     </div>
 
     <!-- Job Modal -->
@@ -198,6 +248,24 @@ const search = ref('')
 const statusFilter = ref('All')
 const monthFilter = ref('All')
 const yearFilter = ref('All')
+
+const titleSort = ref('')
+const companySort = ref('')
+const priceSort = ref('')
+const dateSort = ref('')
+
+const showTitleDropdown = ref(false)
+const showCompanyDropdown = ref(false)
+const showPriceDropdown = ref(false)
+const showStatusDropdown = ref(false)
+const showDateDropdown = ref(false)
+
+const titleDropdownStyle = ref({})
+const companyDropdownStyle = ref({})
+const priceDropdownStyle = ref({})
+const statusDropdownStyle = ref({})
+const dateDropdownStyle = ref({})
+
 const jobs = ref([])
 const allEmployers = ref([])
 const showDeleteModal = ref(false)
@@ -228,8 +296,98 @@ const filteredJobs = computed(() => {
     const matchMonth = monthFilter.value === 'All' || (d && String(d.getMonth() + 1).padStart(2, '0') === monthFilter.value)
     return matchSearch && matchStatus && matchYear && matchMonth
   })
-  return [...result].sort((a, b) => new Date(b.job_created_at) - new Date(a.job_created_at))
+
+  if (titleSort.value) {
+    result = [...result].sort((a, b) => {
+      const cmp = (a.job_title || '').localeCompare(b.job_title || '')
+      return titleSort.value === 'desc' ? -cmp : cmp
+    })
+  }
+
+  if (companySort.value) {
+    result = [...result].sort((a, b) => {
+      const cmp = (a.company || '').localeCompare(b.company || '')
+      return companySort.value === 'desc' ? -cmp : cmp
+    })
+  }
+
+  if (priceSort.value) {
+    result = [...result].sort((a, b) => {
+      const priceA = Number(a.job_price) || 0
+      const priceB = Number(b.job_price) || 0
+      return priceSort.value === 'desc' ? priceB - priceA : priceA - priceB
+    })
+  }
+
+  if (dateSort.value) {
+    result = [...result].sort((a, b) => {
+      const dateA = new Date(a.job_updated_at) || 0
+      const dateB = new Date(b.job_updated_at) || 0
+      return dateSort.value === 'desc' ? dateB - dateA : dateA - dateB
+    })
+  } else {
+    result = [...result].sort((a, b) => {
+      const dateA = new Date(a.job_updated_at) || 0
+      const dateB = new Date(b.job_updated_at) || 0
+      return dateB - dateA
+    })
+  }
+
+  return result
 })
+
+const toggleTitleDropdown = (e) => {
+  closeAllDropdowns()
+  showTitleDropdown.value = true
+  const rect = e.target.getBoundingClientRect()
+  titleDropdownStyle.value = { position: 'fixed', top: (rect.bottom + window.scrollY) + 'px', left: rect.left + 'px' }
+}
+
+const setTitleSort = (val) => { titleSort.value = val; showTitleDropdown.value = false }
+
+const toggleCompanyDropdown = (e) => {
+  closeAllDropdowns()
+  showCompanyDropdown.value = true
+  const rect = e.target.getBoundingClientRect()
+  companyDropdownStyle.value = { position: 'fixed', top: (rect.bottom + window.scrollY) + 'px', left: rect.left + 'px' }
+}
+
+const setCompanySort = (val) => { companySort.value = val; showCompanyDropdown.value = false }
+
+const togglePriceDropdown = (e) => {
+  closeAllDropdowns()
+  showPriceDropdown.value = true
+  const rect = e.target.getBoundingClientRect()
+  priceDropdownStyle.value = { position: 'fixed', top: (rect.bottom + window.scrollY) + 'px', left: rect.left + 'px' }
+}
+
+const setPriceSort = (val) => { priceSort.value = val; showPriceDropdown.value = false }
+
+const toggleStatusDropdown = (e) => {
+  closeAllDropdowns()
+  showStatusDropdown.value = true
+  const rect = e.target.getBoundingClientRect()
+  statusDropdownStyle.value = { position: 'fixed', top: (rect.bottom + window.scrollY) + 'px', left: rect.left + 'px' }
+}
+
+const setStatusFilter = (val) => { statusFilter.value = val; showStatusDropdown.value = false }
+
+const toggleDateDropdown = (e) => {
+  closeAllDropdowns()
+  showDateDropdown.value = true
+  const rect = e.target.getBoundingClientRect()
+  dateDropdownStyle.value = { position: 'fixed', top: (rect.bottom + window.scrollY) + 'px', left: rect.left + 'px' }
+}
+
+const setDateSort = (val) => { dateSort.value = val; showDateDropdown.value = false }
+
+const closeAllDropdowns = () => {
+  showTitleDropdown.value = false
+  showCompanyDropdown.value = false
+  showPriceDropdown.value = false
+  showStatusDropdown.value = false
+  showDateDropdown.value = false
+}
 
 const viewJob = (id) => router.push({ name: 'JobDetail', params: { id } })
 
@@ -288,7 +446,7 @@ onMounted(async () => {
 }
 .filter-select {
   padding: 10px 14px; border: 1px solid #ddd;
-  border-radius: 6px; font-size: 14px; min-width: 120px;
+  border-radius: 6px; font-size: 14px;
 }
 
 .table-container { background: white; border-radius: 8px; overflow: hidden; }
@@ -297,23 +455,41 @@ onMounted(async () => {
   padding: 12px 14px; text-align: left;
   border-bottom: 1px solid #eee; overflow: hidden;
 }
-.table th { font-size: 12px; color: #666; font-weight: 600; background: #f9f9f9; }
+.table th { font-size: 12px; color: #666; font-weight: 600; background: #f9f9f9; position: relative; }
+
+.col-filter-btn {
+  margin-left: 8px; padding: 3px 6px; border: none;
+  border-radius: 4px; font-size: 10px; background: transparent; color: #888;
+  cursor: pointer; font-weight: 500;
+}
+.col-filter-btn:hover { color: #06C755; }
+.col-filter-btn.active { color: #06C755; font-weight: 600; }
+
+.col-dropdown {
+  background: white; border: 1px solid #ddd; border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 50; min-width: 120px;
+}
+.col-dropdown-item {
+  display: block; width: 100%; padding: 8px 14px; border: none;
+  background: none; text-align: left; font-size: 13px; cursor: pointer;
+}
+.col-dropdown-item:hover { background: #f5f5f5; }
+.col-dropdown-item:first-child { border-radius: 6px 6px 0 0; }
+.col-dropdown-item:last-child { border-radius: 0 0 6px 6px; }
 
 .truncate-cell { max-width: 0; }
 .clickable-title {
   display: block; white-space: nowrap; overflow: hidden;
-  text-overflow: ellipsis; cursor: pointer;
-  color: #0066cc; font-size: 14px;
+  text-overflow: ellipsis; cursor: pointer; color: #0066cc; font-size: 14px;
 }
 .clickable-title:hover { text-decoration: underline; }
 .clickable-company {
   display: block; white-space: nowrap; overflow: hidden;
   text-overflow: ellipsis; cursor: pointer; color: #0066cc; font-size: 13px;
 }
-.clickable-company:hover { text-decoration: underline; }
 
 .badge {
-  display: inline-block; padding: 3px 10px;
+  display: inline-flex; padding: 3px 10px;
   border-radius: 12px; font-size: 11px; font-weight: 600; width: fit-content;
 }
 .badge.open { background: #e3f2fd; color: #1976d2; }
@@ -339,7 +515,6 @@ onMounted(async () => {
 .text-muted { color: #999; font-size: 12px; }
 .empty { text-align: center; color: #999; padding: 32px; }
 
-/* Mini Modal */
 .modal-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,0.4);
   display: flex; align-items: center; justify-content: center; z-index: 100;
@@ -377,7 +552,6 @@ onMounted(async () => {
 }
 .btn-full-view:hover { text-decoration: underline; }
 
-/* Profile hero */
 .profile-hero {
   display: flex; align-items: flex-start; gap: 14px;
   margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #eee;

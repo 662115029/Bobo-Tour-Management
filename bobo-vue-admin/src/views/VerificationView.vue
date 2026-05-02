@@ -499,25 +499,23 @@ onMounted(async () => {
 
 .col-filter-btn {
   margin-left: 8px;
-  padding: 3px 8px;
-  border: 1px solid #ddd;
+  padding: 3px 6px;
+  border: none;
   border-radius: 4px;
   font-size: 10px;
-  background: white;
-  color: #666;
+  background: transparent;
+  color: #888;
   cursor: pointer;
   font-weight: 500;
 }
 
 .col-filter-btn:hover {
-  border-color: #06C755;
   color: #06C755;
 }
 
 .col-filter-btn.active {
-  background: #06C755;
-  border-color: #06C755;
-  color: white;
+  color: #06C755;
+  font-weight: 600;
 }
 
 .col-dropdown {
