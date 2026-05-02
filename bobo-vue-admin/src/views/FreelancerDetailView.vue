@@ -106,12 +106,19 @@
           <!-- Vehicle Images -->
           <div v-if="vehicleImages.length" style="margin-top:20px;">
             <p class="sub-section-label">📸 Vehicle Photos ({{ vehicleImages.length }})</p>
-            <div class="image-grid">
-              <a v-for="img in vehicleImages" :key="img.fl_vehicle_image_id"
-                :href="img.fl_vehicle_image_url" target="_blank" class="image-wrap">
-                <img :src="img.fl_vehicle_image_url" class="vehicle-img"
-                  @error="e => e.target.src=''" />
-              </a>
+            <div class="doc-grid">
+              <div v-for="img in vehicleImages" :key="img.fl_vehicle_image_id" class="doc-card">
+                <div class="doc-preview">
+                  <a :href="img.fl_vehicle_image_url" target="_blank">
+                    <img :src="img.fl_vehicle_image_url" class="doc-img"
+                      @error="e => e.target.style.display='none'" />
+                  </a>
+                </div>
+                <div class="doc-info">
+                  <p class="doc-type">Vehicle Photo</p>
+                  <a :href="img.fl_vehicle_image_url" target="_blank" class="link">View →</a>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -257,11 +264,6 @@ onMounted(async () => {
 .tag.green { background: #f0fdf4; color: #166534; }
 .tag.red { background: #fef2f2; color: #991b1b; }
 .tag.gray { background: #f5f5f5; color: #666; }
-
-/* Vehicle Images */
-.image-grid { display: flex; flex-wrap: wrap; gap: 10px; }
-.image-wrap { display: block; border-radius: 8px; overflow: hidden; border: 1px solid #eee; }
-.vehicle-img { width: 140px; height: 100px; object-fit: cover; display: block; }
 
 /* Documents */
 .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
