@@ -13,22 +13,31 @@
 
     <div class="filter-row">
       <input type="text" v-model="search" placeholder="Search name..." class="search-input" />
-      <select v-model="statusFilter" class="filter-select">
-        <option value="All">All Status</option>
-        <option value="VERIFIED">Verified</option>
-        <option value="PENDING">Pending</option>
-        <option value="NOT_VERIFIED">Not Verified</option>
-      </select>
     </div>
 
     <div class="table-container">
       <table class="table">
         <thead>
           <tr>
-            <th style="width:54%">NAME</th>
-            <th style="width:10%">STATUS</th>
-            <th style="width:12%">ACTION</th>
-            <th style="width:16%">LAST UPDATED</th>
+            <th style="width:54%">
+              NAME
+              <button class="col-filter-btn" :class="{ active: nameSort !== '' }" @click.stop="toggleNameDropdown($event)">
+                {{ nameSort === 'asc' ? 'A → Z' : nameSort === 'desc' ? 'Z → A' : 'Sort' }}
+              </button>
+            </th>
+            <th style="width:10%">
+              STATUS
+              <button class="col-filter-btn" :class="{ active: statusFilter !== '' }" @click.stop="toggleStatusDropdown($event)">
+                {{ statusFilter || 'Filter' }}
+              </button>
+            </th>
+            <th style="width:14%">ACTION</th>
+            <th style="width:16%">
+              LAST UPDATED
+              <button class="col-filter-btn" :class="{ active: dateSort !== '' }" @click.stop="toggleDateDropdown($event)">
+                {{ dateSort === 'desc' ? 'Latest' : dateSort === 'asc' ? 'Oldest' : 'Sort' }}
+              </button>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -50,6 +59,25 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- Column Filter Dropdown -->
+    <div v-if="showStatusDropdown" class="col-dropdown" :style="statusDropdownStyle">
+      <button class="col-dropdown-item" @click="setStatusFilter('')">All Status</button>
+      <button class="col-dropdown-item" @click="setStatusFilter('VERIFIED')">Verified</button>
+      <button class="col-dropdown-item" @click="setStatusFilter('PENDING')">Pending</button>
+      <button class="col-dropdown-item" @click="setStatusFilter('NOT_VERIFIED')">Not Verified</button>
+    </div>
+
+    <div v-if="showNameDropdown" class="col-dropdown" :style="nameDropdownStyle">
+      <button class="col-dropdown-item" @click="setNameSort('')">Sort</button>
+      <button class="col-dropdown-item" @click="setNameSort('asc')">A → Z</button>
+      <button class="col-dropdown-item" @click="setNameSort('desc')">Z → A</button>
+    </div>
+
+    <div v-if="showDateDropdown" class="col-dropdown" :style="dateDropdownStyle">
+      <button class="col-dropdown-item" @click="setDateSort('desc')">Latest</button>
+      <button class="col-dropdown-item" @click="setDateSort('asc')">Oldest</button>
     </div>
 
     <!-- User Detail Modal -->
@@ -155,7 +183,16 @@ import { ref, computed, onMounted } from 'vue'
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000'
 const activeTab = ref('Freelancer')
 const search = ref('')
-const statusFilter = ref('All')
+const nameSort = ref('')
+const statusFilter = ref('')
+const dateSort = ref('desc')
+const showNameDropdown = ref(false)
+const showStatusDropdown = ref(false)
+const showDateDropdown = ref(false)
+const nameDropdownStyle = ref({})
+const statusDropdownStyle = ref({})
+const dateDropdownStyle = ref({})
+
 const freelancers = ref([])
 const employers = ref([])
 const allFreelancers = ref([])
@@ -172,18 +209,90 @@ const formatDateTime = (date) => {
   return new Date(date).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
+const toggleNameDropdown = (e) => {
+  closeAllDropdowns()
+  showNameDropdown.value = true
+  const rect = e.target.getBoundingClientRect()
+  nameDropdownStyle.value = {
+    position: 'fixed',
+    top: (rect.bottom + window.scrollY) + 'px',
+    left: rect.left + 'px'
+  }
+}
+
+const setNameSort = (val) => {
+  nameSort.value = val
+  showNameDropdown.value = false
+}
+
+const toggleStatusDropdown = (e) => {
+  closeAllDropdowns()
+  showStatusDropdown.value = true
+  const rect = e.target.getBoundingClientRect()
+  statusDropdownStyle.value = {
+    position: 'fixed',
+    top: (rect.bottom + window.scrollY) + 'px',
+    left: rect.left + 'px'
+  }
+}
+
+const setStatusFilter = (val) => {
+  statusFilter.value = val
+  showStatusDropdown.value = false
+}
+
+const toggleDateDropdown = (e) => {
+  closeAllDropdowns()
+  showDateDropdown.value = true
+  const rect = e.target.getBoundingClientRect()
+  dateDropdownStyle.value = {
+    position: 'fixed',
+    top: (rect.bottom + window.scrollY) + 'px',
+    left: rect.left + 'px'
+  }
+}
+
+const setDateSort = (val) => {
+  dateSort.value = val
+  showDateDropdown.value = false
+}
+
+const closeAllDropdowns = () => {
+  showNameDropdown.value = false
+  showStatusDropdown.value = false
+  showDateDropdown.value = false
+}
+
 const filteredList = computed(() => {
   const list = activeTab.value === 'Freelancer' ? freelancers.value : employers.value
   let result = list.filter(v => {
     const matchSearch = (v.name || '').toLowerCase().includes(search.value.toLowerCase())
-    const matchStatus = statusFilter.value === 'All' || v.status === statusFilter.value
+    const matchStatus = statusFilter.value === '' || v.status === statusFilter.value
     return matchSearch && matchStatus
   })
-  return [...result].sort((a, b) => {
-    const dateA = new Date(a.createdAt || 0)
-    const dateB = new Date(b.createdAt || 0)
-    return dateB - dateA
-  })
+
+  if (nameSort.value) {
+    result = [...result].sort((a, b) => {
+      const cmp = (a.name || '').localeCompare(b.name || '')
+      return nameSort.value === 'desc' ? -cmp : cmp
+    })
+  }
+
+  if (dateSort.value) {
+    result = [...result].sort((a, b) => {
+      const dateA = new Date(a.createdAt || 0)
+      const dateB = new Date(b.createdAt || 0)
+      return dateSort.value === 'desc' ? dateB - dateA : dateA - dateB
+    })
+  } else {
+    result = [...result].sort((a, b) => {
+      const dateA = new Date(a.createdAt || 0)
+      const dateB = new Date(b.createdAt || 0)
+      return dateB - dateA
+    })
+  }
+
+  return result
 })
 
 const openDocs = (v) => {
@@ -256,11 +365,9 @@ const reviewDoc = async (doc, newStatus) => {
     })
     const data = await res.json()
     if (data.status === 'updated') {
-      // Update local state
       doc.status = newStatus
       doc.reviewed = formatDateTime(new Date().toISOString())
 
-      // Update verify status in list
       const list = activeTab.value === 'Freelancer' ? freelancers.value : employers.value
       const user = list.find(u => u.id === selectedUser.value.id)
       if (user) {
@@ -361,20 +468,6 @@ onMounted(async () => {
   max-width: 280px;
 }
 
-.filter-group {
-  display: flex;
-  gap: 8px;
-  flex: 1;
-}
-
-.filter-select {
-  padding: 10px 14px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
-  min-width: 160px;
-}
-
 .table-container {
   background: white;
   border-radius: 8px;
@@ -400,6 +493,63 @@ onMounted(async () => {
   color: #666;
   font-weight: 600;
   background: #f9f9f9;
+  white-space: nowrap;
+  position: relative;
+}
+
+.col-filter-btn {
+  margin-left: 8px;
+  padding: 3px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 10px;
+  background: white;
+  color: #666;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.col-filter-btn:hover {
+  border-color: #06C755;
+  color: #06C755;
+}
+
+.col-filter-btn.active {
+  background: #06C755;
+  border-color: #06C755;
+  color: white;
+}
+
+.col-dropdown {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 50;
+  min-width: 140px;
+}
+
+.col-dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 8px 14px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.col-dropdown-item:hover {
+  background: #f5f5f5;
+}
+
+.col-dropdown-item:first-child {
+  border-radius: 6px 6px 0 0;
+}
+
+.col-dropdown-item:last-child {
+  border-radius: 0 0 6px 6px;
 }
 
 .truncate-cell {
@@ -471,7 +621,6 @@ onMounted(async () => {
   font-size: 13px;
 }
 
-/* Modal */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -510,15 +659,6 @@ onMounted(async () => {
   padding: 24px 0;
 }
 
-.modal {
-  background: white;
-  border-radius: 12px;
-  padding: 28px;
-  width: 520px;
-  max-height: 80vh;
-  overflow-y: auto;
-}
-
 .mini-modal {
   background: white;
   border-radius: 12px;
@@ -533,15 +673,6 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 16px;
-}
-
-.mini-modal-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #111;
-  margin: 0;
-  flex: 1;
-  padding-right: 12px;
 }
 
 .mini-modal-footer {
@@ -791,11 +922,5 @@ onMounted(async () => {
 .doc-badge.rejected {
   background: #ffebee;
   color: #c62828;
-}
-
-.no-docs {
-  color: #999;
-  text-align: center;
-  padding: 24px 0;
 }
 </style>
