@@ -427,7 +427,7 @@ onMounted(async () => {
   display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;
 }
 .hero-left { display: flex; flex-direction: column; gap: 8px; flex: 1; padding-right: 24px; }
-.job-title { font-size: 22px; margin: 0; color: #111; }
+.job-title { font-size: 5px; margin: 0; color: #111; }
 .company { color: #666; margin: 0; font-size: 14px; }
 .job-desc { color: #888; font-size: 13px; line-height: 1.6; margin: 0; }
 .price-box { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
