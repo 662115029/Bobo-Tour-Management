@@ -460,11 +460,13 @@ onMounted(async () => {
 
 <style scoped>
 .title {
-  font-size: 24px;
-  margin: 0 0 24px -24px;
+  font-size: 15px;
+  font-weight: 500;
+  margin: 0 0 24px 0;
   background: #1a1a2e;
-  padding: 24px 40px;
+  padding: 15px 20px;
   color: white;
+  letter-spacing: 0.2px;
 }
 
 .filter-row {

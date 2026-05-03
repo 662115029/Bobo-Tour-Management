@@ -138,10 +138,10 @@ const toggle = () => {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 24px;
+  padding: 6px 10px;
   color: white;
   text-decoration: none;
-  opacity: 0.7;
+  opacity: 0.4;
   transition: all 0.2s;
   border-left: 3px solid transparent;
   white-space: nowrap;
@@ -154,14 +154,13 @@ const toggle = () => {
 }
 
 .nav-item:hover {
-  opacity: 1;
+  opacity: 2;
   background: rgba(255,255,255,0.05);
 }
 
 .nav-item.active {
   opacity: 1;
-  border-left-color: #06C755;
-  background: rgba(6, 199, 85, 0.1);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .icon {
