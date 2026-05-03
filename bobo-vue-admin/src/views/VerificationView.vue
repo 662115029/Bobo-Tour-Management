@@ -37,6 +37,7 @@
               <button class="col-filter-btn" :class="{ active: dateSort !== '' }" @click.stop="toggleDateDropdown($event)">
                 {{ dateSort === 'desc' ? 'Latest ▼' : dateSort === 'asc' ? 'Oldest ▼' : 'All ▼' }}
               </button>
+              <button v-if="nameSort || statusFilter || dateSort" class="reset-btn" @click="resetAllFilters">Reset</button>
             </th>
           </tr>
         </thead>
@@ -184,15 +185,21 @@ import { ref, computed, onMounted } from 'vue'
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000'
 const activeTab = ref('Freelancer')
 const search = ref('')
-const nameSort = ref('')
-const statusFilter = ref('')
-const dateSort = ref('')
+const nameSort = ref(localStorage.getItem('verification_nameSort') || '')
+const statusFilter = ref(localStorage.getItem('verification_statusFilter') || '')
+const dateSort = ref(localStorage.getItem('verification_dateSort') || '')
 const showNameDropdown = ref(false)
 const showStatusDropdown = ref(false)
 const showDateDropdown = ref(false)
 const nameDropdownStyle = ref({})
 const statusDropdownStyle = ref({})
 const dateDropdownStyle = ref({})
+
+const saveFilters = () => {
+  localStorage.setItem('verification_nameSort', nameSort.value)
+  localStorage.setItem('verification_statusFilter', statusFilter.value)
+  localStorage.setItem('verification_dateSort', dateSort.value)
+}
 
 const freelancers = ref([])
 const employers = ref([])
@@ -224,6 +231,7 @@ const toggleNameDropdown = (e) => {
 const setNameSort = (val) => {
   nameSort.value = val
   showNameDropdown.value = false
+  saveFilters()
 }
 
 const toggleStatusDropdown = (e) => {
@@ -240,6 +248,7 @@ const toggleStatusDropdown = (e) => {
 const setStatusFilter = (val) => {
   statusFilter.value = val
   showStatusDropdown.value = false
+  saveFilters()
 }
 
 const toggleDateDropdown = (e) => {
@@ -256,12 +265,20 @@ const toggleDateDropdown = (e) => {
 const setDateSort = (val) => {
   dateSort.value = val
   showDateDropdown.value = false
+  saveFilters()
 }
 
 const closeAllDropdowns = () => {
   showNameDropdown.value = false
   showStatusDropdown.value = false
   showDateDropdown.value = false
+}
+
+const resetAllFilters = () => {
+  nameSort.value = ''
+  statusFilter.value = ''
+  dateSort.value = ''
+  saveFilters()
 }
 
 const filteredList = computed(() => {
@@ -520,6 +537,13 @@ onMounted(async () => {
   color: #06C755;
   font-weight: 600;
 }
+
+.reset-btn {
+  margin-left: 6px; padding: 4px 8px; border: none;
+  border-radius: 4px; font-size: 10px; background: #ffebee;
+  color: #c62828; cursor: pointer; font-weight: 500;
+}
+.reset-btn:hover { background: #ffcdd2; }
 
 .col-dropdown {
   background: white;

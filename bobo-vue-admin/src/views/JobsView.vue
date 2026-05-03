@@ -61,6 +61,7 @@
               <button class="col-filter-btn" :class="{ active: dateSort !== '' }" @click.stop="toggleDateDropdown($event)">
                 {{ dateSort === 'desc' ? 'Latest ▼' : dateSort === 'asc' ? 'Oldest ▼' : 'All ▼' }}
               </button>
+              <button v-if="titleSort || companySort || priceSort || statusFilter !== 'All' || dateSort" class="reset-btn" @click="resetAllFilters">Reset</button>
             </th>
           </tr>
         </thead>
@@ -246,14 +247,14 @@ import { API_BASE } from '../data/api'
 
 const router = useRouter()
 const search = ref('')
-const statusFilter = ref('All')
+const statusFilter = ref(localStorage.getItem('jobs_statusFilter') || 'All')
 const monthFilter = ref('All')
 const yearFilter = ref('All')
 
-const titleSort = ref('')
-const companySort = ref('')
-const priceSort = ref('')
-const dateSort = ref('')
+const titleSort = ref(localStorage.getItem('jobs_titleSort') || '')
+const companySort = ref(localStorage.getItem('jobs_companySort') || '')
+const priceSort = ref(localStorage.getItem('jobs_priceSort') || '')
+const dateSort = ref(localStorage.getItem('jobs_dateSort') || '')
 
 const showTitleDropdown = ref(false)
 const showCompanyDropdown = ref(false)
@@ -266,6 +267,14 @@ const companyDropdownStyle = ref({})
 const priceDropdownStyle = ref({})
 const statusDropdownStyle = ref({})
 const dateDropdownStyle = ref({})
+
+const saveFilters = () => {
+  localStorage.setItem('jobs_titleSort', titleSort.value)
+  localStorage.setItem('jobs_companySort', companySort.value)
+  localStorage.setItem('jobs_priceSort', priceSort.value)
+  localStorage.setItem('jobs_statusFilter', statusFilter.value)
+  localStorage.setItem('jobs_dateSort', dateSort.value)
+}
 
 const jobs = ref([])
 const allEmployers = ref([])
@@ -344,7 +353,7 @@ const toggleTitleDropdown = (e) => {
   titleDropdownStyle.value = { position: 'fixed', top: (rect.bottom + window.scrollY) + 'px', left: rect.left + 'px' }
 }
 
-const setTitleSort = (val) => { titleSort.value = val; showTitleDropdown.value = false }
+const setTitleSort = (val) => { titleSort.value = val; showTitleDropdown.value = false; saveFilters() }
 
 const toggleCompanyDropdown = (e) => {
   closeAllDropdowns()
@@ -353,7 +362,7 @@ const toggleCompanyDropdown = (e) => {
   companyDropdownStyle.value = { position: 'fixed', top: (rect.bottom + window.scrollY) + 'px', left: rect.left + 'px' }
 }
 
-const setCompanySort = (val) => { companySort.value = val; showCompanyDropdown.value = false }
+const setCompanySort = (val) => { companySort.value = val; showCompanyDropdown.value = false; saveFilters() }
 
 const togglePriceDropdown = (e) => {
   closeAllDropdowns()
@@ -362,7 +371,7 @@ const togglePriceDropdown = (e) => {
   priceDropdownStyle.value = { position: 'fixed', top: (rect.bottom + window.scrollY) + 'px', left: rect.left + 'px' }
 }
 
-const setPriceSort = (val) => { priceSort.value = val; showPriceDropdown.value = false }
+const setPriceSort = (val) => { priceSort.value = val; showPriceDropdown.value = false; saveFilters() }
 
 const toggleStatusDropdown = (e) => {
   closeAllDropdowns()
@@ -371,7 +380,7 @@ const toggleStatusDropdown = (e) => {
   statusDropdownStyle.value = { position: 'fixed', top: (rect.bottom + window.scrollY) + 'px', left: rect.left + 'px' }
 }
 
-const setStatusFilter = (val) => { statusFilter.value = val; showStatusDropdown.value = false }
+const setStatusFilter = (val) => { statusFilter.value = val; showStatusDropdown.value = false; saveFilters() }
 
 const toggleDateDropdown = (e) => {
   closeAllDropdowns()
@@ -380,7 +389,7 @@ const toggleDateDropdown = (e) => {
   dateDropdownStyle.value = { position: 'fixed', top: (rect.bottom + window.scrollY) + 'px', left: rect.left + 'px' }
 }
 
-const setDateSort = (val) => { dateSort.value = val; showDateDropdown.value = false }
+const setDateSort = (val) => { dateSort.value = val; showDateDropdown.value = false; saveFilters() }
 
 const closeAllDropdowns = () => {
   showTitleDropdown.value = false
@@ -388,6 +397,15 @@ const closeAllDropdowns = () => {
   showPriceDropdown.value = false
   showStatusDropdown.value = false
   showDateDropdown.value = false
+}
+
+const resetAllFilters = () => {
+  titleSort.value = ''
+  companySort.value = ''
+  priceSort.value = ''
+  statusFilter.value = 'All'
+  dateSort.value = ''
+  saveFilters()
 }
 
 const viewJob = (id) => router.push({ name: 'JobDetail', params: { id } })
@@ -465,6 +483,13 @@ onMounted(async () => {
 }
 .col-filter-btn:hover { border-color: #06C755; color: #06C755; }
 .col-filter-btn.active { border-color: #06C755; color: #06C755; font-weight: 600; }
+
+.reset-btn {
+  margin-left: 6px; padding: 4px 8px; border: none;
+  border-radius: 4px; font-size: 10px; background: #ffebee;
+  color: #c62828; cursor: pointer; font-weight: 500;
+}
+.reset-btn:hover { background: #ffcdd2; }
 
 .col-dropdown {
   background: white; border: 1px solid #ddd; border-radius: 6px;

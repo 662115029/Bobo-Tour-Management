@@ -30,6 +30,7 @@
               <button class="col-filter-btn" :class="{ active: dateSort !== '' }" @click.stop="toggleDateDropdown($event)">
                 {{ dateSort === 'desc' ? 'Latest ▼' : dateSort === 'asc' ? 'Oldest ▼' : 'All ▼' }}
               </button>
+              <button v-if="actionSort || typeFilter !== 'All' || dateSort" class="reset-btn" @click="resetAllFilters">Reset</button>
             </th>
           </tr>
         </thead>
@@ -85,9 +86,9 @@ import { computed, onMounted, ref } from 'vue'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000'
 const search = ref('')
-const typeFilter = ref('All')
-const actionSort = ref('')
-const dateSort = ref('')
+const typeFilter = ref(localStorage.getItem('logs_typeFilter') || 'All')
+const actionSort = ref(localStorage.getItem('logs_actionSort') || '')
+const dateSort = ref(localStorage.getItem('logs_dateSort') || '')
 const logs = ref([])
 
 const showActionDropdown = ref(false)
@@ -97,6 +98,12 @@ const actionDropdownStyle = ref({})
 const typeDropdownStyle = ref({})
 const dateDropdownStyle = ref({})
 
+const saveFilters = () => {
+  localStorage.setItem('logs_actionSort', actionSort.value)
+  localStorage.setItem('logs_typeFilter', typeFilter.value)
+  localStorage.setItem('logs_dateSort', dateSort.value)
+}
+
 const toggleActionDropdown = (e) => {
   closeAllDropdowns()
   showActionDropdown.value = true
@@ -104,7 +111,7 @@ const toggleActionDropdown = (e) => {
   actionDropdownStyle.value = { position: 'fixed', top: (rect.bottom + window.scrollY) + 'px', left: rect.left + 'px' }
 }
 
-const setActionSort = (val) => { actionSort.value = val; showActionDropdown.value = false }
+const setActionSort = (val) => { actionSort.value = val; showActionDropdown.value = false; saveFilters() }
 
 const toggleTypeDropdown = (e) => {
   closeAllDropdowns()
@@ -113,7 +120,7 @@ const toggleTypeDropdown = (e) => {
   typeDropdownStyle.value = { position: 'fixed', top: (rect.bottom + window.scrollY) + 'px', left: rect.left + 'px' }
 }
 
-const setTypeFilter = (val) => { typeFilter.value = val; showTypeDropdown.value = false }
+const setTypeFilter = (val) => { typeFilter.value = val; showTypeDropdown.value = false; saveFilters() }
 
 const toggleDateDropdown = (e) => {
   closeAllDropdowns()
@@ -122,12 +129,19 @@ const toggleDateDropdown = (e) => {
   dateDropdownStyle.value = { position: 'fixed', top: (rect.bottom + window.scrollY) + 'px', left: rect.left + 'px' }
 }
 
-const setDateSort = (val) => { dateSort.value = val; showDateDropdown.value = false }
+const setDateSort = (val) => { dateSort.value = val; showDateDropdown.value = false; saveFilters() }
 
 const closeAllDropdowns = () => {
   showActionDropdown.value = false
   showTypeDropdown.value = false
   showDateDropdown.value = false
+}
+
+const resetAllFilters = () => {
+  actionSort.value = ''
+  typeFilter.value = 'All'
+  dateSort.value = ''
+  saveFilters()
 }
 
 const formatDateTime = (date) => {
@@ -258,6 +272,13 @@ onMounted(async () => {
 }
 .col-filter-btn:hover { color: #06C755; }
 .col-filter-btn.active { color: #06C755; font-weight: 600; }
+
+.reset-btn {
+  margin-left: 6px; padding: 4px 8px; border: none;
+  border-radius: 4px; font-size: 10px; background: #ffebee;
+  color: #c62828; cursor: pointer; font-weight: 500;
+}
+.reset-btn:hover { background: #ffcdd2; }
 
 .col-dropdown {
   background: white; border: 1px solid #ddd; border-radius: 6px;

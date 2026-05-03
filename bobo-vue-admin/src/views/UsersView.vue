@@ -52,6 +52,7 @@
               <button class="col-filter-btn" :class="{ active: dateSort !== '' }" @click.stop="toggleDateDropdown($event)">
                 {{ dateSort === 'desc' ? 'Latest ▼' : dateSort === 'asc' ? 'Oldest ▼' : 'All ▼' }}
               </button>
+              <button v-if="nameSort || ratingSort || verifyFilter !== 'All' || dateSort" class="reset-btn" @click="resetAllFilters">Reset</button>
             </th>
           </tr>
         </thead>
@@ -145,10 +146,10 @@ const jobsDoneByFreelancer = ref({})
 const jobsDoneByEmployer = ref({})
 
 // Sort states
-const nameSort = ref('')
-const ratingSort = ref('')
-const verifyFilter = ref('All')
-const dateSort = ref('')
+const nameSort = ref(localStorage.getItem('users_nameSort') || '')
+const ratingSort = ref(localStorage.getItem('users_ratingSort') || '')
+const verifyFilter = ref(localStorage.getItem('users_verifyFilter') || 'All')
+const dateSort = ref(localStorage.getItem('users_dateSort') || '')
 
 // Dropdown visibility
 const showNameDropdown = ref(false)
@@ -162,6 +163,13 @@ const ratingDropdownStyle = ref({})
 const statusDropdownStyle = ref({})
 const dateDropdownStyle = ref({})
 
+const saveFilters = () => {
+  localStorage.setItem('users_nameSort', nameSort.value)
+  localStorage.setItem('users_ratingSort', ratingSort.value)
+  localStorage.setItem('users_verifyFilter', verifyFilter.value)
+  localStorage.setItem('users_dateSort', dateSort.value)
+}
+
 const toggleNameDropdown = (e) => {
   closeAllDropdowns()
   showNameDropdown.value = true
@@ -169,7 +177,7 @@ const toggleNameDropdown = (e) => {
   nameDropdownStyle.value = { position: 'fixed', top: (rect.bottom + window.scrollY) + 'px', left: rect.left + 'px' }
 }
 
-const setNameSort = (val) => { nameSort.value = val; showNameDropdown.value = false }
+const setNameSort = (val) => { nameSort.value = val; showNameDropdown.value = false; saveFilters() }
 
 const toggleRatingDropdown = (e) => {
   closeAllDropdowns()
@@ -178,7 +186,7 @@ const toggleRatingDropdown = (e) => {
   ratingDropdownStyle.value = { position: 'fixed', top: (rect.bottom + window.scrollY) + 'px', left: rect.left + 'px' }
 }
 
-const setRatingSort = (val) => { ratingSort.value = val; showRatingDropdown.value = false }
+const setRatingSort = (val) => { ratingSort.value = val; showRatingDropdown.value = false; saveFilters() }
 
 const toggleStatusDropdown = (e) => {
   closeAllDropdowns()
@@ -187,7 +195,7 @@ const toggleStatusDropdown = (e) => {
   statusDropdownStyle.value = { position: 'fixed', top: (rect.bottom + window.scrollY) + 'px', left: rect.left + 'px' }
 }
 
-const setVerifyFilter = (val) => { verifyFilter.value = val; showStatusDropdown.value = false }
+const setVerifyFilter = (val) => { verifyFilter.value = val; showStatusDropdown.value = false; saveFilters() }
 
 const toggleDateDropdown = (e) => {
   closeAllDropdowns()
@@ -196,13 +204,21 @@ const toggleDateDropdown = (e) => {
   dateDropdownStyle.value = { position: 'fixed', top: (rect.bottom + window.scrollY) + 'px', left: rect.left + 'px' }
 }
 
-const setDateSort = (val) => { dateSort.value = val; showDateDropdown.value = false }
+const setDateSort = (val) => { dateSort.value = val; showDateDropdown.value = false; saveFilters() }
 
 const closeAllDropdowns = () => {
   showNameDropdown.value = false
   showRatingDropdown.value = false
   showStatusDropdown.value = false
   showDateDropdown.value = false
+}
+
+const resetAllFilters = () => {
+  nameSort.value = ''
+  ratingSort.value = ''
+  verifyFilter.value = 'All'
+  dateSort.value = ''
+  saveFilters()
 }
 
 const viewUser = (user) => {
@@ -558,6 +574,13 @@ watch(activeTab, async (tab) => {
 }
 .col-filter-btn:hover { border-color: #06C755; color: #06C755; }
 .col-filter-btn.active { border-color: #06C755; color: #06C755; font-weight: 600; }
+
+.reset-btn {
+  margin-left: 6px; padding: 4px 8px; border: none;
+  border-radius: 4px; font-size: 10px; background: #ffebee;
+  color: #c62828; cursor: pointer; font-weight: 500;
+}
+.reset-btn:hover { background: #ffcdd2; }
 
 .col-dropdown {
   background: white; border: 1px solid #ddd; border-radius: 6px;
