@@ -36,16 +36,12 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="job in jobs.slice(0, 10)" :key="job.job_id">
-            <td class="truncate-cell">
-              <span class="clickable-title" @click="openJobModal(job)" :title="job.job_title">
-                {{ job.job_title }}
-              </span>
+          <tr v-for="job in jobs.slice(0, 10)" :key="job.job_id" class="row-hover">
+            <td class="truncate-cell clickable-cell" @click="openJobModal(job)">
+              {{ job.job_title }}
             </td>
-            <td class="truncate-cell">
-              <span class="clickable-title" @click="openCompanyModal(job)" :title="job.company">
-                {{ job.company }}
-              </span>
+            <td class="truncate-cell clickable-cell" @click="openCompanyModal(job)">
+              {{ job.company }}
             </td>
             <td>{{ job.job_price ? '฿' + Number(job.job_price).toLocaleString() : '-' }}</td>
             <td>
@@ -77,11 +73,9 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="v in verifications.slice(0, 10)" :key="v.id">
-            <td class="truncate-cell">
-              <span class="clickable-title" @click="openVerifyModal(v)" :title="v.name">
-                {{ v.name }}
-              </span>
+          <tr v-for="v in verifications.slice(0, 10)" :key="v.id" class="row-hover">
+            <td class="truncate-cell clickable-cell" @click="openVerifyModal(v)">
+              {{ v.name }}
             </td>
             <td>
               <span class="type-tag" :class="v.type.toLowerCase()">{{ v.type }}</span>
@@ -552,12 +546,18 @@ section {
 
 .truncate-cell { max-width: 0; }
 
-.clickable-title {
-  display: block; white-space: nowrap; overflow: hidden;
-  text-overflow: ellipsis; cursor: pointer; color: #0066cc;
-  font-size: 14px;
+.row-hover:hover {
+  background: #f5f5f5;
 }
-.clickable-title:hover { text-decoration: underline; }
+
+.clickable-cell {
+  cursor: pointer;
+  color: #000;
+}
+
+.clickable-cell:hover {
+  color: #000;
+}
 
 /* Badge */
 .badge {

@@ -57,11 +57,11 @@
           </tr>
         </thead>
 <tbody>
-          <tr v-for="user in filteredUsers" :key="user.id">
-            <td class="truncate-cell">
+          <tr v-for="user in filteredUsers" :key="user.id" class="row-hover">
+            <td class="truncate-cell clickable-cell" @click="viewUser(user)">
               <div class="user-cell">
                 <span class="avatar">{{ user.initials }}</span>
-                <span class="clickable-title" @click="viewUser(user)" :title="user.name">
+                <span :title="user.name">
                   {{ user.name }}
                 </span>
               </div>
@@ -495,16 +495,18 @@ watch(activeTab, async (tab) => {
 
 .truncate-cell { max-width: 0; }
 
-.clickable-title {
-  display: block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  cursor: pointer;
-  color: #0066cc;
-  font-size: 14px;
+.row-hover:hover {
+  background: #f5f5f5;
 }
-.clickable-title:hover { text-decoration: underline; }
+
+.clickable-cell {
+  cursor: pointer;
+  color: #000;
+}
+
+.clickable-cell:hover {
+  color: #000;
+}
 
 .action-btns { display: flex; gap: 6px; }
 .btn-action {
@@ -627,9 +629,6 @@ watch(activeTab, async (tab) => {
     width: 28px;
     height: 28px;
     font-size: 10px;
-  }
-  .clickable-title {
-    font-size: 13px;
   }
 }
 
