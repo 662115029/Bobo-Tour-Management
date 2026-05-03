@@ -30,27 +30,27 @@
             <th style="width:28%">
               NAME
               <button class="col-filter-btn" :class="{ active: nameSort !== '' }" @click.stop="toggleNameDropdown($event)">
-                {{ nameSort === 'asc' ? 'A→Z' : nameSort === 'desc' ? 'Z→A' : 'Sort' }}
+                {{ nameSort === 'asc' ? 'A→Z ▼' : nameSort === 'desc' ? 'Z→A ▼' : 'All ▼' }}
               </button>
             </th>
             <th style="width:16%">
               RATING
               <button class="col-filter-btn" :class="{ active: ratingSort !== '' }" @click.stop="toggleRatingDropdown($event)">
-                {{ ratingSort === 'desc' ? 'High' : ratingSort === 'asc' ? 'Low' : 'Sort' }}
+                {{ ratingSort === 'desc' ? 'High ▼' : ratingSort === 'asc' ? 'Low ▼' : 'All ▼' }}
               </button>
             </th>
             <th style="width:10%">JOBS</th>
             <th style="width:10%">
               STATUS
               <button class="col-filter-btn" :class="{ active: verifyFilter !== 'All' }" @click.stop="toggleStatusDropdown($event)">
-                {{ verifyFilter === 'All' ? 'Filter' : verifyFilter }}
+                {{ verifyFilter === 'All' ? 'All ▼' : verifyFilter + ' ▼' }}
               </button>
             </th>
             <th style="width:12%">ACTION</th>
             <th style="width:16%">
               LAST UPDATED
               <button class="col-filter-btn" :class="{ active: dateSort !== '' }" @click.stop="toggleDateDropdown($event)">
-                {{ dateSort === 'desc' ? 'Latest' : dateSort === 'asc' ? 'Oldest' : 'Sort' }}
+                {{ dateSort === 'desc' ? 'Latest ▼' : dateSort === 'asc' ? 'Oldest ▼' : 'All ▼' }}
               </button>
             </th>
           </tr>
@@ -89,25 +89,26 @@
 
     <!-- Column Filter Dropdowns -->
     <div v-if="showNameDropdown" class="col-dropdown" :style="nameDropdownStyle">
-      <button class="col-dropdown-item" @click="setNameSort('')">Sort</button>
+      <button class="col-dropdown-item" @click="setNameSort('')">All</button>
       <button class="col-dropdown-item" @click="setNameSort('asc')">A → Z</button>
       <button class="col-dropdown-item" @click="setNameSort('desc')">Z → A</button>
     </div>
 
     <div v-if="showRatingDropdown" class="col-dropdown" :style="ratingDropdownStyle">
-      <button class="col-dropdown-item" @click="setRatingSort('')">Sort</button>
+      <button class="col-dropdown-item" @click="setRatingSort('')">All</button>
       <button class="col-dropdown-item" @click="setRatingSort('desc')">High → Low</button>
       <button class="col-dropdown-item" @click="setRatingSort('asc')">Low → High</button>
     </div>
 
     <div v-if="showStatusDropdown" class="col-dropdown" :style="statusDropdownStyle">
-      <button class="col-dropdown-item" @click="setVerifyFilter('All')">All Status</button>
+      <button class="col-dropdown-item" @click="setVerifyFilter('All')">All</button>
       <button class="col-dropdown-item" @click="setVerifyFilter('VERIFIED')">Verified</button>
       <button class="col-dropdown-item" @click="setVerifyFilter('PENDING')">Pending</button>
       <button class="col-dropdown-item" @click="setVerifyFilter('NOT_VERIFIED')">Not Verified</button>
     </div>
 
     <div v-if="showDateDropdown" class="col-dropdown" :style="dateDropdownStyle">
+      <button class="col-dropdown-item" @click="setDateSort('')">All</button>
       <button class="col-dropdown-item" @click="setDateSort('desc')">Latest</button>
       <button class="col-dropdown-item" @click="setDateSort('asc')">Oldest</button>
     </div>
@@ -398,11 +399,13 @@ watch(activeTab, async (tab) => {
 .table-container {
   background: white;
   border-radius: 8px;
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .table {
   width: 100%;
+  min-width: 900px;
   border-collapse: collapse;
   table-layout: fixed;
 }
@@ -412,6 +415,7 @@ watch(activeTab, async (tab) => {
   padding: 14px 16px;
   text-align: left;
   border-bottom: 1px solid #eee;
+  white-space: nowrap;
 }
 
 .table th {
@@ -419,6 +423,9 @@ watch(activeTab, async (tab) => {
   color: #666;
   font-weight: 600;
   background: #f9f9f9;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .user-cell {
@@ -545,12 +552,12 @@ watch(activeTab, async (tab) => {
 .empty { text-align: center; color: #999; padding: 32px; }
 
 .col-filter-btn {
-  margin-left: 8px; padding: 3px 6px; border: none;
-  border-radius: 4px; font-size: 10px; background: transparent; color: #888;
+  margin-left: 8px; padding: 4px 10px; border: 1px solid #ccc;
+  border-radius: 20px; font-size: 11px; background: transparent; color: #666;
   cursor: pointer; font-weight: 500;
 }
-.col-filter-btn:hover { color: #06C755; }
-.col-filter-btn.active { color: #06C755; font-weight: 600; }
+.col-filter-btn:hover { border-color: #06C755; color: #06C755; }
+.col-filter-btn.active { border-color: #06C755; color: #06C755; font-weight: 600; }
 
 .col-dropdown {
   background: white; border: 1px solid #ddd; border-radius: 6px;
@@ -563,4 +570,50 @@ watch(activeTab, async (tab) => {
 .col-dropdown-item:hover { background: #f5f5f5; }
 .col-dropdown-item:first-child { border-radius: 6px 6px 0 0; }
 .col-dropdown-item:last-child { border-radius: 0 0 6px 6px; }
+
+@media (max-width: 1024px) {
+  .table th, .table td {
+    padding: 12px 10px;
+  }
+  .table th {
+    font-size: 11px;
+  }
+  .badge {
+    padding: 3px 8px;
+    font-size: 11px;
+  }
+  .btn-action {
+    padding: 3px 8px;
+    font-size: 11px;
+  }
+  .avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 10px;
+  }
+  .clickable-title {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 640px) {
+  .filter-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .search-input {
+    width: 100%;
+  }
+  .title {
+    font-size: 20px;
+  }
+  .tabs {
+    gap: 16px;
+  }
+  .tab {
+    font-size: 13px;
+    padding: 10px 0;
+  }
+}
 </style>

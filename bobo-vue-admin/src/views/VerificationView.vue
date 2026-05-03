@@ -22,20 +22,20 @@
             <th style="width:54%">
               NAME
               <button class="col-filter-btn" :class="{ active: nameSort !== '' }" @click.stop="toggleNameDropdown($event)">
-                {{ nameSort === 'asc' ? 'A → Z' : nameSort === 'desc' ? 'Z → A' : 'Sort' }}
+                {{ nameSort === 'asc' ? 'A → Z' : nameSort === 'desc' ? 'Z → A' : 'All ▼' }}
               </button>
             </th>
             <th style="width:10%">
               STATUS
               <button class="col-filter-btn" :class="{ active: statusFilter !== '' }" @click.stop="toggleStatusDropdown($event)">
-                {{ statusFilter || 'Filter' }}
+                {{ statusFilter ? statusFilter : 'All ▼' }}
               </button>
             </th>
             <th style="width:14%">ACTION</th>
             <th style="width:16%">
               LAST UPDATED
               <button class="col-filter-btn" :class="{ active: dateSort !== '' }" @click.stop="toggleDateDropdown($event)">
-                {{ dateSort === 'desc' ? 'Latest' : dateSort === 'asc' ? 'Oldest' : 'Sort' }}
+                {{ dateSort === 'desc' ? 'Latest ▼' : dateSort === 'asc' ? 'Oldest ▼' : 'All ▼' }}
               </button>
             </th>
           </tr>
@@ -63,19 +63,20 @@
 
     <!-- Column Filter Dropdown -->
     <div v-if="showStatusDropdown" class="col-dropdown" :style="statusDropdownStyle">
-      <button class="col-dropdown-item" @click="setStatusFilter('')">All Status</button>
+      <button class="col-dropdown-item" @click="setStatusFilter('')">All</button>
       <button class="col-dropdown-item" @click="setStatusFilter('VERIFIED')">Verified</button>
       <button class="col-dropdown-item" @click="setStatusFilter('PENDING')">Pending</button>
       <button class="col-dropdown-item" @click="setStatusFilter('NOT_VERIFIED')">Not Verified</button>
     </div>
 
     <div v-if="showNameDropdown" class="col-dropdown" :style="nameDropdownStyle">
-      <button class="col-dropdown-item" @click="setNameSort('')">Sort</button>
+      <button class="col-dropdown-item" @click="setNameSort('')">All</button>
       <button class="col-dropdown-item" @click="setNameSort('asc')">A → Z</button>
       <button class="col-dropdown-item" @click="setNameSort('desc')">Z → A</button>
     </div>
 
     <div v-if="showDateDropdown" class="col-dropdown" :style="dateDropdownStyle">
+      <button class="col-dropdown-item" @click="setDateSort('')">All</button>
       <button class="col-dropdown-item" @click="setDateSort('desc')">Latest</button>
       <button class="col-dropdown-item" @click="setDateSort('asc')">Oldest</button>
     </div>
@@ -185,7 +186,7 @@ const activeTab = ref('Freelancer')
 const search = ref('')
 const nameSort = ref('')
 const statusFilter = ref('')
-const dateSort = ref('desc')
+const dateSort = ref('')
 const showNameDropdown = ref(false)
 const showStatusDropdown = ref(false)
 const showDateDropdown = ref(false)
@@ -499,21 +500,23 @@ onMounted(async () => {
 
 .col-filter-btn {
   margin-left: 8px;
-  padding: 3px 6px;
-  border: none;
-  border-radius: 4px;
-  font-size: 10px;
+  padding: 4px 10px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  font-size: 11px;
   background: transparent;
-  color: #888;
+  color: #666;
   cursor: pointer;
   font-weight: 500;
 }
 
 .col-filter-btn:hover {
+  border-color: #06C755;
   color: #06C755;
 }
 
 .col-filter-btn.active {
+  border-color: #06C755;
   color: #06C755;
   font-weight: 600;
 }

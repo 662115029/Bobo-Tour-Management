@@ -4,36 +4,33 @@
 
     <div class="filter-row">
       <input type="text" v-model="search" placeholder="Search action or target..." class="search-input" />
-      <div class="filter-group">
-        <select v-model="typeFilter" class="filter-select">
-          <option value="All">All Types</option>
-          <option value="FREELANCER">Freelancer</option>
-          <option value="EMPLOYER">Employer</option>
-          <option value="JOB">Job</option>
-          <option value="ADMIN">Admin</option>
-        </select>
-        <select v-model="actionFilter" class="filter-select">
-          <option value="All">All Actions</option>
-          <option value="APPROVE">Approve</option>
-          <option value="REJECT">Reject</option>
-          <option value="BAN">Ban</option>
-          <option value="UNBAN">Unban</option>
-          <option value="DELETE">Delete</option>
-          <option value="UPDATE">Update</option>
-        </select>
-      </div>
     </div>
 
     <div class="table-container">
       <table class="table">
         <thead>
           <tr>
-            <th style="width:14%">ACTION</th>
-            <th style="width:14%">TYPE</th>
+            <th style="width:14%">
+              ACTION
+              <button class="col-filter-btn" :class="{ active: actionSort !== '' }" @click.stop="toggleActionDropdown($event)">
+                {{ actionSort === 'asc' ? 'A→Z ▼' : actionSort === 'desc' ? 'Z→A ▼' : 'All ▼' }}
+              </button>
+            </th>
+            <th style="width:14%">
+              TYPE
+              <button class="col-filter-btn" :class="{ active: typeFilter !== 'All' }" @click.stop="toggleTypeDropdown($event)">
+                {{ typeFilter === 'All' ? 'All ▼' : typeFilter + ' ▼' }}
+              </button>
+            </th>
             <th style="width:22%">TARGET</th>
             <th style="width:30%">NOTE</th>
             <th style="width:12%">ADMIN</th>
-            <th style="width:16%">WHEN</th>
+            <th style="width:16%">
+              WHEN
+              <button class="col-filter-btn" :class="{ active: dateSort !== '' }" @click.stop="toggleDateDropdown($event)">
+                {{ dateSort === 'desc' ? 'Latest ▼' : dateSort === 'asc' ? 'Oldest ▼' : 'All ▼' }}
+              </button>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -59,6 +56,27 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Column Filter Dropdowns -->
+    <div v-if="showActionDropdown" class="col-dropdown" :style="actionDropdownStyle">
+      <button class="col-dropdown-item" @click="setActionSort('')">All</button>
+      <button class="col-dropdown-item" @click="setActionSort('asc')">A → Z</button>
+      <button class="col-dropdown-item" @click="setActionSort('desc')">Z → A</button>
+    </div>
+
+    <div v-if="showTypeDropdown" class="col-dropdown" :style="typeDropdownStyle">
+      <button class="col-dropdown-item" @click="setTypeFilter('All')">All</button>
+      <button class="col-dropdown-item" @click="setTypeFilter('FREELANCER')">Freelancer</button>
+      <button class="col-dropdown-item" @click="setTypeFilter('EMPLOYER')">Employer</button>
+      <button class="col-dropdown-item" @click="setTypeFilter('JOB')">Job</button>
+      <button class="col-dropdown-item" @click="setTypeFilter('ADMIN')">Admin</button>
+    </div>
+
+    <div v-if="showDateDropdown" class="col-dropdown" :style="dateDropdownStyle">
+      <button class="col-dropdown-item" @click="setDateSort('')">All</button>
+      <button class="col-dropdown-item" @click="setDateSort('desc')">Latest</button>
+      <button class="col-dropdown-item" @click="setDateSort('asc')">Oldest</button>
+    </div>
   </div>
 </template>
 
@@ -68,8 +86,49 @@ import { computed, onMounted, ref } from 'vue'
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000'
 const search = ref('')
 const typeFilter = ref('All')
-const actionFilter = ref('All')
+const actionSort = ref('')
+const dateSort = ref('')
 const logs = ref([])
+
+const showActionDropdown = ref(false)
+const showTypeDropdown = ref(false)
+const showDateDropdown = ref(false)
+const actionDropdownStyle = ref({})
+const typeDropdownStyle = ref({})
+const dateDropdownStyle = ref({})
+
+const toggleActionDropdown = (e) => {
+  closeAllDropdowns()
+  showActionDropdown.value = true
+  const rect = e.target.getBoundingClientRect()
+  actionDropdownStyle.value = { position: 'fixed', top: (rect.bottom + window.scrollY) + 'px', left: rect.left + 'px' }
+}
+
+const setActionSort = (val) => { actionSort.value = val; showActionDropdown.value = false }
+
+const toggleTypeDropdown = (e) => {
+  closeAllDropdowns()
+  showTypeDropdown.value = true
+  const rect = e.target.getBoundingClientRect()
+  typeDropdownStyle.value = { position: 'fixed', top: (rect.bottom + window.scrollY) + 'px', left: rect.left + 'px' }
+}
+
+const setTypeFilter = (val) => { typeFilter.value = val; showTypeDropdown.value = false }
+
+const toggleDateDropdown = (e) => {
+  closeAllDropdowns()
+  showDateDropdown.value = true
+  const rect = e.target.getBoundingClientRect()
+  dateDropdownStyle.value = { position: 'fixed', top: (rect.bottom + window.scrollY) + 'px', left: rect.left + 'px' }
+}
+
+const setDateSort = (val) => { dateSort.value = val; showDateDropdown.value = false }
+
+const closeAllDropdowns = () => {
+  showActionDropdown.value = false
+  showTypeDropdown.value = false
+  showDateDropdown.value = false
+}
 
 const formatDateTime = (date) => {
   if (!date) return '-'
@@ -99,15 +158,37 @@ const getTypeClass = (type) => {
 }
 
 const filteredLogs = computed(() => {
-  return logs.value.filter(log => {
+  let result = logs.value.filter(log => {
     const matchSearch = search.value === '' ||
       (log.action_type || '').toLowerCase().includes(search.value.toLowerCase()) ||
       (log.target_name || '').toLowerCase().includes(search.value.toLowerCase()) ||
       (log.note || '').toLowerCase().includes(search.value.toLowerCase())
     const matchType = typeFilter.value === 'All' || (log.target_type || '').toUpperCase() === typeFilter.value
-    const matchAction = actionFilter.value === 'All' || (log.action_type || '').toUpperCase() === actionFilter.value
-    return matchSearch && matchType && matchAction
+    return matchSearch && matchType
   })
+
+  if (actionSort.value) {
+    result = [...result].sort((a, b) => {
+      const cmp = (a.action_type || '').localeCompare(b.action_type || '')
+      return actionSort.value === 'desc' ? -cmp : cmp
+    })
+  }
+
+  if (dateSort.value) {
+    result = [...result].sort((a, b) => {
+      const dateA = new Date(a.created_at) || 0
+      const dateB = new Date(b.created_at) || 0
+      return dateSort.value === 'desc' ? dateB - dateA : dateA - dateB
+    })
+  } else {
+    result = [...result].sort((a, b) => {
+      const dateA = new Date(a.created_at) || 0
+      const dateB = new Date(b.created_at) || 0
+      return dateB - dateA
+    })
+  }
+
+  return result
 })
 
 onMounted(async () => {
@@ -169,4 +250,36 @@ onMounted(async () => {
 
 .text-muted { color: #999; font-size: 12px; }
 .empty { text-align: center; color: #999; padding: 32px; }
+
+.col-filter-btn {
+  margin-left: 8px; padding: 4px 10px; border: 1px solid #ccc;
+  border-radius: 20px; font-size: 11px; background: transparent; color: #888;
+  cursor: pointer; font-weight: 500;
+}
+.col-filter-btn:hover { color: #06C755; }
+.col-filter-btn.active { color: #06C755; font-weight: 600; }
+
+.col-dropdown {
+  background: white; border: 1px solid #ddd; border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 50; min-width: 120px;
+}
+.col-dropdown-item {
+  display: block; width: 100%; padding: 8px 14px; border: none;
+  background: none; text-align: left; font-size: 13px; cursor: pointer;
+}
+.col-dropdown-item:hover { background: #f5f5f5; }
+.col-dropdown-item:first-child { border-radius: 6px 6px 0 0; }
+.col-dropdown-item:last-child { border-radius: 0 0 6px 6px; }
+
+@media (max-width: 1024px) {
+  .table th, .table td { padding: 10px 8px; }
+  .table th { font-size: 11px; }
+  .action-badge, .type-tag { padding: 2px 8px; font-size: 10px; }
+}
+
+@media (max-width: 640px) {
+  .filter-row { flex-direction: column; align-items: stretch; gap: 10px; }
+  .search-input { width: 100%; }
+  .title { font-size: 20px; }
+}
 </style>

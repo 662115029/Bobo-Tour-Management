@@ -34,32 +34,32 @@
             <th style="width:28%">
               JOB TITLE
               <button class="col-filter-btn" :class="{ active: titleSort !== '' }" @click.stop="toggleTitleDropdown($event)">
-                {{ titleSort === 'asc' ? 'A→Z' : titleSort === 'desc' ? 'Z→A' : 'Sort' }}
+                {{ titleSort === 'asc' ? 'A→Z ▼' : titleSort === 'desc' ? 'Z→A ▼' : 'All ▼' }}
               </button>
             </th>
             <th style="width:16%">
               COMPANY
               <button class="col-filter-btn" :class="{ active: companySort !== '' }" @click.stop="toggleCompanyDropdown($event)">
-                {{ companySort === 'asc' ? 'A→Z' : companySort === 'desc' ? 'Z→A' : 'Sort' }}
+                {{ companySort === 'asc' ? 'A→Z ▼' : companySort === 'desc' ? 'Z→A ▼' : 'All ▼' }}
               </button>
             </th>
             <th style="width:10%">
               PRICE
               <button class="col-filter-btn" :class="{ active: priceSort !== '' }" @click.stop="togglePriceDropdown($event)">
-                {{ priceSort === 'asc' ? '↑' : priceSort === 'desc' ? '↓' : 'Sort' }}
+                {{ priceSort === 'asc' ? '↑ ▼' : priceSort === 'desc' ? '↓ ▼' : 'All ▼' }}
               </button>
             </th>
             <th style="width:10%">
               STATUS
               <button class="col-filter-btn" :class="{ active: statusFilter !== 'All' }" @click.stop="toggleStatusDropdown($event)">
-                {{ statusFilter === 'All' ? 'Filter' : statusFilter }}
+                {{ statusFilter === 'All' ? 'All ▼' : statusFilter + ' ▼' }}
               </button>
             </th>
             <th style="width:12%">ACTION</th>
             <th style="width:16%">
               LAST UPDATED
               <button class="col-filter-btn" :class="{ active: dateSort !== '' }" @click.stop="toggleDateDropdown($event)">
-                {{ dateSort === 'desc' ? 'Latest' : dateSort === 'asc' ? 'Oldest' : 'Sort' }}
+                {{ dateSort === 'desc' ? 'Latest ▼' : dateSort === 'asc' ? 'Oldest ▼' : 'All ▼' }}
               </button>
             </th>
           </tr>
@@ -97,25 +97,25 @@
 
     <!-- Column Filter Dropdowns -->
     <div v-if="showTitleDropdown" class="col-dropdown" :style="titleDropdownStyle">
-      <button class="col-dropdown-item" @click="setTitleSort('')">Sort</button>
+      <button class="col-dropdown-item" @click="setTitleSort('')">All</button>
       <button class="col-dropdown-item" @click="setTitleSort('asc')">A → Z</button>
       <button class="col-dropdown-item" @click="setTitleSort('desc')">Z → A</button>
     </div>
 
     <div v-if="showCompanyDropdown" class="col-dropdown" :style="companyDropdownStyle">
-      <button class="col-dropdown-item" @click="setCompanySort('')">Sort</button>
+      <button class="col-dropdown-item" @click="setCompanySort('')">All</button>
       <button class="col-dropdown-item" @click="setCompanySort('asc')">A → Z</button>
       <button class="col-dropdown-item" @click="setCompanySort('desc')">Z → A</button>
     </div>
 
     <div v-if="showPriceDropdown" class="col-dropdown" :style="priceDropdownStyle">
-      <button class="col-dropdown-item" @click="setPriceSort('')">Sort</button>
+      <button class="col-dropdown-item" @click="setPriceSort('')">All</button>
       <button class="col-dropdown-item" @click="setPriceSort('asc')">Low → High</button>
       <button class="col-dropdown-item" @click="setPriceSort('desc')">High → Low</button>
     </div>
 
     <div v-if="showStatusDropdown" class="col-dropdown" :style="statusDropdownStyle">
-      <button class="col-dropdown-item" @click="setStatusFilter('All')">All Status</button>
+      <button class="col-dropdown-item" @click="setStatusFilter('All')">All</button>
       <button class="col-dropdown-item" @click="setStatusFilter('OPEN')">Open</button>
       <button class="col-dropdown-item" @click="setStatusFilter('MATCHING')">Matching</button>
       <button class="col-dropdown-item" @click="setStatusFilter('SELECTED')">Selected</button>
@@ -125,6 +125,7 @@
     </div>
 
     <div v-if="showDateDropdown" class="col-dropdown" :style="dateDropdownStyle">
+      <button class="col-dropdown-item" @click="setDateSort('')">All</button>
       <button class="col-dropdown-item" @click="setDateSort('desc')">Latest</button>
       <button class="col-dropdown-item" @click="setDateSort('asc')">Oldest</button>
     </div>
@@ -458,12 +459,12 @@ onMounted(async () => {
 .table th { font-size: 12px; color: #666; font-weight: 600; background: #f9f9f9; position: relative; }
 
 .col-filter-btn {
-  margin-left: 8px; padding: 3px 6px; border: none;
-  border-radius: 4px; font-size: 10px; background: transparent; color: #888;
+  margin-left: 8px; padding: 4px 10px; border: 1px solid #ccc;
+  border-radius: 20px; font-size: 11px; background: transparent; color: #666;
   cursor: pointer; font-weight: 500;
 }
-.col-filter-btn:hover { color: #06C755; }
-.col-filter-btn.active { color: #06C755; font-weight: 600; }
+.col-filter-btn:hover { border-color: #06C755; color: #06C755; }
+.col-filter-btn.active { border-color: #06C755; color: #06C755; font-weight: 600; }
 
 .col-dropdown {
   background: white; border: 1px solid #ddd; border-radius: 6px;
