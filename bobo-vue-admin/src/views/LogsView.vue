@@ -26,7 +26,7 @@
             <th style="width:30%">NOTE</th>
             <th style="width:12%">ADMIN</th>
             <th style="width:16%">
-              WHEN
+              LAST UPDATED
               <button class="col-filter-btn" :class="{ active: dateSort !== '' }" @click.stop="toggleDateDropdown($event)">
                 {{ dateSort === 'desc' ? 'Latest ▼' : dateSort === 'asc' ? 'Oldest ▼' : 'All ▼' }}
               </button>
