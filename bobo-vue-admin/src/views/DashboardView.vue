@@ -518,7 +518,13 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.title { font-size: 24px; margin-bottom: 24px; }
+.title {
+  font-size: 24px;
+  margin: 0 0 24px -24px;
+  background: #1a1a2e;
+  padding: 24px 40px;
+  color: white;
+}
 
 .stats-row {
   display: grid; grid-template-columns: repeat(4, 1fr);

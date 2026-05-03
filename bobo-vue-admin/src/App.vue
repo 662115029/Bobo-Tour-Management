@@ -1,14 +1,25 @@
 <template>
   <div class="app">
-    <Sidebar />
-    <main class="main">
+    <Sidebar @toggle="handleSidebarToggle" />
+    <main class="main" :class="{ expanded: isExpanded, collapsed: !isExpanded }">
       <router-view />
     </main>
   </div>
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
 import Sidebar from './components/Sidebar.vue'
+
+const isExpanded = ref(true)
+
+onMounted(() => {
+  isExpanded.value = localStorage.getItem('sidebarOpen') !== 'false'
+})
+
+const handleSidebarToggle = (val) => {
+  isExpanded.value = val
+}
 </script>
 
 <style>
@@ -31,6 +42,10 @@ body {
 .main {
   flex: 1;
   margin-left: 240px;
-  padding: 24px 32px;
+  transition: margin-left 0.3s ease;
+}
+
+.main.collapsed {
+  margin-left: 72px;
 }
 </style>

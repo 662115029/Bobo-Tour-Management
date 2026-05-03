@@ -398,7 +398,10 @@ watch(activeTab, async (tab) => {
 <style scoped>
 .title {
   font-size: 24px;
-  margin-bottom: 24px;
+  margin: 0 0 24px -24px;
+  background: #1a1a2e;
+  padding: 24px 40px;
+  color: white;
 }
 
 .tabs {
