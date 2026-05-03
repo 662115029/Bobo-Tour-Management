@@ -7,6 +7,7 @@ import FreelancerDetail from '../views/FreelancerDetailView.vue'
 import EmployerDetail from '../views/EmployerDetailView.vue'
 import Users from '../views/UsersView.vue'
 import Logs from '../views/LogsView.vue'
+import Profile from '../views/ProfileView.vue'
 
 const routes = [
   { path: '/', name: 'Dashboard', component: Dashboard },
@@ -16,7 +17,8 @@ const routes = [
   { path: '/freelancers/:id', name: 'FreelancerDetail', component: FreelancerDetail },
   { path: '/employers/:id', name: 'EmployerDetail', component: EmployerDetail },
   { path: '/users', name: 'Users', component: Users },
-  { path: '/logs', name: 'Logs', component: Logs }
+  { path: '/logs', name: 'Logs', component: Logs },
+  { path: '/profile', name: 'Profile', component: Profile }
 ]
 
 const router = createRouter({
