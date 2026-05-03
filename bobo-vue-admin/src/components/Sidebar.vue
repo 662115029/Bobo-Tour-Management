@@ -4,7 +4,7 @@
       <span class="hamburger">{{ isOpen ? '✕' : '☰' }}</span>
     </button>
     <div class="brand">
-      <h1 :class="{ hidden: !isOpen }">AdminPanel</h1>
+      <h1 :class="{ hidden: !isOpen }">Admin Panel</h1>
       <p v-if="isOpen">FreelanceJob v1.0</p>
     </div>
     <nav class="nav">
@@ -65,7 +65,7 @@ const toggle = () => {
   position: fixed;
   left: 0;
   top: 0;
-  padding: 24px 0;
+  padding: 10px 0px;
   transition: width 0.3s;
   z-index: 100;
 }
@@ -81,14 +81,13 @@ const toggle = () => {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #2a2a4a;
   border: none;
   color: white;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 15px;
   z-index: 101;
 }
 
@@ -101,10 +100,10 @@ const toggle = () => {
 }
 
 .brand {
-  padding: 0 24px 32px;
-  border-bottom: 1px solid #2a2a4a;
-  margin-bottom: 24px;
+  padding: 0 0 10px 10px;
+  border-bottom: 2px solid #29293d;
   overflow: hidden;
+  min-height: 60px;
 }
 
 .sidebar.collapsed .brand {
@@ -113,20 +112,26 @@ const toggle = () => {
 
 .brand h1 {
   margin: 0;
-  font-size: 20px;
-  font-weight: bold;
+  font-size: 17.5px;
+  font-weight: 700;
   white-space: nowrap;
+  letter-spacing: 0.2px;
+  visibility: visible;
 }
 
-.brand h1.hidden {
-  display: none;
+.sidebar.collapsed .brand h1 {
+  visibility: hidden;
 }
 
 .brand p {
-  margin: 4px 0 0;
   font-size: 12px;
-  opacity: 0.6;
+  opacity: 0.5;
   white-space: nowrap;
+  visibility: visible;
+}
+
+.sidebar.collapsed .brand p {
+  visibility: hidden;
 }
 
 .nav {
@@ -138,7 +143,7 @@ const toggle = () => {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 6px 10px;
+  padding:5px 10px;
   color: white;
   text-decoration: none;
   opacity: 0.4;
@@ -149,7 +154,7 @@ const toggle = () => {
 }
 
 .sidebar.collapsed .nav-item {
-  padding: 14px;
+  padding: 5px;
   justify-content: center;
 }
 
@@ -173,12 +178,12 @@ const toggle = () => {
   bottom: 0;
   left: 0;
   right: 0;
-  border-top: 1px solid #2a2a4a;
-  padding-top: 12px;
+  border-top: 2px solid #29293d;
+  padding-top: 0px;
 }
 
 .sidebar.collapsed .bottom-nav .nav-item {
-  padding: 14px;
+  padding: 10px;
   justify-content: center;
 }
 </style>

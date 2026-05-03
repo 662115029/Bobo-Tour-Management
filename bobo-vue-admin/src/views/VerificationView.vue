@@ -455,7 +455,7 @@ onMounted(async () => {
 .title {
   font-size: 15px;
   font-weight: 500;
-  margin: 0 0 24px 0;
+  margin: 0 0 2px 0;
   background: #1a1a2e;
   padding: 15px 20px;
   color: white;
@@ -467,6 +467,7 @@ onMounted(async () => {
   gap: 24px;
   margin-bottom: 16px;
   border-bottom: 2px solid #eee;
+  padding: 0 20px;
 }
 
 .tab {
@@ -490,6 +491,7 @@ onMounted(async () => {
   gap: 12px;
   align-items: center;
   justify-content: space-between;
+  padding: 0 20px;
 }
 
 .search-input {
@@ -504,6 +506,7 @@ onMounted(async () => {
   background: white;
   border-radius: 8px;
   overflow: hidden;
+  margin: 0 20px;
 }
 
 .table {
@@ -514,7 +517,7 @@ onMounted(async () => {
 
 .table th,
 .table td {
-  padding: 12px 16px;
+  padding: 15px 20px;
   text-align: left;
   border-bottom: 1px solid #eee;
   overflow: hidden;
@@ -524,7 +527,7 @@ onMounted(async () => {
   font-size: 12px;
   color: #666;
   font-weight: 600;
-  background: #f9f9f9;
+  background: white;
   white-space: nowrap;
   position: relative;
 }
