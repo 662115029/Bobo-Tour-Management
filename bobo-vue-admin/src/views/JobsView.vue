@@ -241,7 +241,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { API_BASE } from '../data/api'
 
@@ -408,6 +408,12 @@ const resetAllFilters = () => {
   saveFilters()
 }
 
+const handleOutsideClick = (e) => {
+  if (!e.target.closest('.col-dropdown') && !e.target.closest('.col-filter-btn')) {
+    closeAllDropdowns()
+  }
+}
+
 const viewJob = (id) => router.push({ name: 'JobDetail', params: { id } })
 
 const openJobModal = (job) => { jobModal.value = job }
@@ -436,7 +442,12 @@ const confirmDelete = async () => {
   }
 }
 
+onUnmounted(() => {
+  document.removeEventListener('click', handleOutsideClick)
+})
+
 onMounted(async () => {
+  document.addEventListener('click', handleOutsideClick)
   try {
     const [jobsRes, emRes] = await Promise.all([
       fetch(`${API_BASE}/jobs?limit=500`),

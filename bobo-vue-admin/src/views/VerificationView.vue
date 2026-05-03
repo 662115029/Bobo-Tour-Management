@@ -180,7 +180,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000'
 const activeTab = ref('Freelancer')
@@ -279,6 +279,12 @@ const resetAllFilters = () => {
   statusFilter.value = ''
   dateSort.value = ''
   saveFilters()
+}
+
+const handleOutsideClick = (e) => {
+  if (!e.target.closest('.col-dropdown') && !e.target.closest('.col-filter-btn')) {
+    closeAllDropdowns()
+  }
 }
 
 const filteredList = computed(() => {
@@ -401,7 +407,12 @@ const reviewDoc = async (doc, newStatus) => {
   }
 }
 
+onUnmounted(() => {
+  document.removeEventListener('click', handleOutsideClick)
+})
+
 onMounted(async () => {
+  document.addEventListener('click', handleOutsideClick)
   try {
     const [flRes, emRes, flDocRes, emDocRes] = await Promise.all([
       fetch(`${API_BASE}/freelancers?limit=500`),

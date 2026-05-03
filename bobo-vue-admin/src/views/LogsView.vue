@@ -82,7 +82,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000'
 const search = ref('')
@@ -142,6 +142,12 @@ const resetAllFilters = () => {
   typeFilter.value = 'All'
   dateSort.value = ''
   saveFilters()
+}
+
+const handleOutsideClick = (e) => {
+  if (!e.target.closest('.col-dropdown') && !e.target.closest('.col-filter-btn')) {
+    closeAllDropdowns()
+  }
 }
 
 const formatDateTime = (date) => {
@@ -205,7 +211,12 @@ const filteredLogs = computed(() => {
   return result
 })
 
+onUnmounted(() => {
+  document.removeEventListener('click', handleOutsideClick)
+})
+
 onMounted(async () => {
+  document.addEventListener('click', handleOutsideClick)
   try {
     const res = await fetch(`${API_BASE}/admin/logs?limit=500`)
     const data = await res.json()

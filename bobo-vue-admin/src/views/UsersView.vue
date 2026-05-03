@@ -133,7 +133,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 const activeTab = ref('Freelancer')
@@ -219,6 +219,12 @@ const resetAllFilters = () => {
   verifyFilter.value = 'All'
   dateSort.value = ''
   saveFilters()
+}
+
+const handleOutsideClick = (e) => {
+  if (!e.target.closest('.col-dropdown') && !e.target.closest('.col-filter-btn')) {
+    closeAllDropdowns()
+  }
 }
 
 const viewUser = (user) => {
@@ -373,7 +379,12 @@ const filteredUsers = computed(() => {
   return result
 })
 
+onUnmounted(() => {
+  document.removeEventListener('click', handleOutsideClick)
+})
+
 onMounted(async () => {
+  document.addEventListener('click', handleOutsideClick)
   await Promise.allSettled([loadEmployers(), loadFreelancers(), loadJobs()])
 })
 
