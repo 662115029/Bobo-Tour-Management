@@ -42,11 +42,9 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="v in filteredList" :key="v.id">
-            <td class="truncate-cell">
-              <span class="clickable-title" @click="openUserModal(v)" :title="v.name">
-                {{ v.name }}
-              </span>
+          <tr v-for="v in filteredList" :key="v.id" class="row-hover">
+            <td class="truncate-cell clickable-cell" @click="openUserModal(v)">
+              {{ v.name }}
             </td>
             <td>
               <span class="badge" :class="v.status?.toLowerCase()">{{ v.status }}</span>
@@ -595,18 +593,17 @@ onMounted(async () => {
   max-width: 0;
 }
 
-.clickable-title {
-  display: block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  cursor: pointer;
-  color: #0066cc;
-  font-size: 14px;
+.row-hover:hover {
+  background: #f5f5f5;
 }
 
-.clickable-title:hover {
-  text-decoration: underline;
+.clickable-cell {
+  cursor: pointer;
+  color: #000;
+}
+
+.clickable-cell:hover {
+  color: #000;
 }
 
 .badge {
@@ -789,7 +786,7 @@ onMounted(async () => {
 
 .profile-name {
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 100;
   margin: 0 0 4px;
   color: #111;
 }
