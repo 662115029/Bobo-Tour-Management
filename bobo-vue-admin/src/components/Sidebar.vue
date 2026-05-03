@@ -77,19 +77,23 @@ const toggle = () => {
 .toggle-btn {
   position: absolute;
   top: 24px;
-  right: -14px;
+  right: 16px;
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #1a1a2e;
-  border: 2px solid #06C755;
-  color: #06C755;
+  background: #2a2a4a;
+  border: none;
+  color: white;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 14px;
   z-index: 101;
+}
+
+.sidebar.collapsed .toggle-btn {
+  right: 20px;
 }
 
 .hamburger {
@@ -101,6 +105,10 @@ const toggle = () => {
   border-bottom: 1px solid #2a2a4a;
   margin-bottom: 24px;
   overflow: hidden;
+}
+
+.sidebar.collapsed .brand {
+  padding-right: 40px;
 }
 
 .brand h1 {
