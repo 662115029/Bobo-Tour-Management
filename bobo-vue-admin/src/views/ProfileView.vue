@@ -7,7 +7,6 @@
           <div class="avatar">{{ initials }}</div>
           <div class="profile-info">
             <h2>{{ admin.name }}</h2>
-            <p>@{{ admin.username }}</p>
           </div>
         </div>
         <div class="profile-details">
@@ -57,8 +56,7 @@ onMounted(async () => {
     
     if (data.admin_id) {
       admin.value = data
-      initials.value = data.name?.[0]?.toUpperCase() || '?'
-    }
+      initials.value = data.name?.split(' ').map(w => w[0]).join('').toUpperCase() || '?'    }
   } catch (e) {
     console.error('Failed to load admin:', e)
   }

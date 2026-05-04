@@ -415,7 +415,7 @@ def admin_me(admin_id: str):
         cursor = get_cursor(conn)
         cursor.execute(
             """
-            SELECT admin_id, name, username, status, created_at, updated_at
+            SELECT admin_id, name, status, created_at, updated_at
             FROM admins
             WHERE admin_id = %s
             """,
@@ -426,12 +426,11 @@ def admin_me(admin_id: str):
         
         if row:
             return {
-                "admin_id": row[0],
-                "name": row[1],
-                "username": row[2],
-                "status": row[3],
-                "created_at": row[4],
-                "updated_at": row[5]
+                "admin_id": row["admin_id"],
+                "name": row["name"],
+                "status": row["status"],
+                "created_at": row["created_at"],
+                "updated_at": row["updated_at"]
             }
         else:
             return {"error": "Admin not found"}
