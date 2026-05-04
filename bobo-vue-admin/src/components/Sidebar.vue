@@ -39,7 +39,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, defineEmits } from 'vue'
+import { ref, onMounted} from 'vue'
 
 const emit = defineEmits(['toggle'])
 
@@ -76,10 +76,10 @@ const toggle = () => {
 
 .toggle-btn {
   position: absolute;
-  top: 24px;
-  right: 16px;
-  width: 28px;
-  height: 28px;
+  top: 20px;
+  right: 20px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   border: none;
   color: white;
@@ -174,11 +174,8 @@ const toggle = () => {
 }
 
 .bottom-nav {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
   border-top: 2px solid #29293d;
+  margin-top: 8px;
   padding-top: 0px;
 }
 
