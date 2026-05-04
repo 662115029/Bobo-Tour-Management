@@ -81,10 +81,21 @@ const handleLogout = () => {
 </script>
 
 <style scoped>
+.title {
+  font-size: 15px;
+  font-weight: 500;
+  margin: 0 0 15px 0;
+  background: #1a1a2e;
+  padding: 15px 20px;
+  color: white;
+  letter-spacing: 0.2px;
+}
+
 .content {
   background: white;
   padding: 24px;
   border-radius: 8px;
+  margin: 0 20px;
 }
 
 .profile-card {
