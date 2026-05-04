@@ -609,6 +609,7 @@ onMounted(async () => {
 
 .clickable-cell:hover {
   color: #000;
+  text-decoration: underline;
 }
 
 .badge {

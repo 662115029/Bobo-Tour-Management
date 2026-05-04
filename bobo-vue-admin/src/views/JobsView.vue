@@ -36,7 +36,7 @@
       <table class="table">
         <thead>
           <tr>
-            <th style="width: 28%">
+            <th style="width: 20%">
               JOB TITLE
               <button
                 class="col-filter-btn"
@@ -95,31 +95,20 @@
               </button>
             </th>
             <th style="width: 12%">ACTION</th>
-            <th style="width: 16%">
+            <th style="width: 16%; position: relative;">
               LAST UPDATED
               <button
                 class="col-filter-btn"
                 :class="{ active: dateSort !== '' }"
                 @click.stop="toggleDateDropdown($event)"
               >
-                {{
-                  dateSort === "desc"
-                    ? "Latest ▼"
-                    : dateSort === "asc"
-                      ? "Oldest ▼"
-                      : "All ▼"
-                }}
+                {{ dateSort === "desc" ? "Latest ▼" : dateSort === "asc" ? "Oldest ▼" : "All ▼" }}
               </button>
               <button
-                v-if="
-                  titleSort ||
-                  companySort ||
-                  priceSort ||
-                  statusFilter !== 'All' ||
-                  dateSort
-                "
+                v-if="titleSort || companySort || priceSort || statusFilter !== 'All' || dateSort"
                 class="reset-btn"
                 @click="resetAllFilters"
+                style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%);"
               >
                 Reset
               </button>
@@ -882,6 +871,7 @@ onMounted(async () => {
 
 .clickable-cell:hover {
   color: #000;
+  text-decoration: underline;
 }
 
 .badge {

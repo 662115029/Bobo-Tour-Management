@@ -882,6 +882,7 @@ section {
 
 .clickable-cell:hover {
   color: #000;
+  text-decoration: underline;
 }
 
 /* Badge */

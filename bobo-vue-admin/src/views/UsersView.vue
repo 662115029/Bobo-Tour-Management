@@ -211,8 +211,7 @@
     <div
       v-if="showBanModal"
       class="modal-overlay"
-      @click.self="showBanModal = false"
-    >
+      @click.self="showBanModal = false">
       <div class="modal">
         <div class="modal-icon">{{ banTarget?.isActive ? "🚫" : "✅" }}</div>
         <h3>{{ banTarget?.isActive ? "Ban User" : "Unban User" }}</h3>
@@ -238,6 +237,50 @@
         </div>
       </div>
     </div>
+    <!-- User Modal -->
+    <div v-if="userModal" class="modal-overlay" @click.self="userModal = null">
+      <div class="mini-modal">
+        <div class="mini-modal-header" style="justify-content: space-between">
+          <h3 class="mini-modal-title">{{ userModal.name }}</h3>
+          <button class="close-btn" @click="userModal = null">✕</button>
+        </div>
+        <div class="profile-hero">
+          <div class="profile-avatar">
+            <img v-if="userModal.imageUrl" :src="userModal.imageUrl" class="avatar-img" />
+            <span v-else class="avatar-initial">{{ userModal.initials }}</span>
+          </div>
+        </div>
+        <div class="mini-grid">
+          <div class="mini-item">
+            <label>Status</label>
+            <span class="badge" :class="userModal.verifyStatus?.toLowerCase()">{{ userModal.verifyStatus }}</span>
+          </div>
+          <div class="mini-item">
+            <label>Active</label>
+            <span>{{ userModal.isActive ? '✅ Active' : '❌ Inactive' }}</span>
+          </div>
+          <div class="mini-item">
+            <label>Rating</label>
+            <span>⭐ {{ Number(userModal.rating || 0).toFixed(1) }}</span>
+          </div>
+          <div class="mini-item">
+            <label>Jobs Done</label>
+            <span>{{ jobsDoneById[userModal.id] || 0 }}</span>
+          </div>
+          <div class="mini-item">
+            <label>Created</label>
+            <span class="text-muted">{{ formatDateTime(userModal.createdAt) }}</span>
+          </div>
+          <div class="mini-item">
+            <label>Last Updated</label>
+            <span class="text-muted">{{ formatDateTime(userModal.updatedAt) }}</span>
+          </div>
+        </div>
+        <div class="mini-modal-footer">
+          <button class="btn-full-view" @click="goToFullDetail">View Full Detail →</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -246,6 +289,8 @@ import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useRouter } from "vue-router";
 
 const activeTab = ref("Freelancer");
+
+const userModal = ref(null)
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
 const router = useRouter();
@@ -372,12 +417,17 @@ const handleOutsideClick = (e) => {
 };
 
 const viewUser = (user) => {
-  if (activeTab.value === "Freelancer") {
-    router.push({ name: "FreelancerDetail", params: { id: user.id } });
-  } else {
-    router.push({ name: "EmployerDetail", params: { id: user.id } });
-  }
-};
+  userModal.value = user
+}
+
+const goToFullDetail = () => {
+  if (!userModal.value) return
+  const route = activeTab.value === 'Employer'
+    ? { name: 'EmployerDetail', params: { id: userModal.value.id } }
+    : { name: 'FreelancerDetail', params: { id: userModal.value.id } }
+  router.push(route)
+  userModal.value = null
+}
 
 const openBanModal = (user) => {
   banTarget.value = user;
@@ -683,6 +733,7 @@ watch(activeTab, async (tab) => {
 
 .clickable-cell:hover {
   color: #000;
+  text-decoration: underline;
 }
 
 .action-btns {
@@ -723,11 +774,11 @@ watch(activeTab, async (tab) => {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
+  z-index: 200;
 }
 .modal {
   background: white;
@@ -935,5 +986,108 @@ watch(activeTab, async (tab) => {
     font-size: 13px;
     padding: 10px 0;
   }
+}
+
+.mini-modal {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  width: 480px;
+  max-width: 90vw;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+}
+
+.mini-modal-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.mini-modal-title {
+  margin: 0;
+  font-size: 18px;
+  color: #1a1a2e;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #999;
+  padding: 0;
+}
+.profile-hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.profile-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #1a1a2e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-initial {
+  color: white;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.mini-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.mini-item label {
+  display: block;
+  font-size: 11px;
+  color: #999;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  letter-spacing: 0.5px;
+}
+
+.mini-item span {
+  font-size: 14px;
+  color: #333;
+}
+
+.mini-modal-footer {
+  border-top: 1px solid #eee;
+  padding-top: 16px;
+  text-align: right;
+}
+
+.btn-full-view {
+  background: none;
+  border: none;
+  color: #1976d2;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.btn-full-view:hover {
+  text-decoration: underline;
 }
 </style>
