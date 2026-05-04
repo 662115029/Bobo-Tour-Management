@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from notification import notify_job_matched, notify_job_confirmed, notify_job_declined
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+import bcrypt
 import os
 import bot
 
@@ -361,6 +362,81 @@ def admin_admins(limit: int = 50, offset: int = 0):
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
         return {"error": str(e), "items": []}
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+@app.post("/admin/login")
+def admin_login(request: LoginRequest):
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute(
+            """
+            SELECT admin_id, name, password_hash, status, created_at, updated_at
+            FROM admins
+            WHERE name = %s
+            """,
+            (request.username,)
+        )
+        row = cursor.fetchone()
+        cursor.close()  # ← add this
+        conn.close()
+
+        if row:
+            try:
+                match = bcrypt.checkpw(request.password.encode('utf-8'), row["password_hash"].encode('utf-8'))
+            except Exception as verify_err:
+                return {"success": False, "error": f"Verify error: {str(verify_err)}"}
+
+            if match:
+                return {
+                    "success": True,
+                    "admin": {
+                        "admin_id": row["admin_id"],
+                        "name": row["name"],
+                        "status": row["status"],
+                        "created_at": row["created_at"],
+                        "updated_at": row["updated_at"]
+                    }
+                }
+            else:
+                return {"success": False, "error": "Wrong password"}
+        else:
+            return {"success": False, "error": "Admin not found"}
+    except Exception as e:
+        return {"success": False, "error": f"DB error: {str(e)}"}
+
+@app.get("/admin/me")
+def admin_me(admin_id: str):
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute(
+            """
+            SELECT admin_id, name, username, status, created_at, updated_at
+            FROM admins
+            WHERE admin_id = %s
+            """,
+            (admin_id,)
+        )
+        row = cursor.fetchone()
+        conn.close()
+        
+        if row:
+            return {
+                "admin_id": row[0],
+                "name": row[1],
+                "username": row[2],
+                "status": row[3],
+                "created_at": row[4],
+                "updated_at": row[5]
+            }
+        else:
+            return {"error": "Admin not found"}
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.get("/admin/logs")
 def admin_logs(limit: int = 50, offset: int = 0,
