@@ -223,7 +223,7 @@ const confirmBan = async () => {
     const res = await fetch(`${API_BASE}/freelancers/${fl.value.fl_id}/ban`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ is_active: !fl.value.fl_is_active }),
+      body: JSON.stringify({ is_active: !fl.value.fl_is_active, admin_id: localStorage.getItem('admin_id') || '' }),
     });
     const data = await res.json();
     if (data.status === "updated") {

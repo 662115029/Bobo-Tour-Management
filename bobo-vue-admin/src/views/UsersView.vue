@@ -338,7 +338,21 @@ const openUserModal = (user) => {
   userModal.value = user
 }
 
+const logAction = async (action_type, target_type, target_id, target_name, note = null) => {
+  const admin_id = localStorage.getItem('admin_id') || '';
+  if (!admin_id) return;
+  try {
+    await fetch(`${API_BASE}/admin/log`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ admin_id, action_type, target_type, target_id, target_name, note })
+    });
+  } catch (e) {}
+};
+
 const viewUser = (user) => {
+  const target_type = activeTab.value === 'Employer' ? 'EMPLOYER' : 'FREELANCER';
+  logAction('VIEW', target_type, user.id, user.name);
   const route = activeTab.value === 'Employer'
     ? { name: 'EmployerDetail', params: { id: user.id }, state: { parent: 'Users', parentTo: '/users', userName: user.name } }
     : { name: 'FreelancerDetail', params: { id: user.id }, state: { parent: 'Users', parentTo: '/users', userName: user.name } }
@@ -369,10 +383,13 @@ const confirmBan = async () => {
     const res = await fetch(endpoint, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ is_active: !user.isActive }),
+      body: JSON.stringify({ is_active: !user.isActive, admin_id: localStorage.getItem('admin_id') || '' }),
     });
     const data = await res.json();
     if (data.status === "updated") {
+      const action = user.isActive ? 'BAN_USER' : 'UNBAN_USER';
+      const target_type = activeTab.value === 'Employer' ? 'EMPLOYER' : 'FREELANCER';
+      logAction(action, target_type, user.id, user.name);
       user.isActive = !user.isActive;
     }
   } catch (e) {
