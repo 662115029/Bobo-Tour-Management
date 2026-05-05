@@ -22,10 +22,6 @@
         </div>
         <div class="profile-details">
           <div class="detail-row">
-            <label>Admin ID</label>
-            <span>{{ admin.admin_id }}</span>
-          </div>
-          <div class="detail-row">
             <label>Status</label>
             <span class="badge" :class="admin.status?.toLowerCase()">{{ admin.status }}</span>
           </div>
