@@ -28,11 +28,11 @@
         <table class="table">
         <thead>
           <tr>
-            <th style="width: 28%">JOB TITLE</th>
+            <th style="width: 20%">JOB TITLE</th>
             <th style="width: 16%">COMPANY</th>
             <th style="width: 10%">PRICE</th>
             <th style="width: 10%">STATUS</th>
-            <th style="width: 12%">ACTION</th>
+            <th style="width: 12%; text-align: center;">ACTION</th>
             <th style="width: 16%">LAST UPDATED</th>
           </tr>
         </thead>
@@ -90,10 +90,10 @@
       <table class="table">
         <thead>
           <tr>
-            <th style="width: 28%">NAME</th>
+            <th style="width: 20%">NAME</th>
             <th style="width: 26%">TYPE</th>
-            <th style="width: 10%">STATUS</th>
-            <th style="width: 12%">ACTION</th>
+            <th style="width: 10%" >STATUS</th>
+            <th style="width: 12%; text-align: center;">ACTION</th>
             <th style="width: 16%">LAST UPDATED</th>
           </tr>
         </thead>
@@ -216,31 +216,26 @@
       @click.self="companyModal = null"
     >
       <div class="mini-modal">
-        <div
-          class="mini-modal-header"
-          style="justify-content: flex-end; margin-bottom: 8px"
-        >
+        <div class="mini-modal-header">
+          <h3 class="mini-modal-title">{{ companyModal.em_name }}</h3>
           <button class="close-btn" @click="companyModal = null">✕</button>
         </div>
-        <div v-if="companyLoading" class="mini-loading">Loading...</div>
+        <div v-if="companyLoading" class="mini-loading">
+  <div v-for="i in 4" :key="'cl-'+i" style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #f5f5f5">
+    <span class="skeleton skeleton-text" style="flex:1"></span>
+    <span class="skeleton skeleton-badge"></span>
+    <span class="skeleton skeleton-btn"></span>
+  </div>
+</div>
         <div v-else>
           <div class="profile-hero">
             <div class="profile-avatar em">
-              <img
-                v-if="companyModal.em_profile_image_url"
-                :src="companyModal.em_profile_image_url"
-                class="avatar-img"
-              />
-              <span v-else class="avatar-initial">{{
-                companyModal.em_name?.[0] || "?"
-              }}</span>
+              <img v-if="companyModal.em_profile_image_url" :src="companyModal.em_profile_image_url" class="avatar-img" />
+              <span v-else class="avatar-initial">{{ companyModal.em_name?.[0] || "?" }}</span>
             </div>
             <div class="profile-info">
-              <h3 class="profile-name">{{ companyModal.em_name }}</h3>
-              <p v-if="companyModal.em_bio" class="profile-bio">
-                {{ companyModal.em_bio }}
-              </p>
-              <p v-else class="profile-bio muted">No bio</p>
+              <p v-if="companyModal.em_bio" class="profile-bio">{{ companyModal.em_bio }}</p>
+              <p v-else class="profile-bio muted">No bio available</p>
             </div>
           </div>
           <div class="mini-grid">
@@ -314,7 +309,13 @@
         >
           <button class="close-btn" @click="verifyModal = null">✕</button>
         </div>
-        <div v-if="verifyLoading" class="mini-loading">Loading...</div>
+        <div v-if="verifyLoading" class="mini-loading">
+  <div v-for="i in 4" :key="'vl-'+i" style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #f5f5f5">
+    <span class="skeleton skeleton-text" style="flex:1"></span>
+    <span class="skeleton skeleton-badge"></span>
+    <span class="skeleton skeleton-btn"></span>
+  </div>
+</div>
         <div v-else>
           <!-- Freelancer -->
           <div v-if="verifyModal.type === 'Freelancer' && verifyDetail">
@@ -839,14 +840,21 @@ section {
 }
 
 .table-container {
+  background: white;
   border-radius: 8px;
-  margin-bottom: 24px;
-  padding: 0 20px;
+  overflow: hidden;
+  margin: 0 20px 24px;
 }
 
 .section-title {
-  font-size: 16px;
-  margin-bottom: 16px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #444;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 16px 20px 12px;
+  margin: 0;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .table {
@@ -857,19 +865,28 @@ section {
 
 .table th,
 .table td {
-  padding: 12px 15px;
+  padding: 15px 20px;
   text-align: left;
   border-bottom: 1px solid #eee;
   overflow: hidden;
 }
 .table th {
-  font-size: 15px;
+  font-size: 12px;
   color: #666;
   font-weight: 600;
+  background: white;
+  letter-spacing: 0.3px;
 }
 
 .truncate-cell {
   max-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.table td:nth-child(2) {
+  color: #888;
+  font-size: 13px;
 }
 
 .row-hover:hover {
@@ -888,11 +905,13 @@ section {
 
 /* Badge */
 .badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   padding: 3px 10px;
   border-radius: 12px;
   font-size: 11px;
   font-weight: 600;
+  width: fit-content;
 }
 .badge.open {
   background: #e3f2fd;
@@ -951,6 +970,7 @@ section {
 .action-btns {
   display: flex;
   gap: 6px;
+  justify-content: center;
 }
 .btn-action {
   padding: 4px 10px;
@@ -961,11 +981,12 @@ section {
   font-weight: 500;
 }
 .btn-action.view {
-  background: #e3f2fd;
-  color: #1976d2;
+  background: #e0f7f1;
+  color: #00796b;
+  font-weight: 600;
 }
 .btn-action.view:hover {
-  background: #bbdefb;
+  background: #b2dfdb;
 }
 .btn-action.delete {
   background: #ffebee;
@@ -992,11 +1013,12 @@ section {
 }
 .mini-modal {
   background: white;
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 24px;
-  width: 460px;
-  max-height: 80vh;
+  width: 480px;
+  max-height: 85vh;
   overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
 }
 .mini-modal-header {
   display: flex;
@@ -1020,10 +1042,24 @@ section {
   color: #888;
   flex-shrink: 0;
 }
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.skeleton {
+  display: inline-block;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite;
+}
+.skeleton-text { height: 14px; display: block; border-radius: 4px; }
+.skeleton-badge { height: 22px; width: 70px; border-radius: 12px; }
+.skeleton-btn { height: 26px; width: 50px; border-radius: 5px; }
+.skeleton-row td { padding-top: 18px; padding-bottom: 18px; }
+
 .mini-loading {
-  color: #999;
-  text-align: center;
-  padding: 20px 0;
+  padding: 8px 0;
 }
 
 .profile-hero {
@@ -1035,9 +1071,9 @@ section {
   border-bottom: 1px solid #eee;
 }
 .profile-avatar {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1045,10 +1081,10 @@ section {
   overflow: hidden;
 }
 .profile-avatar.fl {
-  background: #e3f2fd;
+  background: #e0f7f1;
 }
 .profile-avatar.em {
-  background: #f3e5f5;
+  background: #ede7f6;
 }
 .avatar-img {
   width: 100%;
@@ -1057,7 +1093,7 @@ section {
   border-radius: 50%;
 }
 .avatar-initial {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 700;
   color: #555;
 }
@@ -1097,7 +1133,7 @@ section {
 .mini-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  gap: 16px 20px;
 }
 .mini-item {
   display: flex;
@@ -1106,13 +1142,15 @@ section {
 }
 .mini-item label {
   font-size: 10px;
-  color: #999;
+  color: #aaa;
   font-weight: 600;
   text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
 .mini-item span {
   font-size: 13px;
-  color: #222;
+  color: #111;
+  font-weight: 500;
 }
 
 .mini-modal-footer {
@@ -1123,15 +1161,18 @@ section {
   justify-content: flex-end;
 }
 .btn-full-view {
-  background: none;
+  padding: 9px 20px;
+  background: #1a1a2e;
+  color: white;
   border: none;
-  color: #0066cc;
+  border-radius: 8px;
   font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
-  font-weight: 500;
+  transition: background 0.15s;
 }
 .btn-full-view:hover {
-  text-decoration: underline;
+  background: #2d2d4e;
 }
 
 .btn-cancel {
