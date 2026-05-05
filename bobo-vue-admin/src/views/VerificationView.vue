@@ -19,11 +19,13 @@
       <table class="table">
         <thead>
           <tr>
-            <th style="width:54%">
-              NAME
-              <button class="col-filter-btn" :class="{ active: nameSort !== '' }" @click.stop="toggleNameDropdown($event)">
-                {{ nameSort === 'asc' ? 'A → Z' : nameSort === 'desc' ? 'Z → A' : 'All ▼' }}
-              </button>
+            <th class="th-sortable" :class="{ 'th-active': nameSort }" style="width:46%" @click="cycleSort('name')">
+              <span class="th-inner">
+                NAME
+                <span class="sort-arrows">
+                  <span :class="nameSort === 'asc' ? 'arrow-active' : 'arrow-dim'">↑</span><span :class="nameSort === 'desc' ? 'arrow-active' : 'arrow-dim'">↓</span>
+                </span>
+              </span>
             </th>
             <th style="width:10%">
               STATUS
@@ -31,17 +33,27 @@
                 {{ statusFilter ? statusFilter : 'All ▼' }}
               </button>
             </th>
-            <th style="width:14%">ACTION</th>
-            <th style="width:16%">
-              LAST UPDATED
-              <button class="col-filter-btn" :class="{ active: dateSort !== '' }" @click.stop="toggleDateDropdown($event)">
-                {{ dateSort === 'desc' ? 'Latest ▼' : dateSort === 'asc' ? 'Oldest ▼' : 'All ▼' }}
-              </button>
-              <button v-if="nameSort || statusFilter || dateSort" class="reset-btn" @click="resetAllFilters">Reset</button>
+            <th style="width:12%; text-align: center;">ACTION</th>
+            <th class="th-sortable" :class="{ 'th-active': dateSort }" style="width:16%; position: relative;" @click="cycleSort('date')">
+              <span class="th-inner">
+                LAST UPDATED
+                <span class="sort-arrows">
+                  <span :class="dateSort === 'asc' ? 'arrow-active' : 'arrow-dim'">↑</span><span :class="dateSort === 'desc' ? 'arrow-active' : 'arrow-dim'">↓</span>
+                </span>
+              </span>
+              <button v-if="nameSort || statusFilter || dateSort" class="reset-btn" @click.stop="resetAllFilters" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%);">✕ Reset</button>
             </th>
           </tr>
         </thead>
         <tbody>
+          <template v-if="isLoading">
+            <tr v-for="i in 6" :key="'sk-'+i" class="skeleton-row">
+              <td><span class="skeleton skeleton-text" style="width:60%"></span></td>
+              <td><span class="skeleton skeleton-badge"></span></td>
+              <td><div class="action-btns"><span class="skeleton skeleton-btn" style="width:72px"></span></div></td>
+              <td><span class="skeleton skeleton-text" style="width:75%"></span></td>
+            </tr>
+          </template>
           <tr v-for="v in filteredList" :key="v.id" class="row-hover">
             <td class="truncate-cell clickable-cell" @click="openUserModal(v)">
               {{ v.name }}
@@ -68,17 +80,7 @@
       <button class="col-dropdown-item" @click="setStatusFilter('NOT_VERIFIED')">Not Verified</button>
     </div>
 
-    <div v-if="showNameDropdown" class="col-dropdown" :style="nameDropdownStyle">
-      <button class="col-dropdown-item" @click="setNameSort('')">All</button>
-      <button class="col-dropdown-item" @click="setNameSort('asc')">A → Z</button>
-      <button class="col-dropdown-item" @click="setNameSort('desc')">Z → A</button>
-    </div>
 
-    <div v-if="showDateDropdown" class="col-dropdown" :style="dateDropdownStyle">
-      <button class="col-dropdown-item" @click="setDateSort('')">All</button>
-      <button class="col-dropdown-item" @click="setDateSort('desc')">Latest</button>
-      <button class="col-dropdown-item" @click="setDateSort('asc')">Oldest</button>
-    </div>
 
     <!-- User Detail Modal -->
     <div v-if="userDetailModal" class="modal-overlay" @click.self="userDetailModal = null">
@@ -187,12 +189,8 @@ const search = ref('')
 const nameSort = ref(localStorage.getItem('verification_nameSort') || '')
 const statusFilter = ref(localStorage.getItem('verification_statusFilter') || '')
 const dateSort = ref(localStorage.getItem('verification_dateSort') || '')
-const showNameDropdown = ref(false)
 const showStatusDropdown = ref(false)
-const showDateDropdown = ref(false)
-const nameDropdownStyle = ref({})
 const statusDropdownStyle = ref({})
-const dateDropdownStyle = ref({})
 
 const saveFilters = () => {
   localStorage.setItem('verification_nameSort', nameSort.value)
@@ -200,6 +198,7 @@ const saveFilters = () => {
   localStorage.setItem('verification_dateSort', dateSort.value)
 }
 
+const isLoading = ref(true)
 const freelancers = ref([])
 const employers = ref([])
 const allFreelancers = ref([])
@@ -216,20 +215,13 @@ const formatDateTime = (date) => {
   return new Date(date).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
-const toggleNameDropdown = (e) => {
-  closeAllDropdowns()
-  showNameDropdown.value = true
-  const rect = e.target.getBoundingClientRect()
-  nameDropdownStyle.value = {
-    position: 'fixed',
-    top: (rect.bottom + window.scrollY) + 'px',
-    left: rect.left + 'px'
-  }
-}
-
-const setNameSort = (val) => {
-  nameSort.value = val
-  showNameDropdown.value = false
+const cycleSort = (key) => {
+  const map = { name: nameSort, date: dateSort }
+  const current = map[key]
+  const next = current.value === '' ? 'asc' : current.value === 'asc' ? 'desc' : ''
+  nameSort.value = ''
+  dateSort.value = ''
+  current.value = next
   saveFilters()
 }
 
@@ -250,27 +242,8 @@ const setStatusFilter = (val) => {
   saveFilters()
 }
 
-const toggleDateDropdown = (e) => {
-  closeAllDropdowns()
-  showDateDropdown.value = true
-  const rect = e.target.getBoundingClientRect()
-  dateDropdownStyle.value = {
-    position: 'fixed',
-    top: (rect.bottom + window.scrollY) + 'px',
-    left: rect.left + 'px'
-  }
-}
-
-const setDateSort = (val) => {
-  dateSort.value = val
-  showDateDropdown.value = false
-  saveFilters()
-}
-
 const closeAllDropdowns = () => {
-  showNameDropdown.value = false
   showStatusDropdown.value = false
-  showDateDropdown.value = false
 }
 
 const resetAllFilters = () => {
@@ -307,7 +280,7 @@ const filteredList = computed(() => {
       const dateB = new Date(b.createdAt || 0)
       return dateSort.value === 'desc' ? dateB - dateA : dateA - dateB
     })
-  } else {
+  } else if (!nameSort.value) {
     result = [...result].sort((a, b) => {
       const dateA = new Date(a.createdAt || 0)
       const dateB = new Date(b.createdAt || 0)
@@ -448,6 +421,8 @@ onMounted(async () => {
     emDocs.value = emDocData.items || []
   } catch (e) {
     console.error('Failed to load verifications:', e)
+  } finally {
+    isLoading.value = false
   }
 })
 </script>
@@ -495,13 +470,7 @@ onMounted(async () => {
   padding: 0 20px;
 }
 
-.search-input {
-  padding: 10px 14px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
-  max-width: 280px;
-}
+
 
 .table-container {
   background: white;
@@ -532,6 +501,49 @@ onMounted(async () => {
   white-space: nowrap;
   position: relative;
 }
+
+.search-input {
+  padding: 10px 14px;
+  border: 1.5px solid #bbb;
+  border-radius: 8px;
+  width: 280px;
+  font-size: 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.search-input:focus {
+  border-color: #06c755;
+  box-shadow: 0 0 0 3px rgba(6,199,85,0.12);
+}
+
+.table th.th-sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s, color 0.15s;
+}
+.table th.th-sortable:hover { background: #f0fdf4; color: #06c755; }
+.table th.th-active { background: #f0fdf4; color: #06c755; }
+.th-inner { display: inline-flex; align-items: center; gap: 6px; }
+.sort-arrows { display: inline-flex; flex-direction: column; line-height: 1; font-size: 10px; gap: 0; margin-top: 1px; }
+.arrow-dim { color: #ccc; }
+.arrow-active { color: #06c755; font-weight: 700; }
+
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.skeleton {
+  display: inline-block;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite;
+}
+.skeleton-text { height: 14px; display: block; border-radius: 4px; }
+.skeleton-badge { height: 22px; width: 70px; border-radius: 12px; }
+.skeleton-btn { height: 26px; width: 50px; border-radius: 5px; }
+.skeleton-row td { padding-top: 18px; padding-bottom: 18px; }
 
 .col-filter-btn {
   margin-left: 8px;
@@ -597,6 +609,9 @@ onMounted(async () => {
 
 .truncate-cell {
   max-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .row-hover:hover {
@@ -614,11 +629,13 @@ onMounted(async () => {
 }
 
 .badge {
-  display: inline-block;
-  padding: 4px 10px;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
   border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 11px;
+  font-weight: 600;
+  width: fit-content;
 }
 
 .badge.pending {
@@ -636,9 +653,26 @@ onMounted(async () => {
   color: #c62828;
 }
 
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.skeleton {
+  display: inline-block;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite;
+}
+.skeleton-text { height: 14px; display: block; border-radius: 4px; }
+.skeleton-badge { height: 22px; width: 70px; border-radius: 12px; }
+.skeleton-btn { height: 26px; width: 50px; border-radius: 5px; }
+.skeleton-row td { padding-top: 18px; padding-bottom: 18px; }
+
 .action-btns {
   display: flex;
   gap: 6px;
+  justify-content: center;
 }
 
 .btn-action {
