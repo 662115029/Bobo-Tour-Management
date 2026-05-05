@@ -201,14 +201,18 @@
     <!-- User Modal -->
     <div v-if="userModal" class="modal-overlay" @click.self="userModal = null">
       <div class="mini-modal">
-        <div class="mini-modal-header" style="justify-content: space-between">
-          <h3 class="mini-modal-title">{{ userModal.name }}</h3>
-          <button class="close-btn" @click="userModal = null">✕</button>
+        <div class="mini-modal-header">
+          <button class="close-btn" @click="userModal = null" style="margin-left:auto">✕</button>
         </div>
         <div class="profile-hero">
-          <div class="profile-avatar">
+          <div class="profile-avatar" :class="activeTab === 'Freelancer' ? 'fl' : 'em'">
             <img v-if="userModal.imageUrl" :src="userModal.imageUrl" class="avatar-img" />
             <span v-else class="avatar-initial">{{ userModal.initials }}</span>
+          </div>
+          <div class="profile-info">
+            <h3 class="profile-name">{{ userModal.name }}</h3>
+            <p v-if="userModal.bio" class="profile-bio">{{ userModal.bio }}</p>
+            <p v-else class="profile-bio muted">No bio</p>
           </div>
         </div>
         <div class="mini-grid">
@@ -331,7 +335,10 @@ const handleOutsideClick = (e) => {
 };
 
 const viewUser = (user) => {
-  userModal.value = user
+  const route = activeTab.value === 'Employer'
+    ? { name: 'EmployerDetail', params: { id: user.id }, state: { parent: 'Users', parentTo: '/users', userName: user.name } }
+    : { name: 'FreelancerDetail', params: { id: user.id }, state: { parent: 'Users', parentTo: '/users', userName: user.name } }
+  router.push(route)
 }
 
 const goToFullDetail = () => {
@@ -970,38 +977,31 @@ watch(activeTab, async (tab) => {
   background: white;
   border-radius: 12px;
   padding: 24px;
-  width: 480px;
-  max-width: 90vw;
-  max-height: 85vh;
+  width: 460px;
+  max-height: 80vh;
   overflow-y: auto;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
 }
 
 .mini-modal-header {
   display: flex;
-  align-items: center;
+  justify-content: space-between;
+  align-items: flex-start;
   margin-bottom: 16px;
-}
-
-.mini-modal-title {
-  margin: 0;
-  font-size: 18px;
-  color: #1a1a2e;
 }
 
 .close-btn {
   background: none;
   border: none;
-  font-size: 18px;
+  font-size: 16px;
   cursor: pointer;
-  color: #999;
-  padding: 0;
+  color: #888;
+  flex-shrink: 0;
 }
 .profile-hero {
   display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 16px;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 20px;
   padding-bottom: 16px;
   border-bottom: 1px solid #eee;
 }
@@ -1010,50 +1010,83 @@ watch(activeTab, async (tab) => {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: #1a1a2e;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   overflow: hidden;
 }
+
+.profile-avatar.fl { background: #e3f2fd; }
+.profile-avatar.em { background: #f3e5f5; }
 
 .avatar-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: 50%;
 }
 
 .avatar-initial {
-  color: white;
-  font-size: 20px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #555;
+}
+
+.profile-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-name {
+  font-size: 16px;
   font-weight: 600;
+  margin: 0 0 4px;
+  color: #111;
+}
+
+.profile-bio {
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.profile-bio.muted {
+  color: #bbb;
+  font-style: italic;
 }
 
 .mini-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 16px;
+  gap: 14px;
 }
 
 .mini-item label {
   display: block;
-  font-size: 11px;
+  font-size: 10px;
   color: #999;
   text-transform: uppercase;
   margin-bottom: 4px;
-  letter-spacing: 0.5px;
+  font-weight: 600;
 }
 
 .mini-item span {
-  font-size: 14px;
-  color: #333;
+  font-size: 13px;
+  color: #222;
 }
 
 .mini-modal-footer {
-  border-top: 1px solid #eee;
+  margin-top: 20px;
   padding-top: 16px;
-  text-align: right;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .btn-full-view {

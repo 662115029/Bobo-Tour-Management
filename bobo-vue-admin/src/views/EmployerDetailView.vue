@@ -5,6 +5,14 @@
     <div class="page-content">
       <div class="topbar">
         <span class="back-link" @click="router.back()">← Back</span>
+        <button
+          v-if="em"
+          class="ban-btn"
+          :class="em.em_is_active ? 'ban' : 'unban'"
+          @click="showBanModal = true"
+        >
+          {{ em.em_is_active ? "🚫 Ban" : "✅ Unban" }}
+        </button>
       </div>
 
       <div v-if="loading" class="loading">⏳ Loading...</div>
@@ -119,7 +127,22 @@
 
       <div v-else class="loading">Employer not found.</div>
     </div>
+  <!-- Ban Modal -->
+  <div v-if="showBanModal" class="modal-overlay" @click.self="showBanModal = false">
+    <div class="modal">
+      <div class="modal-icon">{{ em?.em_is_active ? "🚫" : "✅" }}</div>
+      <h3>{{ em?.em_is_active ? "Ban Employer" : "Unban Employer" }}</h3>
+      <p>Are you sure you want to {{ em?.em_is_active ? "ban" : "unban" }} <strong>{{ em?.em_name }}</strong>?</p>
+      <p v-if="em?.em_is_active" class="modal-warning">This will prevent them from using the platform.</p>
+      <div class="modal-actions">
+        <button class="btn-cancel" @click="showBanModal = false">Cancel</button>
+        <button :class="em?.em_is_active ? 'btn-ban' : 'btn-unban'" @click="confirmBan">
+          {{ em?.em_is_active ? "Ban" : "Unban" }}
+        </button>
+      </div>
+    </div>
   </div>
+</div>
 </template>
 
 <script setup>
@@ -130,6 +153,7 @@ import { API_BASE } from "../data/api";
 
 const route = useRoute();
 const router = useRouter();
+const showBanModal = ref(false);
 const em = ref(null);
 const documents = ref([]);
 const jobs = ref([]);
@@ -148,6 +172,25 @@ const formatDateTime = (date) => {
 const isImage = (url) => {
   if (!url) return false;
   return /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(url);
+};
+
+const confirmBan = async () => {
+  if (!em.value) return;
+  try {
+    const res = await fetch(`${API_BASE}/employers/${em.value.em_id}/ban`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ is_active: !em.value.em_is_active }),
+    });
+    const data = await res.json();
+    if (data.status === "updated") {
+      em.value.em_is_active = !em.value.em_is_active;
+    }
+  } catch (e) {
+    console.error("Failed to ban/unban employer:", e);
+  } finally {
+    showBanModal.value = false;
+  }
 };
 
 onMounted(async () => {
@@ -183,6 +226,47 @@ onMounted(async () => {
   padding: 12px 0;
   margin-bottom: 16px;
 }
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  margin-bottom: 16px;
+}
+
+.ban-btn {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.ban-btn.ban { background: #ffebee; color: #c62828; }
+.ban-btn.ban:hover { background: #ffcdd2; }
+.ban-btn.unban { background: #e8f5e9; color: #2e7d32; }
+.ban-btn.unban:hover { background: #c8e6c9; }
+
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 200;
+}
+.modal {
+  background: white; border-radius: 12px;
+  padding: 32px; width: 360px; text-align: center;
+}
+.modal-icon { font-size: 40px; margin-bottom: 12px; }
+.modal h3 { margin: 0 0 8px; font-size: 18px; }
+.modal p { color: #666; font-size: 14px; margin: 4px 0; }
+.modal-warning { color: #c62828 !important; font-size: 12px !important; }
+.modal-actions { display: flex; gap: 12px; justify-content: center; margin-top: 24px; }
+.btn-cancel { padding: 8px 20px; border: 1px solid #ddd; border-radius: 8px; background: white; cursor: pointer; font-size: 14px; }
+.btn-ban { padding: 8px 20px; border: none; border-radius: 8px; background: #c62828; color: white; cursor: pointer; font-size: 14px; font-weight: 600; }
+.btn-unban { padding: 8px 20px; border: none; border-radius: 8px; background: #2e7d32; color: white; cursor: pointer; font-size: 14px; font-weight: 600; }
+
 .back-link {
   color: #000000;
   cursor: pointer;
