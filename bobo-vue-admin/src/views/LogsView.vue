@@ -9,6 +9,13 @@
         placeholder="Search action or target..."
         class="search-input"
       />
+      <button
+        v-if="actionFilter !== 'All' || typeFilter !== 'All' || targetSort || dateSort"
+        class="reset-btn"
+        @click="resetAllFilters"
+      >
+        ✕ Reset
+      </button>
     </div>
 
     <div class="table-container">
@@ -16,24 +23,24 @@
         <thead>
           <tr>
             <th style="width: 18%">
-              ACTION
+              <span style="display:inline-flex;align-items:center;white-space:nowrap;gap:4px;">ACTION
               <button
                 class="col-filter-btn"
                 :class="{ active: actionFilter !== 'All' }"
                 @click.stop="toggleActionDropdown($event)"
               >
-                {{ actionFilter === "All" ? "All ▼" : actionFilter === "APPROVE_DOCUMENT" ? "APPROVE DOC ▼" : actionFilter === "VERIFY_FREELANCER" ? "VERIFY FL ▼" : actionFilter === "REJECT_DOCUMENT" ? "REJECT DOC ▼" : actionFilter + " ▼" }}
-              </button>
+                {{ actionFilter === "All" ? "All ▼" : actionFilter === "APPROVE_DOCUMENT" ? "APPROVE DOC ▼" : actionFilter === "VERIFY_FREELANCER" ? "VERIFY FL ▼" : actionFilter === "VERIFY_EMPLOYER" ? "VERIFY EM ▼" : actionFilter === "REJECT_DOCUMENT" ? "REJECT DOC ▼" : actionFilter + " ▼" }}
+              </button></span>
             </th>
             <th style="width: 16%">
-              TYPE
+              <span style="display:inline-flex;align-items:center;white-space:nowrap;gap:4px;">TYPE
               <button
                 class="col-filter-btn"
                 :class="{ active: typeFilter !== 'All' }"
                 @click.stop="toggleTypeDropdown($event)"
               >
                 {{ typeFilter === "All" ? "All ▼" : typeFilter === "FREELANCER" ? "FREELANCE ▼" : typeFilter === "EMPLOYER" ? "EMPLOYER ▼" : typeFilter === "DOCUMENT" ? "DOCUMENT ▼" : typeFilter === "JOB" ? "JOB ▼" : typeFilter + " ▼" }}
-              </button>
+              </button></span>
             </th>
             <th class="th-sortable" :class="{ 'th-active': targetSort }" style="width: 22%" @click="cycleSort('target')">
               <span class="th-inner">
@@ -47,7 +54,7 @@
             </th>
             <th style="width: 24%">NOTE</th>
             <th style="width: 12%">ADMIN</th>
-            <th class="th-sortable" :class="{ 'th-active': dateSort }" style="width: 16%; position: relative;" @click="cycleSort('date')">
+            <th class="th-sortable" :class="{ 'th-active': dateSort }" style="width: 16%;" @click="cycleSort('date')">
               <span class="th-inner">
                 LAST UPDATED
                 <span class="sort-label">
@@ -56,14 +63,7 @@
                   <span v-else class="sort-label-active">↓</span>
                 </span>
               </span>
-              <button
-                v-if="actionFilter !== 'All' || typeFilter !== 'All' || targetSort || dateSort"
-                class="reset-btn"
-                @click.stop="resetAllFilters"
-                style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%);"
-              >
-                ✕ Reset
-              </button>
+
             </th>
           </tr>
         </thead>
@@ -117,7 +117,9 @@
       <button class="col-dropdown-item" @click="setActionFilter('All')">All</button>
       <button class="col-dropdown-item" @click="setActionFilter('APPROVE_DOCUMENT')">Approve Document</button>
       <button class="col-dropdown-item" @click="setActionFilter('VERIFY_FREELANCER')">Verify Freelancer</button>
+      <button class="col-dropdown-item" @click="setActionFilter('VERIFY_EMPLOYER')">Verify Employer</button>
       <button class="col-dropdown-item" @click="setActionFilter('REJECT')">Reject</button>
+      <button class="col-dropdown-item" @click="setActionFilter('REJECT_DOCUMENT')">Reject Document</button>
       <button class="col-dropdown-item" @click="setActionFilter('BAN')">Ban</button>
       <button class="col-dropdown-item" @click="setActionFilter('UNBAN')">Unban</button>
       <button class="col-dropdown-item" @click="setActionFilter('DELETE')">Delete</button>
@@ -192,7 +194,7 @@ const toggleActionDropdown = (e) => {
   if (opening) {
     showActionDropdown.value = true;
     const rect = e.target.getBoundingClientRect();
-    actionDropdownStyle.value = { position: "fixed", top: rect.bottom + window.scrollY + "px", left: rect.left + "px" };
+    actionDropdownStyle.value = { position: "fixed", top: rect.bottom + "px", left: rect.left + "px" };
   }
 };
 const setActionFilter = (val) => {
@@ -299,7 +301,10 @@ const filteredLogs = computed(() => {
   });
 
   if (actionFilter.value !== "All") {
-    result = result.filter((log) => (log.action_type || "").toUpperCase() === actionFilter.value);
+    result = result.filter((log) => {
+      const a = (log.action_type || "").toUpperCase();
+      return a === actionFilter.value;
+    });
   }
 
   if (targetSort.value) {
@@ -409,6 +414,8 @@ onMounted(async () => {
   border-bottom: 1px solid #eee;
   overflow: hidden;
 }
+.table th:has(.col-filter-btn) { white-space: nowrap; }
+
 .table th {
   font-size: 12px;
   color: #666;
@@ -464,14 +471,16 @@ onMounted(async () => {
 }
 
 .table th.th-sortable {
-  cursor: pointer; user-select: none; transition: background 0.15s, color 0.15s;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s, color 0.15s;
 }
-.table th.th-sortable:hover { background: #e8faf0; color: #06c755; }
-.table th.th-active { background: #06c755; color: #fff; }
+.table th.th-sortable:hover { background: #f0fdf4; color: #1a7a3f; }
+.table th.th-active { background: #e6f9ef; color: #1a7a3f; border-bottom: 2px solid #06c755; }
 .th-inner { display: inline-flex; align-items: center; gap: 6px; }
-.sort-label { font-size: 10px; margin-left: 2px; }
-.sort-label-dim { color: #ccc; }
-.sort-label-active { color: #fff; font-weight: 700; }
+.sort-label { font-size: 11px; margin-left: 4px; }
+.sort-label-dim { color: #bbb; }
+.sort-label-active { color: #1a7a3f; font-weight: 700; }
 
 @keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
 .skeleton {
@@ -484,34 +493,44 @@ onMounted(async () => {
 .skeleton-row td { padding-top: 18px; padding-bottom: 18px; }
 
 .col-filter-btn {
-  margin-left: 8px;
-  padding: 4px 10px;
+  margin-left: 6px;
+  padding: 3px 8px;
   border: 1px solid #ccc;
   border-radius: 20px;
   font-size: 11px;
   background: transparent;
-  color: #888;
+  color: #666;
   cursor: pointer;
   font-weight: 500;
+  vertical-align: middle;
+  line-height: 1;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .col-filter-btn:hover {
+  border-color: #06c755;
   color: #06c755;
 }
 .col-filter-btn.active {
+  border-color: #06c755;
   color: #06c755;
   font-weight: 600;
 }
 
 .reset-btn {
-  margin-left: 6px;
-  padding: 4px 8px;
+  margin-left: 12px;
+  padding: 6px 12px;
   border: none;
-  border-radius: 4px;
-  font-size: 10px;
+  border-radius: 6px;
+  font-size: 12px;
   background: #ffebee;
   color: #c62828;
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .reset-btn:hover {
   background: #ffcdd2;
