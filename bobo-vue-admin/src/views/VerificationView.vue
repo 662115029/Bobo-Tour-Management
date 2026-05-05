@@ -361,7 +361,7 @@ const reviewDoc = async (doc, newStatus) => {
     const res = await fetch(endpoint, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: newStatus, reviewed_by: 'ad_001' })
+      body: JSON.stringify({ status: newStatus, reviewed_by: localStorage.getItem('admin_id') || '' })
     })
     const data = await res.json()
     if (data.status === 'updated') {
