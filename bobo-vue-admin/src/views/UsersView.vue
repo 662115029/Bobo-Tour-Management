@@ -95,7 +95,7 @@
         </thead>
         <tbody>
           <tr v-for="user in filteredUsers" :key="user.id" class="row-hover">
-            <td class="truncate-cell clickable-cell" @click="viewUser(user)">
+            <td class="truncate-cell clickable-cell" @click="openUserModal(user)">
               <div class="user-cell">
                 <span class="avatar">{{ user.initials }}</span>
                 <span :title="user.name">
@@ -334,6 +334,10 @@ const handleOutsideClick = (e) => {
   }
 };
 
+const openUserModal = (user) => {
+  userModal.value = user
+}
+
 const viewUser = (user) => {
   const route = activeTab.value === 'Employer'
     ? { name: 'EmployerDetail', params: { id: user.id }, state: { parent: 'Users', parentTo: '/users', userName: user.name } }
@@ -344,8 +348,8 @@ const viewUser = (user) => {
 const goToFullDetail = () => {
   if (!userModal.value) return
   const route = activeTab.value === 'Employer'
-    ? { name: 'EmployerDetail', params: { id: userModal.value.id } }
-    : { name: 'FreelancerDetail', params: { id: userModal.value.id } }
+    ? { name: 'EmployerDetail', params: { id: userModal.value.id }, state: { parent: 'Users', parentTo: '/users', userName: userModal.value.name } }
+    : { name: 'FreelancerDetail', params: { id: userModal.value.id }, state: { parent: 'Users', parentTo: '/users', userName: userModal.value.name } }
   router.push(route)
   userModal.value = null
 }
@@ -1092,12 +1096,11 @@ watch(activeTab, async (tab) => {
 .btn-full-view {
   background: none;
   border: none;
-  color: #1976d2;
-  font-size: 14px;
-  font-weight: 500;
+  color: #0066cc;
+  font-size: 13px;
   cursor: pointer;
+  font-weight: 500;
 }
-
 .btn-full-view:hover {
   text-decoration: underline;
 }
