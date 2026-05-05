@@ -15,61 +15,69 @@
       <table class="table">
         <thead>
           <tr>
-            <th style="width: 14%">
+            <th style="width: 18%">
               ACTION
               <button
                 class="col-filter-btn"
-                :class="{ active: actionSort !== '' }"
+                :class="{ active: actionFilter !== 'All' }"
                 @click.stop="toggleActionDropdown($event)"
               >
-                {{
-                  actionSort === "asc"
-                    ? "A→Z ▼"
-                    : actionSort === "desc"
-                      ? "Z→A ▼"
-                      : "All ▼"
-                }}
+                {{ actionFilter === "All" ? "All ▼" : actionFilter === "APPROVE_DOCUMENT" ? "APPROVE DOC ▼" : actionFilter === "VERIFY_FREELANCER" ? "VERIFY FL ▼" : actionFilter === "REJECT_DOCUMENT" ? "REJECT DOC ▼" : actionFilter + " ▼" }}
               </button>
             </th>
-            <th style="width: 14%">
+            <th style="width: 16%">
               TYPE
               <button
                 class="col-filter-btn"
                 :class="{ active: typeFilter !== 'All' }"
                 @click.stop="toggleTypeDropdown($event)"
               >
-                {{ typeFilter === "All" ? "All ▼" : typeFilter + " ▼" }}
+                {{ typeFilter === "All" ? "All ▼" : typeFilter === "FREELANCER" ? "FREELANCE ▼" : typeFilter === "EMPLOYER" ? "EMPLOYER ▼" : typeFilter === "DOCUMENT" ? "DOCUMENT ▼" : typeFilter === "JOB" ? "JOB ▼" : typeFilter + " ▼" }}
               </button>
             </th>
-            <th style="width: 22%">TARGET</th>
-            <th style="width: 30%">NOTE</th>
+            <th class="th-sortable" :class="{ 'th-active': targetSort }" style="width: 22%" @click="cycleSort('target')">
+              <span class="th-inner">
+                TARGET
+                <span class="sort-label">
+                  <span v-if="!targetSort" class="sort-label-dim">⇅</span>
+                  <span v-else-if="targetSort === 'asc'" class="sort-label-active">↑AZ</span>
+                  <span v-else class="sort-label-active">↓ZA</span>
+                </span>
+              </span>
+            </th>
+            <th style="width: 24%">NOTE</th>
             <th style="width: 12%">ADMIN</th>
-            <th style="width: 16%">
-              LAST UPDATED
+            <th class="th-sortable" :class="{ 'th-active': dateSort }" style="width: 16%; position: relative;" @click="cycleSort('date')">
+              <span class="th-inner">
+                LAST UPDATED
+                <span class="sort-label">
+                  <span v-if="!dateSort" class="sort-label-dim">⇅</span>
+                  <span v-else-if="dateSort === 'asc'" class="sort-label-active">↑</span>
+                  <span v-else class="sort-label-active">↓</span>
+                </span>
+              </span>
               <button
-                class="col-filter-btn"
-                :class="{ active: dateSort !== '' }"
-                @click.stop="toggleDateDropdown($event)"
-              >
-                {{
-                  dateSort === "desc"
-                    ? "Latest ▼"
-                    : dateSort === "asc"
-                      ? "Oldest ▼"
-                      : "All ▼"
-                }}
-              </button>
-              <button
-                v-if="actionSort || typeFilter !== 'All' || dateSort"
+                v-if="actionFilter !== 'All' || typeFilter !== 'All' || targetSort || dateSort"
                 class="reset-btn"
-                @click="resetAllFilters"
+                @click.stop="resetAllFilters"
+                style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%);"
               >
-                Reset
+                ✕ Reset
               </button>
             </th>
           </tr>
         </thead>
         <tbody>
+          <template v-if="isLoading">
+            <tr v-for="i in 8" :key="'sk-'+i" class="skeleton-row">
+              <td><span class="skeleton skeleton-badge" style="width:80px"></span></td>
+              <td><span class="skeleton skeleton-badge" style="width:90px"></span></td>
+              <td><span class="skeleton skeleton-text" style="width:70%"></span></td>
+              <td><span class="skeleton skeleton-text" style="width:85%"></span></td>
+              <td><span class="skeleton skeleton-text" style="width:60%"></span></td>
+              <td><span class="skeleton skeleton-text" style="width:75%"></span></td>
+            </tr>
+          </template>
           <tr v-for="log in filteredLogs" :key="log.log_id">
             <td>
               <span
@@ -106,13 +114,14 @@
       class="col-dropdown"
       :style="actionDropdownStyle"
     >
-      <button class="col-dropdown-item" @click="setActionSort('')">All</button>
-      <button class="col-dropdown-item" @click="setActionSort('asc')">
-        A → Z
-      </button>
-      <button class="col-dropdown-item" @click="setActionSort('desc')">
-        Z → A
-      </button>
+      <button class="col-dropdown-item" @click="setActionFilter('All')">All</button>
+      <button class="col-dropdown-item" @click="setActionFilter('APPROVE_DOCUMENT')">Approve Document</button>
+      <button class="col-dropdown-item" @click="setActionFilter('VERIFY_FREELANCER')">Verify Freelancer</button>
+      <button class="col-dropdown-item" @click="setActionFilter('REJECT')">Reject</button>
+      <button class="col-dropdown-item" @click="setActionFilter('BAN')">Ban</button>
+      <button class="col-dropdown-item" @click="setActionFilter('UNBAN')">Unban</button>
+      <button class="col-dropdown-item" @click="setActionFilter('DELETE')">Delete</button>
+      <button class="col-dropdown-item" @click="setActionFilter('UPDATE')">Update</button>
     </div>
 
     <div
@@ -137,19 +146,7 @@
       </button>
     </div>
 
-    <div
-      v-if="showDateDropdown"
-      class="col-dropdown"
-      :style="dateDropdownStyle"
-    >
-      <button class="col-dropdown-item" @click="setDateSort('')">All</button>
-      <button class="col-dropdown-item" @click="setDateSort('desc')">
-        Latest
-      </button>
-      <button class="col-dropdown-item" @click="setDateSort('asc')">
-        Oldest
-      </button>
-    </div>
+
   </div>
 </template>
 
@@ -160,36 +157,46 @@ import { computed, onMounted, onUnmounted, ref } from "vue";
 const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
 const search = ref("");
 const typeFilter = ref(localStorage.getItem("logs_typeFilter") || "All");
-const actionSort = ref(localStorage.getItem("logs_actionSort") || "");
+const actionFilter = ref(localStorage.getItem("logs_actionFilter") || "All");
+const targetSort = ref(localStorage.getItem("logs_targetSort") || "");
+const showActionDropdown = ref(false);
+const actionDropdownStyle = ref({});
 const dateSort = ref(localStorage.getItem("logs_dateSort") || "");
+const isLoading = ref(true);
 const logs = ref([]);
 
-const showActionDropdown = ref(false);
 const showTypeDropdown = ref(false);
-const showDateDropdown = ref(false);
-const actionDropdownStyle = ref({});
 const typeDropdownStyle = ref({});
-const dateDropdownStyle = ref({});
 
 const saveFilters = () => {
-  localStorage.setItem("logs_actionSort", actionSort.value);
+  localStorage.setItem("logs_actionFilter", actionFilter.value);
+  localStorage.setItem("logs_targetSort", targetSort.value);
   localStorage.setItem("logs_typeFilter", typeFilter.value);
   localStorage.setItem("logs_dateSort", dateSort.value);
 };
 
-const toggleActionDropdown = (e) => {
-  closeAllDropdowns();
-  showActionDropdown.value = true;
-  const rect = e.target.getBoundingClientRect();
-  actionDropdownStyle.value = {
-    position: "fixed",
-    top: rect.bottom + window.scrollY + "px",
-    left: rect.left + "px",
-  };
+const cycleSort = (key) => {
+  const map = { target: targetSort, date: dateSort };
+  const current = map[key];
+  const next = current.value === "" ? "asc" : current.value === "asc" ? "desc" : "";
+  targetSort.value = "";
+  dateSort.value = "";
+  current.value = next;
+  saveFilters();
 };
 
-const setActionSort = (val) => {
-  actionSort.value = val;
+const toggleActionDropdown = (e) => {
+  const opening = !showActionDropdown.value;
+  showActionDropdown.value = false;
+  showTypeDropdown.value = false;
+  if (opening) {
+    showActionDropdown.value = true;
+    const rect = e.target.getBoundingClientRect();
+    actionDropdownStyle.value = { position: "fixed", top: rect.bottom + window.scrollY + "px", left: rect.left + "px" };
+  }
+};
+const setActionFilter = (val) => {
+  actionFilter.value = val;
   showActionDropdown.value = false;
   saveFilters();
 };
@@ -211,31 +218,13 @@ const setTypeFilter = (val) => {
   saveFilters();
 };
 
-const toggleDateDropdown = (e) => {
-  closeAllDropdowns();
-  showDateDropdown.value = true;
-  const rect = e.target.getBoundingClientRect();
-  dateDropdownStyle.value = {
-    position: "fixed",
-    top: rect.bottom + window.scrollY + "px",
-    left: rect.left + "px",
-  };
-};
-
-const setDateSort = (val) => {
-  dateSort.value = val;
-  showDateDropdown.value = false;
-  saveFilters();
-};
-
 const closeAllDropdowns = () => {
-  showActionDropdown.value = false;
   showTypeDropdown.value = false;
-  showDateDropdown.value = false;
 };
 
 const resetAllFilters = () => {
-  actionSort.value = "";
+  actionFilter.value = "All";
+  targetSort.value = "";
   typeFilter.value = "All";
   dateSort.value = "";
   saveFilters();
@@ -263,21 +252,33 @@ const formatDateTime = (date) => {
 
 const getActionClass = (action) => {
   const a = (action || "").toUpperCase();
-  if (a === "APPROVE") return "green";
-  if (a === "REJECT") return "red";
-  if (a === "BAN") return "red";
-  if (a === "UNBAN") return "green";
-  if (a === "DELETE") return "red";
-  if (a === "UPDATE") return "blue";
-  return "gray";
+  // approve family
+  if (a === "APPROVE" || a === "APPROVE_DOCUMENT" || a === "APPROVE_EMPLOYER" || a === "APPROVE_FREELANCER") return "action-approve";
+  // verify family
+  if (a === "VERIFY_FREELANCER" || a === "VERIFY_EMPLOYER" || a === "VERIFY") return "action-verify";
+  // unban / restore
+  if (a === "UNBAN") return "action-unban";
+  // update
+  if (a === "UPDATE") return "action-update";
+  // view
+  if (a === "VIEW") return "action-view";
+  // reject family
+  if (a === "REJECT" || a === "REJECT_DOCUMENT") return "action-reject";
+  // ban
+  if (a === "BAN") return "action-ban";
+  // delete
+  if (a === "DELETE") return "action-delete";
+  return "action-default";
 };
 
 const getTypeClass = (type) => {
   const t = (type || "").toUpperCase();
-  if (t === "FREELANCER") return "blue";
-  if (t === "EMPLOYER") return "purple";
-  if (t === "JOB") return "orange";
-  return "gray";
+  if (t === "FREELANCER") return "type-freelancer";
+  if (t === "EMPLOYER")   return "type-employer";
+  if (t === "JOB")        return "type-job";
+  if (t === "DOCUMENT")   return "type-document";
+  if (t === "USER")       return "type-user";
+  return "type-default";
 };
 
 const filteredLogs = computed(() => {
@@ -297,10 +298,14 @@ const filteredLogs = computed(() => {
     return matchSearch && matchType;
   });
 
-  if (actionSort.value) {
+  if (actionFilter.value !== "All") {
+    result = result.filter((log) => (log.action_type || "").toUpperCase() === actionFilter.value);
+  }
+
+  if (targetSort.value) {
     result = [...result].sort((a, b) => {
-      const cmp = (a.action_type || "").localeCompare(b.action_type || "");
-      return actionSort.value === "desc" ? -cmp : cmp;
+      const cmp = (a.target_name || "").localeCompare(b.target_name || "");
+      return targetSort.value === "desc" ? -cmp : cmp;
     });
   }
 
@@ -334,6 +339,8 @@ onMounted(async () => {
   } catch (e) {
     console.error("Failed to load logs:", e);
     logs.value = [];
+  } finally {
+    isLoading.value = false;
   }
 });
 </script>
@@ -350,10 +357,11 @@ onMounted(async () => {
 }
 
 .filter-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   margin-bottom: 16px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
   padding: 0 20px;
 }
 .filter-group {
@@ -362,10 +370,18 @@ onMounted(async () => {
 }
 .search-input {
   padding: 10px 14px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  border: 1.5px solid #999;
+  border-radius: 8px;
   width: 280px;
   font-size: 14px;
+  background: white;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.12);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.search-input:focus {
+  border-color: #06c755;
+  box-shadow: 0 0 0 3px rgba(6,199,85,0.12);
 }
 .filter-select {
   padding: 10px 14px;
@@ -398,6 +414,7 @@ onMounted(async () => {
   color: #666;
   font-weight: 600;
   background: white;
+  letter-spacing: 0.3px;
 }
 
 .truncate-cell {
@@ -406,45 +423,35 @@ onMounted(async () => {
   text-overflow: ellipsis;
 }
 
-.action-badge {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 600;
-}
+.action-badge,
 .type-tag {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   padding: 3px 10px;
-  border-radius: 20px;
+  border-radius: 12px;
   font-size: 11px;
   font-weight: 600;
+  width: fit-content;
 }
 
-.green {
-  background: #f0fdf4;
-  color: #166534;
-}
-.red {
-  background: #fef2f2;
-  color: #991b1b;
-}
-.blue {
-  background: #e3f2fd;
-  color: #1976d2;
-}
-.purple {
-  background: #f3e5f5;
-  color: #7b1fa2;
-}
-.orange {
-  background: #fff3e0;
-  color: #f57c00;
-}
-.gray {
-  background: #f5f5f5;
-  color: #666;
-}
+/* ACTION colors */
+.action-approve { background: #e8f5e9; color: #2e7d32; }
+.action-verify  { background: #e0f7f1; color: #00796b; }
+.action-unban   { background: #e3f2fd; color: #1565c0; }
+.action-update  { background: #ede7f6; color: #5e35b1; }
+.action-view    { background: #fff3e0; color: #e65100; }
+.action-reject  { background: #fce4ec; color: #c2185b; }
+.action-ban     { background: #fff8e1; color: #f57f17; }
+.action-delete  { background: #fef2f2; color: #991b1b; }
+.action-default { background: #f5f5f5; color: #666; }
+
+/* TYPE colors (ไม่ซ้ำ ACTION เลย) */
+.type-freelancer { background: #e0f2fe; color: #0369a1; }
+.type-employer   { background: #fdf4ff; color: #7e22ce; }
+.type-job        { background: #fff7ed; color: #9a3412; }
+.type-document   { background: #f0fdf4; color: #166534; }
+.type-user       { background: #fce4ec; color: #880e4f; }
+.type-default    { background: #f5f5f5; color: #666; }
 
 .text-muted {
   color: #999;
@@ -455,6 +462,26 @@ onMounted(async () => {
   color: #999;
   padding: 32px;
 }
+
+.table th.th-sortable {
+  cursor: pointer; user-select: none; transition: background 0.15s, color 0.15s;
+}
+.table th.th-sortable:hover { background: #e8faf0; color: #06c755; }
+.table th.th-active { background: #06c755; color: #fff; }
+.th-inner { display: inline-flex; align-items: center; gap: 6px; }
+.sort-label { font-size: 10px; margin-left: 2px; }
+.sort-label-dim { color: #ccc; }
+.sort-label-active { color: #fff; font-weight: 700; }
+
+@keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
+.skeleton {
+  display: inline-block; border-radius: 6px;
+  background: linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);
+  background-size: 800px 100%; animation: shimmer 1.4s infinite;
+}
+.skeleton-text { height: 14px; display: block; border-radius: 4px; }
+.skeleton-badge { height: 22px; border-radius: 12px; display: inline-block; }
+.skeleton-row td { padding-top: 18px; padding-bottom: 18px; }
 
 .col-filter-btn {
   margin-left: 8px;

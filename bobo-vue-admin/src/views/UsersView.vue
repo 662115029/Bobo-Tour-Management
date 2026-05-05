@@ -32,46 +32,54 @@
       <table class="table">
         <thead>
           <tr>
-            <th class="th-sortable" :class="{ 'th-active': nameSort }" style="width: 20%" @click="cycleSort('name')">
+            <th class="th-sortable" :class="{ 'th-active': nameSort }" style="width: 16%" @click="cycleSort('name')">
               <span class="th-inner">
                 NAME
-                <span class="sort-arrows">
-                  <span :class="nameSort === 'asc' ? 'arrow-active' : 'arrow-dim'">↑</span><span :class="nameSort === 'desc' ? 'arrow-active' : 'arrow-dim'">↓</span>
+                <span class="sort-label">
+                  <span v-if="!nameSort" class="sort-label-dim">⇅</span>
+                  <span v-else-if="nameSort === 'asc'" class="sort-label-active">↑AZ</span>
+                  <span v-else class="sort-label-active">↓ZA</span>
                 </span>
               </span>
             </th>
-            <th class="th-sortable" :class="{ 'th-active': ratingSort }" style="width: 16%" @click="cycleSort('rating')">
+            <th class="th-sortable" :class="{ 'th-active': ratingSort }" style="width: 12%" @click="cycleSort('rating')">
               <span class="th-inner">
                 RATING
-                <span class="sort-arrows">
-                  <span :class="ratingSort === 'asc' ? 'arrow-active' : 'arrow-dim'">↑</span><span :class="ratingSort === 'desc' ? 'arrow-active' : 'arrow-dim'">↓</span>
+                <span class="sort-label">
+                  <span v-if="!ratingSort" class="sort-label-dim">⇅</span>
+                  <span v-else-if="ratingSort === 'asc'" class="sort-label-active">↑09</span>
+                  <span v-else class="sort-label-active">↓90</span>
                 </span>
               </span>
             </th>
-            <th class="th-sortable" :class="{ 'th-active': jobsSort }" style="width: 10%" @click="cycleSort('jobs')">
+            <th class="th-sortable" :class="{ 'th-active': jobsSort }" style="width: 15%" @click="cycleSort('jobs')">
               <span class="th-inner">
                 JOBS
-                <span class="sort-arrows">
-                  <span :class="jobsSort === 'asc' ? 'arrow-active' : 'arrow-dim'">↑</span><span :class="jobsSort === 'desc' ? 'arrow-active' : 'arrow-dim'">↓</span>
+                <span class="sort-label">
+                  <span v-if="!jobsSort" class="sort-label-dim">⇅</span>
+                  <span v-else-if="jobsSort === 'asc'" class="sort-label-active">↑09</span>
+                  <span v-else class="sort-label-active">↓90</span>
                 </span>
               </span>
             </th>
-            <th style="width: 10%">
-              STATUS
+            <th style="width: 16%">
+              <span style="display:inline-flex;align-items:center;white-space:nowrap;gap:4px;">STATUS
               <button
                 class="col-filter-btn"
                 :class="{ active: verifyFilter !== 'All' }"
                 @click.stop="toggleStatusDropdown($event)"
               >
-                {{ verifyFilter === "All" ? "All ▼" : verifyFilter + " ▼" }}
-              </button>
+                {{ verifyFilter === "All" ? "All ▼" : verifyFilter === "NOT_VERIFIED" ? "NOT VERIF. ▼" : verifyFilter === "VERIFIED" ? "VERIFIED ▼" : verifyFilter === "PENDING" ? "PENDING ▼" : verifyFilter === "REJECTED" ? "REJECTED ▼" : verifyFilter + " ▼" }}
+              </button></span>
             </th>
-            <th style="width: 12%; text-align: center;">ACTION</th>
+            <th style="width: 11%; text-align: center;">ACTION</th>
             <th class="th-sortable" :class="{ 'th-active': dateSort }" style="width: 16%; position: relative;" @click="cycleSort('date')">
               <span class="th-inner">
                 LAST UPDATED
-                <span class="sort-arrows">
-                  <span :class="dateSort === 'asc' ? 'arrow-active' : 'arrow-dim'">↑</span><span :class="dateSort === 'desc' ? 'arrow-active' : 'arrow-dim'">↓</span>
+                <span class="sort-label">
+                  <span v-if="!dateSort" class="sort-label-dim">⇅</span>
+                  <span v-else-if="dateSort === 'asc'" class="sort-label-active">↑</span>
+                  <span v-else class="sort-label-active">↓</span>
                 </span>
               </span>
               <button
@@ -509,6 +517,11 @@ onUnmounted(() => {
 
 onMounted(async () => {
   document.addEventListener("click", handleOutsideClick);
+  // Clear sort state on fresh load
+  nameSort.value = "";
+  ratingSort.value = "";
+  dateSort.value = "";
+  jobsSort.value = "";
   await Promise.allSettled([loadEmployers(), loadFreelancers(), loadJobs()]);
   isLoading.value = false;
 });
@@ -764,10 +777,11 @@ watch(activeTab, async (tab) => {
 }
 
 .filter-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   margin-bottom: 16px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
   padding: 0 20px;
 }
 
@@ -798,11 +812,12 @@ watch(activeTab, async (tab) => {
 }
 .search-input {
   padding: 10px 14px;
-  border: 1.5px solid #bbb;
+  border: 1.5px solid #999;
   border-radius: 8px;
   width: 280px;
   font-size: 14px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  background: white;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.12);
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
@@ -830,16 +845,16 @@ watch(activeTab, async (tab) => {
   user-select: none;
   transition: background 0.15s, color 0.15s;
 }
-.table th.th-sortable:hover { background: #f0fdf4; color: #06c755; }
-.table th.th-active { background: #f0fdf4; color: #06c755; }
+.table th.th-sortable:hover { background: #f0fdf4; color: #1a7a3f; }
+.table th.th-active { background: #e6f9ef; color: #1a7a3f; border-bottom: 2px solid #06c755; }
 .th-inner { display: inline-flex; align-items: center; gap: 6px; }
-.sort-arrows { display: inline-flex; flex-direction: column; line-height: 1; font-size: 10px; gap: 0; margin-top: 1px; }
-.arrow-dim { color: #ccc; }
-.arrow-active { color: #06c755; font-weight: 700; }
+.sort-label { font-size: 11px; margin-left: 4px; }
+.sort-label-dim { color: #bbb; }
+.sort-label-active { color: #1a7a3f; font-weight: 700; }
 
 .col-filter-btn {
-  margin-left: 8px;
-  padding: 4px 10px;
+  margin-left: 6px;
+  padding: 3px 8px;
   border: 1px solid #ccc;
   border-radius: 20px;
   font-size: 11px;
@@ -847,6 +862,12 @@ watch(activeTab, async (tab) => {
   color: #666;
   cursor: pointer;
   font-weight: 500;
+  vertical-align: middle;
+  line-height: 1;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .col-filter-btn:hover {
   border-color: #06c755;

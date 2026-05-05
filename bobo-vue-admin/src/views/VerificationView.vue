@@ -19,26 +19,30 @@
       <table class="table">
         <thead>
           <tr>
-            <th class="th-sortable" :class="{ 'th-active': nameSort }" style="width:46%" @click="cycleSort('name')">
+            <th class="th-sortable" :class="{ 'th-active': nameSort }" style="width:40%" @click="cycleSort('name')">
               <span class="th-inner">
                 NAME
-                <span class="sort-arrows">
-                  <span :class="nameSort === 'asc' ? 'arrow-active' : 'arrow-dim'">↑</span><span :class="nameSort === 'desc' ? 'arrow-active' : 'arrow-dim'">↓</span>
+                <span class="sort-label">
+                  <span v-if="!nameSort" class="sort-label-dim">⇅</span>
+                  <span v-else-if="nameSort === 'asc'" class="sort-label-active">↑AZ</span>
+                  <span v-else class="sort-label-active">↓ZA</span>
                 </span>
               </span>
             </th>
-            <th style="width:10%">
-              STATUS
+            <th style="width:16%">
+              <span style="display:inline-flex;align-items:center;white-space:nowrap;gap:4px;">STATUS
               <button class="col-filter-btn" :class="{ active: statusFilter !== '' }" @click.stop="toggleStatusDropdown($event)">
-                {{ statusFilter ? statusFilter : 'All ▼' }}
-              </button>
+                {{ statusFilter ? statusFilter + ' ▼' : 'All ▼' }}
+              </button></span>
             </th>
             <th style="width:12%; text-align: center;">ACTION</th>
             <th class="th-sortable" :class="{ 'th-active': dateSort }" style="width:16%; position: relative;" @click="cycleSort('date')">
               <span class="th-inner">
                 LAST UPDATED
-                <span class="sort-arrows">
-                  <span :class="dateSort === 'asc' ? 'arrow-active' : 'arrow-dim'">↑</span><span :class="dateSort === 'desc' ? 'arrow-active' : 'arrow-dim'">↓</span>
+                <span class="sort-label">
+                  <span v-if="!dateSort" class="sort-label-dim">⇅</span>
+                  <span v-else-if="dateSort === 'asc'" class="sort-label-active">↑</span>
+                  <span v-else class="sort-label-active">↓</span>
                 </span>
               </span>
               <button v-if="nameSort || statusFilter || dateSort" class="reset-btn" @click.stop="resetAllFilters" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%);">✕ Reset</button>
@@ -493,6 +497,10 @@ onMounted(async () => {
   overflow: hidden;
 }
 
+.table th:has(.col-filter-btn) {
+  white-space: nowrap;
+}
+
 .table th {
   font-size: 12px;
   color: #666;
@@ -504,11 +512,12 @@ onMounted(async () => {
 
 .search-input {
   padding: 10px 14px;
-  border: 1.5px solid #bbb;
+  border: 1.5px solid #999;
   border-radius: 8px;
   width: 280px;
   font-size: 14px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  background: white;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.12);
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
@@ -522,12 +531,12 @@ onMounted(async () => {
   user-select: none;
   transition: background 0.15s, color 0.15s;
 }
-.table th.th-sortable:hover { background: #f0fdf4; color: #06c755; }
-.table th.th-active { background: #f0fdf4; color: #06c755; }
+.table th.th-sortable:hover { background: #f0fdf4; color: #1a7a3f; }
+.table th.th-active { background: #e6f9ef; color: #1a7a3f; border-bottom: 2px solid #06c755; }
 .th-inner { display: inline-flex; align-items: center; gap: 6px; }
-.sort-arrows { display: inline-flex; flex-direction: column; line-height: 1; font-size: 10px; gap: 0; margin-top: 1px; }
-.arrow-dim { color: #ccc; }
-.arrow-active { color: #06c755; font-weight: 700; }
+.sort-label { font-size: 11px; margin-left: 4px; }
+.sort-label-dim { color: #bbb; }
+.sort-label-active { color: #1a7a3f; font-weight: 700; }
 
 @keyframes shimmer {
   0% { background-position: -400px 0; }
@@ -546,8 +555,8 @@ onMounted(async () => {
 .skeleton-row td { padding-top: 18px; padding-bottom: 18px; }
 
 .col-filter-btn {
-  margin-left: 8px;
-  padding: 4px 10px;
+  margin-left: 6px;
+  padding: 3px 8px;
   border: 1px solid #ccc;
   border-radius: 20px;
   font-size: 11px;
@@ -555,6 +564,12 @@ onMounted(async () => {
   color: #666;
   cursor: pointer;
   font-weight: 500;
+  vertical-align: middle;
+  line-height: 1;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .col-filter-btn:hover {

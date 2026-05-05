@@ -39,43 +39,51 @@
             <th class="th-sortable" :class="{ 'th-active': titleSort }" style="width: 20%" @click="cycleSort('title')">
               <span class="th-inner">
                 JOB TITLE
-                <span class="sort-arrows">
-                  <span :class="titleSort === 'asc' ? 'arrow-active' : 'arrow-dim'">↑</span><span :class="titleSort === 'desc' ? 'arrow-active' : 'arrow-dim'">↓</span>
+                <span class="sort-label">
+                  <span v-if="!titleSort" class="sort-label-dim">⇅</span>
+                  <span v-else-if="titleSort === 'asc'" class="sort-label-active">↑AZ</span>
+                  <span v-else class="sort-label-active">↓ZA</span>
                 </span>
               </span>
             </th>
             <th class="th-sortable" :class="{ 'th-active': companySort }" style="width: 16%" @click="cycleSort('company')">
               <span class="th-inner">
                 COMPANY
-                <span class="sort-arrows">
-                  <span :class="companySort === 'asc' ? 'arrow-active' : 'arrow-dim'">↑</span><span :class="companySort === 'desc' ? 'arrow-active' : 'arrow-dim'">↓</span>
+                <span class="sort-label">
+                  <span v-if="!companySort" class="sort-label-dim">⇅</span>
+                  <span v-else-if="companySort === 'asc'" class="sort-label-active">↑AZ</span>
+                  <span v-else class="sort-label-active">↓ZA</span>
                 </span>
               </span>
             </th>
             <th class="th-sortable" :class="{ 'th-active': priceSort }" style="width: 10%" @click="cycleSort('price')">
               <span class="th-inner">
                 PRICE
-                <span class="sort-arrows">
-                  <span :class="priceSort === 'asc' ? 'arrow-active' : 'arrow-dim'">↑</span><span :class="priceSort === 'desc' ? 'arrow-active' : 'arrow-dim'">↓</span>
+                <span class="sort-label">
+                  <span v-if="!priceSort" class="sort-label-dim">⇅</span>
+                  <span v-else-if="priceSort === 'asc'" class="sort-label-active">↑09</span>
+                  <span v-else class="sort-label-active">↓90</span>
                 </span>
               </span>
             </th>
-            <th style="width: 10% ">
-              STATUS
+            <th style="width: 16%; text-align: center;">
+              <span style="display:inline-flex;align-items:center;white-space:nowrap;gap:4px;">STATUS
               <button
                 class="col-filter-btn"
                 :class="{ active: statusFilter !== 'All' }"
                 @click.stop="toggleStatusDropdown($event)"
               >
                 {{ statusFilter === "All" ? "All ▼" : statusFilter + " ▼" }}
-              </button>
+              </button></span>
             </th>
             <th style="width: 12%; text-align: center;">ACTION</th>
             <th class="th-sortable" :class="{ 'th-active': dateSort }" style="width: 16%; position: relative;" @click="cycleSort('date')">
               <span class="th-inner">
                 LAST UPDATED
-                <span class="sort-arrows">
-                  <span :class="dateSort === 'asc' ? 'arrow-active' : 'arrow-dim'">↑</span><span :class="dateSort === 'desc' ? 'arrow-active' : 'arrow-dim'">↓</span>
+                <span class="sort-label">
+                  <span v-if="!dateSort" class="sort-label-dim">⇅</span>
+                  <span v-else-if="dateSort === 'asc'" class="sort-label-active">↑</span>
+                  <span v-else class="sort-label-active">↓</span>
                 </span>
               </span>
               <button
@@ -107,7 +115,7 @@
                   : "-"
               }}
             </td>
-            <td>
+            <td style="text-align: center;">
               <span class="badge" :class="job.job_status?.toLowerCase()">{{
                 job.job_status
               }}</span>
@@ -206,7 +214,11 @@
           </div>
           <div class="mini-item">
             <label>Freelancer</label>
-            <span>{{ jobModal.selected_fl_id || "-" }}</span>
+            <span>{{
+              jobModal.selected_fl_id
+                ? (allFreelancers.find(f => f.fl_id === jobModal.selected_fl_id)?.fl_name || jobModal.selected_fl_id)
+                : '-'
+            }}</span>
           </div>
           <div class="mini-item">
             <label>Job Start</label>
@@ -412,6 +424,7 @@ const cycleSort = (key) => {
 const isLoading = ref(true);
 const jobs = ref([]);
 const allEmployers = ref([]);
+const allFreelancers = ref([]);
 const showDeleteModal = ref(false);
 const deleteTargetId = ref(null);
 const deleteTargetTitle = ref("");
@@ -568,16 +581,19 @@ onUnmounted(() => {
 onMounted(async () => {
   document.addEventListener("click", handleOutsideClick);
   try {
-    const [jobsRes, emRes] = await Promise.all([
+    const [jobsRes, emRes, flRes] = await Promise.all([
       fetch(`${API_BASE}/jobs?limit=500`),
       fetch(`${API_BASE}/employers?limit=500`),
+      fetch(`${API_BASE}/freelancers?limit=500`),
     ]);
-    const [jobsData, emData] = await Promise.all([
+    const [jobsData, emData, flData] = await Promise.all([
       jobsRes.json(),
       emRes.json(),
+      flRes.json(),
     ]);
     jobs.value = jobsData.items || [];
     allEmployers.value = emData.items || [];
+    allFreelancers.value = flData.items || [];
   } catch (e) {
     console.error("Failed to load jobs:", e);
   } finally {
@@ -610,11 +626,12 @@ onMounted(async () => {
 }
 .search-input {
   padding: 10px 14px;
-  border: 1.5px solid #bbb;
+  border: 1.5px solid #999;
   border-radius: 8px;
   width: 280px;
   font-size: 14px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  background: white;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.12);
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
@@ -653,6 +670,10 @@ onMounted(async () => {
   color: #888;
   font-size: 13px;
 }
+.table th:has(.col-filter-btn) {
+  white-space: nowrap;
+}
+
 .table th {
   font-size: 12px;
   color: #666;
@@ -662,8 +683,8 @@ onMounted(async () => {
 }
 
 .col-filter-btn {
-  margin-left: 8px;
-  padding: 4px 10px;
+  margin-left: 6px;
+  padding: 3px 8px;
   border: 1px solid #ccc;
   border-radius: 20px;
   font-size: 11px;
@@ -671,6 +692,8 @@ onMounted(async () => {
   color: #666;
   cursor: pointer;
   font-weight: 500;
+  vertical-align: middle;
+  line-height: 1;
 }
 .col-filter-btn:hover {
   border-color: #06c755;
@@ -687,8 +710,8 @@ onMounted(async () => {
   user-select: none;
   transition: background 0.15s, color 0.15s;
 }
-.table th.th-sortable:hover { background: #f0fdf4; color: #06c755; }
-.table th.th-active { background: #f0fdf4; color: #06c755; }
+.table th.th-sortable:hover { background: #f0fdf4; color: #1a7a3f; }
+.table th.th-active { background: #e6f9ef; color: #1a7a3f; border-bottom: 2px solid #06c755; }
 .th-inner {
   display: inline-flex;
   align-items: center;

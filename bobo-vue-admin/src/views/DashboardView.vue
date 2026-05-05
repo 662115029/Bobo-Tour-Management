@@ -1,7 +1,5 @@
 <template>
   <div>
-    <BreadcrumbBar />
-
     <div class="stats-row">
       <div class="stat-card">
         <span class="stat-label">TOTAL JOBS</span>
@@ -180,7 +178,11 @@
           </div>
           <div class="mini-item">
             <label>Freelancer</label>
-            <span>{{ jobModal.selected_fl_id || "-" }}</span>
+            <span>{{
+              jobModal.selected_fl_id
+                ? (allFreelancers.find(f => f.fl_id === jobModal.selected_fl_id)?.fl_name || jobModal.selected_fl_id)
+                : '-'
+            }}</span>
           </div>
           <div class="mini-item">
             <label>Created</label>
@@ -534,7 +536,6 @@
 </template>
 
 <script setup>
-import BreadcrumbBar from '../components/BreadcrumbBar.vue'
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 
@@ -876,6 +877,7 @@ section {
   font-weight: 600;
   background: white;
   letter-spacing: 0.3px;
+  position: relative;
 }
 
 .truncate-cell {
@@ -951,19 +953,21 @@ section {
 }
 
 .type-tag {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   padding: 3px 10px;
   border-radius: 12px;
   font-size: 11px;
   font-weight: 600;
+  width: fit-content;
 }
 .type-tag.freelancer {
-  background: #e3f2fd;
-  color: #1976d2;
+  background: #e0f2fe;
+  color: #0369a1;
 }
 .type-tag.employer {
-  background: #f3e5f5;
-  color: #7b1fa2;
+  background: #fdf4ff;
+  color: #7e22ce;
 }
 
 /* Action buttons */
@@ -1013,16 +1017,14 @@ section {
 }
 .mini-modal {
   background: white;
-  border-radius: 16px;
+  border-radius: 12px;
   padding: 24px;
-  width: 480px;
-  max-height: 85vh;
+  width: 460px;
+  max-height: 80vh;
   overflow-y: auto;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
 }
 .mini-modal-header {
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 16px;
 }
@@ -1133,7 +1135,7 @@ section {
 .mini-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px 20px;
+  gap: 14px;
 }
 .mini-item {
   display: flex;
@@ -1142,15 +1144,13 @@ section {
 }
 .mini-item label {
   font-size: 10px;
-  color: #aaa;
+  color: #999;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.4px;
 }
 .mini-item span {
   font-size: 13px;
-  color: #111;
-  font-weight: 500;
+  color: #222;
 }
 
 .mini-modal-footer {
@@ -1161,18 +1161,15 @@ section {
   justify-content: flex-end;
 }
 .btn-full-view {
-  padding: 9px 20px;
-  background: #1a1a2e;
-  color: white;
+  background: none;
   border: none;
-  border-radius: 8px;
+  color: #0066cc;
   font-size: 13px;
-  font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s;
+  font-weight: 500;
 }
 .btn-full-view:hover {
-  background: #2d2d4e;
+  text-decoration: underline;
 }
 
 .btn-cancel {
