@@ -1,5 +1,6 @@
 <template>
   <div>
+    <BreadcrumbBar />
     <div class="stats-row">
       <div class="stat-card">
         <span class="stat-label">TOTAL JOBS</span>
@@ -218,17 +219,19 @@
       @click.self="companyModal = null"
     >
       <div class="mini-modal">
-        <div class="mini-modal-header">
-          <h3 class="mini-modal-title">{{ companyModal.em_name }}</h3>
+        <div
+          class="mini-modal-header"
+          style="justify-content: flex-end; margin-bottom: 8px"
+        >
           <button class="close-btn" @click="companyModal = null">✕</button>
         </div>
         <div v-if="companyLoading" class="mini-loading">
-  <div v-for="i in 4" :key="'cl-'+i" style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #f5f5f5">
-    <span class="skeleton skeleton-text" style="flex:1"></span>
-    <span class="skeleton skeleton-badge"></span>
-    <span class="skeleton skeleton-btn"></span>
-  </div>
-</div>
+          <div v-for="i in 4" :key="'cl-'+i" style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #f5f5f5">
+            <span class="skeleton skeleton-text" style="flex:1"></span>
+            <span class="skeleton skeleton-badge"></span>
+            <span class="skeleton skeleton-btn"></span>
+          </div>
+        </div>
         <div v-else>
           <div class="profile-hero">
             <div class="profile-avatar em">
@@ -236,8 +239,10 @@
               <span v-else class="avatar-initial">{{ companyModal.em_name?.[0] || "?" }}</span>
             </div>
             <div class="profile-info">
-              <p v-if="companyModal.em_bio" class="profile-bio">{{ companyModal.em_bio }}</p>
-              <p v-else class="profile-bio muted">No bio available</p>
+              <h3 class="profile-name">{{ companyModal.em_name }}</h3>
+              <p class="profile-bio" :class="{ muted: !companyModal.em_bio }">
+                {{ companyModal.em_bio || "No bio" }}
+              </p>
             </div>
           </div>
           <div class="mini-grid">
@@ -537,6 +542,7 @@
 
 <script setup>
 import { onMounted, ref } from "vue";
+import BreadcrumbBar from '../components/BreadcrumbBar.vue';
 import { useRouter } from "vue-router";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
