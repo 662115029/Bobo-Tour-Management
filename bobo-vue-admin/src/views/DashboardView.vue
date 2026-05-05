@@ -4,19 +4,23 @@
     <div class="stats-row">
       <div class="stat-card">
         <span class="stat-label">TOTAL JOBS</span>
-        <span class="stat-value">{{ stats.totalJobs.toLocaleString() }}</span>
+        <span v-if="isLoading" class="skeleton skeleton-stat"></span>
+        <span v-else class="stat-value">{{ stats.totalJobs.toLocaleString() }}</span>
       </div>
       <div class="stat-card">
         <span class="stat-label">PENDING VERIFY</span>
-        <span class="stat-value">{{ stats.pendingVerify }}</span>
+        <span v-if="isLoading" class="skeleton skeleton-stat"></span>
+        <span v-else class="stat-value">{{ stats.pendingVerify }}</span>
       </div>
       <div class="stat-card">
         <span class="stat-label">FREELANCERS</span>
-        <span class="stat-value">{{ stats.freelancers }}</span>
+        <span v-if="isLoading" class="skeleton skeleton-stat"></span>
+        <span v-else class="stat-value">{{ stats.freelancers }}</span>
       </div>
       <div class="stat-card">
         <span class="stat-label">EMPLOYERS</span>
-        <span class="stat-value">{{ stats.employers }}</span>
+        <span v-if="isLoading" class="skeleton skeleton-stat"></span>
+        <span v-else class="stat-value">{{ stats.employers }}</span>
       </div>
     </div>
 
@@ -36,7 +40,18 @@
           </tr>
         </thead>
         <tbody>
+          <template v-if="isLoading">
+            <tr v-for="i in 5" :key="'jsk-'+i" class="skeleton-row">
+              <td><span class="skeleton skeleton-text" style="width:70%"></span></td>
+              <td><span class="skeleton skeleton-text" style="width:60%"></span></td>
+              <td><span class="skeleton skeleton-text" style="width:50%"></span></td>
+              <td style="text-align:center"><span class="skeleton skeleton-badge"></span></td>
+              <td><div class="action-btns"><span class="skeleton skeleton-btn"></span><span class="skeleton skeleton-btn"></span></div></td>
+              <td><span class="skeleton skeleton-text" style="width:80%"></span></td>
+            </tr>
+          </template>
           <tr
+            v-else
             v-for="job in jobs.slice(0, 10)"
             :key="job.job_id"
             class="row-hover"
@@ -97,7 +112,17 @@
           </tr>
         </thead>
         <tbody>
+          <template v-if="isLoading">
+            <tr v-for="i in 5" :key="'vsk-'+i" class="skeleton-row">
+              <td><span class="skeleton skeleton-text" style="width:65%"></span></td>
+              <td style="text-align:center"><span class="skeleton skeleton-badge" style="width:80px"></span></td>
+              <td style="text-align:center"><span class="skeleton skeleton-badge"></span></td>
+              <td style="text-align:center"><div class="action-btns"><span class="skeleton skeleton-btn" style="width:72px"></span></div></td>
+              <td style="text-align:center"><span class="skeleton skeleton-text" style="width:75%"></span></td>
+            </tr>
+          </template>
           <tr
+            v-else
             v-for="v in verifications.slice(0, 10)"
             :key="v.id"
             class="row-hover"
@@ -554,6 +579,7 @@ const stats = ref({
   freelancers: 0,
   employers: 0,
 });
+const isLoading = ref(true);
 const jobs = ref([]);
 const verifications = ref([]);
 const allEmployers = ref([]);
@@ -596,6 +622,19 @@ const formatDateTime = (date) => {
 
 const viewJob = (id) => router.push({ name: "JobDetail", params: { id } });
 
+// Helper: send log to backend
+const logAction = async (action_type, target_type, target_id, target_name, note = null) => {
+  const admin_id = localStorage.getItem('admin_id') || '';
+  if (!admin_id) return;
+  try {
+    await fetch(`${API_BASE}/admin/log`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ admin_id, action_type, target_type, target_id, target_name, note })
+    });
+  } catch (e) {}
+};
+
 const deleteJob = (id, title) => {
   deleteTargetId.value = id;
   deleteTargetTitle.value = title;
@@ -604,7 +643,8 @@ const deleteJob = (id, title) => {
 
 const confirmDelete = async () => {
   try {
-    await fetch(`${API_BASE}/jobs/${deleteTargetId.value}`, {
+    const adminId = localStorage.getItem('admin_id') || '';
+    await fetch(`${API_BASE}/jobs/${deleteTargetId.value}?admin_id=${adminId}`, {
       method: "DELETE",
     });
     jobs.value = jobs.value.filter((j) => j.job_id !== deleteTargetId.value);
@@ -724,7 +764,7 @@ const reviewVerifyDoc = async (doc, newStatus) => {
     const res = await fetch(endpoint, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: newStatus, reviewed_by: "ad_001" }),
+      body: JSON.stringify({ status: newStatus, reviewed_by: localStorage.getItem("admin_id") || "" }),
     });
     const data = await res.json();
     if (data.status === "updated") {
@@ -798,6 +838,9 @@ onMounted(async () => {
       }));
     verifications.value = [...pendingFl, ...pendingEm];
   } catch {}
+  finally {
+    isLoading.value = false;
+  }
 });
 </script>
 
@@ -1065,6 +1108,7 @@ section {
 .skeleton-badge { height: 22px; width: 70px; border-radius: 12px; }
 .skeleton-btn { height: 26px; width: 50px; border-radius: 5px; }
 .skeleton-row td { padding-top: 18px; padding-bottom: 18px; }
+.skeleton-stat { height: 32px; width: 80px; border-radius: 6px; display: block; margin-top: 4px; }
 
 .mini-loading {
   padding: 8px 0;
