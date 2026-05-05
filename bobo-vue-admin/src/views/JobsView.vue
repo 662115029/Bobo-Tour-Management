@@ -534,8 +534,22 @@ const handleOutsideClick = (e) => {
   }
 };
 
+// Helper: send log to backend
+const logAction = async (action_type, target_type, target_id, target_name, note = null) => {
+  const admin_id = localStorage.getItem('admin_id') || '';
+  if (!admin_id) return;
+  try {
+    await fetch(`${API_BASE}/admin/log`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ admin_id, action_type, target_type, target_id, target_name, note })
+    });
+  } catch (e) {}
+};
+
 const viewJob = (id) => {
   const job = jobs.value.find((j) => j.job_id === id);
+  logAction('VIEW', 'JOB', id, job?.job_title || id);
   router.push({
     name: "JobDetail",
     params: { id },
@@ -561,7 +575,8 @@ const deleteJob = (id) => {
 
 const confirmDelete = async () => {
   try {
-    await fetch(`${API_BASE}/jobs/${deleteTargetId.value}`, {
+    const adminId = localStorage.getItem('admin_id') || '';
+    await fetch(`${API_BASE}/jobs/${deleteTargetId.value}?admin_id=${adminId}`, {
       method: "DELETE",
     });
     jobs.value = jobs.value.filter((j) => j.job_id !== deleteTargetId.value);

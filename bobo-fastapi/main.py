@@ -48,6 +48,14 @@ class BanRequest(BaseModel):
     is_active: bool
     admin_id: str
 
+class LogRequest(BaseModel):
+    admin_id: str
+    action_type: str
+    target_type: str
+    target_id: str
+    target_name: str
+    note: str = None
+
 # =============================================================================
 # STORAGE / IMAGE UPLOAD
 # =============================================================================
@@ -430,6 +438,27 @@ def admin_admins(limit: int = 50, offset: int = 0):
 class LoginRequest(BaseModel):
     username: str
     password: str
+
+
+@app.post("/admin/log")
+def create_admin_log(body: LogRequest):
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute(
+            """
+            INSERT INTO admin_logs
+                (admin_id, action_type, target_type, target_id, target_name, note)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            """,
+            (body.admin_id, body.action_type, body.target_type,
+             body.target_id, body.target_name, body.note)
+        )
+        conn.commit()
+        conn.close()
+        return {"status": "logged"}
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.post("/admin/login")
 def admin_login(request: LoginRequest):
@@ -1530,14 +1559,17 @@ def ban_employer(em_id: str, body: BanRequest):
 # =============================================================================
 
 @app.delete("/jobs/{job_id}")
-def delete_job(job_id: str):
+def delete_job(job_id: str, admin_id: str = None):
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
-        cursor.execute("SELECT job_id FROM jobs WHERE job_id = %s", (job_id,))
-        if not cursor.fetchone():
+        cursor.execute("SELECT job_id, job_title FROM jobs WHERE job_id = %s", (job_id,))
+        job = cursor.fetchone()
+        if not job:
             conn.close()
             raise HTTPException(status_code=404, detail="Job not found")
+
+        job_title = job["job_title"] if job else job_id
 
         # Delete in FK-safe order
         cursor.execute("DELETE FROM fl_reviews WHERE job_id = %s", (job_id,))
@@ -1549,6 +1581,17 @@ def delete_job(job_id: str):
         cursor.execute("DELETE FROM job_itineraries WHERE job_id = %s", (job_id,))
         cursor.execute("DELETE FROM job_required_languages WHERE job_id = %s", (job_id,))
         cursor.execute("DELETE FROM jobs WHERE job_id = %s", (job_id,))
+
+        # Log deletion
+        if admin_id:
+            cursor.execute(
+                """
+                INSERT INTO admin_logs
+                    (admin_id, action_type, target_type, target_id, target_name, note)
+                VALUES (%s, 'DELETE', 'JOB', %s, %s, NULL)
+                """,
+                (admin_id, job_id, job_title)
+            )
 
         conn.commit()
         conn.close()
