@@ -32,39 +32,30 @@
       <table class="table">
         <thead>
           <tr>
-            <th style="width: 28%">
-              NAME
-              <button
-                class="col-filter-btn"
-                :class="{ active: nameSort !== '' }"
-                @click.stop="toggleNameDropdown($event)"
-              >
-                {{
-                  nameSort === "asc"
-                    ? "A→Z ▼"
-                    : nameSort === "desc"
-                      ? "Z→A ▼"
-                      : "All ▼"
-                }}
-              </button>
+            <th class="th-sortable" :class="{ 'th-active': nameSort }" style="width: 20%" @click="cycleSort('name')">
+              <span class="th-inner">
+                NAME
+                <span class="sort-arrows">
+                  <span :class="nameSort === 'asc' ? 'arrow-active' : 'arrow-dim'">↑</span><span :class="nameSort === 'desc' ? 'arrow-active' : 'arrow-dim'">↓</span>
+                </span>
+              </span>
             </th>
-            <th style="width: 16%">
-              RATING
-              <button
-                class="col-filter-btn"
-                :class="{ active: ratingSort !== '' }"
-                @click.stop="toggleRatingDropdown($event)"
-              >
-                {{
-                  ratingSort === "desc"
-                    ? "High ▼"
-                    : ratingSort === "asc"
-                      ? "Low ▼"
-                      : "All ▼"
-                }}
-              </button>
+            <th class="th-sortable" :class="{ 'th-active': ratingSort }" style="width: 16%" @click="cycleSort('rating')">
+              <span class="th-inner">
+                RATING
+                <span class="sort-arrows">
+                  <span :class="ratingSort === 'asc' ? 'arrow-active' : 'arrow-dim'">↑</span><span :class="ratingSort === 'desc' ? 'arrow-active' : 'arrow-dim'">↓</span>
+                </span>
+              </span>
             </th>
-            <th style="width: 10%">JOBS</th>
+            <th class="th-sortable" :class="{ 'th-active': jobsSort }" style="width: 10%" @click="cycleSort('jobs')">
+              <span class="th-inner">
+                JOBS
+                <span class="sort-arrows">
+                  <span :class="jobsSort === 'asc' ? 'arrow-active' : 'arrow-dim'">↑</span><span :class="jobsSort === 'desc' ? 'arrow-active' : 'arrow-dim'">↓</span>
+                </span>
+              </span>
+            </th>
             <th style="width: 10%">
               STATUS
               <button
@@ -75,30 +66,21 @@
                 {{ verifyFilter === "All" ? "All ▼" : verifyFilter + " ▼" }}
               </button>
             </th>
-            <th style="width: 12%">ACTION</th>
-            <th style="width: 16%">
-              LAST UPDATED
+            <th style="width: 12%; text-align: center;">ACTION</th>
+            <th class="th-sortable" :class="{ 'th-active': dateSort }" style="width: 16%; position: relative;" @click="cycleSort('date')">
+              <span class="th-inner">
+                LAST UPDATED
+                <span class="sort-arrows">
+                  <span :class="dateSort === 'asc' ? 'arrow-active' : 'arrow-dim'">↑</span><span :class="dateSort === 'desc' ? 'arrow-active' : 'arrow-dim'">↓</span>
+                </span>
+              </span>
               <button
-                class="col-filter-btn"
-                :class="{ active: dateSort !== '' }"
-                @click.stop="toggleDateDropdown($event)"
-              >
-                {{
-                  dateSort === "desc"
-                    ? "Latest ▼"
-                    : dateSort === "asc"
-                      ? "Oldest ▼"
-                      : "All ▼"
-                }}
-              </button>
-              <button
-                v-if="
-                  nameSort || ratingSort || verifyFilter !== 'All' || dateSort
-                "
+                v-if="nameSort || ratingSort || verifyFilter !== 'All' || dateSort || jobsSort"
                 class="reset-btn"
-                @click="resetAllFilters"
+                @click.stop="resetAllFilters"
+                style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%);"
               >
-                Reset
+                ✕ Reset
               </button>
             </th>
           </tr>
@@ -136,42 +118,26 @@
             </td>
             <td class="text-muted">{{ formatDateTime(user.updatedAt) }}</td>
           </tr>
-          <tr v-if="filteredUsers.length === 0">
-            <td colspan="6" class="empty">No users found.</td>
-          </tr>
+          <template v-if="isLoading">
+            <tr v-for="i in 6" :key="'sk-'+i" class="skeleton-row">
+              <td><span class="skeleton skeleton-text" style="width:65%"></span></td>
+              <td><span class="skeleton skeleton-text" style="width:40%"></span></td>
+              <td><span class="skeleton skeleton-text" style="width:40%"></span></td>
+              <td><span class="skeleton skeleton-badge"></span></td>
+              <td>
+                <div class="action-btns">
+                  <span class="skeleton skeleton-btn"></span>
+                  <span class="skeleton skeleton-btn"></span>
+                </div>
+              </td>
+              <td><span class="skeleton skeleton-text" style="width:80%"></span></td>
+            </tr>
+          </template>
         </tbody>
       </table>
     </div>
 
     <!-- Column Filter Dropdowns -->
-    <div
-      v-if="showNameDropdown"
-      class="col-dropdown"
-      :style="nameDropdownStyle"
-    >
-      <button class="col-dropdown-item" @click="setNameSort('')">All</button>
-      <button class="col-dropdown-item" @click="setNameSort('asc')">
-        A → Z
-      </button>
-      <button class="col-dropdown-item" @click="setNameSort('desc')">
-        Z → A
-      </button>
-    </div>
-
-    <div
-      v-if="showRatingDropdown"
-      class="col-dropdown"
-      :style="ratingDropdownStyle"
-    >
-      <button class="col-dropdown-item" @click="setRatingSort('')">All</button>
-      <button class="col-dropdown-item" @click="setRatingSort('desc')">
-        High → Low
-      </button>
-      <button class="col-dropdown-item" @click="setRatingSort('asc')">
-        Low → High
-      </button>
-    </div>
-
     <div
       v-if="showStatusDropdown"
       class="col-dropdown"
@@ -194,19 +160,6 @@
       </button>
     </div>
 
-    <div
-      v-if="showDateDropdown"
-      class="col-dropdown"
-      :style="dateDropdownStyle"
-    >
-      <button class="col-dropdown-item" @click="setDateSort('')">All</button>
-      <button class="col-dropdown-item" @click="setDateSort('desc')">
-        Latest
-      </button>
-      <button class="col-dropdown-item" @click="setDateSort('asc')">
-        Oldest
-      </button>
-    </div>
     <!-- Ban Modal -->
     <div
       v-if="showBanModal"
@@ -305,63 +258,34 @@ const nameSort = ref(localStorage.getItem("users_nameSort") || "");
 const ratingSort = ref(localStorage.getItem("users_ratingSort") || "");
 const verifyFilter = ref(localStorage.getItem("users_verifyFilter") || "All");
 const dateSort = ref(localStorage.getItem("users_dateSort") || "");
+const jobsSort = ref(localStorage.getItem("users_jobsSort") || "");
 
-// Dropdown visibility
-const showNameDropdown = ref(false);
-const showRatingDropdown = ref(false);
 const showStatusDropdown = ref(false);
-const showDateDropdown = ref(false);
-
-// Dropdown positions
-const nameDropdownStyle = ref({});
-const ratingDropdownStyle = ref({});
 const statusDropdownStyle = ref({});
-const dateDropdownStyle = ref({});
 
 const saveFilters = () => {
   localStorage.setItem("users_nameSort", nameSort.value);
   localStorage.setItem("users_ratingSort", ratingSort.value);
   localStorage.setItem("users_verifyFilter", verifyFilter.value);
   localStorage.setItem("users_dateSort", dateSort.value);
+  localStorage.setItem("users_jobsSort", jobsSort.value);
 };
 
-const toggleNameDropdown = (e) => {
-  closeAllDropdowns();
-  showNameDropdown.value = true;
-  const rect = e.target.getBoundingClientRect();
-  nameDropdownStyle.value = {
-    position: "fixed",
-    top: rect.bottom + window.scrollY + "px",
-    left: rect.left + "px",
-  };
-};
-
-const setNameSort = (val) => {
-  nameSort.value = val;
-  showNameDropdown.value = false;
-  saveFilters();
-};
-
-const toggleRatingDropdown = (e) => {
-  closeAllDropdowns();
-  showRatingDropdown.value = true;
-  const rect = e.target.getBoundingClientRect();
-  ratingDropdownStyle.value = {
-    position: "fixed",
-    top: rect.bottom + window.scrollY + "px",
-    left: rect.left + "px",
-  };
-};
-
-const setRatingSort = (val) => {
-  ratingSort.value = val;
-  showRatingDropdown.value = false;
+// กดลูกศร: ไม่มี → asc → desc → ไม่มี (clear คอลัมน์อื่นอัตโนมัติ)
+const cycleSort = (key) => {
+  const map = { name: nameSort, rating: ratingSort, date: dateSort, jobs: jobsSort };
+  const current = map[key];
+  const next = current.value === "" ? "asc" : current.value === "asc" ? "desc" : "";
+  nameSort.value = "";
+  ratingSort.value = "";
+  dateSort.value = "";
+  jobsSort.value = "";
+  current.value = next;
   saveFilters();
 };
 
 const toggleStatusDropdown = (e) => {
-  closeAllDropdowns();
-  showStatusDropdown.value = true;
+  showStatusDropdown.value = !showStatusDropdown.value;
   const rect = e.target.getBoundingClientRect();
   statusDropdownStyle.value = {
     position: "fixed",
@@ -376,28 +300,8 @@ const setVerifyFilter = (val) => {
   saveFilters();
 };
 
-const toggleDateDropdown = (e) => {
-  closeAllDropdowns();
-  showDateDropdown.value = true;
-  const rect = e.target.getBoundingClientRect();
-  dateDropdownStyle.value = {
-    position: "fixed",
-    top: rect.bottom + window.scrollY + "px",
-    left: rect.left + "px",
-  };
-};
-
-const setDateSort = (val) => {
-  dateSort.value = val;
-  showDateDropdown.value = false;
-  saveFilters();
-};
-
 const closeAllDropdowns = () => {
-  showNameDropdown.value = false;
-  showRatingDropdown.value = false;
   showStatusDropdown.value = false;
-  showDateDropdown.value = false;
 };
 
 const resetAllFilters = () => {
@@ -405,6 +309,7 @@ const resetAllFilters = () => {
   ratingSort.value = "";
   verifyFilter.value = "All";
   dateSort.value = "";
+  jobsSort.value = "";
   saveFilters();
 };
 
@@ -458,6 +363,7 @@ const confirmBan = async () => {
     banTarget.value = null;
   }
 };
+const isLoading = ref(true);
 const employers = ref([]);
 const freelancers = ref([]);
 const jobs = ref([]);
@@ -572,13 +478,21 @@ const filteredUsers = computed(() => {
     });
   }
 
+  if (jobsSort.value) {
+    result = [...result].sort((a, b) => {
+      const jobsA = jobsDoneById.value[a.id] || 0;
+      const jobsB = jobsDoneById.value[b.id] || 0;
+      return jobsSort.value === "desc" ? jobsB - jobsA : jobsA - jobsB;
+    });
+  }
+
   if (dateSort.value) {
     result = [...result].sort((a, b) => {
       const dateA = new Date(a.updatedAt) || 0;
       const dateB = new Date(b.updatedAt) || 0;
       return dateSort.value === "desc" ? dateB - dateA : dateA - dateB;
     });
-  } else {
+  } else if (!nameSort.value && !ratingSort.value && !jobsSort.value) {
     result = [...result].sort((a, b) => {
       const dateA = new Date(a.updatedAt) || 0;
       const dateB = new Date(b.updatedAt) || 0;
@@ -596,6 +510,7 @@ onUnmounted(() => {
 onMounted(async () => {
   document.addEventListener("click", handleOutsideClick);
   await Promise.allSettled([loadEmployers(), loadFreelancers(), loadJobs()]);
+  isLoading.value = false;
 });
 
 watch(activeTab, async (tab) => {
@@ -694,11 +609,13 @@ watch(activeTab, async (tab) => {
 }
 
 .badge {
-  display: inline-block;
-  padding: 4px 10px;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
   border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 11px;
+  font-weight: 600;
+  width: fit-content;
 }
 
 .badge.verified {
@@ -721,6 +638,9 @@ watch(activeTab, async (tab) => {
 
 .truncate-cell {
   max-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .row-hover:hover {
@@ -740,6 +660,7 @@ watch(activeTab, async (tab) => {
 .action-btns {
   display: flex;
   gap: 6px;
+  justify-content: center;
 }
 .btn-action {
   padding: 4px 10px;
@@ -750,11 +671,12 @@ watch(activeTab, async (tab) => {
   font-weight: 500;
 }
 .btn-action.view {
-  background: #e3f2fd;
-  color: #1976d2;
+  background: #e0f7f1;
+  color: #00796b;
+  font-weight: 600;
 }
 .btn-action.view:hover {
-  background: #bbdefb;
+  background: #b2dfdb;
 }
 .btn-action.ban {
   background: #ffebee;
@@ -849,13 +771,21 @@ watch(activeTab, async (tab) => {
   padding: 0 20px;
 }
 
-.search-input {
-  padding: 10px 14px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  width: 280px;
-  font-size: 14px;
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
 }
+.skeleton {
+  display: inline-block;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite;
+}
+.skeleton-text { height: 14px; display: block; border-radius: 4px; }
+.skeleton-badge { height: 22px; width: 70px; border-radius: 12px; }
+.skeleton-btn { height: 26px; width: 50px; border-radius: 5px; }
+.skeleton-row td { padding-top: 18px; padding-bottom: 18px; }
 
 .text-muted {
   color: #999;
@@ -865,6 +795,20 @@ watch(activeTab, async (tab) => {
 .filter-group {
   display: flex;
   gap: 8px;
+}
+.search-input {
+  padding: 10px 14px;
+  border: 1.5px solid #bbb;
+  border-radius: 8px;
+  width: 280px;
+  font-size: 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.search-input:focus {
+  border-color: #06c755;
+  box-shadow: 0 0 0 3px rgba(6,199,85,0.12);
 }
 
 .filter-select {
@@ -880,6 +824,18 @@ watch(activeTab, async (tab) => {
   color: #999;
   padding: 32px;
 }
+
+.table th.th-sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s, color 0.15s;
+}
+.table th.th-sortable:hover { background: #f0fdf4; color: #06c755; }
+.table th.th-active { background: #f0fdf4; color: #06c755; }
+.th-inner { display: inline-flex; align-items: center; gap: 6px; }
+.sort-arrows { display: inline-flex; flex-direction: column; line-height: 1; font-size: 10px; gap: 0; margin-top: 1px; }
+.arrow-dim { color: #ccc; }
+.arrow-active { color: #06c755; font-weight: 700; }
 
 .col-filter-btn {
   margin-left: 8px;
