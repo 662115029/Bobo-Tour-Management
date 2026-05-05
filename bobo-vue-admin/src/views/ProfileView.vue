@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1 class="title">Profile</h1>
+    <BreadcrumbBar />
     <div class="content">
       <div class="profile-card">
         <div class="profile-header">
@@ -45,6 +45,7 @@
 </template>
 
 <script setup>
+import BreadcrumbBar from '../components/BreadcrumbBar.vue'
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -126,7 +127,7 @@ const saveColor = () => {
 }
 
 .profile-card {
-  background: #f9f9f9;
+  background: white;
   border-radius: 12px;
   padding: 24px;
 }

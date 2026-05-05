@@ -168,6 +168,70 @@ async def upload_fl_document(
         raise
     except Exception as e:
         return {"error": str(e)}
+
+@app.post("/em-documents/{em_id}/upload")
+async def upload_em_document(
+    em_id: str,
+    doc_type: str,
+    file: UploadFile = File(...)
+):
+    if file.content_type not in ALLOWED_TYPES:
+        raise HTTPException(status_code=400, detail="Invalid file type. Only JPEG, PNG, and WebP allowed.")
+
+    valid_doc_types = {"COMPANY_REGISTRATION", "BUSINESS_LICENSE", "TOURISM_LICENSE", "TAX_ID_DOCUMENT", "AUTHORIZED_PERSON_ID"}
+    if doc_type not in valid_doc_types:
+        raise HTTPException(status_code=400, detail=f"Invalid doc_type. Must be one of: {valid_doc_types}")
+
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+
+        # Check employer exists
+        cursor.execute("SELECT em_id FROM employers WHERE em_id = %s", (em_id,))
+        if not cursor.fetchone():
+            conn.close()
+            raise HTTPException(status_code=404, detail="Employer not found")
+
+        # Upload to Supabase
+        image_url = await upload_image_to_supabase(file)
+
+        # Mark previous document of same type as not latest
+        cursor.execute(
+            """
+            UPDATE em_documents
+            SET is_latest = 0
+            WHERE em_id = %s AND em_doc_type = %s AND is_latest = 1
+            """,
+            (em_id, doc_type)
+        )
+
+        # Insert new document record
+        import uuid
+        new_doc_id = str(uuid.uuid4())
+        cursor.execute(
+            """
+            INSERT INTO em_documents
+                (em_doc_id, em_id, em_doc_type, file_url, em_doc_status, is_latest)
+            VALUES (%s, %s, %s, %s, 'PENDING', 1)
+            """,
+            (new_doc_id, em_id, doc_type, image_url)
+        )
+
+        conn.commit()
+        conn.close()
+
+        return {
+            "em_doc_id": new_doc_id,
+            "em_id": em_id,
+            "em_doc_type": doc_type,
+            "file_url": image_url,
+            "em_doc_status": "PENDING"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        return {"error": str(e)}
+
 # =============================================================================
 # LINE WEBHOOK
 # =============================================================================

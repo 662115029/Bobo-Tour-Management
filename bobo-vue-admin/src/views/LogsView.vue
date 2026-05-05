@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1 class="title">Admin Logs</h1>
+    <BreadcrumbBar />
 
     <div class="filter-row">
       <input
@@ -154,6 +154,7 @@
 </template>
 
 <script setup>
+import BreadcrumbBar from '../components/BreadcrumbBar.vue'
 import { computed, onMounted, onUnmounted, ref } from "vue";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
@@ -396,7 +397,7 @@ onMounted(async () => {
   font-size: 12px;
   color: #666;
   font-weight: 600;
-  background: #f9f9f9;
+  background: white;
 }
 
 .truncate-cell {

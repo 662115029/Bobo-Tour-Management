@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1 class="title">Verification</h1>
+    <BreadcrumbBar />
 
     <div class="tabs">
       <button class="tab" :class="{ active: activeTab === 'Freelancer' }" @click="activeTab = 'Freelancer'">
@@ -178,6 +178,7 @@
 </template>
 
 <script setup>
+import BreadcrumbBar from '../components/BreadcrumbBar.vue'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000'

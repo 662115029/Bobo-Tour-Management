@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1 class="title">Users Management</h1>
+    <BreadcrumbBar />
 
     <div class="tabs">
       <button
@@ -285,6 +285,7 @@
 </template>
 
 <script setup>
+import BreadcrumbBar from '../components/BreadcrumbBar.vue'
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useRouter } from "vue-router";
 

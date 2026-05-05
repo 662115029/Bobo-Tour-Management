@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1 class="title">Dashboard</h1>
+    <BreadcrumbBar />
 
     <div class="stats-row">
       <div class="stat-card">
@@ -533,6 +533,7 @@
 </template>
 
 <script setup>
+import BreadcrumbBar from '../components/BreadcrumbBar.vue'
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 

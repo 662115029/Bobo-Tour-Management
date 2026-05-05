@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1 class="title">Jobs Management</h1>
+    <BreadcrumbBar />
 
     <div class="filter-row">
       <input
@@ -440,6 +440,7 @@
 </template>
 
 <script setup>
+import BreadcrumbBar from '../components/BreadcrumbBar.vue'
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { API_BASE } from "../data/api";
@@ -673,7 +674,14 @@ const handleOutsideClick = (e) => {
   }
 };
 
-const viewJob = (id) => router.push({ name: "JobDetail", params: { id } });
+const viewJob = (id) => {
+  const job = jobs.value.find((j) => j.job_id === id);
+  router.push({
+    name: "JobDetail",
+    params: { id },
+    state: { jobTitle: job?.job_title || "" }
+  });
+};
 
 const openJobModal = (job) => {
   jobModal.value = job;

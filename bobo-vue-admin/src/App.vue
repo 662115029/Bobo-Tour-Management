@@ -31,7 +31,7 @@ const handleSidebarToggle = (val) => {
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #f5f5f5;
+  background: #f0f0f0;
 }
 
 .app {
