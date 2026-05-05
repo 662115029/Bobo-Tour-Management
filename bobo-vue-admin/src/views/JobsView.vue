@@ -60,7 +60,7 @@
                 </span>
               </span>
             </th>
-            <th style="width: 10%">
+            <th style="width: 10% ">
               STATUS
               <button
                 class="col-filter-btn"
@@ -682,18 +682,13 @@ onMounted(async () => {
   font-weight: 600;
 }
 
-.th-sortable {
+.table th.th-sortable {
   cursor: pointer;
   user-select: none;
-  transition: background 0.15s;
+  transition: background 0.15s, color 0.15s;
 }
-.th-sortable:hover {
-  background: #f0fdf4 !important;
-}
-.th-active {
-  background: #f0fdf4 !important;
-  color: #06c755 !important;
-}
+.table th.th-sortable:hover { background: #f0fdf4; color: #06c755; }
+.table th.th-active { background: #f0fdf4; color: #06c755; }
 .th-inner {
   display: inline-flex;
   align-items: center;
