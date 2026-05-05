@@ -36,53 +36,29 @@
       <table class="table">
         <thead>
           <tr>
-            <th style="width: 20%">
-              JOB TITLE
-              <button
-                class="col-filter-btn"
-                :class="{ active: titleSort !== '' }"
-                @click.stop="toggleTitleDropdown($event)"
-              >
-                {{
-                  titleSort === "asc"
-                    ? "A→Z ▼"
-                    : titleSort === "desc"
-                      ? "Z→A ▼"
-                      : "All ▼"
-                }}
-              </button>
+            <th class="th-sortable" :class="{ 'th-active': titleSort }" style="width: 20%" @click="cycleSort('title')">
+              <span class="th-inner">
+                JOB TITLE
+                <span class="sort-arrows">
+                  <span :class="titleSort === 'asc' ? 'arrow-active' : 'arrow-dim'">↑</span><span :class="titleSort === 'desc' ? 'arrow-active' : 'arrow-dim'">↓</span>
+                </span>
+              </span>
             </th>
-            <th style="width: 16%">
-              COMPANY
-              <button
-                class="col-filter-btn"
-                :class="{ active: companySort !== '' }"
-                @click.stop="toggleCompanyDropdown($event)"
-              >
-                {{
-                  companySort === "asc"
-                    ? "A→Z ▼"
-                    : companySort === "desc"
-                      ? "Z→A ▼"
-                      : "All ▼"
-                }}
-              </button>
+            <th class="th-sortable" :class="{ 'th-active': companySort }" style="width: 16%" @click="cycleSort('company')">
+              <span class="th-inner">
+                COMPANY
+                <span class="sort-arrows">
+                  <span :class="companySort === 'asc' ? 'arrow-active' : 'arrow-dim'">↑</span><span :class="companySort === 'desc' ? 'arrow-active' : 'arrow-dim'">↓</span>
+                </span>
+              </span>
             </th>
-            <th style="width: 10%">
-              PRICE
-              <button
-                class="col-filter-btn"
-                :class="{ active: priceSort !== '' }"
-                @click.stop="togglePriceDropdown($event)"
-              >
-                {{
-                  priceSort === "asc"
-                    ? "↑ ▼"
-                    : priceSort === "desc"
-                      ? "↓ ▼"
-                      : "All ▼"
-                }}
-              </button>
+            <th class="th-sortable" :class="{ 'th-active': priceSort }" style="width: 10%" @click="cycleSort('price')">
+              <span class="th-inner">
+                PRICE
+                <span class="sort-arrows">
+                  <span :class="priceSort === 'asc' ? 'arrow-active' : 'arrow-dim'">↑</span><span :class="priceSort === 'desc' ? 'arrow-active' : 'arrow-dim'">↓</span>
+                </span>
+              </span>
             </th>
             <th style="width: 10%">
               STATUS
@@ -94,23 +70,21 @@
                 {{ statusFilter === "All" ? "All ▼" : statusFilter + " ▼" }}
               </button>
             </th>
-            <th style="width: 12%">ACTION</th>
-            <th style="width: 16%; position: relative;">
-              LAST UPDATED
-              <button
-                class="col-filter-btn"
-                :class="{ active: dateSort !== '' }"
-                @click.stop="toggleDateDropdown($event)"
-              >
-                {{ dateSort === "desc" ? "Latest ▼" : dateSort === "asc" ? "Oldest ▼" : "All ▼" }}
-              </button>
+            <th style="width: 12%; text-align: center;">ACTION</th>
+            <th class="th-sortable" :class="{ 'th-active': dateSort }" style="width: 16%; position: relative;" @click="cycleSort('date')">
+              <span class="th-inner">
+                LAST UPDATED
+                <span class="sort-arrows">
+                  <span :class="dateSort === 'asc' ? 'arrow-active' : 'arrow-dim'">↑</span><span :class="dateSort === 'desc' ? 'arrow-active' : 'arrow-dim'">↓</span>
+                </span>
+              </span>
               <button
                 v-if="titleSort || companySort || priceSort || statusFilter !== 'All' || dateSort"
                 class="reset-btn"
-                @click="resetAllFilters"
-                style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%);"
+                @click.stop="resetAllFilters"
+                style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%);"
               >
-                Reset
+                ✕ Reset
               </button>
             </th>
           </tr>
@@ -153,56 +127,26 @@
             </td>
             <td class="text-muted">{{ formatDateTime(job.job_updated_at) }}</td>
           </tr>
-          <tr v-if="filteredJobs.length === 0">
-            <td colspan="6" class="empty">No jobs found.</td>
-          </tr>
+          <template v-if="isLoading">
+            <tr v-for="i in 6" :key="'sk-'+i" class="skeleton-row">
+              <td><span class="skeleton skeleton-text" style="width:70%"></span></td>
+              <td><span class="skeleton skeleton-text" style="width:60%"></span></td>
+              <td><span class="skeleton skeleton-text" style="width:50%"></span></td>
+              <td><span class="skeleton skeleton-badge"></span></td>
+              <td>
+                <div class="action-btns">
+                  <span class="skeleton skeleton-btn"></span>
+                  <span class="skeleton skeleton-btn"></span>
+                </div>
+              </td>
+              <td><span class="skeleton skeleton-text" style="width:80%"></span></td>
+            </tr>
+          </template>
         </tbody>
       </table>
     </div>
 
     <!-- Column Filter Dropdowns -->
-    <div
-      v-if="showTitleDropdown"
-      class="col-dropdown"
-      :style="titleDropdownStyle"
-    >
-      <button class="col-dropdown-item" @click="setTitleSort('')">All</button>
-      <button class="col-dropdown-item" @click="setTitleSort('asc')">
-        A → Z
-      </button>
-      <button class="col-dropdown-item" @click="setTitleSort('desc')">
-        Z → A
-      </button>
-    </div>
-
-    <div
-      v-if="showCompanyDropdown"
-      class="col-dropdown"
-      :style="companyDropdownStyle"
-    >
-      <button class="col-dropdown-item" @click="setCompanySort('')">All</button>
-      <button class="col-dropdown-item" @click="setCompanySort('asc')">
-        A → Z
-      </button>
-      <button class="col-dropdown-item" @click="setCompanySort('desc')">
-        Z → A
-      </button>
-    </div>
-
-    <div
-      v-if="showPriceDropdown"
-      class="col-dropdown"
-      :style="priceDropdownStyle"
-    >
-      <button class="col-dropdown-item" @click="setPriceSort('')">All</button>
-      <button class="col-dropdown-item" @click="setPriceSort('asc')">
-        Low → High
-      </button>
-      <button class="col-dropdown-item" @click="setPriceSort('desc')">
-        High → Low
-      </button>
-    </div>
-
     <div
       v-if="showStatusDropdown"
       class="col-dropdown"
@@ -228,20 +172,6 @@
       </button>
       <button class="col-dropdown-item" @click="setStatusFilter('CANCELLED')">
         Cancelled
-      </button>
-    </div>
-
-    <div
-      v-if="showDateDropdown"
-      class="col-dropdown"
-      :style="dateDropdownStyle"
-    >
-      <button class="col-dropdown-item" @click="setDateSort('')">All</button>
-      <button class="col-dropdown-item" @click="setDateSort('desc')">
-        Latest
-      </button>
-      <button class="col-dropdown-item" @click="setDateSort('asc')">
-        Oldest
       </button>
     </div>
 
@@ -456,17 +386,8 @@ const companySort = ref(localStorage.getItem("jobs_companySort") || "");
 const priceSort = ref(localStorage.getItem("jobs_priceSort") || "");
 const dateSort = ref(localStorage.getItem("jobs_dateSort") || "");
 
-const showTitleDropdown = ref(false);
-const showCompanyDropdown = ref(false);
-const showPriceDropdown = ref(false);
 const showStatusDropdown = ref(false);
-const showDateDropdown = ref(false);
-
-const titleDropdownStyle = ref({});
-const companyDropdownStyle = ref({});
-const priceDropdownStyle = ref({});
 const statusDropdownStyle = ref({});
-const dateDropdownStyle = ref({});
 
 const saveFilters = () => {
   localStorage.setItem("jobs_titleSort", titleSort.value);
@@ -476,6 +397,19 @@ const saveFilters = () => {
   localStorage.setItem("jobs_dateSort", dateSort.value);
 };
 
+// กดลูกศร: ไม่มี → asc → desc → ไม่มี (และ clear คอลัมน์อื่นทั้งหมด)
+const cycleSort = (key) => {
+  const current = { title: titleSort, company: companySort, price: priceSort, date: dateSort }[key];
+  const next = current.value === "" ? "asc" : current.value === "asc" ? "desc" : "";
+  titleSort.value = "";
+  companySort.value = "";
+  priceSort.value = "";
+  dateSort.value = "";
+  current.value = next;
+  saveFilters();
+};
+
+const isLoading = ref(true);
 const jobs = ref([]);
 const allEmployers = ref([]);
 const showDeleteModal = ref(false);
@@ -529,94 +463,31 @@ const filteredJobs = computed(() => {
       const cmp = (a.job_title || "").localeCompare(b.job_title || "");
       return titleSort.value === "desc" ? -cmp : cmp;
     });
-  }
-
-  if (companySort.value) {
+  } else if (companySort.value) {
     result = [...result].sort((a, b) => {
       const cmp = (a.company || "").localeCompare(b.company || "");
       return companySort.value === "desc" ? -cmp : cmp;
     });
-  }
-
-  if (priceSort.value) {
+  } else if (priceSort.value) {
     result = [...result].sort((a, b) => {
-      const priceA = Number(a.job_price) || 0;
-      const priceB = Number(b.job_price) || 0;
-      return priceSort.value === "desc" ? priceB - priceA : priceA - priceB;
+      const cmp = (Number(a.job_price) || 0) - (Number(b.job_price) || 0);
+      return priceSort.value === "desc" ? -cmp : cmp;
     });
-  }
-
-  if (dateSort.value) {
+  } else if (dateSort.value) {
     result = [...result].sort((a, b) => {
-      const dateA = new Date(a.job_updated_at) || 0;
-      const dateB = new Date(b.job_updated_at) || 0;
-      return dateSort.value === "desc" ? dateB - dateA : dateA - dateB;
+      const cmp = new Date(a.job_updated_at) - new Date(b.job_updated_at);
+      return dateSort.value === "desc" ? -cmp : cmp;
     });
   } else {
-    result = [...result].sort((a, b) => {
-      const dateA = new Date(a.job_updated_at) || 0;
-      const dateB = new Date(b.job_updated_at) || 0;
-      return dateB - dateA;
-    });
+    // Default: ล่าสุดก่อน
+    result = [...result].sort((a, b) => new Date(b.job_updated_at) - new Date(a.job_updated_at));
   }
 
   return result;
 });
 
-const toggleTitleDropdown = (e) => {
-  closeAllDropdowns();
-  showTitleDropdown.value = true;
-  const rect = e.target.getBoundingClientRect();
-  titleDropdownStyle.value = {
-    position: "fixed",
-    top: rect.bottom + window.scrollY + "px",
-    left: rect.left + "px",
-  };
-};
-
-const setTitleSort = (val) => {
-  titleSort.value = val;
-  showTitleDropdown.value = false;
-  saveFilters();
-};
-
-const toggleCompanyDropdown = (e) => {
-  closeAllDropdowns();
-  showCompanyDropdown.value = true;
-  const rect = e.target.getBoundingClientRect();
-  companyDropdownStyle.value = {
-    position: "fixed",
-    top: rect.bottom + window.scrollY + "px",
-    left: rect.left + "px",
-  };
-};
-
-const setCompanySort = (val) => {
-  companySort.value = val;
-  showCompanyDropdown.value = false;
-  saveFilters();
-};
-
-const togglePriceDropdown = (e) => {
-  closeAllDropdowns();
-  showPriceDropdown.value = true;
-  const rect = e.target.getBoundingClientRect();
-  priceDropdownStyle.value = {
-    position: "fixed",
-    top: rect.bottom + window.scrollY + "px",
-    left: rect.left + "px",
-  };
-};
-
-const setPriceSort = (val) => {
-  priceSort.value = val;
-  showPriceDropdown.value = false;
-  saveFilters();
-};
-
 const toggleStatusDropdown = (e) => {
-  closeAllDropdowns();
-  showStatusDropdown.value = true;
+  showStatusDropdown.value = !showStatusDropdown.value;
   const rect = e.target.getBoundingClientRect();
   statusDropdownStyle.value = {
     position: "fixed",
@@ -631,29 +502,8 @@ const setStatusFilter = (val) => {
   saveFilters();
 };
 
-const toggleDateDropdown = (e) => {
-  closeAllDropdowns();
-  showDateDropdown.value = true;
-  const rect = e.target.getBoundingClientRect();
-  dateDropdownStyle.value = {
-    position: "fixed",
-    top: rect.bottom + window.scrollY + "px",
-    left: rect.left + "px",
-  };
-};
-
-const setDateSort = (val) => {
-  dateSort.value = val;
-  showDateDropdown.value = false;
-  saveFilters();
-};
-
 const closeAllDropdowns = () => {
-  showTitleDropdown.value = false;
-  showCompanyDropdown.value = false;
-  showPriceDropdown.value = false;
   showStatusDropdown.value = false;
-  showDateDropdown.value = false;
 };
 
 const resetAllFilters = () => {
@@ -666,10 +516,7 @@ const resetAllFilters = () => {
 };
 
 const handleOutsideClick = (e) => {
-  if (
-    !e.target.closest(".col-dropdown") &&
-    !e.target.closest(".col-filter-btn")
-  ) {
+  if (!e.target.closest(".col-dropdown") && !e.target.closest(".col-filter-btn")) {
     closeAllDropdowns();
   }
 };
@@ -733,6 +580,8 @@ onMounted(async () => {
     allEmployers.value = emData.items || [];
   } catch (e) {
     console.error("Failed to load jobs:", e);
+  } finally {
+    isLoading.value = false;
   }
 });
 </script>
@@ -761,16 +610,24 @@ onMounted(async () => {
 }
 .search-input {
   padding: 10px 14px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  border: 1.5px solid #bbb;
+  border-radius: 8px;
   width: 280px;
   font-size: 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.search-input:focus {
+  border-color: #06c755;
+  box-shadow: 0 0 0 3px rgba(6,199,85,0.12);
 }
 .filter-select {
   padding: 10px 14px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  border: 1.5px solid #bbb;
+  border-radius: 8px;
   font-size: 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
 }
 
 .table-container {
@@ -791,6 +648,10 @@ onMounted(async () => {
   text-align: left;
   border-bottom: 1px solid #eee;
   overflow: hidden;
+}
+.table td:nth-child(2) {
+  color: #888;
+  font-size: 13px;
 }
 .table th {
   font-size: 12px;
@@ -819,6 +680,39 @@ onMounted(async () => {
   border-color: #06c755;
   color: #06c755;
   font-weight: 600;
+}
+
+.th-sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+.th-sortable:hover {
+  background: #f0fdf4 !important;
+}
+.th-active {
+  background: #f0fdf4 !important;
+  color: #06c755 !important;
+}
+.th-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.sort-arrows {
+  display: inline-flex;
+  flex-direction: column;
+  line-height: 1;
+  font-size: 10px;
+  gap: 0px;
+  margin-top: 1px;
+}
+.arrow-dim {
+  color: #ccc;
+}
+.arrow-active {
+  color: #06c755;
+  font-weight: 700;
 }
 
 .reset-btn {
@@ -866,6 +760,9 @@ onMounted(async () => {
 
 .truncate-cell {
   max-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .row-hover:hover {
@@ -930,6 +827,7 @@ onMounted(async () => {
 .action-btns {
   display: flex;
   gap: 6px;
+  justify-content: center;
 }
 .btn-action {
   padding: 4px 10px;
@@ -940,11 +838,12 @@ onMounted(async () => {
   font-weight: 500;
 }
 .btn-action.view {
-  background: #e3f2fd;
-  color: #1976d2;
+  background: #e0f7f1;
+  color: #00796b;
+  font-weight: 600;
 }
 .btn-action.view:hover {
-  background: #bbdefb;
+  background: #b2dfdb;
 }
 .btn-action.delete {
   background: #ffebee;
@@ -952,6 +851,37 @@ onMounted(async () => {
 }
 .btn-action.delete:hover {
   background: #ffcdd2;
+}
+
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.skeleton {
+  display: inline-block;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite;
+}
+.skeleton-text {
+  height: 14px;
+  display: block;
+  border-radius: 4px;
+}
+.skeleton-badge {
+  height: 22px;
+  width: 70px;
+  border-radius: 12px;
+}
+.skeleton-btn {
+  height: 26px;
+  width: 50px;
+  border-radius: 5px;
+}
+.skeleton-row td {
+  padding-top: 18px;
+  padding-bottom: 18px;
 }
 
 .text-muted {
