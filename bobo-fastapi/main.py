@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from notification import notify_job_matched, notify_job_confirmed, notify_job_declined
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+from typing import Optional, Tuple
 import bcrypt
 import os
 import bot
@@ -440,6 +441,37 @@ class LoginRequest(BaseModel):
     password: str
 
 
+_RETRY = " Please verify your details and try again."
+
+
+def _normalize_admin_login_identifier(raw: str) -> Tuple[Optional[str], Optional[str]]:
+    """Strip input; if it looks like an email, require domain admin.com."""
+    s = (raw or "").strip()
+    if not s:
+        return (
+            None,
+            "Username or email is missing." + _RETRY,
+        )
+    if "@" in s:
+        local, _, domain = s.rpartition("@")
+        domain_clean = domain.strip()
+        if not local or not domain_clean or "@" in local:
+            return (
+                None,
+                "That email address is not valid (check the part before and after @)."
+                + _RETRY,
+            )
+        dom_lower = domain_clean.lower()
+        if dom_lower != "admin.com":
+            return (
+                None,
+                f"Admin email must use the domain @admin.com only (you entered: {domain_clean})."
+                + _RETRY,
+            )
+        return s.lower(), None
+    return s, None
+
+
 @app.post("/admin/log")
 def create_admin_log(body: LogRequest):
     try:
@@ -463,25 +495,61 @@ def create_admin_log(body: LogRequest):
 @app.post("/admin/login")
 def admin_login(request: LoginRequest):
     try:
+        pwd_raw = request.password if request.password is not None else ""
+        pwd_str = str(pwd_raw).strip()
+        if not pwd_str:
+            return {
+                "success": False,
+                "error": "Password is missing." + _RETRY,
+            }
+
+        lookup_key, ident_err = _normalize_admin_login_identifier(request.username)
+        if ident_err:
+            return {"success": False, "error": ident_err}
+
         conn = get_connection()
         cursor = get_cursor(conn)
         cursor.execute(
             """
             SELECT admin_id, username, email, name, password_hash, status, created_at, updated_at
             FROM admins
-            WHERE username = %s
+            WHERE username = %s OR email = %s
             """,
-            (request.username,)
+            (lookup_key, lookup_key)
         )
         row = cursor.fetchone()
-        cursor.close()  # ← add this
+        cursor.close()
         conn.close()
 
         if row:
+            if (row.get("status") or "").lower() != "active":
+                return {
+                    "success": False,
+                    "error": "This admin account is inactive and cannot sign in. Contact an administrator.",
+                }
+            ph = row["password_hash"]
+            if isinstance(ph, bytes):
+                ph_bytes = ph
+            else:
+                ph_bytes = str(ph).encode("utf-8")
             try:
-                match = bcrypt.checkpw(request.password.encode('utf-8'), row["password_hash"].encode('utf-8'))
+                match = bcrypt.checkpw(pwd_str.encode("utf-8"), ph_bytes)
+            except ValueError:
+                return {
+                    "success": False,
+                    "error": (
+                        "The stored password for this account is not configured correctly (invalid hash). "
+                        "An administrator must update password_hash in the database."
+                    ),
+                }
             except Exception as verify_err:
-                return {"success": False, "error": f"Verify error: {str(verify_err)}"}
+                return {
+                    "success": False,
+                    "error": (
+                        f"Password could not be verified ({str(verify_err)}). "
+                        "Please try again or contact support."
+                    ),
+                }
 
             if match:
                 return {
@@ -497,11 +565,26 @@ def admin_login(request: LoginRequest):
                     }
                 }
             else:
-                return {"success": False, "error": "Wrong password"}
+                return {
+                    "success": False,
+                    "error": (
+                        "The password is incorrect (check Caps Lock and spelling)."
+                        + _RETRY
+                    ),
+                }
         else:
-            return {"success": False, "error": "Admin not found"}
+            return {
+                "success": False,
+                "error": (
+                    "No admin account matches that username or email."
+                    + _RETRY
+                ),
+            }
     except Exception as e:
-        return {"success": False, "error": f"DB error: {str(e)}"}
+        return {
+            "success": False,
+            "error": f"Server or database error: {str(e)}. Please try again later.",
+        }
 
 @app.get("/admin/me")
 def admin_me(admin_id: str):

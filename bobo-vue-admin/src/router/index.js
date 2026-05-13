@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
+import AdminLayout from "../layouts/AdminLayout.vue";
 import Dashboard from "../views/DashboardView.vue";
 import Jobs from "../views/JobsView.vue";
 import JobDetail from "../views/JobDetailView.vue";
@@ -21,30 +22,36 @@ const pageNames = {
 
 const routes = [
   { path: "/login", name: "Login", component: Login },
-  { path: "/", name: "Dashboard", component: Dashboard },
-  { path: "/jobs", name: "Jobs", component: Jobs },
   {
-    path: "/jobs/:id",
-    name: "JobDetail",
-    component: JobDetail,
-    meta: { parent: "Jobs Management", parentTo: "/jobs" },
+    path: "/",
+    component: AdminLayout,
+    children: [
+      { path: "", name: "Dashboard", component: Dashboard },
+      { path: "jobs", name: "Jobs", component: Jobs },
+      {
+        path: "jobs/:id",
+        name: "JobDetail",
+        component: JobDetail,
+        meta: { parent: "Jobs Management", parentTo: "/jobs" },
+      },
+      { path: "verification", name: "Verification", component: Verification },
+      {
+        path: "freelancers/:id",
+        name: "FreelancerDetail",
+        component: FreelancerDetail,
+        meta: { isDynamic: true },
+      },
+      {
+        path: "employers/:id",
+        name: "EmployerDetail",
+        component: EmployerDetail,
+        meta: { isDynamic: true },
+      },
+      { path: "users", name: "Users", component: Users },
+      { path: "logs", name: "Logs", component: Logs },
+      { path: "profile", name: "Profile", component: Profile },
+    ],
   },
-  { path: "/verification", name: "Verification", component: Verification },
-  {
-    path: "/freelancers/:id",
-    name: "FreelancerDetail",
-    component: FreelancerDetail,
-    meta: { isDynamic: true },
-  },
-  {
-    path: "/employers/:id",
-    name: "EmployerDetail",
-    component: EmployerDetail,
-    meta: { isDynamic: true },
-  },
-  { path: "/users", name: "Users", component: Users },
-  { path: "/logs", name: "Logs", component: Logs },
-  { path: "/profile", name: "Profile", component: Profile },
 ];
 
 const router = createRouter({
@@ -58,7 +65,7 @@ router.beforeEach((to, from, next) => {
   if (to.path !== "/login" && !adminId) {
     next("/login");
   } else if (to.path === "/login" && adminId) {
-    next("/");
+    next({ name: "Dashboard" });
   } else {
     // For dynamic detail pages, store the parent info from the previous route
     if (to.meta?.isDynamic && from.name) {
