@@ -422,7 +422,7 @@ def admin_admins(limit: int = 50, offset: int = 0):
         cursor = get_cursor(conn)
         cursor.execute(
             """
-            SELECT admin_id, name, status, created_at, updated_at
+            SELECT admin_id, username, email, name, status, created_at, updated_at
             FROM admins
             ORDER BY created_at DESC
             LIMIT %s OFFSET %s
@@ -467,9 +467,9 @@ def admin_login(request: LoginRequest):
         cursor = get_cursor(conn)
         cursor.execute(
             """
-            SELECT admin_id, name, password_hash, status, created_at, updated_at
+            SELECT admin_id, username, email, name, password_hash, status, created_at, updated_at
             FROM admins
-            WHERE name = %s
+            WHERE username = %s
             """,
             (request.username,)
         )
@@ -488,6 +488,8 @@ def admin_login(request: LoginRequest):
                     "success": True,
                     "admin": {
                         "admin_id": row["admin_id"],
+                        "username": row["username"],
+                        "email": row["email"],
                         "name": row["name"],
                         "status": row["status"],
                         "created_at": row["created_at"],
@@ -508,7 +510,7 @@ def admin_me(admin_id: str):
         cursor = get_cursor(conn)
         cursor.execute(
             """
-            SELECT admin_id, name, status, created_at, updated_at
+            SELECT admin_id, username, email, name, status, created_at, updated_at
             FROM admins
             WHERE admin_id = %s
             """,
@@ -520,6 +522,8 @@ def admin_me(admin_id: str):
         if row:
             return {
                 "admin_id": row["admin_id"],
+                "username": row["username"],
+                "email": row["email"],
                 "name": row["name"],
                 "status": row["status"],
                 "created_at": row["created_at"],
@@ -577,7 +581,7 @@ def get_employers(limit: int = 50, offset: int = 0):
         cursor = get_cursor(conn)
         cursor.execute(
             """
-            SELECT em_id, em_username, em_name, em_phone, em_address, em_bio,
+            SELECT em_id, em_username, em_email, em_name, em_phone, em_address, em_bio,
                    em_profile_image_url, em_verify_status, em_is_active,
                    em_rating_avg, em_created_at, em_updated_at
             FROM employers
@@ -599,7 +603,7 @@ def get_employer(em_id: str):
         cursor = get_cursor(conn)
         cursor.execute(
             """
-            SELECT em_id, em_username, em_name, em_phone, em_address, em_bio,
+            SELECT em_id, em_username, em_email, em_name, em_phone, em_address, em_bio,
                    em_profile_image_url, em_verify_status, em_is_active,
                    em_rating_avg, em_created_at, em_updated_at
             FROM employers
@@ -702,7 +706,7 @@ def get_freelancers(limit: int = 50, offset: int = 0):
         cursor = get_cursor(conn)
         cursor.execute(
             """
-            SELECT fl_id, line_user_id, fl_name, fl_date_of_birth,
+            SELECT fl_id, line_user_id, fl_username, fl_email, fl_name, fl_date_of_birth,
                    fl_address, fl_bio, fl_profile_image_url,
                    fl_verify_status, fl_is_active, fl_rating_avg,
                    fl_created_at, fl_updated_at
@@ -725,7 +729,7 @@ def get_freelancer(fl_id: str):
         cursor = get_cursor(conn)
         cursor.execute(
             """
-            SELECT fl_id, line_user_id, fl_name, fl_date_of_birth,
+            SELECT fl_id, line_user_id, fl_username, fl_email, fl_name, fl_date_of_birth,
                    fl_address, fl_bio, fl_profile_image_url,
                    fl_verify_status, fl_is_active, fl_rating_avg,
                    fl_created_at, fl_updated_at
