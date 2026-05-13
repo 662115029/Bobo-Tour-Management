@@ -25,10 +25,10 @@
     </div>
 
     <!-- Recent Jobs -->
-    <div class="table-container">
+    <div class="table-container mb-6">
       <section>
         <h2 class="section-title">Recent Jobs</h2>
-        <table class="table">
+        <table class="table dash-table">
         <thead>
           <tr>
             <th style="width: 20%">JOB TITLE</th>
@@ -98,10 +98,10 @@
     </div>
 
     <!-- Recent Verifications -->
-    <div class="table-container">
+    <div class="table-container mb-6">
       <section>
       <h2 class="section-title">Recent Verifications</h2>
-      <table class="table">
+      <table class="table dash-table">
         <thead>
           <tr>
             <th style="width: 20%">NAME</th>
@@ -259,9 +259,9 @@
         </div>
         <div v-else>
           <div class="profile-hero">
-            <div class="profile-avatar em">
+            <div class="dash-profile-avatar em">
               <img v-if="companyModal.em_profile_image_url" :src="companyModal.em_profile_image_url" class="avatar-img" />
-              <span v-else class="avatar-initial">{{ companyModal.em_name?.[0] || "?" }}</span>
+              <span v-else class="dash-avatar-initial">{{ companyModal.em_name?.[0] || "?" }}</span>
             </div>
             <div class="profile-info">
               <h3 class="profile-name">{{ companyModal.em_name }}</h3>
@@ -352,13 +352,13 @@
           <!-- Freelancer -->
           <div v-if="verifyModal.type === 'Freelancer' && verifyDetail">
             <div class="profile-hero">
-              <div class="profile-avatar fl">
+              <div class="dash-profile-avatar fl">
                 <img
                   v-if="verifyDetail.fl_profile_image_url"
                   :src="verifyDetail.fl_profile_image_url"
                   class="avatar-img"
                 />
-                <span v-else class="avatar-initial">{{
+                <span v-else class="dash-avatar-initial">{{
                   verifyDetail.fl_name?.[0] || "?"
                 }}</span>
               </div>
@@ -414,13 +414,13 @@
           <!-- Employer -->
           <div v-if="verifyModal.type === 'Employer' && verifyDetail">
             <div class="profile-hero">
-              <div class="profile-avatar em">
+              <div class="dash-profile-avatar em">
                 <img
                   v-if="verifyDetail.em_profile_image_url"
                   :src="verifyDetail.em_profile_image_url"
                   class="avatar-img"
                 />
-                <span v-else class="avatar-initial">{{
+                <span v-else class="dash-avatar-initial">{{
                   verifyDetail.em_name?.[0] || "?"
                 }}</span>
               </div>
@@ -844,537 +844,3 @@ onMounted(async () => {
 });
 </script>
 
-<style scoped>
-.title {
-  font-size: 15px;
-  font-weight: 500;
-  margin: 0 0 24px 0;
-  background: #1a1a2e;
-  padding: 15px 20px;
-  color: white;
-  letter-spacing: 0.2px;
-}
-
-.stats-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 32px;
-  padding: 0px 20px;
-}
-.stat-card {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 15px 20px;
-}
-.stat-label {
-  font-size: 12px;
-  color: #666;
-  font-weight: 600;
-}
-.stat-value {
-  font-size: 28px;
-  font-weight: bold;
-  color: #1a1a2e;
-}
-
-section {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 24px;
-}
-
-.table-container {
-  background: white;
-  border-radius: 8px;
-  overflow: hidden;
-  margin: 0 20px 24px;
-}
-
-.section-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: #444;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  padding: 16px 20px 12px;
-  margin: 0;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-}
-
-.table th,
-.table td {
-  padding: 15px 20px;
-  text-align: left;
-  border-bottom: 1px solid #eee;
-  overflow: hidden;
-}
-.table th {
-  font-size: 12px;
-  color: #666;
-  font-weight: 600;
-  background: white;
-  letter-spacing: 0.3px;
-  position: relative;
-}
-
-.truncate-cell {
-  max-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.table td:nth-child(2) {
-  color: #888;
-  font-size: 13px;
-}
-
-.row-hover:hover {
-  background: #f5f5f5;
-}
-
-.clickable-cell {
-  cursor: pointer;
-  color: #000;
-}
-
-.clickable-cell:hover {
-  color: #000;
-  text-decoration: underline;
-}
-
-/* Badge */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 10px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 600;
-  width: fit-content;
-}
-.badge.open {
-  background: #e3f2fd;
-  color: #1976d2;
-}
-.badge.matching {
-  background: #e0f2f1;
-  color: #00695c;
-}
-.badge.selected {
-  background: #f3e5f5;
-  color: #7b1fa2;
-}
-.badge.in_progress {
-  background: #fff3e0;
-  color: #f57c00;
-}
-.badge.completed {
-  background: #f5f5f5;
-  color: #666;
-}
-.badge.cancelled {
-  background: #ffebee;
-  color: #c62828;
-}
-.badge.pending {
-  background: #fff3e0;
-  color: #f57c00;
-}
-.badge.verified {
-  background: #e8f5e9;
-  color: #2e7d32;
-}
-.badge.not_verified {
-  background: #ffebee;
-  color: #c62828;
-}
-
-.type-tag {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 10px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 600;
-  width: fit-content;
-}
-.type-tag.freelancer {
-  background: #e0f2fe;
-  color: #0369a1;
-}
-.type-tag.employer {
-  background: #fdf4ff;
-  color: #7e22ce;
-}
-
-/* Action buttons */
-.action-btns {
-  display: flex;
-  gap: 6px;
-  justify-content: center;
-}
-.btn-action {
-  padding: 4px 10px;
-  border-radius: 5px;
-  border: none;
-  font-size: 12px;
-  cursor: pointer;
-  font-weight: 500;
-}
-.btn-action.view {
-  background: #e0f7f1;
-  color: #00796b;
-  font-weight: 600;
-}
-.btn-action.view:hover {
-  background: #b2dfdb;
-}
-.btn-action.delete {
-  background: #ffebee;
-  color: #c62828;
-}
-.btn-action.delete:hover {
-  background: #ffcdd2;
-}
-
-.text-muted {
-  color: #999;
-  font-size: 12px;
-}
-
-/* Mini Modal */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-}
-.mini-modal {
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
-  width: 460px;
-  max-height: 80vh;
-  overflow-y: auto;
-}
-.mini-modal-header {
-  display: flex;
-  align-items: flex-start;
-  margin-bottom: 16px;
-}
-.mini-modal-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #111;
-  margin: 0;
-  flex: 1;
-  padding-right: 12px;
-}
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
-  color: #888;
-  flex-shrink: 0;
-}
-@keyframes shimmer {
-  0% { background-position: -400px 0; }
-  100% { background-position: 400px 0; }
-}
-.skeleton {
-  display: inline-block;
-  border-radius: 6px;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 800px 100%;
-  animation: shimmer 1.4s infinite;
-}
-.skeleton-text { height: 14px; display: block; border-radius: 4px; }
-.skeleton-badge { height: 22px; width: 70px; border-radius: 12px; }
-.skeleton-btn { height: 26px; width: 50px; border-radius: 5px; }
-.skeleton-row td { padding-top: 18px; padding-bottom: 18px; }
-.skeleton-stat { height: 32px; width: 80px; border-radius: 6px; display: block; margin-top: 4px; }
-
-.mini-loading {
-  padding: 8px 0;
-}
-
-.profile-hero {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #eee;
-}
-.profile-avatar {
-  width: 64px;
-  height: 64px;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  overflow: hidden;
-}
-.profile-avatar.fl {
-  background: #e0f7f1;
-}
-.profile-avatar.em {
-  background: #ede7f6;
-}
-.avatar-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-}
-.avatar-initial {
-  font-size: 24px;
-  font-weight: 700;
-  color: #555;
-}
-.profile-info {
-  flex: 1;
-  min-width: 0;
-}
-.profile-name {
-  font-size: 16px;
-  font-weight: 600;
-  margin: 0 0 4px;
-  color: #111;
-}
-.profile-bio {
-  font-size: 12px;
-  color: #666;
-  margin: 0;
-  line-height: 1.5;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.profile-bio.muted {
-  color: #bbb;
-  font-style: italic;
-}
-.mini-desc {
-  font-size: 13px;
-  color: #666;
-  line-height: 1.6;
-  margin: 0 0 16px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #eee;
-}
-
-.mini-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-.mini-item {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-.mini-item label {
-  font-size: 10px;
-  color: #999;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-.mini-item span {
-  font-size: 13px;
-  color: #222;
-}
-
-.mini-modal-footer {
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid #eee;
-  display: flex;
-  justify-content: flex-end;
-}
-.btn-full-view {
-  background: none;
-  border: none;
-  color: #0066cc;
-  font-size: 13px;
-  cursor: pointer;
-  font-weight: 500;
-}
-.btn-full-view:hover {
-  text-decoration: underline;
-}
-
-.btn-cancel {
-  padding: 10px 24px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background: white;
-  cursor: pointer;
-  font-size: 14px;
-}
-.btn-confirm-delete {
-  padding: 10px 24px;
-  border: none;
-  border-radius: 6px;
-  background: #dc3545;
-  color: white;
-  cursor: pointer;
-  font-size: 14px;
-}
-.btn-confirm-delete:hover {
-  background: #b02a37;
-}
-
-.docs-modal {
-  background: white;
-  border-radius: 12px;
-  padding: 28px;
-  width: 1200px;
-  max-height: 80vh;
-  overflow-y: auto;
-}
-
-.doc-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.doc-row {
-  border: 1px solid #eee;
-  border-radius: 8px;
-  padding: 14px;
-  display: grid;
-  grid-template-columns: 120px 150px 100px 150px 1fr;
-  gap: 16px;
-  align-items: center;
-}
-
-.doc-type-cell {
-  font-weight: 600;
-  color: #222;
-  font-size: 14px;
-}
-
-.doc-file-cell {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.doc-thumbnail {
-  max-width: 120px;
-  max-height: 100px;
-  border-radius: 5px;
-  object-fit: cover;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-
-.doc-thumbnail:hover {
-  transform: scale(1.05);
-}
-
-.doc-status-cell {
-  text-align: center;
-}
-
-.doc-uploaded-cell {
-  font-size: 12px;
-  color: #666;
-}
-
-.doc-actions-cell {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-}
-
-.btn-approve-row {
-  padding: 6px 12px;
-  border-radius: 5px;
-  border: none;
-  background: #e8f5e9;
-  color: #2e7d32;
-  font-size: 12px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-.btn-approve-row:hover:not(:disabled) {
-  background: #c8e6c9;
-}
-
-.btn-approve-row:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.btn-reject-row {
-  padding: 6px 12px;
-  border-radius: 5px;
-  border: none;
-  background: #ffebee;
-  color: #c62828;
-  font-size: 12px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-.btn-reject-row:hover:not(:disabled) {
-  background: #ffcdd2;
-}
-
-.btn-reject-row:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.doc-badge {
-  padding: 3px 8px;
-  border-radius: 12px;
-  font-size: 10px;
-  font-weight: 600;
-}
-
-.doc-badge.pending {
-  background: #fff3e0;
-  color: #f57c00;
-}
-
-.doc-badge.approved {
-  background: #e8f5e9;
-  color: #2e7d32;
-}
-
-.doc-badge.rejected {
-  background: #ffebee;
-  color: #c62828;
-}
-
-.no-docs {
-  color: #999;
-  text-align: center;
-  padding: 24px 0;
-}
-</style>

@@ -1,1 +1,729 @@
 @import "tailwindcss";
+
+@keyframes shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+@layer components {
+  .filter-row {
+    @apply mb-4 flex items-center justify-between gap-3 px-5;
+  }
+
+  .search-input {
+    @apply w-[280px] rounded-lg border-[1.5px] border-[#999] bg-white px-3.5 py-2.5 text-sm shadow-[0_1px_6px_rgba(0,0,0,0.12)] outline-none transition-[border-color,box-shadow] duration-150;
+  }
+
+  .search-input:focus {
+    @apply border-[#06c755] shadow-[0_0_0_3px_rgba(6,199,85,0.12)];
+  }
+
+  .filter-group {
+    @apply flex gap-2;
+  }
+
+  .filter-select {
+    @apply min-w-[130px] rounded-md border border-[#ddd] px-3.5 py-2.5 text-sm;
+  }
+
+  .filter-select-jobs {
+    @apply rounded-lg border-[1.5px] border-[#bbb] px-3.5 py-2.5 text-sm shadow-[0_1px_4px_rgba(0,0,0,0.08)];
+  }
+
+  .col-filter-btn {
+    @apply ml-1.5 inline-block max-w-[110px] cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap rounded-full border border-[#ccc] bg-transparent px-2 py-0.5 align-middle text-[11px] font-medium leading-none text-[#666];
+  }
+
+  .col-filter-btn:hover {
+    @apply border-[#06c755] text-[#06c755];
+  }
+
+  .col-filter-btn.active {
+    @apply border-[#06c755] font-semibold text-[#06c755];
+  }
+
+  .reset-btn {
+    @apply shrink-0 cursor-pointer whitespace-nowrap rounded-md border-none bg-[#ffebee] px-3 py-1.5 text-xs font-semibold text-[#c62828];
+  }
+
+  .reset-btn:hover {
+    @apply bg-[#ffcdd2];
+  }
+
+  .col-dropdown {
+    @apply z-50 min-w-[120px] rounded-md border border-[#ddd] bg-white shadow-[0_4px_12px_rgba(0,0,0,0.15)];
+  }
+
+  .col-dropdown-wide {
+    @apply z-50 min-w-[140px] rounded-md border border-[#ddd] bg-white shadow-[0_4px_12px_rgba(0,0,0,0.15)];
+  }
+
+  .col-dropdown-item {
+    @apply block w-full cursor-pointer border-none bg-transparent px-3.5 py-2 text-left text-[13px];
+  }
+
+  .col-dropdown-item:hover {
+    @apply bg-[#f5f5f5];
+  }
+
+  .col-dropdown-item:first-child {
+    @apply rounded-t-md;
+  }
+
+  .col-dropdown-item:last-child {
+    @apply rounded-b-md;
+  }
+
+  .th-sortable {
+    @apply cursor-pointer select-none transition-[background,color] duration-150;
+  }
+
+  .th-sortable:hover {
+    @apply bg-[#f0fdf4] text-[#1a7a3f];
+  }
+
+  .th-active {
+    @apply border-b-2 border-[#06c755] bg-[#e6f9ef] text-[#1a7a3f];
+  }
+
+  .th-inner {
+    @apply inline-flex items-center gap-1.5;
+  }
+
+  .sort-label {
+    @apply ml-1 text-[11px];
+  }
+
+  .sort-label-dim {
+    @apply text-[#bbb];
+  }
+
+  .sort-label-active {
+    @apply font-bold text-[#1a7a3f];
+  }
+
+  .truncate-cell {
+    @apply max-w-0 overflow-hidden text-ellipsis whitespace-nowrap;
+  }
+
+  .row-hover:hover {
+    @apply bg-[#f5f5f5];
+  }
+
+  .clickable-cell {
+    @apply cursor-pointer text-black;
+  }
+
+  .clickable-cell:hover {
+    @apply text-black underline;
+  }
+
+  .text-muted {
+    @apply text-[#999];
+  }
+
+  .skeleton {
+    @apply inline-block rounded-md bg-[linear-gradient(90deg,#f0f0f0_25%,#e0e0e0_50%,#f0f0f0_75%)] bg-[length:800px_100%];
+    animation: shimmer 1.4s infinite;
+  }
+
+  .skeleton-text {
+    @apply block h-3.5 rounded;
+  }
+
+  .skeleton-badge {
+    @apply inline-block h-[22px] w-[70px] rounded-full;
+  }
+
+  .skeleton-btn {
+    @apply inline-block h-[26px] w-[50px] rounded-[5px];
+  }
+
+  .skeleton-row td {
+    @apply py-[18px];
+  }
+
+  .skeleton-stat {
+    @apply mt-1 block h-8 w-20 rounded-md;
+  }
+
+  .empty {
+    @apply px-8 py-8 text-center text-[#999];
+  }
+
+  .modal-overlay {
+    @apply fixed inset-0 z-[200] flex items-center justify-center bg-black/40;
+  }
+
+  .modal-overlay-strong {
+    @apply fixed inset-0 z-[200] flex items-center justify-center bg-black/40;
+  }
+
+  .mini-modal {
+    @apply max-h-[80vh] w-[460px] overflow-y-auto rounded-xl bg-white p-6;
+  }
+
+  .mini-modal-sm {
+    @apply max-h-[80vh] w-[380px] overflow-y-auto rounded-xl bg-white p-8 text-center;
+  }
+
+  .mini-modal-header {
+    @apply mb-4 flex items-start justify-between;
+  }
+
+  .mini-modal-title {
+    @apply m-0 flex-1 pr-3 text-base font-semibold text-[#111];
+  }
+
+  .close-btn {
+    @apply shrink-0 cursor-pointer border-none bg-transparent text-base text-[#888];
+  }
+
+  .mini-desc {
+    @apply m-0 mb-4 border-b border-[#eee] pb-4 text-[13px] leading-relaxed text-[#666];
+  }
+
+  .mini-grid {
+    @apply grid grid-cols-2 gap-3.5;
+  }
+
+  .mini-item {
+    @apply flex flex-col gap-1;
+  }
+
+  .mini-item label {
+    @apply mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#999];
+  }
+
+  .mini-item span {
+    @apply text-[13px] text-[#222];
+  }
+
+  .mini-modal-footer {
+    @apply mt-5 flex justify-end border-t border-[#eee] pt-4;
+  }
+
+  .btn-full-view {
+    @apply cursor-pointer border-none bg-transparent text-[13px] font-medium text-[#06c];
+  }
+
+  .btn-full-view:hover {
+    @apply underline;
+  }
+
+  .btn-cancel {
+    @apply cursor-pointer rounded-md border border-[#ddd] bg-white px-6 py-2.5 text-sm;
+  }
+
+  .btn-confirm-delete {
+    @apply cursor-pointer rounded-md border-none bg-[#dc3545] px-6 py-2.5 text-sm text-white;
+  }
+
+  .btn-confirm-delete:hover {
+    @apply bg-[#b02a37];
+  }
+
+  .action-btns {
+    @apply flex justify-center gap-1.5;
+  }
+
+  .btn-action {
+    @apply cursor-pointer rounded-[5px] border-none px-2.5 py-1 text-xs font-medium;
+  }
+
+  .btn-action.view {
+    @apply bg-[#e0f7f1] font-semibold text-[#00796b];
+  }
+
+  .btn-action.view:hover {
+    @apply bg-[#b2dfdb];
+  }
+
+  .btn-action.delete {
+    @apply bg-[#ffebee] text-[#c62828];
+  }
+
+  .btn-action.delete:hover {
+    @apply bg-[#ffcdd2];
+  }
+
+  .btn-action.ban {
+    @apply bg-[#ffebee] text-[#c62828];
+  }
+
+  .btn-action.ban:hover {
+    @apply bg-[#ffcdd2];
+  }
+
+  .btn-action.unban {
+    @apply bg-[#e8f5e9] text-[#2e7d32];
+  }
+
+  .btn-action.unban:hover {
+    @apply bg-[#c8e6c9];
+  }
+
+  .badge {
+    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold;
+  }
+
+  .badge.open {
+    @apply bg-[#e3f2fd] text-[#1976d2];
+  }
+
+  .badge.matching {
+    @apply bg-[#e0f2f1] text-[#00695c];
+  }
+
+  .badge.selected {
+    @apply bg-[#f3e5f5] text-[#7b1fa2];
+  }
+
+  .badge.in_progress {
+    @apply bg-[#fff3e0] text-[#f57c00];
+  }
+
+  .badge.completed {
+    @apply bg-[#f5f5f5] text-[#666];
+  }
+
+  .badge.cancelled {
+    @apply bg-[#ffebee] text-[#c62828];
+  }
+
+  .badge.pending {
+    @apply bg-[#fff3e0] text-[#f57c00];
+  }
+
+  .badge.verified {
+    @apply bg-[#e8f5e9] text-[#2e7d32];
+  }
+
+  .badge.not_verified,
+  .badge.rejected {
+    @apply bg-[#ffebee] text-[#c62828];
+  }
+
+  .badge.unknown {
+    @apply bg-[#f5f5f5] text-[#666];
+  }
+
+  .badge.active {
+    @apply bg-[#e8f5e9] text-[#2e7d32];
+  }
+
+  .action-badge,
+  .type-tag {
+    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold;
+  }
+
+  .action-approve {
+    @apply bg-[#e8f5e9] text-[#2e7d32];
+  }
+
+  .action-verify {
+    @apply bg-[#e0f7f1] text-[#00796b];
+  }
+
+  .action-unban {
+    @apply bg-[#e3f2fd] text-[#1565c0];
+  }
+
+  .action-update {
+    @apply bg-[#ede7f6] text-[#5e35b1];
+  }
+
+  .action-view {
+    @apply bg-[#fff3e0] text-[#e65100];
+  }
+
+  .action-reject {
+    @apply bg-[#fce4ec] text-[#c2185b];
+  }
+
+  .action-ban {
+    @apply bg-[#fff8e1] text-[#f57f17];
+  }
+
+  .action-delete {
+    @apply bg-[#fef2f2] text-[#991b1b];
+  }
+
+  .action-default {
+    @apply bg-[#f5f5f5] text-[#666];
+  }
+
+  .type-freelancer {
+    @apply bg-[#e0f2fe] text-[#0369a1];
+  }
+
+  .type-employer {
+    @apply bg-[#fdf4ff] text-[#7e22ce];
+  }
+
+  .type-job {
+    @apply bg-[#fff7ed] text-[#9a3412];
+  }
+
+  .type-document {
+    @apply bg-[#f0fdf4] text-[#166534];
+  }
+
+  .type-user {
+    @apply bg-[#fce4ec] text-[#880e4f];
+  }
+
+  .type-default {
+    @apply bg-[#f5f5f5] text-[#666];
+  }
+
+  .tabs {
+    @apply mb-4 flex gap-6 border-b-2 border-[#eee] px-5;
+  }
+
+  .tabs-wide {
+    @apply mb-4 flex gap-[25px] border-b-2 border-[#eee] px-5;
+  }
+
+  .tab {
+    @apply cursor-pointer border-none bg-transparent py-3 text-sm text-[#666];
+  }
+
+  .tab.active {
+    @apply -mb-0.5 border-b-2 border-[#06c755] font-medium text-[#06c755];
+  }
+
+  .user-cell {
+    @apply flex min-w-0 items-center gap-3;
+  }
+
+  .user-avatar {
+    @apply flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#6c757d] text-xs font-semibold text-white;
+  }
+
+  .modal-icon {
+    @apply mb-3 text-4xl;
+  }
+
+  .modal h3 {
+    @apply m-0 mb-3 text-xl;
+  }
+
+  .modal p {
+    @apply m-0 mb-2 leading-normal text-[#555];
+  }
+
+  .modal-warning {
+    @apply mb-6 text-xs !text-[#dc3545];
+  }
+
+  .modal-actions {
+    @apply mt-5 flex justify-center gap-3;
+  }
+
+  .btn-confirm {
+    @apply cursor-pointer rounded-md border-none px-6 py-2.5 text-sm text-white;
+  }
+
+  .btn-confirm.ban {
+    @apply bg-[#dc3545];
+  }
+
+  .btn-confirm.ban:hover {
+    @apply bg-[#b02a37];
+  }
+
+  .btn-confirm.unban {
+    @apply bg-[#2e7d32];
+  }
+
+  .btn-confirm.unban:hover {
+    @apply bg-[#1b5e20];
+  }
+
+  .profile-hero {
+    @apply mb-5 flex items-start gap-3.5 border-b border-[#eee] pb-4;
+  }
+
+  .profile-avatar {
+    @apply flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full;
+  }
+
+  .profile-avatar.fl {
+    @apply bg-[#e3f2fd];
+  }
+
+  .profile-avatar.em {
+    @apply bg-[#f3e5f5];
+  }
+
+  .avatar-img {
+    @apply h-full w-full rounded-full object-cover;
+  }
+
+  .avatar-initial {
+    @apply text-[22px] font-bold text-[#555];
+  }
+
+  .profile-info {
+    @apply min-w-0 flex-1;
+  }
+
+  .profile-name {
+    @apply m-0 mb-1 text-base font-semibold text-[#111];
+  }
+
+  .profile-bio {
+    @apply m-0 line-clamp-2 text-xs leading-normal text-[#666];
+  }
+
+  .profile-bio.muted {
+    @apply italic text-[#bbb];
+  }
+
+  .mini-loading {
+    @apply px-0 py-2 text-center text-[#999];
+  }
+
+  .table-container {
+    @apply mx-5 overflow-hidden rounded-lg bg-white;
+  }
+
+  .table {
+    table-layout: fixed;
+    @apply w-full border-collapse;
+  }
+
+  .table th,
+  .table td {
+    @apply overflow-hidden border-b border-[#eee] px-5 py-[15px] text-left;
+  }
+
+  .table th {
+    @apply relative bg-white text-xs font-semibold tracking-wide text-[#666];
+  }
+
+  .table th:has(.col-filter-btn) {
+    @apply whitespace-nowrap;
+  }
+
+  .users-table {
+    @apply min-w-[900px];
+  }
+
+  .users-table th,
+  .users-table td {
+    @apply whitespace-nowrap;
+  }
+
+  .users-table th {
+    @apply sticky top-0 z-10;
+  }
+
+  .jobs-table td:nth-child(2) {
+    @apply text-[13px] text-[#888];
+  }
+
+  .verify-table th {
+    @apply whitespace-nowrap;
+  }
+
+  .modal {
+    @apply w-[380px] rounded-xl bg-white p-8 text-center;
+  }
+
+  .stats-row {
+    @apply mb-8 grid grid-cols-4 gap-4 px-5;
+  }
+
+  .stat-card {
+    @apply flex flex-col gap-2 rounded-lg bg-white px-5 py-3.5;
+  }
+
+  .stat-label {
+    @apply text-xs font-semibold text-[#666];
+  }
+
+  .stat-value {
+    @apply text-[28px] font-bold text-[#1a1a2e];
+  }
+
+  section {
+    @apply mb-6 rounded-lg bg-white p-5;
+  }
+
+  .section-title {
+    @apply m-0 border-b border-[#f0f0f0] px-5 pb-3 pt-4 text-[13px] font-bold uppercase tracking-wide text-[#444];
+  }
+
+  .btn-action.verify-style {
+    @apply bg-[#e3f2fd] font-medium text-[#1976d2];
+  }
+
+  .btn-action.verify-style:hover {
+    @apply bg-[#bbdefb];
+  }
+
+  .dash-table td:nth-child(2) {
+    @apply text-[13px] text-[#888];
+  }
+
+  .type-tag.freelancer {
+    @apply bg-[#e0f2fe] text-[#0369a1];
+  }
+
+  .type-tag.employer {
+    @apply bg-[#fdf4ff] text-[#7e22ce];
+  }
+
+  .docs-modal {
+    @apply max-h-[80vh] w-full max-w-[1200px] overflow-y-auto rounded-xl bg-white p-7;
+  }
+
+  .doc-list {
+    @apply flex flex-col gap-3;
+  }
+
+  .doc-row {
+    @apply grid items-center gap-4 rounded-lg border border-[#eee] p-3.5;
+    grid-template-columns: 120px 150px 100px 150px 1fr;
+  }
+
+  .doc-type-cell {
+    @apply text-sm font-semibold text-[#222];
+  }
+
+  .doc-file-cell {
+    @apply flex items-center justify-center;
+  }
+
+  .doc-thumbnail {
+    @apply max-h-[100px] max-w-[120px] cursor-pointer rounded-[5px] object-cover transition-transform duration-200;
+  }
+
+  .doc-thumbnail:hover {
+    @apply scale-105;
+  }
+
+  .doc-status-cell {
+    @apply text-center;
+  }
+
+  .doc-uploaded-cell {
+    @apply text-xs text-[#666];
+  }
+
+  .doc-actions-cell {
+    @apply flex justify-end gap-2;
+  }
+
+  .btn-approve-row {
+    @apply cursor-pointer rounded-[5px] border-none bg-[#e8f5e9] px-3 py-1.5 text-xs font-medium text-[#2e7d32] transition-all duration-200;
+  }
+
+  .btn-approve-row:hover:not(:disabled) {
+    @apply bg-[#c8e6c9];
+  }
+
+  .btn-approve-row:disabled {
+    @apply cursor-not-allowed opacity-40;
+  }
+
+  .btn-reject-row {
+    @apply cursor-pointer rounded-[5px] border-none bg-[#ffebee] px-3 py-1.5 text-xs font-medium text-[#c62828] transition-all duration-200;
+  }
+
+  .btn-reject-row:hover:not(:disabled) {
+    @apply bg-[#ffcdd2];
+  }
+
+  .btn-reject-row:disabled {
+    @apply cursor-not-allowed opacity-40;
+  }
+
+  .doc-badge {
+    @apply rounded-full px-2 py-0.5 text-[10px] font-semibold;
+  }
+
+  .doc-badge.pending {
+    @apply bg-[#fff3e0] text-[#f57c00];
+  }
+
+  .doc-badge.approved {
+    @apply bg-[#e8f5e9] text-[#2e7d32];
+  }
+
+  .doc-badge.rejected {
+    @apply bg-[#ffebee] text-[#c62828];
+  }
+
+  .no-docs {
+    @apply px-0 py-6 text-center text-[#999];
+  }
+
+  .modal-header {
+    @apply mb-5 flex items-start justify-between;
+  }
+
+  .modal-header h3 {
+    @apply m-0 mb-1.5 text-lg;
+  }
+
+  .dash-profile-avatar {
+    @apply flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl;
+  }
+
+  .dash-profile-avatar.fl {
+    @apply bg-[#e0f7f1];
+  }
+
+  .dash-profile-avatar.em {
+    @apply bg-[#ede7f6];
+  }
+
+  .dash-avatar-initial {
+    @apply text-2xl font-bold text-[#555];
+  }
+}
+
+@media (max-width: 1024px) {
+  .table th,
+  .table td {
+    @apply px-2.5 py-3;
+  }
+
+  .table th {
+    @apply text-[11px];
+  }
+
+  .action-badge,
+  .type-tag {
+    @apply px-2 py-0.5 text-[10px];
+  }
+
+  .badge {
+    @apply px-2 py-0.5 text-[11px];
+  }
+
+  .btn-action {
+    @apply px-2 py-0.5 text-[11px];
+  }
+
+  .user-avatar {
+    @apply h-7 w-7 text-[10px];
+  }
+}
+
+@media (max-width: 640px) {
+  .filter-row {
+    @apply flex-col items-stretch gap-2.5;
+  }
+
+  .search-input {
+    @apply w-full;
+  }
+}

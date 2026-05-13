@@ -1,41 +1,64 @@
 <template>
   <div>
     <BreadcrumbBar />
-    <div class="content">
-      <div class="profile-card">
-        <div class="profile-header">
-          <div class="avatar-wrapper">
-            <div class="avatar" :style="{ background: avatarColor }">{{ initials }}</div>
-            <button class="avatar-edit" @click="showPalette = !showPalette" title="Change color">✏️</button>
-            <div v-if="showPalette" class="color-palette">
-              <div v-for="color in colors" :key="color"
-                class="color-swatch"
+    <div class="mx-5 rounded-lg bg-white p-6">
+      <div class="rounded-xl bg-white p-6">
+        <div class="mb-6 flex items-center gap-5 border-b border-[#eee] pb-6">
+          <div class="relative h-[72px] w-[72px] shrink-0">
+            <div
+              class="flex h-[72px] w-[72px] items-center justify-center rounded-full text-[28px] font-semibold text-white"
+              :style="{ background: avatarColor }"
+            >
+              {{ initials }}
+            </div>
+            <button
+              type="button"
+              class="absolute bottom-0 right-0 flex h-[22px] w-[22px] cursor-pointer items-center justify-center rounded-full bg-white text-[11px] shadow-md"
+              title="Change color"
+              @click="showPalette = !showPalette"
+            >
+              ✏️
+            </button>
+            <div
+              v-if="showPalette"
+              class="absolute left-0 top-[80px] z-10 grid grid-cols-5 gap-2 rounded-xl bg-white p-3 shadow-lg"
+            >
+              <div
+                v-for="color in colors"
+                :key="color"
+                class="h-7 w-7 cursor-pointer rounded-full border-[3px] border-transparent transition-transform hover:scale-110"
+                :class="{ '!border-[#333] !scale-110': avatarColor === color }"
                 :style="{ background: color }"
-                :class="{ selected: avatarColor === color }"
                 @click="pickColor(color)"
               />
             </div>
           </div>
-          <div class="profile-info">
-            <h2>{{ admin.name }}</h2>
+          <div class="min-w-0">
+            <h2 class="m-0 mb-1 text-xl text-[#1a1a2e]">{{ admin.name }}</h2>
           </div>
         </div>
-        <div class="profile-details">
-          <div class="detail-row">
-            <label>Status</label>
+        <div class="flex flex-col gap-4">
+          <div class="flex items-center justify-between">
+            <label class="text-sm font-medium text-[#666]">Status</label>
             <span class="badge" :class="admin.status?.toLowerCase()">{{ admin.status }}</span>
           </div>
-          <div class="detail-row">
-            <label>Created</label>
-            <span>{{ formatDate(admin.created_at) }}</span>
+          <div class="flex items-center justify-between">
+            <label class="text-sm font-medium text-[#666]">Created</label>
+            <span class="text-sm text-[#333]">{{ formatDate(admin.created_at) }}</span>
           </div>
-          <div class="detail-row">
-            <label>Last Updated</label>
-            <span>{{ formatDate(admin.updated_at) }}</span>
+          <div class="flex items-center justify-between">
+            <label class="text-sm font-medium text-[#666]">Last Updated</label>
+            <span class="text-sm text-[#333]">{{ formatDate(admin.updated_at) }}</span>
           </div>
         </div>
       </div>
-      <button class="logout-btn" @click="handleLogout">Logout</button>
+      <button
+        type="button"
+        class="mt-6 cursor-pointer rounded-md border-none bg-[#ffebee] px-6 py-3 text-sm font-medium text-[#c62828] hover:bg-[#ffcdd2]"
+        @click="handleLogout"
+      >
+        Logout
+      </button>
     </div>
   </div>
 </template>
@@ -65,14 +88,15 @@ onMounted(async () => {
     router.push('/login')
     return
   }
-  
+
   try {
     const res = await fetch(`${API_BASE}/admin/me?admin_id=${adminId}`)
     const data = await res.json()
-    
+
     if (data.admin_id) {
       admin.value = data
-      initials.value = data.name?.split(' ').map(w => w[0]).join('').toUpperCase() || '?'    }
+      initials.value = data.name?.split(' ').map(w => w[0]).join('').toUpperCase() || '?'
+    }
   } catch (e) {
     console.error('Failed to load admin:', e)
   }
@@ -98,176 +122,4 @@ const pickColor = (color) => {
   localStorage.setItem('avatar_color', color)
   showPalette.value = false
 }
-
-const saveColor = () => {
-  localStorage.setItem('avatar_color', avatarColor.value)
-}
 </script>
-
-<style scoped>
-.title {
-  font-size: 15px;
-  font-weight: 500;
-  margin: 0 0 15px 0;
-  background: #1a1a2e;
-  padding: 15px 20px;
-  color: white;
-  letter-spacing: 0.2px;
-}
-
-.content {
-  background: white;
-  padding: 24px;
-  border-radius: 8px;
-  margin: 0 20px;
-}
-
-.profile-card {
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
-}
-
-.profile-header {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  margin-bottom: 24px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid #eee;
-}
-
-.avatar {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  background: #1a1a2e;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  font-weight: 600;
-}
-
-.profile-info h2 {
-  margin: 0 0 4px;
-  font-size: 20px;
-  color: #1a1a2e;
-}
-
-.profile-info p {
-  margin: 0;
-  color: #666;
-  font-size: 14px;
-}
-
-.profile-details {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.detail-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.detail-row label {
-  font-size: 14px;
-  color: #666;
-  font-weight: 500;
-}
-
-.detail-row span {
-  font-size: 14px;
-  color: #333;
-}
-
-.badge {
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.badge.active {
-  background: #e8f5e9;
-  color: #2e7d32;
-}
-
-.logout-btn {
-  margin-top: 24px;
-  padding: 12px 24px;
-  background: #ffebee;
-  color: #c62828;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.logout-btn:hover {
-  background: #ffcdd2;
-}
-
-.avatar-wrapper {
-  position: relative;
-  width: 72px;
-  height: 72px;
-}
-
-.avatar-edit {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 22px;
-  height: 22px;
-  background: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  cursor: pointer;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
-}
-
-.color-input {
-  display: none;
-}
-
-.color-palette {
-  position: absolute;
-  top: 80px;
-  left: 0;
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
-  background: white;
-  border-radius: 12px;
-  padding: 12px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-  z-index: 10;
-}
-
-.color-swatch {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  cursor: pointer;
-  border: 3px solid transparent;
-  transition: transform 0.1s;
-}
-
-.color-swatch:hover {
-  transform: scale(1.15);
-}
-
-.color-swatch.selected {
-  border-color: #333;
-  transform: scale(1.15);
-}
-</style>
