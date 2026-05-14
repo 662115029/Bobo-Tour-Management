@@ -2,57 +2,62 @@
   <div>
     <BreadcrumbBar :label="fl?.fl_name" />
 
-    <div class="page-content">
-      <div class="topbar">
-        <span class="back-link" @click="router.back()">← Back</span>
-        <button
-          v-if="fl"
-          class="ban-btn"
-          :class="fl.fl_is_active ? 'ban' : 'unban'"
-          @click="showBanModal = true"
-        >
+    <div class="px-5 pb-6">
+      <!-- Topbar -->
+      <div class="flex items-center justify-between py-3 mb-4">
+        <span class="text-sm cursor-pointer" @click="router.back()">← Back</span>
+        <button v-if="fl" class="btn-action !px-4 !py-1.5 !text-[13px] !rounded-lg"
+          :class="fl.fl_is_active ? 'ban' : 'unban'" @click="showBanModal = true">
           {{ fl.fl_is_active ? "🚫 Ban" : "✅ Unban" }}
         </button>
       </div>
 
-      <div v-if="loading" class="loading">⏳ Loading...</div>
+      <div v-if="loading" class="empty">⏳ Loading...</div>
 
       <div v-else-if="fl">
         <!-- Hero Card -->
-        <div class="hero-card">
-          <div class="hero-left">
-            <img v-if="fl.fl_profile_image_url" :src="fl.fl_profile_image_url" class="avatar" />
-            <div v-else class="avatar-placeholder">{{ fl.fl_name?.[0] || "?" }}</div>
+        <div class="bg-white rounded-xl p-7 flex justify-between items-start mb-4">
+          <div class="flex items-start gap-4">
+            <img v-if="fl.fl_profile_image_url" :src="fl.fl_profile_image_url"
+              class="w-[72px] h-[72px] rounded-full object-cover shrink-0" />
+            <div v-else
+              class="w-[72px] h-[72px] rounded-full bg-[#e3f2fd] text-[#1976d2] flex items-center justify-center text-[28px] font-bold shrink-0">
+              {{ fl.fl_name?.[0] || "?" }}
+            </div>
             <div>
               <span class="badge" :class="fl.fl_verify_status?.toLowerCase()">{{ fl.fl_verify_status }}</span>
-              <h2 class="name">{{ fl.fl_name }}</h2>
-              <p v-if="fl.fl_bio" class="bio">{{ fl.fl_bio }}</p>
-              <p v-else class="bio muted">No bio</p>
+              <h2 class="text-xl font-semibold mt-1 mb-0">{{ fl.fl_name }}</h2>
+              <p v-if="fl.fl_bio" class="text-[13px] text-[#666] mt-1 mb-0 leading-relaxed max-w-[400px]">{{ fl.fl_bio
+                }}</p>
+              <p v-else class="text-[13px] text-[#bbb] italic mt-1 mb-0">No bio</p>
             </div>
           </div>
-          <div class="rating-box">
-            <span class="rating-label">RATING</span>
-            <span class="rating-value">⭐ {{ fl.fl_rating_avg ?? "-" }}</span>
+          <div class="flex flex-col items-end gap-1 shrink-0">
+            <span class="text-[11px] text-[#999] font-semibold uppercase tracking-wide">RATING</span>
+            <span class="text-[22px] font-bold">⭐ {{ fl.fl_rating_avg ?? "-" }}</span>
           </div>
         </div>
 
-        <div class="sections">
+        <div class="flex flex-col gap-4">
+
           <!-- 1. Basic Info -->
-          <div class="section-card">
+          <section>
             <h3 class="section-title">👤 Basic Info</h3>
-            <div class="mini-grid">
+            <div class="mini-grid px-5 pt-4">
               <div class="mini-item">
                 <label>Languages</label>
-                <div class="tag-row" style="margin-top: 4px">
-                  <span v-for="l in languages" :key="l.fl_language_id" class="tag blue">{{ l.fl_language_name }}</span>
-                  <span v-if="!languages.length" class="empty-val">-</span>
+                <div class="flex flex-wrap gap-1.5 mt-1">
+                  <span v-for="l in languages" :key="l.fl_language_id" class="badge open">{{ l.fl_language_name
+                    }}</span>
+                  <span v-if="!languages.length" class="text-[#ccc] text-[13px]">-</span>
                 </div>
               </div>
               <div class="mini-item">
                 <label>Pickup Areas</label>
-                <div class="tag-row" style="margin-top: 4px">
-                  <span v-for="a in pickupAreas" :key="a.fl_area_id" class="tag orange">{{ a.fl_area_name }}</span>
-                  <span v-if="!pickupAreas.length" class="empty-val">-</span>
+                <div class="flex flex-wrap gap-1.5 mt-1">
+                  <span v-for="a in pickupAreas" :key="a.fl_area_id" class="badge in_progress">{{ a.fl_area_name
+                    }}</span>
+                  <span v-if="!pickupAreas.length" class="text-[#ccc] text-[13px]">-</span>
                 </div>
               </div>
               <div class="mini-item">
@@ -65,43 +70,50 @@
               </div>
               <div class="mini-item">
                 <label>Created</label>
-                <span class="muted">{{ formatDateTime(fl.fl_created_at) }}</span>
+                <span class="text-muted text-[12px]">{{ formatDateTime(fl.fl_created_at) }}</span>
               </div>
               <div class="mini-item">
                 <label>Last Updated</label>
-                <span class="muted">{{ formatDateTime(fl.fl_updated_at) }}</span>
+                <span class="text-muted text-[12px]">{{ formatDateTime(fl.fl_updated_at) }}</span>
               </div>
             </div>
-            <div v-if="fl.fl_address" style="margin-top: 16px">
+
+            <div v-if="fl.fl_address" class="px-5 pt-4">
               <div class="mini-item">
-                <label>Address</label><span>{{ fl.fl_address }}</span>
+                <label>Address</label>
+                <span>{{ fl.fl_address }}</span>
               </div>
             </div>
 
             <!-- Availability -->
-            <div v-if="availability.length" style="margin-top: 20px">
-              <p class="sub-section-label">📅 Availability</p>
-              <table class="data-table">
+            <div v-if="availability.length" class="px-5 pt-5">
+              <p class="text-xs font-semibold text-[#666] mb-3">📅 Availability</p>
+              <table class="w-full border-collapse text-sm">
                 <thead>
                   <tr>
-                    <th>Start Date</th>
-                    <th>End Date</th>
+                    <th
+                      class="text-left text-[11px] font-semibold text-[#999] uppercase px-3 py-2 border-b-2 border-[#eee]">
+                      Start Date</th>
+                    <th
+                      class="text-left text-[11px] font-semibold text-[#999] uppercase px-3 py-2 border-b-2 border-[#eee]">
+                      End Date</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="a in availability" :key="a.fl_available_id">
-                    <td>{{ formatDate(a.fl_available_start_date) }}</td>
-                    <td>{{ formatDate(a.fl_available_end_date) }}</td>
+                  <tr v-for="a in availability" :key="a.fl_available_id"
+                    class="border-b border-[#f5f5f5] last:border-0">
+                    <td class="px-3 py-2.5 text-[#333]">{{ formatDate(a.fl_available_start_date) }}</td>
+                    <td class="px-3 py-2.5 text-[#333]">{{ formatDate(a.fl_available_end_date) }}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
-          </div>
+          </section>
 
           <!-- 2. Vehicle -->
-          <div class="section-card" v-if="vehicle">
+          <section v-if="vehicle">
             <h3 class="section-title">🚐 Vehicle</h3>
-            <div class="mini-grid">
+            <div class="mini-grid px-5 pt-4">
               <div class="mini-item">
                 <label>Type</label>
                 <span>{{ vehicle.fl_vehicle_type }}</span>
@@ -123,65 +135,75 @@
                 <span>{{ vehicle.fl_vehicle_license_plate }}</span>
               </div>
             </div>
-            <div v-if="vehicleImages.length" style="margin-top: 20px">
-              <p class="sub-section-label">📸 Vehicle Photos ({{ vehicleImages.length }})</p>
-              <div class="doc-grid">
-                <div v-for="img in vehicleImages" :key="img.fl_vehicle_image_id" class="doc-card">
-                  <div class="doc-preview">
+            <div v-if="vehicleImages.length" class="px-5 pt-5">
+              <p class="text-xs font-semibold text-[#666] mb-3">📸 Vehicle Photos ({{ vehicleImages.length }})</p>
+              <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr))">
+                <div v-for="img in vehicleImages" :key="img.fl_vehicle_image_id"
+                  class="border border-[#eee] rounded-[10px] overflow-hidden flex flex-col">
+                  <div class="bg-[#f9f9f9] h-[140px] flex items-center justify-center overflow-hidden">
                     <a :href="img.fl_vehicle_image_url" target="_blank">
-                      <img :src="img.fl_vehicle_image_url" class="doc-img" @error="(e) => (e.target.style.display = 'none')" />
+                      <img :src="img.fl_vehicle_image_url" class="w-full h-full object-cover"
+                        @error="(e) => (e.target.style.display = 'none')" />
                     </a>
                   </div>
-                  <div class="doc-info">
-                    <p class="doc-type">Vehicle Photo</p>
-                    <a :href="img.fl_vehicle_image_url" target="_blank" class="link">View →</a>
+                  <div class="p-3 flex flex-col gap-1.5">
+                    <p class="text-xs font-semibold text-[#444] m-0">Vehicle Photo</p>
+                    <a :href="img.fl_vehicle_image_url" target="_blank" class="text-[#0066cc] text-xs">View →</a>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          </section>
 
           <!-- 3. Documents -->
-          <div class="section-card" v-if="documents.length">
+          <section v-if="documents.length">
             <h3 class="section-title">📄 Documents</h3>
-            <div class="doc-grid">
-              <div v-for="d in documents" :key="d.fl_doc_id" class="doc-card">
-                <div class="doc-preview">
+            <div class="px-5 pt-4 grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr))">
+              <div v-for="d in documents" :key="d.fl_doc_id"
+                class="border border-[#eee] rounded-[10px] overflow-hidden flex flex-col">
+                <div class="bg-[#f9f9f9] h-[140px] flex items-center justify-center overflow-hidden">
                   <a :href="d.file_url" target="_blank">
-                    <img v-if="isImage(d.file_url)" :src="d.file_url" class="doc-img" @error="(e) => (e.target.style.display = 'none')" />
-                    <div v-else class="doc-icon">📄</div>
+                    <img v-if="isImage(d.file_url)" :src="d.file_url" class="w-full h-full object-cover"
+                      @error="(e) => (e.target.style.display = 'none')" />
+                    <div v-else class="text-4xl">📄</div>
                   </a>
                 </div>
-                <div class="doc-info">
-                  <p class="doc-type">{{ d.fl_doc_type }}</p>
-                  <span class="tag" :class="{ green: d.fl_doc_status === 'APPROVED', red: d.fl_doc_status === 'REJECTED', gray: d.fl_doc_status === 'PENDING' }">{{ d.fl_doc_status }}</span>
-                  <p class="doc-date">{{ formatDateTime(d.fl_uploaded_at) }}</p>
-                  <a :href="d.file_url" target="_blank" class="link">View File →</a>
+                <div class="p-3 flex flex-col gap-1.5">
+                  <p class="text-xs font-semibold text-[#444] m-0">{{ d.fl_doc_type }}</p>
+                  <span class="badge" :class="{
+                    verified: d.fl_doc_status === 'APPROVED',
+                    cancelled: d.fl_doc_status === 'REJECTED',
+                    pending: d.fl_doc_status === 'PENDING',
+                  }">{{ d.fl_doc_status }}</span>
+                  <p class="text-[11px] text-muted m-0">{{ formatDateTime(d.fl_uploaded_at) }}</p>
+                  <a :href="d.file_url" target="_blank" class="text-[#0066cc] text-xs">View File →</a>
                 </div>
               </div>
             </div>
-          </div>
+          </section>
+
         </div>
       </div>
 
-      <div v-else class="loading">Freelancer not found.</div>
+      <div v-else class="empty">Freelancer not found.</div>
     </div>
-  <!-- Ban Modal -->
-  <div v-if="showBanModal" class="modal-overlay" @click.self="showBanModal = false">
-    <div class="modal">
-      <div class="modal-icon">{{ fl?.fl_is_active ? "🚫" : "✅" }}</div>
-      <h3>{{ fl?.fl_is_active ? "Ban Freelancer" : "Unban Freelancer" }}</h3>
-      <p>Are you sure you want to {{ fl?.fl_is_active ? "ban" : "unban" }} <strong>{{ fl?.fl_name }}</strong>?</p>
-      <p v-if="fl?.fl_is_active" class="modal-warning">This will prevent them from using the platform.</p>
-      <div class="modal-actions">
-        <button class="btn-cancel" @click="showBanModal = false">Cancel</button>
-        <button :class="fl?.fl_is_active ? 'btn-ban' : 'btn-unban'" @click="confirmBan">
-          {{ fl?.fl_is_active ? "Ban" : "Unban" }}
-        </button>
+
+    <!-- Ban Modal -->
+    <div v-if="showBanModal" class="modal-overlay" @click.self="showBanModal = false">
+      <div class="modal">
+        <div class="modal-icon">{{ fl?.fl_is_active ? "🚫" : "✅" }}</div>
+        <h3>{{ fl?.fl_is_active ? "Ban Freelancer" : "Unban Freelancer" }}</h3>
+        <p>Are you sure you want to {{ fl?.fl_is_active ? "ban" : "unban" }} <strong>{{ fl?.fl_name }}</strong>?</p>
+        <p v-if="fl?.fl_is_active" class="modal-warning">This will prevent them from using the platform.</p>
+        <div class="modal-actions">
+          <button class="btn-cancel" @click="showBanModal = false">Cancel</button>
+          <button class="btn-confirm" :class="fl?.fl_is_active ? 'ban' : 'unban'" @click="confirmBan">
+            {{ fl?.fl_is_active ? "Ban" : "Unban" }}
+          </button>
+        </div>
       </div>
     </div>
   </div>
-</div>
 </template>
 
 <script setup>
@@ -267,287 +289,3 @@ onMounted(async () => {
   }
 });
 </script>
-
-<style scoped>
-.page-content {
-  padding: 0 20px 24px;
-  box-sizing: border-box;
-}
-
-.topbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 0;
-  margin-bottom: 16px;
-}
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 24px;
-  margin-bottom: 16px;
-}
-
-.ban-btn {
-  padding: 8px 20px;
-  border: none;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.15s;
-}
-.ban-btn.ban { background: #ffebee; color: #c62828; }
-.ban-btn.ban:hover { background: #ffcdd2; }
-.ban-btn.unban { background: #e8f5e9; color: #2e7d32; }
-.ban-btn.unban:hover { background: #c8e6c9; }
-
-.modal-overlay {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.4);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 200;
-}
-.modal {
-  background: white; border-radius: 12px;
-  padding: 32px; width: 360px; text-align: center;
-}
-.modal-icon { font-size: 40px; margin-bottom: 12px; }
-.modal h3 { margin: 0 0 8px; font-size: 18px; }
-.modal p { color: #666; font-size: 14px; margin: 4px 0; }
-.modal-warning { color: #c62828 !important; font-size: 12px !important; }
-.modal-actions { display: flex; gap: 12px; justify-content: center; margin-top: 24px; }
-.btn-cancel { padding: 8px 20px; border: 1px solid #ddd; border-radius: 8px; background: white; cursor: pointer; font-size: 14px; }
-.btn-ban { padding: 8px 20px; border: none; border-radius: 8px; background: #c62828; color: white; cursor: pointer; font-size: 14px; font-weight: 600; }
-.btn-unban { padding: 8px 20px; border: none; border-radius: 8px; background: #2e7d32; color: white; cursor: pointer; font-size: 14px; font-weight: 600; }
-
-.back-link {
-  color: #000000;
-  cursor: pointer;
-  font-size: 14px;
-}
-.loading {
-  color: #999;
-  padding: 40px 0;
-  text-align: center;
-}
-
-.hero-card {
-  background: white;
-  border-radius: 12px;
-  padding: 28px;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 16px;
-}
-.hero-left {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-}
-.avatar {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-.avatar-placeholder {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  background: #e3f2fd;
-  color: #1976d2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  font-weight: 700;
-  flex-shrink: 0;
-}
-.name {
-  font-size: 20px;
-  margin: 4px 0 0;
-}
-.bio {
-  font-size: 13px;
-  color: #666;
-  margin: 4px 0 0;
-  line-height: 1.5;
-  max-width: 400px;
-}
-.bio.muted {
-  color: #bbb;
-  font-style: italic;
-}
-.rating-box {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-}
-.rating-label {
-  font-size: 11px;
-  color: #999;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-.rating-value {
-  font-size: 22px;
-  font-weight: 700;
-}
-
-.sections {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.section-card {
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
-}
-.section-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #444;
-  margin: 0 0 20px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #eee;
-}
-.sub-section-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #666;
-  margin: 0 0 12px;
-}
-
-.mini-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-.mini-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.mini-item label {
-  font-size: 10px;
-  color: #999;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-.mini-item span {
-  font-size: 13px;
-  color: #222;
-}
-.muted {
-  color: #888 !important;
-  font-size: 12px !important;
-}
-.empty-val {
-  font-size: 13px;
-  color: #ccc;
-}
-.link {
-  color: #0066cc;
-  font-size: 12px;
-}
-
-.tag-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.tag {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 500;
-}
-.tag.blue { background: #e3f2fd; color: #1976d2; }
-.tag.orange { background: #fff3e0; color: #f57c00; }
-.tag.green { background: #f0fdf4; color: #166534; }
-.tag.red { background: #fef2f2; color: #991b1b; }
-.tag.gray { background: #f5f5f5; color: #666; }
-
-.doc-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
-}
-.doc-card {
-  border: 1px solid #eee;
-  border-radius: 10px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-.doc-preview {
-  background: #f9f9f9;
-  height: 140px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-.doc-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.doc-icon { font-size: 40px; }
-.doc-info {
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.doc-type {
-  font-size: 12px;
-  font-weight: 600;
-  color: #444;
-  margin: 0;
-}
-.doc-date {
-  font-size: 11px;
-  color: #999;
-  margin: 0;
-}
-
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
-}
-.data-table th {
-  text-align: left;
-  font-size: 11px;
-  font-weight: 600;
-  color: #999;
-  text-transform: uppercase;
-  padding: 8px 12px;
-  border-bottom: 2px solid #eee;
-}
-.data-table td {
-  padding: 10px 12px;
-  border-bottom: 1px solid #f5f5f5;
-  color: #333;
-}
-.data-table tr:last-child td { border-bottom: none; }
-
-.badge {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 600;
-  width: fit-content;
-}
-.badge.pending { background: #fff3e0; color: #f57c00; }
-.badge.verified { background: #e8f5e9; color: #2e7d32; }
-.badge.not_verified { background: #ffebee; color: #c62828; }
-</style>
