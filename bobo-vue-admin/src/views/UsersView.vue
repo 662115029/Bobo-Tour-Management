@@ -227,7 +227,10 @@
           </div>
           <div class="mini-item">
             <label>Active</label>
-            <span>{{ userModal.isActive ? '✅ Active' : '❌ Inactive' }}</span>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:8px;height:8px;border-radius:50%;" :style="{ background: userModal.isActive ? '#06c755' : '#bbb' }"></div>
+              <span :style="{ color: userModal.isActive ? '#2e7d32' : '#999', fontWeight: 500 }">{{ userModal.isActive ? 'Active' : 'Inactive' }}</span>
+            </div>
           </div>
           <div class="mini-item">
             <label>Rating</label>

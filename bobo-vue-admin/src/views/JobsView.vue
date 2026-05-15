@@ -267,9 +267,10 @@
           </div>
           <div class="mini-item">
             <label>Active</label>
-            <span>{{
-              companyModal.em_is_active ? "✅ Active" : "❌ Inactive"
-            }}</span>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:8px;height:8px;border-radius:50%;" :style="{ background: companyModal.em_is_active ? '#06c755' : '#bbb' }"></div>
+              <span :style="{ color: companyModal.em_is_active ? '#2e7d32' : '#999', fontWeight: 500 }">{{ companyModal.em_is_active ? 'Active' : 'Inactive' }}</span>
+            </div>
           </div>
           <div class="mini-item">
             <label>Phone</label>

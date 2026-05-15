@@ -114,7 +114,12 @@
               <div class="mini-item"><label>Status</label>
                 <span class="badge" :class="userDetailModal.fl_verify_status?.toLowerCase()">{{ userDetailModal.fl_verify_status }}</span>
               </div>
-              <div class="mini-item"><label>Active</label><span>{{ userDetailModal.fl_is_active ? '✅ Active' : '❌ Inactive' }}</span></div>
+              <div class="mini-item"><label>Active</label>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <div style="width:8px;height:8px;border-radius:50%;" :style="{ background: userDetailModal.fl_is_active ? '#06c755' : '#bbb' }"></div>
+                  <span :style="{ color: userDetailModal.fl_is_active ? '#2e7d32' : '#999', fontWeight: 500 }">{{ userDetailModal.fl_is_active ? 'Active' : 'Inactive' }}</span>
+                </div>
+              </div>
               <div class="mini-item"><label>Rating</label><span>⭐ {{ userDetailModal.fl_rating_avg ?? '-' }}</span></div>
               <div class="mini-item"><label>Address</label><span>{{ userDetailModal.fl_address || '-' }}</span></div>
               <div class="mini-item"><label>Created</label><span class="text-muted">{{ formatDateTime(userDetailModal.fl_created_at) }}</span></div>
@@ -138,7 +143,12 @@
               <div class="mini-item"><label>Status</label>
                 <span class="badge" :class="userDetailModal.em_verify_status?.toLowerCase()">{{ userDetailModal.em_verify_status }}</span>
               </div>
-              <div class="mini-item"><label>Active</label><span>{{ userDetailModal.em_is_active ? '✅ Active' : '❌ Inactive' }}</span></div>
+              <div class="mini-item"><label>Active</label>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <div style="width:8px;height:8px;border-radius:50%;" :style="{ background: userDetailModal.em_is_active ? '#06c755' : '#bbb' }"></div>
+                  <span :style="{ color: userDetailModal.em_is_active ? '#2e7d32' : '#999', fontWeight: 500 }">{{ userDetailModal.em_is_active ? 'Active' : 'Inactive' }}</span>
+                </div>
+              </div>
               <div class="mini-item"><label>Rating</label><span>⭐ {{ userDetailModal.em_rating_avg ?? '-' }}</span></div>
               <div class="mini-item"><label>Phone</label><span>{{ userDetailModal.em_phone || '-' }}</span></div>
               <div class="mini-item"><label>Address</label><span>{{ userDetailModal.em_address || '-' }}</span></div>

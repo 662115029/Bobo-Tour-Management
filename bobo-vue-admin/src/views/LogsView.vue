@@ -93,10 +93,7 @@
             </td>
             <td class="truncate-cell" :title="log.target_name">
               <template v-if="log.target_id && ['FREELANCER','EMPLOYER','JOB'].includes((log.target_type||'').toUpperCase())">
-                <div class="user-cell" style="cursor:pointer" @click="openTargetModal(log)">
-                  <span v-if="(log.target_type||'').toUpperCase() !== 'JOB'" class="user-avatar" :style="avatarStyle(log.target_id, log.target_name)">{{ initials2(log.target_name) }}</span>
-                  <span style="text-decoration:underline;text-underline-offset:2px;">{{ log.target_name || log.target_id }}</span>
-                </div>
+                <span style="cursor:pointer;text-decoration:underline;text-underline-offset:2px;" @click="openTargetModal(log)">{{ log.target_name || log.target_id }}</span>
               </template>
               <span v-else>{{ log.target_name || log.target_id || "-" }}</span>
             </td>
@@ -190,7 +187,13 @@
         </div>
         <div class="mini-grid">
           <div class="mini-item"><label>Status</label><span class="badge" :class="targetModal.fl_verify_status?.toLowerCase()">{{ targetModal.fl_verify_status }}</span></div>
-          <div class="mini-item"><label>Active</label><span>{{ targetModal.fl_is_active ? '✅ Active' : '❌ Inactive' }}</span></div>
+          <div class="mini-item">
+            <label>Active</label>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:8px;height:8px;border-radius:50%;" :style="{ background: targetModal.fl_is_active ? '#06c755' : '#bbb' }"></div>
+              <span :style="{ color: targetModal.fl_is_active ? '#2e7d32' : '#999', fontWeight: 500 }">{{ targetModal.fl_is_active ? 'Active' : 'Inactive' }}</span>
+            </div>
+          </div>
           <div class="mini-item"><label>Rating</label><span>⭐ {{ Number(targetModal.fl_rating_avg || 0).toFixed(1) }}</span></div>
           <div class="mini-item"><label>Phone</label><span>{{ targetModal.fl_phone || '-' }}</span></div>
           <div class="mini-item"><label>Created</label><span class="text-muted">{{ formatDateTime(targetModal.fl_created_at) }}</span></div>
@@ -220,7 +223,13 @@
         </div>
         <div class="mini-grid">
           <div class="mini-item"><label>Status</label><span class="badge" :class="targetModal.em_verify_status?.toLowerCase()">{{ targetModal.em_verify_status }}</span></div>
-          <div class="mini-item"><label>Active</label><span>{{ targetModal.em_is_active ? '✅ Active' : '❌ Inactive' }}</span></div>
+          <div class="mini-item">
+            <label>Active</label>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:8px;height:8px;border-radius:50%;" :style="{ background: targetModal.em_is_active ? '#06c755' : '#bbb' }"></div>
+              <span :style="{ color: targetModal.em_is_active ? '#2e7d32' : '#999', fontWeight: 500 }">{{ targetModal.em_is_active ? 'Active' : 'Inactive' }}</span>
+            </div>
+          </div>
           <div class="mini-item"><label>Rating</label><span>⭐ {{ Number(targetModal.em_rating_avg || 0).toFixed(1) }}</span></div>
           <div class="mini-item"><label>Phone</label><span>{{ targetModal.em_phone || '-' }}</span></div>
           <div class="mini-item"><label>Created</label><span class="text-muted">{{ formatDateTime(targetModal.em_created_at) }}</span></div>
