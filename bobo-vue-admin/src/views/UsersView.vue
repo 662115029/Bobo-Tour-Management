@@ -97,13 +97,18 @@
           <tr v-for="user in filteredUsers" :key="user.id" class="row-hover">
             <td class="truncate-cell clickable-cell" @click="openUserModal(user)">
               <div class="user-cell">
-                <span class="user-avatar">{{ user.initials }}</span>
+                <span class="user-avatar" :style="avatarStyle(user.id, user.name)">{{ initials2(user.name) }}</span>
                 <span :title="user.name">
                   {{ user.name }}
                 </span>
               </div>
             </td>
-            <td>⭐ {{ Number(user.rating || 0).toFixed(1) }}</td>
+            <td>
+              <div style="display:inline-flex;align-items:center;gap:4px;">
+                {{ Number(user.rating || 0).toFixed(1) }}
+                <svg style="width:16px;height:16px;color:#f9a825;" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+              </div>
+            </td>
             <td>{{ jobsDoneById[user.id] || 0 }}</td>
             <td>
               <span class="badge" :class="user.verifyStatus?.toLowerCase()">{{
@@ -205,9 +210,9 @@
           <button class="close-btn" @click="userModal = null" style="margin-left:auto">✕</button>
         </div>
         <div class="profile-hero">
-          <div class="profile-avatar" :class="activeTab === 'Freelancer' ? 'fl' : 'em'">
-            <img v-if="userModal.imageUrl" :src="userModal.imageUrl" class="avatar-img" />
-            <span v-else class="avatar-initial">{{ userModal.initials }}</span>
+          <div class="profile-avatar-wrap">
+            <img v-if="userModal.imageUrl" :src="userModal.imageUrl" class="w-12 h-12 rounded-full object-cover ring-2 ring-[#eee]" />
+            <div v-else class="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ring-2 ring-[#eee]" :style="avatarStyle(userModal.id, userModal.name)">{{ initials2(userModal.name) }}</div>
           </div>
           <div class="profile-info">
             <h3 class="profile-name">{{ userModal.name }}</h3>
@@ -412,6 +417,27 @@ const formatDateTime = (date) => {
   });
 };
 
+const AVATAR_PALETTES = [
+  { bg: '#e3f2fd', text: '#1565c0' }, { bg: '#fce4ec', text: '#ad1457' },
+  { bg: '#e8f5e9', text: '#2e7d32' }, { bg: '#fff3e0', text: '#e65100' },
+  { bg: '#f3e5f5', text: '#6a1b9a' }, { bg: '#e0f7fa', text: '#00695c' },
+  { bg: '#fff8e1', text: '#f57f17' }, { bg: '#fbe9e7', text: '#bf360c' },
+]
+const avatarPalette = (id, name) => {
+  const str = String(id || name || '?')
+  let hash = 0; for (let i = 0; i < str.length; i++) hash = (hash * 31 + str.charCodeAt(i)) >>> 0
+  return AVATAR_PALETTES[hash % AVATAR_PALETTES.length]
+}
+const avatarStyle = (id, name) => {
+  const p = avatarPalette(id, name)
+  return { backgroundColor: p.bg, color: p.text }
+}
+const initials2 = (name) => {
+  if (!name) return '?'
+  const parts = name.trim().split(/\s+/).slice(0, 2)
+  return parts.map(p => p[0]?.toUpperCase() || '').join('')
+}
+
 function initialsFromName(name) {
   if (!name) return "?";
   const parts = name.trim().split(/\s+/).slice(0, 2);
@@ -557,4 +583,3 @@ watch(activeTab, async (tab) => {
     await loadFreelancers();
 });
 </script>
-

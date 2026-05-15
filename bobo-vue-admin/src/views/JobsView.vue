@@ -248,11 +248,9 @@
           <button class="close-btn" @click="companyModal = null">✕</button>
         </div>
         <div class="profile-hero">
-          <div class="profile-avatar em">
-            <img v-if="companyModal.em_profile_image_url" :src="companyModal.em_profile_image_url" class="avatar-img" />
-            <span v-else class="avatar-initial">{{
-              companyModal.em_name?.[0] || "?"
-            }}</span>
+          <div class="profile-avatar-wrap">
+            <img v-if="companyModal.em_profile_image_url" :src="companyModal.em_profile_image_url" class="w-12 h-12 rounded-full object-cover ring-2 ring-[#eee]" />
+            <div v-else class="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ring-2 ring-[#eee]" :style="avatarStyle(companyModal.em_id, companyModal.em_name)">{{ initials2(companyModal.em_name) }}</div>
           </div>
           <div class="profile-info">
             <h3 class="profile-name">{{ companyModal.em_name }}</h3>
@@ -343,6 +341,27 @@ import { useRouter } from "vue-router";
 import { API_BASE } from "../data/api";
 
 const router = useRouter();
+
+const AVATAR_PALETTES = [
+  { bg: '#e3f2fd', text: '#1565c0' }, { bg: '#fce4ec', text: '#ad1457' },
+  { bg: '#e8f5e9', text: '#2e7d32' }, { bg: '#fff3e0', text: '#e65100' },
+  { bg: '#f3e5f5', text: '#6a1b9a' }, { bg: '#e0f7fa', text: '#00695c' },
+  { bg: '#fff8e1', text: '#f57f17' }, { bg: '#fbe9e7', text: '#bf360c' },
+]
+const avatarPalette = (id, name) => {
+  const str = String(id || name || '?')
+  let hash = 0; for (let i = 0; i < str.length; i++) hash = (hash * 31 + str.charCodeAt(i)) >>> 0
+  return AVATAR_PALETTES[hash % AVATAR_PALETTES.length]
+}
+const avatarStyle = (id, name) => {
+  const p = avatarPalette(id, name)
+  return { backgroundColor: p.bg, color: p.text }
+}
+const initials2 = (name) => {
+  if (!name) return '?'
+  const parts = name.trim().split(/\s+/).slice(0, 2)
+  return parts.map(p => p[0]?.toUpperCase() || '').join('')
+}
 const search = ref("");
 const statusFilter = ref(localStorage.getItem("jobs_statusFilter") || "All");
 const monthFilter = ref("All");

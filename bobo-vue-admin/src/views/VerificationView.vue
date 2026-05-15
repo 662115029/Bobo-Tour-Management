@@ -58,9 +58,12 @@
               <td><span class="skeleton skeleton-text" style="width:75%"></span></td>
             </tr>
           </template>
-          <tr v-for="v in filteredList" :key="v.id" class="row-hover">
-            <td class="truncate-cell clickable-cell" @click="openUserModal(v)">
-              {{ v.name }}
+          <tr v-for="v in filteredList" :key="v.id">
+            <td class="truncate-cell">
+              <div class="user-cell">
+                <span class="user-avatar" :style="avatarStyle(v.id, v.name)">{{ initials2(v.name) }}</span>
+                <span class="clickable-cell" style="cursor:pointer" :title="v.name" @click="openUserModal(v)">{{ v.name }}</span>
+              </div>
             </td>
             <td>
               <span class="badge" :class="v.status?.toLowerCase()">{{ v.status }}</span>
@@ -97,9 +100,9 @@
           <!-- Freelancer -->
           <div v-if="activeTab === 'Freelancer' && userDetailModal">
             <div class="profile-hero">
-              <div class="profile-avatar fl">
-                <img v-if="userDetailModal.fl_profile_image_url" :src="userDetailModal.fl_profile_image_url" class="avatar-img" />
-                <span v-else class="avatar-initial">{{ userDetailModal.fl_name?.[0] || '?' }}</span>
+              <div class="profile-avatar-wrap">
+                <img v-if="userDetailModal.fl_profile_image_url" :src="userDetailModal.fl_profile_image_url" class="w-12 h-12 rounded-full object-cover ring-2 ring-[#eee]" />
+                <div v-else class="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ring-2 ring-[#eee]" :style="avatarStyle(userDetailModal.fl_id, userDetailModal.fl_name)">{{ initials2(userDetailModal.fl_name) }}</div>
               </div>
               <div class="profile-info">
                 <h3 class="profile-name">{{ userDetailModal.fl_name }}</h3>
@@ -121,9 +124,9 @@
           <!-- Employer -->
           <div v-if="activeTab === 'Employer' && userDetailModal">
             <div class="profile-hero">
-              <div class="profile-avatar em">
-                <img v-if="userDetailModal.em_profile_image_url" :src="userDetailModal.em_profile_image_url" class="avatar-img" />
-                <span v-else class="avatar-initial">{{ userDetailModal.em_name?.[0] || '?' }}</span>
+              <div class="profile-avatar-wrap">
+                <img v-if="userDetailModal.em_profile_image_url" :src="userDetailModal.em_profile_image_url" class="w-12 h-12 rounded-full object-cover ring-2 ring-[#eee]" />
+                <div v-else class="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ring-2 ring-[#eee]" :style="avatarStyle(userDetailModal.em_id, userDetailModal.em_name)">{{ initials2(userDetailModal.em_name) }}</div>
               </div>
               <div class="profile-info">
                 <h3 class="profile-name">{{ userDetailModal.em_name }}</h3>
@@ -145,7 +148,7 @@
           </div>
         </div>
         <div class="mini-modal-footer">
-          <button class="btn-full-view" @click="openDocsFromUser">View Documents →</button>
+          <button class="btn-full-view" @click="openDocsFromUser">ดูรายละเอียดทั้งหมด →</button>
         </div>
       </div>
     </div>
@@ -189,6 +192,27 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000'
 const activeTab = ref('Freelancer')
+
+const AVATAR_PALETTES = [
+  { bg: '#e3f2fd', text: '#1565c0' }, { bg: '#fce4ec', text: '#ad1457' },
+  { bg: '#e8f5e9', text: '#2e7d32' }, { bg: '#fff3e0', text: '#e65100' },
+  { bg: '#f3e5f5', text: '#6a1b9a' }, { bg: '#e0f7fa', text: '#00695c' },
+  { bg: '#fff8e1', text: '#f57f17' }, { bg: '#fbe9e7', text: '#bf360c' },
+]
+const avatarPalette = (id, name) => {
+  const str = String(id || name || '?')
+  let hash = 0; for (let i = 0; i < str.length; i++) hash = (hash * 31 + str.charCodeAt(i)) >>> 0
+  return AVATAR_PALETTES[hash % AVATAR_PALETTES.length]
+}
+const avatarStyle = (id, name) => {
+  const p = avatarPalette(id, name)
+  return { backgroundColor: p.bg, color: p.text }
+}
+const initials2 = (name) => {
+  if (!name) return '?'
+  const parts = name.trim().split(/\s+/).slice(0, 2)
+  return parts.map(p => p[0]?.toUpperCase() || '').join('')
+}
 const search = ref('')
 const nameSort = ref(localStorage.getItem('verification_nameSort') || '')
 const statusFilter = ref(localStorage.getItem('verification_statusFilter') || '')
@@ -430,4 +454,3 @@ onMounted(async () => {
   }
 })
 </script>
-

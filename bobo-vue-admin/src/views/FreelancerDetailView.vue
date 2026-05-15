@@ -160,7 +160,7 @@
           <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm p-5 flex flex-col items-center text-center hover:shadow-md transition-shadow">
             <div class="relative mb-3">
               <img v-if="fl.fl_profile_image_url" :src="fl.fl_profile_image_url" class="w-20 h-20 rounded-full object-cover ring-2 ring-[#eee]" />
-              <div v-else class="w-20 h-20 rounded-full bg-[#e3f2fd] text-[#1976d2] flex items-center justify-center text-3xl font-bold ring-2 ring-[#eee]">{{ fl.fl_name?.[0] || "?" }}</div>
+              <div v-else class="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold ring-2 ring-[#eee]" :style="avatarStyle(fl.fl_id, fl.fl_name)">{{ initials2(fl.fl_name) }}</div>
               <span class="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-white" :class="fl.fl_is_active ? 'bg-[#4caf50]' : 'bg-[#bbb]'"></span>
             </div>
             <h2 class="text-[15px] font-bold text-[#111] mb-1.5">{{ fl.fl_name }}</h2>
@@ -516,6 +516,27 @@ const openImgModal = (url, title = "") => {
 }
 const openDocModal = (d) => {
   modalDoc.value = { url: d.file_url, title: formatDocType(d.fl_doc_type), status: d.fl_doc_status, uploadedAt: d.fl_uploaded_at, reviewedBy: d.reviewed_by_name || null }
+}
+
+const AVATAR_PALETTES = [
+  { bg: '#e3f2fd', text: '#1565c0' }, { bg: '#fce4ec', text: '#ad1457' },
+  { bg: '#e8f5e9', text: '#2e7d32' }, { bg: '#fff3e0', text: '#e65100' },
+  { bg: '#f3e5f5', text: '#6a1b9a' }, { bg: '#e0f7fa', text: '#00695c' },
+  { bg: '#fff8e1', text: '#f57f17' }, { bg: '#fbe9e7', text: '#bf360c' },
+]
+const avatarPalette = (id, name) => {
+  const str = String(id || name || '?')
+  let hash = 0; for (let i = 0; i < str.length; i++) hash = (hash * 31 + str.charCodeAt(i)) >>> 0
+  return AVATAR_PALETTES[hash % AVATAR_PALETTES.length]
+}
+const avatarStyle = (id, name) => {
+  const p = avatarPalette(id, name)
+  return { backgroundColor: p.bg, color: p.text }
+}
+const initials2 = (name) => {
+  if (!name) return '?'
+  const parts = name.trim().split(/\s+/).slice(0, 2)
+  return parts.map(p => p[0]?.toUpperCase() || '').join('')
 }
 
 const formatDate = (d) => { if (!d) return "–"; return new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) }
