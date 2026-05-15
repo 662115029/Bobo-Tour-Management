@@ -169,7 +169,6 @@
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 mb-2">
               <span class="badge" :class="job.job_status?.toLowerCase()">{{ job.job_status }}</span>
-              <span class="text-[11px] text-[#ccc]">{{ job.job_id }}</span>
             </div>
             <h1 class="text-[20px] font-bold text-[#111] leading-tight mb-1.5">{{ job.job_title }}</h1>
             <div class="flex items-center gap-1.5 text-[13px] text-[#666]">
