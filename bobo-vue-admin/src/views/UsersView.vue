@@ -352,7 +352,6 @@ const logAction = async (action_type, target_type, target_id, target_name, note 
 
 const viewUser = (user) => {
   const target_type = activeTab.value === 'Employer' ? 'EMPLOYER' : 'FREELANCER';
-  logAction('VIEW', target_type, user.id, user.name);
   const route = activeTab.value === 'Employer'
     ? { name: 'EmployerDetail', params: { id: user.id }, state: { parent: 'Users', parentTo: '/users', userName: user.name } }
     : { name: 'FreelancerDetail', params: { id: user.id }, state: { parent: 'Users', parentTo: '/users', userName: user.name } }
@@ -387,9 +386,6 @@ const confirmBan = async () => {
     });
     const data = await res.json();
     if (data.status === "updated") {
-      const action = user.isActive ? 'BAN_USER' : 'UNBAN_USER';
-      const target_type = activeTab.value === 'Employer' ? 'EMPLOYER' : 'FREELANCER';
-      logAction(action, target_type, user.id, user.name);
       user.isActive = !user.isActive;
     }
   } catch (e) {

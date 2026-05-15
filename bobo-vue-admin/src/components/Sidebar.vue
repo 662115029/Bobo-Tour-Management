@@ -7,7 +7,7 @@
       <transition name="fade">
         <div v-if="isOpen" class="flex min-w-0 flex-col overflow-hidden">
           <span class="whitespace-nowrap text-[15px] font-bold">Admin Panel</span>
-          <span class="whitespace-nowrap text-[11px] text-white/40">FreelanceJob v1.0</span>
+          <span class="whitespace-nowrap text-[11px] text-white/40">BoboTourManagement</span>
         </div>
       </transition>
     </div>

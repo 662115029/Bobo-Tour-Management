@@ -4,17 +4,13 @@
 
     <div class="filter-row">
       <input type="text" v-model="search" placeholder="Search action or target..." class="search-input" />
-      <button v-if="actionFilter !== 'All' || typeFilter !== 'All' || targetSort || dateSort" class="reset-btn ml-3"
-        @click="resetAllFilters">
-        ✕ Reset
-      </button>
     </div>
 
     <div class="table-container">
       <table class="table">
         <thead>
           <tr>
-            <th style="width: 18%">
+            <th style="width: 17%">
               <span style="display:inline-flex;align-items:center;white-space:nowrap;gap:4px;">ACTION
                 <button class="col-filter-btn" :class="{ active: actionFilter !== 'All' }"
                   @click.stop="toggleActionDropdown($event)">
@@ -25,10 +21,12 @@
                           : actionFilter === "VERIFY_EMPLOYER" ? "VERIFY EM ▼"
                             : actionFilter === "BAN_USER" ? "BAN ▼"
                               : actionFilter === "UNBAN_USER" ? "UNBAN ▼"
-                                : actionFilter + " ▼" }}
+                                : actionFilter === "DELETE" ? "DELETE ▼"
+                                  : actionFilter === "DELETE_JOB" ? "DELETE ▼"
+                                  : actionFilter + " ▼" }}
                 </button></span>
             </th>
-            <th style="width: 16%">
+            <th style="width: 13%">
               <span style="display:inline-flex;align-items:center;white-space:nowrap;gap:4px;">TYPE
                 <button class="col-filter-btn" :class="{ active: typeFilter !== 'All' }"
                   @click.stop="toggleTypeDropdown($event)">
@@ -37,7 +35,7 @@
                   : typeFilter + " ▼" }}
                 </button></span>
             </th>
-            <th class="th-sortable" :class="{ 'th-active': targetSort }" style="width: 22%"
+            <th class="th-sortable" :class="{ 'th-active': targetSort }" style="width: 18%"
               @click="cycleSort('target')">
               <span class="th-inner">
                 TARGET
@@ -48,18 +46,26 @@
                 </span>
               </span>
             </th>
-            <th style="width: 24%">NOTE</th>
-            <th style="width: 12%">ADMIN</th>
-            <th class="th-sortable" :class="{ 'th-active': dateSort }" style="width: 16%;" @click="cycleSort('date')">
-              <span class="th-inner">
+            <th style="width: 20%">NOTE</th>
+            <th style="width: 15%; white-space: nowrap;">
+              <span style="display:inline-flex;align-items:center;white-space:nowrap;gap:4px;">ADMIN
+                <button class="col-filter-btn" :class="{ active: adminFilter !== 'All' }"
+                  @click.stop="toggleAdminDropdown($event)">
+                  {{ adminFilter === 'All' ? 'All ▼' : adminFilter + ' ▼' }}
+                </button></span>
+            </th>
+            <th class="th-sortable" :class="{ 'th-active': dateSort }" style="width: 17%;" @click="cycleSort('date')">
+              <span class="th-inner" style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;">
                 LAST UPDATED
                 <span class="sort-label">
                   <span v-if="!dateSort" class="sort-label-dim">⇅</span>
                   <span v-else-if="dateSort === 'asc'" class="sort-label-active">↑</span>
                   <span v-else class="sort-label-active">↓</span>
                 </span>
+                <button v-if="actionFilter !== 'All' || typeFilter !== 'All' || adminFilter !== 'All' || targetSort || dateSort"
+                  class="reset-btn" style="margin-left:6px;font-size:11px;padding:2px 8px;"
+                  @click.stop="resetAllFilters">✕ Reset</button>
               </span>
-
             </th>
           </tr>
         </thead>
@@ -110,7 +116,7 @@
       <button class="col-dropdown-item" @click="setActionFilter('VERIFY_EMPLOYER')">Verify Employer</button>
       <button class="col-dropdown-item" @click="setActionFilter('BAN_USER')">Ban</button>
       <button class="col-dropdown-item" @click="setActionFilter('UNBAN_USER')">Unban</button>
-      <button class="col-dropdown-item" @click="setActionFilter('DELETE')">Delete Job</button>
+      <button class="col-dropdown-item" @click="setActionFilter('DELETE_JOB')">Delete Job</button>
     </div>
 
     <div v-if="showTypeDropdown" class="col-dropdown" :style="typeDropdownStyle">
@@ -122,14 +128,25 @@
     </div>
 
 
+    <div v-if="showAdminDropdown" class="col-dropdown" :style="adminDropdownStyle">
+      <button class="col-dropdown-item" @click="setAdminFilter('All')">All</button>
+      <button
+        v-for="name in uniqueAdmins"
+        :key="name"
+        class="col-dropdown-item"
+        @click="setAdminFilter(name)">
+        {{ name }}
+      </button>
+    </div>
+
   </div>
 </template>
 
 <script setup>
 import BreadcrumbBar from '../components/BreadcrumbBar.vue'
-import { computed, onMounted, onUnmounted, ref } from "vue";
-
-const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { useRoute } from "vue-router";
+import { API_BASE } from "../data/api";
 const search = ref("");
 const typeFilter = ref(localStorage.getItem("logs_typeFilter") || "All");
 const actionFilter = ref(localStorage.getItem("logs_actionFilter") || "All");
@@ -139,15 +156,20 @@ const actionDropdownStyle = ref({});
 const dateSort = ref(localStorage.getItem("logs_dateSort") || "");
 const isLoading = ref(true);
 const logs = ref([]);
+const admins = ref([]);
 
 const showTypeDropdown = ref(false);
 const typeDropdownStyle = ref({});
+const adminFilter = ref(localStorage.getItem("logs_adminFilter") || "All");
+const showAdminDropdown = ref(false);
+const adminDropdownStyle = ref({});
 
 const saveFilters = () => {
   localStorage.setItem("logs_actionFilter", actionFilter.value);
   localStorage.setItem("logs_targetSort", targetSort.value);
   localStorage.setItem("logs_typeFilter", typeFilter.value);
   localStorage.setItem("logs_dateSort", dateSort.value);
+  localStorage.setItem("logs_adminFilter", adminFilter.value);
 };
 
 const cycleSort = (key) => {
@@ -167,7 +189,7 @@ const toggleActionDropdown = (e) => {
   if (opening) {
     showActionDropdown.value = true;
     const rect = e.target.getBoundingClientRect();
-    actionDropdownStyle.value = { position: "fixed", top: rect.bottom + "px", left: rect.left + "px" };
+    actionDropdownStyle.value = { position: "fixed", top: rect.bottom + window.scrollY + "px", left: rect.left + "px" };
   }
 };
 const setActionFilter = (val) => {
@@ -193,9 +215,27 @@ const setTypeFilter = (val) => {
   saveFilters();
 };
 
+const toggleAdminDropdown = (e) => {
+  closeAllDropdowns();
+  showAdminDropdown.value = true;
+  const rect = e.target.getBoundingClientRect();
+  adminDropdownStyle.value = {
+    position: "fixed",
+    top: rect.bottom + window.scrollY + "px",
+    left: rect.left + "px",
+  };
+};
+
+const setAdminFilter = (val) => {
+  adminFilter.value = val;
+  showAdminDropdown.value = false;
+  saveFilters();
+};
+
 const closeAllDropdowns = () => {
   showTypeDropdown.value = false;
   showActionDropdown.value = false;
+  showAdminDropdown.value = false;
 };
 
 const resetAllFilters = () => {
@@ -203,6 +243,7 @@ const resetAllFilters = () => {
   targetSort.value = "";
   typeFilter.value = "All";
   dateSort.value = "";
+  adminFilter.value = "All";
   saveFilters();
 };
 
@@ -233,7 +274,9 @@ const getActionClass = (action) => {
   if (a === "REJECT_DOCUMENT") return "action-reject";
   if (a === "BAN_USER") return "action-ban";
   if (a === "UNBAN_USER") return "action-unban";
-  if (a === "DELETE") return "action-delete";
+  if (a === "UPDATE") return "action-update";
+  if (a === "VIEW") return "action-view";
+  if (a === "DELETE" || a === "DELETE_JOB") return "action-delete";
   return "action-default";
 };
 
@@ -247,6 +290,10 @@ const getTypeClass = (type) => {
   return "type-default";
 };
 
+const uniqueAdmins = computed(() => {
+  return admins.value.map(a => a.name).filter(Boolean).sort();
+});
+
 const filteredLogs = computed(() => {
   let result = logs.value.filter((log) => {
     const matchSearch =
@@ -257,16 +304,21 @@ const filteredLogs = computed(() => {
       (log.target_name || "")
         .toLowerCase()
         .includes(search.value.toLowerCase()) ||
-      (log.note || "").toLowerCase().includes(search.value.toLowerCase());
+      (log.note || "").toLowerCase().includes(search.value.toLowerCase()) ||
+      (log.admin_name || "").toLowerCase().includes(search.value.toLowerCase());
     const matchType =
       typeFilter.value === "All" ||
       (log.target_type || "").toUpperCase() === typeFilter.value;
-    return matchSearch && matchType;
+    const matchAdmin =
+      adminFilter.value === "All" ||
+      (log.admin_name || "") === adminFilter.value;
+    return matchSearch && matchType && matchAdmin;
   });
 
   if (actionFilter.value !== "All") {
     result = result.filter((log) => {
       const a = (log.action_type || "").toUpperCase();
+      if (actionFilter.value === "DELETE_JOB") return a === "DELETE_JOB" || a === "DELETE";
       return a === actionFilter.value;
     });
   }
@@ -276,18 +328,16 @@ const filteredLogs = computed(() => {
       const cmp = (a.target_name || "").localeCompare(b.target_name || "");
       return targetSort.value === "desc" ? -cmp : cmp;
     });
-  }
-
-  if (dateSort.value) {
+  } else if (dateSort.value) {
     result = [...result].sort((a, b) => {
-      const dateA = new Date(a.created_at) || 0;
-      const dateB = new Date(b.created_at) || 0;
+      const dateA = new Date(a.created_at).getTime() || 0;
+      const dateB = new Date(b.created_at).getTime() || 0;
       return dateSort.value === "desc" ? dateB - dateA : dateA - dateB;
     });
   } else {
     result = [...result].sort((a, b) => {
-      const dateA = new Date(a.created_at) || 0;
-      const dateB = new Date(b.created_at) || 0;
+      const dateA = new Date(a.created_at).getTime() || 0;
+      const dateB = new Date(b.created_at).getTime() || 0;
       return dateB - dateA;
     });
   }
@@ -299,17 +349,37 @@ onUnmounted(() => {
   document.removeEventListener("click", handleOutsideClick);
 });
 
-onMounted(async () => {
-  document.addEventListener("click", handleOutsideClick);
+const fetchLogs = async () => {
+  isLoading.value = true;
   try {
-    const res = await fetch(`${API_BASE}/admin/logs?limit=500`);
-    const data = await res.json();
-    logs.value = data.items || [];
+    const [logsRes, adminsRes] = await Promise.all([
+      fetch(`${API_BASE}/admin/logs?limit=500`),
+      fetch(`${API_BASE}/admin/admins?limit=500`),
+    ]);
+    const logsData = await logsRes.json();
+    const adminsData = await adminsRes.json();
+    logs.value = logsData.items || [];
+    admins.value = adminsData.items || [];
   } catch (e) {
     console.error("Failed to load logs:", e);
     logs.value = [];
+    admins.value = [];
   } finally {
     isLoading.value = false;
   }
+};
+
+const route = useRoute();
+
+// Re-fetch every time user navigates to this page
+watch(() => route.fullPath, async (newPath) => {
+  if (newPath.includes('/logs')) {
+    await fetchLogs();
+  }
+});
+
+onMounted(async () => {
+  document.addEventListener("click", handleOutsideClick);
+  await fetchLogs();
 });
 </script>

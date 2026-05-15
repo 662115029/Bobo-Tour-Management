@@ -504,7 +504,6 @@ const logAction = async (action_type, target_type, target_id, target_name, note 
 
 const viewJob = (id) => {
   const job = jobs.value.find((j) => j.job_id === id);
-  logAction('VIEW', 'JOB', id, job?.job_title || id);
   router.push({
     name: "JobDetail",
     params: { id },
@@ -533,9 +532,12 @@ const confirmDelete = async () => {
   const id = deleteTargetId.value;
   try {
     const adminId = localStorage.getItem('admin_id') || '';
-    await fetch(`${API_BASE}/jobs/${id}?admin_id=${adminId}`, { method: "DELETE" });
-    logAction('DELETE', 'JOB', id, title);
-    jobs.value = jobs.value.filter((j) => j.job_id !== id);
+    const res = await fetch(`${API_BASE}/jobs/${id}?admin_id=${adminId}`, { method: "DELETE" });
+    if (res.ok) {
+      jobs.value = jobs.value.filter((j) => j.job_id !== id);
+    } else {
+      console.error("Delete failed:", res.status);
+    }
   } catch (e) {
     console.error("Failed to delete job:", e);
   } finally {
@@ -572,4 +574,3 @@ onMounted(async () => {
   }
 });
 </script>
-

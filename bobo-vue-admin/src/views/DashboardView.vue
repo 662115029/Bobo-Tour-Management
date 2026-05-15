@@ -642,13 +642,19 @@ const deleteJob = (id, title) => {
 };
 
 const confirmDelete = async () => {
+  const id = deleteTargetId.value;
+  const title = deleteTargetTitle.value;
   try {
     const adminId = localStorage.getItem('admin_id') || '';
-    await fetch(`${API_BASE}/jobs/${deleteTargetId.value}?admin_id=${adminId}`, {
+    const res = await fetch(`${API_BASE}/jobs/${id}?admin_id=${adminId}`, {
       method: "DELETE",
     });
-    jobs.value = jobs.value.filter((j) => j.job_id !== deleteTargetId.value);
-    stats.value.totalJobs = Math.max(0, stats.value.totalJobs - 1);
+    if (res.ok) {
+      jobs.value = jobs.value.filter((j) => j.job_id !== id);
+      stats.value.totalJobs = Math.max(0, stats.value.totalJobs - 1);
+    } else {
+      console.error("Delete failed:", res.status);
+    }
   } catch (e) {
     console.error("Failed to delete job:", e);
   } finally {
@@ -843,4 +849,3 @@ onMounted(async () => {
   }
 });
 </script>
-

@@ -55,7 +55,7 @@ class LogRequest(BaseModel):
     target_type: str
     target_id: str
     target_name: str
-    note: str = None
+    note: Optional[str] = None
 
 # =============================================================================
 # STORAGE / IMAGE UPLOAD
@@ -1616,7 +1616,9 @@ def ban_employer(em_id: str, body: BanRequest):
 
 @app.delete("/jobs/{job_id}")
 def delete_job(job_id: str, admin_id: str = None):
+    conn = None
     try:
+        # TRANSACTION 1: Delete the job (critical)
         conn = get_connection()
         cursor = get_cursor(conn)
         cursor.execute("SELECT job_id, job_title FROM jobs WHERE job_id = %s", (job_id,))
@@ -1638,23 +1640,39 @@ def delete_job(job_id: str, admin_id: str = None):
         cursor.execute("DELETE FROM job_required_languages WHERE job_id = %s", (job_id,))
         cursor.execute("DELETE FROM jobs WHERE job_id = %s", (job_id,))
 
-        # Log deletion
-        if admin_id:
-            cursor.execute(
-                """
-                INSERT INTO admin_logs
-                    (admin_id, action_type, target_type, target_id, target_name, note)
-                VALUES (%s, 'DELETE', 'JOB', %s, %s, NULL)
-                """,
-                (admin_id, job_id, job_title)
-            )
-
         conn.commit()
         conn.close()
+
+        # TRANSACTION 2: Log deletion (non-critical, separate try/catch)
+        print(f"DEBUG: admin_id={admin_id}, type={type(admin_id)}, bool(admin_id)={bool(admin_id)}")
+        if admin_id:
+            try:
+                print(f"Inserting log for admin_id={admin_id}, job_id={job_id}")
+                log_conn = get_connection()
+                log_cursor = get_cursor(log_conn)
+                log_cursor.execute(
+                    """
+                    INSERT INTO admin_logs
+                        (admin_id, action_type, target_type, target_id, target_name, note)
+                    VALUES (%s, 'DELETE_JOB', 'JOB', %s, %s, NULL)
+                    """,
+                    (admin_id, job_id, job_title)
+                )
+                log_conn.commit()
+                log_conn.close()
+                print(f"Log inserted successfully")
+            except Exception as log_error:
+                print(f"ERROR inserting log: {str(log_error)}")
+                if log_conn:
+                    log_conn.close()
+        else:
+            print(f"Skipping log insert: admin_id is None or empty")
+
         return {"status": "deleted", "job_id": job_id}
     except HTTPException:
         raise
     except Exception as e:
-        conn.rollback()
-        conn.close()
-        return {"error": str(e)}
+        if conn:
+            conn.rollback()
+            conn.close()
+        raise HTTPException(status_code=500, detail=f"Failed to delete job: {str(e)}")

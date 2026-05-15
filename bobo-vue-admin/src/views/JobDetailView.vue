@@ -542,8 +542,10 @@ const formatPickupTime = (val) => {
 const confirmDelete = async () => {
   try {
     const adminId = localStorage.getItem("admin_id") || ""
-    await fetch(`${API_BASE}/jobs/${job.value.job_id}?admin_id=${adminId}`, { method: "DELETE" })
-    router.push({ name: "Jobs" })
+    const res = await fetch(`${API_BASE}/jobs/${job.value.job_id}?admin_id=${adminId}`, { method: "DELETE" })
+    if (res.ok || res.status === 404) {
+      router.push({ name: "Jobs" })
+    }
   } catch (e) { console.error(e) } finally { showDeleteModal.value = false }
 }
 
