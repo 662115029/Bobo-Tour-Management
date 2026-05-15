@@ -617,6 +617,43 @@ def admin_me(admin_id: str):
     except Exception as e:
         return {"error": str(e)}
 
+class AdminUpdateRequest(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+
+@app.patch("/admin/{admin_id}")
+def update_admin(admin_id: str, body: AdminUpdateRequest):
+    try:
+        fields = {}
+        if body.name is not None:
+            fields["name"] = body.name.strip()
+        if body.email is not None:
+            fields["email"] = body.email.strip()
+        if not fields:
+            return {"error": "No fields to update"}
+
+        set_clause = ", ".join(f"{k} = %s" for k in fields)
+        values = list(fields.values()) + [admin_id]
+
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute(
+            f"UPDATE admins SET {set_clause}, updated_at = NOW() WHERE admin_id = %s",
+            values
+        )
+        conn.commit()
+
+        cursor.execute(
+            "SELECT updated_at FROM admins WHERE admin_id = %s",
+            (admin_id,)
+        )
+        row = cursor.fetchone()
+        conn.close()
+
+        return {"status": "updated", "updated_at": row["updated_at"] if row else None}
+    except Exception as e:
+        return {"error": str(e)}
+
 @app.get("/admin/logs")
 def admin_logs(limit: int = 50, offset: int = 0,
                action_type: str = None, target_type: str = None):
