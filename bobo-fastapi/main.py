@@ -790,7 +790,7 @@ def get_freelancers(limit: int = 50, offset: int = 0):
         cursor.execute(
             """
             SELECT fl_id, line_user_id, fl_username, fl_email, fl_name, fl_date_of_birth,
-                   fl_address, fl_bio, fl_profile_image_url,
+                   fl_phone, fl_address, fl_bio, fl_profile_image_url,
                    fl_verify_status, fl_is_active, fl_rating_avg,
                    fl_created_at, fl_updated_at
             FROM freelancers
@@ -813,7 +813,7 @@ def get_freelancer(fl_id: str):
         cursor.execute(
             """
             SELECT fl_id, line_user_id, fl_username, fl_email, fl_name, fl_date_of_birth,
-                   fl_address, fl_bio, fl_profile_image_url,
+                   fl_phone, fl_address, fl_bio, fl_profile_image_url,
                    fl_verify_status, fl_is_active, fl_rating_avg,
                    fl_created_at, fl_updated_at
             FROM freelancers
@@ -1126,37 +1126,6 @@ def create_job(data: dict):
         conn.commit()
         conn.close()
         return {"success": True, "job_id": job_id}
-    except Exception as e:
-        return {"error": str(e)}
-
-@app.get("/job-required-languages")
-def get_job_required_languages(limit: int = 50, offset: int = 0):
-    try:
-        conn = get_connection()
-        cursor = get_cursor(conn)
-        cursor.execute(
-            """
-            SELECT j.job_id, j.em_id, em.em_name AS company,
-                   j.job_title, j.job_description,
-                   j.job_start_date, j.job_end_date,
-                   j.job_required_vehicle_type, j.job_required_seat,
-                   j.job_price, j.job_status,
-                   j.selected_fl_id, f.fl_name AS selected_driver,
-                   j.job_created_at, j.job_updated_at
-            FROM jobs j
-            JOIN employers em ON j.em_id = em.em_id
-            LEFT JOIN freelancers f ON j.selected_fl_id = f.fl_id
-            WHERE j.job_id = %s
-            """,
-            (job_id,)
-        )
-        row = cursor.fetchone()
-        conn.close()
-        if not row:
-            raise HTTPException(status_code=404, detail="Job not found")
-        return row
-    except HTTPException:
-        raise
     except Exception as e:
         return {"error": str(e)}
 

@@ -8,6 +8,8 @@ def get_connection():
         database=os.getenv("MYSQL_DATABASE", "bobo_tour_management"),
         user=os.getenv("MYSQL_USER", "root"),
         password=os.getenv("MYSQL_PASSWORD", ""),
+        charset="utf8mb4",
+        use_unicode=True,
     )
     return conn
 
