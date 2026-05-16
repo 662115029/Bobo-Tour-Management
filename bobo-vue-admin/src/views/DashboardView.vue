@@ -2,22 +2,22 @@
   <div>
     <BreadcrumbBar />
     <div class="stats-row">
-      <div class="stat-card">
+      <div class="stat-card stat-card--blue">
         <span class="stat-label">TOTAL JOBS</span>
         <span v-if="isLoading" class="skeleton skeleton-stat"></span>
         <span v-else class="stat-value">{{ stats.totalJobs.toLocaleString() }}</span>
       </div>
-      <div class="stat-card">
+      <div class="stat-card stat-card--amber">
         <span class="stat-label">PENDING VERIFY</span>
         <span v-if="isLoading" class="skeleton skeleton-stat"></span>
         <span v-else class="stat-value">{{ stats.pendingVerify }}</span>
       </div>
-      <div class="stat-card">
+      <div class="stat-card stat-card--sky">
         <span class="stat-label">FREELANCERS</span>
         <span v-if="isLoading" class="skeleton skeleton-stat"></span>
         <span v-else class="stat-value">{{ stats.freelancers }}</span>
       </div>
-      <div class="stat-card">
+      <div class="stat-card stat-card--purple">
         <span class="stat-label">EMPLOYERS</span>
         <span v-if="isLoading" class="skeleton skeleton-stat"></span>
         <span v-else class="stat-value">{{ stats.employers }}</span>
