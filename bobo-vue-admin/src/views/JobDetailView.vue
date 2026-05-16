@@ -219,7 +219,7 @@
               <div>
                 <div class="text-[11px] text-[#aaa] uppercase tracking-wide font-semibold mb-2">Required Languages</div>
                 <div class="flex flex-wrap gap-1.5">
-                  <span v-for="lang in languages" :key="lang.job_req_lg_id" class="badge open">{{ lang.language_name }}</span>
+                  <span v-for="lang in languages" :key="lang.job_req_lg_id" class="info-tag language">{{ lang.language_name }}</span>
                   <span v-if="!languages.length" class="text-[13px] text-[#bbb]">None specified</span>
                 </div>
               </div>
@@ -321,7 +321,7 @@
                     <div class="w-7 h-7 rounded-full bg-[#e3f2fd] flex items-center justify-center text-[12px] font-bold text-[#1976d2] shrink-0">{{ (pay.driver_name || "?")[0] }}</div>
                     <span class="text-[13px] font-medium text-[#222]">{{ pay.driver_name }}</span>
                   </div>
-                  <span class="badge" :class="{ verified: pay.payment_status === 'CONFIRMED', in_progress: pay.payment_status === 'PAID', cancelled: pay.payment_status === 'REJECTED', pending: pay.payment_status === 'PENDING' }">{{ pay.payment_status }}</span>
+                  <span class="payment-badge" :class="pay.payment_status?.toLowerCase()">{{ pay.payment_status }}</span>
                 </div>
                 <div v-if="pay.paid_at || pay.confirmed_at || pay.reject_reason" class="px-4 pb-3 flex flex-col gap-1">
                   <div v-if="pay.paid_at" class="text-[11px] text-[#888]">Paid: {{ formatDateTime(pay.paid_at) }}</div>
@@ -460,7 +460,7 @@
                   <div class="text-[13px] font-medium text-[#222]">{{ app.driver_name }}</div>
                   <div class="text-[11px] text-[#999] mt-0.5">Applied {{ formatDateTime(app.applied_at) }}</div>
                 </div>
-                <span class="badge shrink-0" :class="{ verified: app.application_status === 'ACCEPTED', cancelled: app.application_status === 'REJECTED', pending: app.application_status === 'APPLIED' }">{{ app.application_status }}</span>
+                <span class="application-badge shrink-0" :class="app.application_status?.toLowerCase()">{{ app.application_status }}</span>
                 <svg class="w-4 h-4 text-[#ccc] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
               </div>
             </div>

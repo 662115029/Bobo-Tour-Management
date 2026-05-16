@@ -297,7 +297,7 @@
                     </div>
                     <div class="p-2 flex flex-col gap-0.5">
                       <span class="text-[11px] font-semibold text-[#222] leading-snug truncate">{{ formatDocType(d.em_doc_type) }}</span>
-                      <span class="badge self-start" :class="{ verified: d.em_doc_status === 'APPROVED', cancelled: d.em_doc_status === 'REJECTED', pending: d.em_doc_status === 'PENDING' }">{{ d.em_doc_status }}</span>
+                      <span class="doc-badge self-start" :class="d.em_doc_status?.toLowerCase()">{{ d.em_doc_status }}</span>
                       <span class="text-[11px] text-[#bbb]">{{ formatDate(d.em_uploaded_at) }}</span>
                     </div>
                   </div>
@@ -367,7 +367,7 @@
         <div class="flex items-center justify-between px-5 py-3.5 border-b border-[#eee] shrink-0">
           <div class="flex items-center gap-2.5">
             <span class="text-[15px] font-semibold text-[#111]">{{ modalDoc.title || "Preview" }}</span>
-            <span v-if="modalDoc.status" class="badge" :class="{ verified: modalDoc.status === 'APPROVED', cancelled: modalDoc.status === 'REJECTED', pending: modalDoc.status === 'PENDING' }">{{ modalDoc.status }}</span>
+            <span v-if="modalDoc.status" class="doc-badge" :class="modalDoc.status?.toLowerCase()">{{ modalDoc.status }}</span>
           </div>
           <button class="text-[#999] hover:text-[#333] border-none bg-transparent cursor-pointer" @click="modalDoc = null">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>

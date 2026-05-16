@@ -156,7 +156,7 @@
             </td>
             <td>
               <div class="action-btns">
-                <button class="btn-action view" @click="openVerifyDocs(v)">
+                <button class="btn-action verify-style" @click="openVerifyDocs(v)">
                   View Docs
                 </button>
               </div>

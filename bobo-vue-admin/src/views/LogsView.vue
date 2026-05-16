@@ -174,6 +174,7 @@ import { useRoute, useRouter } from "vue-router";
 import { API_BASE } from "../data/api";
 import { useAvatar } from '../composables/useAvatar'
 import { formatDate, formatDateTime } from '../utils/formatDate'
+import { getActionClass, getTypeClass } from '../utils/statusClasses'
 import UserMiniModal from '../components/UserMiniModal.vue'
 import JobMiniModal from '../components/JobMiniModal.vue'
 
@@ -286,29 +287,6 @@ const handleOutsideClick = (e) => {
   ) {
     closeAllDropdowns();
   }
-};
-
-const getActionClass = (action) => {
-  const a = (action || "").toUpperCase();
-  if (a === "APPROVE_DOCUMENT") return "action-approve";
-  if (a === "VERIFY_FREELANCER" || a === "VERIFY_EMPLOYER") return "action-verify";
-  if (a === "REJECT_DOCUMENT") return "action-reject";
-  if (a === "BAN_USER") return "action-ban";
-  if (a === "UNBAN_USER") return "action-unban";
-  if (a === "UPDATE") return "action-update";
-  if (a === "VIEW") return "action-view";
-  if (a === "DELETE" || a === "DELETE_JOB") return "action-delete";
-  return "action-default";
-};
-
-const getTypeClass = (type) => {
-  const t = (type || "").toUpperCase();
-  if (t === "FREELANCER") return "type-freelancer";
-  if (t === "EMPLOYER") return "type-employer";
-  if (t === "JOB") return "type-job";
-  if (t === "DOCUMENT") return "type-document";
-  if (t === "USER") return "type-user";
-  return "type-default";
 };
 
 const uniqueAdmins = computed(() => {

@@ -1,15 +1,14 @@
 @import "tailwindcss";
 
 @keyframes shimmer {
-  0% {
-    background-position: -400px 0;
-  }
-  100% {
-    background-position: 400px 0;
-  }
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
 }
 
 @layer components {
+
+  /* ─── Filter / Search ─────────────────────────────────── */
+
   .filter-row {
     @apply mb-4 flex items-center justify-between gap-3 px-5;
   }
@@ -78,6 +77,8 @@
     @apply rounded-b-md;
   }
 
+  /* ─── Sort headers ────────────────────────────────────── */
+
   .th-sortable {
     @apply cursor-pointer select-none transition-[background,color] duration-150;
   }
@@ -106,6 +107,34 @@
     @apply font-bold text-[#1a7a3f];
   }
 
+  /* ─── Table ───────────────────────────────────────────── */
+
+  .table-container {
+    @apply mx-5 overflow-hidden rounded-lg border border-[#e0e0e0] bg-white shadow-sm transition-shadow duration-200;
+  }
+
+  .table-container:hover {
+    @apply shadow-md;
+  }
+
+  .table {
+    table-layout: fixed;
+    @apply w-full border-collapse;
+  }
+
+  .table th,
+  .table td {
+    @apply overflow-hidden border-b border-[#eee] px-5 py-[15px] text-left;
+  }
+
+  .table th {
+    @apply relative bg-white text-xs font-semibold tracking-wide text-[#666];
+  }
+
+  .table th:has(.col-filter-btn) {
+    @apply whitespace-nowrap;
+  }
+
   .truncate-cell {
     @apply max-w-0 overflow-hidden text-ellipsis whitespace-nowrap;
   }
@@ -119,12 +148,39 @@
   }
 
   .clickable-cell:hover {
-    @apply text-black underline;
+    @apply underline;
   }
 
   .text-muted {
     @apply text-[#999];
   }
+
+  .empty {
+    @apply px-8 py-8 text-center text-[#999];
+  }
+
+  .users-table {
+    @apply min-w-[900px];
+  }
+
+  .users-table th,
+  .users-table td {
+    @apply whitespace-nowrap;
+  }
+
+  .users-table th {
+    @apply sticky top-0 z-10;
+  }
+
+  .jobs-table td:nth-child(2) {
+    @apply text-[13px] text-[#888];
+  }
+
+  .verify-table th {
+    @apply whitespace-nowrap;
+  }
+
+  /* ─── Skeleton ────────────────────────────────────────── */
 
   .skeleton {
     @apply inline-block rounded-md bg-[linear-gradient(90deg,#f0f0f0_25%,#e0e0e0_50%,#f0f0f0_75%)] bg-[length:800px_100%];
@@ -151,9 +207,209 @@
     @apply mt-1 block h-8 w-20 rounded-md;
   }
 
-  .empty {
-    @apply px-8 py-8 text-center text-[#999];
+  /* ─── Badge — Job Status ──────────────────────────────── */
+  /* sync กับ statusClasses.js → getJobStatusClass()        */
+
+  .badge {
+    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold;
   }
+
+  .badge.open        { @apply bg-blue-100   text-blue-800;   }
+  .badge.matching    { @apply bg-teal-100   text-teal-800;   }
+  .badge.selected    { @apply bg-purple-100 text-purple-800; }
+  .badge.in_progress { @apply bg-amber-100  text-amber-800;  }
+  .badge.completed   { @apply bg-slate-100  text-slate-600;  }
+  .badge.cancelled   { @apply bg-red-100    text-red-800;    }
+
+  /* ─── Badge — Verify / User Status ───────────────────── */
+  /* sync กับ statusClasses.js → getVerifyStatusClass()     */
+
+  .badge.pending      { @apply bg-amber-100 text-amber-800; }
+  .badge.verified     { @apply bg-green-100 text-green-800; }
+  .badge.not_verified { @apply bg-red-100   text-red-800;   }
+  .badge.unknown      { @apply bg-gray-100  text-gray-500;  }
+  .badge.active       { @apply bg-green-100 text-green-800; }
+
+  /* ─── Doc Badge — Document Status ────────────────────── */
+  /* sync กับ statusClasses.js → getDocStatusClass()        */
+
+  .doc-badge {
+    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold;
+  }
+
+  .doc-badge.pending  { @apply bg-amber-100 text-amber-800; }
+  .doc-badge.approved { @apply bg-green-100 text-green-800; }
+  .doc-badge.rejected { @apply bg-red-100   text-red-800;   }
+
+  /* ─── Action Badge — Log Actions ─────────────────────── */
+  /* sync กับ statusClasses.js → getActionClass()           */
+
+  .action-badge {
+    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold;
+  }
+
+  .action-approve { @apply bg-green-100  text-green-800;  }
+  .action-verify  { @apply bg-teal-100   text-teal-800;   }
+  .action-reject  { @apply bg-rose-100   text-rose-800;   }
+  .action-unban   { @apply bg-blue-100   text-blue-800;   }
+  .action-update  { @apply bg-violet-100 text-violet-800; }
+  .action-view    { @apply bg-sky-100    text-sky-800;     }
+  .action-ban     { @apply bg-orange-200 text-orange-900; }
+  .action-delete  { @apply bg-red-200    text-red-900;    }
+  .action-default { @apply bg-gray-100   text-gray-500;   }
+
+  /* ─── Type Tag — Log Types ───────────────────────────── */
+  /* sync กับ statusClasses.js → getTypeClass()             */
+
+  .type-tag {
+    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold;
+  }
+
+  .type-freelancer { @apply bg-sky-100     text-sky-800;     }
+  .type-employer   { @apply bg-purple-50   text-purple-700;  }
+  .type-job        { @apply bg-orange-50   text-orange-800;  }
+  .type-document   { @apply bg-emerald-50  text-emerald-700; }
+  .type-user       { @apply bg-fuchsia-50  text-fuchsia-700; }
+  .type-default    { @apply bg-gray-100    text-gray-500;    }
+
+  /* ─── Info Tag — Language / Area chips ───────────────── */
+  /* ใช้สำหรับ tag ที่ไม่ใช่ status เช่น ภาษา, พื้นที่        */
+
+  .info-tag {
+    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold;
+  }
+
+  .info-tag.language { @apply bg-indigo-50  text-indigo-700; }
+  .info-tag.area     { @apply bg-cyan-50    text-cyan-700;   }
+
+  /* ─── Payment Badge ───────────────────────────────────── */
+  /* ใช้ใน JobDetailView → payment_status                   */
+
+  .payment-badge {
+    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold;
+  }
+
+  .payment-badge.confirmed { @apply bg-green-100  text-green-800;  }
+  .payment-badge.paid      { @apply bg-blue-100   text-blue-800;   }
+  .payment-badge.pending   { @apply bg-amber-100  text-amber-800;  }
+  .payment-badge.rejected  { @apply bg-red-100    text-red-800;    }
+
+  /* ─── Application Badge ───────────────────────────────── */
+  /* ใช้ใน JobDetailView → application_status               */
+
+  .application-badge {
+    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold;
+  }
+
+  .application-badge.accepted { @apply bg-green-100 text-green-800; }
+  .application-badge.rejected { @apply bg-red-100   text-red-800;   }
+  .application-badge.applied  { @apply bg-amber-100 text-amber-800; }
+
+  /* ─── Tabs ────────────────────────────────────────────── */
+
+  .tabs {
+    @apply mb-4 flex gap-6 border-b-2 border-[#eee] px-5;
+  }
+
+  .tabs-wide {
+    @apply mb-4 flex gap-[25px] border-b-2 border-[#eee] px-5;
+  }
+
+  .tab {
+    @apply cursor-pointer border-none bg-transparent py-3 text-sm text-[#666];
+  }
+
+  .tab.active {
+    @apply -mb-0.5 border-b-2 border-[#06c755] font-medium text-[#06c755];
+  }
+
+  /* ─── User cell / avatar ──────────────────────────────── */
+
+  .user-cell {
+    @apply flex min-w-0 items-center gap-3;
+  }
+
+  .user-avatar {
+    @apply flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#6c757d] text-xs font-semibold text-white;
+  }
+
+  /* ─── Action buttons ──────────────────────────────────── */
+
+  .action-btns {
+    @apply flex justify-center gap-1.5;
+  }
+
+  .btn-action {
+    @apply cursor-pointer rounded-[5px] border-none px-2.5 py-1 text-xs font-medium;
+  }
+
+  .btn-action.view {
+    @apply bg-teal-50 font-semibold text-teal-700;
+  }
+
+  .btn-action.view:hover {
+    @apply bg-teal-100;
+  }
+
+  .btn-action.verify-style {
+    @apply bg-blue-50 font-semibold text-blue-700;
+  }
+
+  .btn-action.verify-style:hover {
+    @apply bg-blue-100;
+  }
+
+  .btn-action.delete {
+    @apply bg-red-50 text-red-700;
+  }
+
+  .btn-action.delete:hover {
+    @apply bg-red-100;
+  }
+
+  .btn-action.ban {
+    @apply bg-orange-100 text-orange-900;
+  }
+
+  .btn-action.ban:hover {
+    @apply bg-orange-200;
+  }
+
+  .btn-action.unban {
+    @apply bg-green-100 text-green-800;
+  }
+
+  .btn-action.unban:hover {
+    @apply bg-green-200;
+  }
+
+  /* ─── Approve / Reject row buttons ───────────────────── */
+
+  .btn-approve-row {
+    @apply cursor-pointer rounded-[5px] border-none bg-green-100 px-3 py-1.5 text-xs font-medium text-green-800 transition-all duration-200;
+  }
+
+  .btn-approve-row:hover:not(:disabled) {
+    @apply bg-green-200;
+  }
+
+  .btn-approve-row:disabled {
+    @apply cursor-not-allowed opacity-40;
+  }
+
+  .btn-reject-row {
+    @apply cursor-pointer rounded-[5px] border-none bg-red-100 px-3 py-1.5 text-xs font-medium text-red-800 transition-all duration-200;
+  }
+
+  .btn-reject-row:hover:not(:disabled) {
+    @apply bg-red-200;
+  }
+
+  .btn-reject-row:disabled {
+    @apply cursor-not-allowed opacity-40;
+  }
+
+  /* ─── Modal ───────────────────────────────────────────── */
 
   .modal-overlay {
     @apply fixed inset-0 z-[200] flex items-center justify-center bg-black/40;
@@ -215,194 +471,8 @@
     @apply underline;
   }
 
-  .btn-cancel {
-    @apply cursor-pointer rounded-md border border-[#ddd] bg-white px-6 py-2.5 text-sm;
-  }
-
-  .btn-confirm-delete {
-    @apply cursor-pointer rounded-md border-none bg-[#dc3545] px-6 py-2.5 text-sm text-white;
-  }
-
-  .btn-confirm-delete:hover {
-    @apply bg-[#b02a37];
-  }
-
-  .action-btns {
-    @apply flex justify-center gap-1.5;
-  }
-
-  .btn-action {
-    @apply cursor-pointer rounded-[5px] border-none px-2.5 py-1 text-xs font-medium;
-  }
-
-  .btn-action.view {
-    @apply bg-[#e0f7f1] font-semibold text-[#00796b];
-  }
-
-  .btn-action.view:hover {
-    @apply bg-[#b2dfdb];
-  }
-
-  .btn-action.delete {
-    @apply bg-[#ffebee] text-[#c62828];
-  }
-
-  .btn-action.delete:hover {
-    @apply bg-[#ffcdd2];
-  }
-
-  .btn-action.ban {
-    @apply bg-[#ffebee] text-[#c62828];
-  }
-
-  .btn-action.ban:hover {
-    @apply bg-[#ffcdd2];
-  }
-
-  .btn-action.unban {
-    @apply bg-[#e8f5e9] text-[#2e7d32];
-  }
-
-  .btn-action.unban:hover {
-    @apply bg-[#c8e6c9];
-  }
-
-  .badge {
-    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold;
-  }
-
-  .badge.open {
-    @apply bg-[#e3f2fd] text-[#1976d2];
-  }
-
-  .badge.matching {
-    @apply bg-[#e0f2f1] text-[#00695c];
-  }
-
-  .badge.selected {
-    @apply bg-[#f3e5f5] text-[#7b1fa2];
-  }
-
-  .badge.in_progress {
-    @apply bg-[#fff3e0] text-[#f57c00];
-  }
-
-  .badge.completed {
-    @apply bg-[#f5f5f5] text-[#666];
-  }
-
-  .badge.cancelled {
-    @apply bg-[#ffebee] text-[#c62828];
-  }
-
-  .badge.pending {
-    @apply bg-[#fff3e0] text-[#f57c00];
-  }
-
-  .badge.verified {
-    @apply bg-[#e8f5e9] text-[#2e7d32];
-  }
-
-  .badge.not_verified,
-  .badge.rejected {
-    @apply bg-[#ffebee] text-[#c62828];
-  }
-
-  .badge.unknown {
-    @apply bg-[#f5f5f5] text-[#666];
-  }
-
-  .badge.active {
-    @apply bg-[#e8f5e9] text-[#2e7d32];
-  }
-
-  .action-badge,
-  .type-tag {
-    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold;
-  }
-
-  .action-approve {
-    @apply bg-[#e8f5e9] text-[#2e7d32];
-  }
-
-  .action-verify {
-    @apply bg-[#e0f7f1] text-[#00796b];
-  }
-
-  .action-unban {
-    @apply bg-[#e3f2fd] text-[#1565c0];
-  }
-
-  .action-update {
-    @apply bg-[#ede7f6] text-[#5e35b1];
-  }
-
-  .action-view {
-    @apply bg-[#fff3e0] text-[#e65100];
-  }
-
-  .action-reject {
-    @apply bg-[#fce4ec] text-[#c2185b];
-  }
-
-  .action-ban {
-    @apply bg-[#fff8e1] text-[#f57f17];
-  }
-
-  .action-delete {
-    @apply bg-[#fef2f2] text-[#991b1b];
-  }
-
-  .action-default {
-    @apply bg-[#f5f5f5] text-[#666];
-  }
-
-  .type-freelancer {
-    @apply bg-[#e0f2fe] text-[#0369a1];
-  }
-
-  .type-employer {
-    @apply bg-[#fdf4ff] text-[#7e22ce];
-  }
-
-  .type-job {
-    @apply bg-[#fff7ed] text-[#9a3412];
-  }
-
-  .type-document {
-    @apply bg-[#f0fdf4] text-[#166534];
-  }
-
-  .type-user {
-    @apply bg-[#fce4ec] text-[#880e4f];
-  }
-
-  .type-default {
-    @apply bg-[#f5f5f5] text-[#666];
-  }
-
-  .tabs {
-    @apply mb-4 flex gap-6 border-b-2 border-[#eee] px-5;
-  }
-
-  .tabs-wide {
-    @apply mb-4 flex gap-[25px] border-b-2 border-[#eee] px-5;
-  }
-
-  .tab {
-    @apply cursor-pointer border-none bg-transparent py-3 text-sm text-[#666];
-  }
-
-  .tab.active {
-    @apply -mb-0.5 border-b-2 border-[#06c755] font-medium text-[#06c755];
-  }
-
-  .user-cell {
-    @apply flex min-w-0 items-center gap-3;
-  }
-
-  .user-avatar {
-    @apply flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#6c757d] text-xs font-semibold text-white;
+  .modal {
+    @apply w-[380px] rounded-xl bg-white p-8 text-center;
   }
 
   .modal-icon {
@@ -425,8 +495,28 @@
     @apply mt-5 flex justify-center gap-3;
   }
 
+  .modal-header {
+    @apply mb-5 flex items-start justify-between;
+  }
+
+  .modal-header h3 {
+    @apply m-0 mb-1.5 text-lg;
+  }
+
+  .btn-cancel {
+    @apply cursor-pointer rounded-md border border-[#ddd] bg-white px-6 py-2.5 text-sm;
+  }
+
   .btn-confirm {
     @apply cursor-pointer rounded-md border-none px-6 py-2.5 text-sm text-white;
+  }
+
+  .btn-confirm-delete {
+    @apply cursor-pointer rounded-md border-none bg-[#dc3545] px-6 py-2.5 text-sm text-white;
+  }
+
+  .btn-confirm-delete:hover {
+    @apply bg-[#b02a37];
   }
 
   .btn-confirm.ban {
@@ -444,6 +534,55 @@
   .btn-confirm.unban:hover {
     @apply bg-[#1b5e20];
   }
+
+  /* ─── Docs modal ──────────────────────────────────────── */
+
+  .docs-modal {
+    @apply max-h-[80vh] w-[1200px] overflow-y-auto rounded-xl bg-white p-7;
+  }
+
+  .doc-list {
+    @apply flex flex-col gap-3;
+  }
+
+  .doc-row {
+    @apply grid items-center gap-4 rounded-lg border border-[#eee] p-[14px];
+    grid-template-columns: 120px 150px 100px 150px 1fr;
+  }
+
+  .doc-type-cell {
+    @apply text-sm font-semibold text-[#222];
+  }
+
+  .doc-file-cell {
+    @apply flex items-center justify-center;
+  }
+
+  .doc-thumbnail {
+    @apply max-h-[100px] max-w-[120px] cursor-pointer rounded object-cover transition-transform duration-200;
+  }
+
+  .doc-thumbnail:hover {
+    @apply scale-105;
+  }
+
+  .doc-status-cell {
+    @apply text-center;
+  }
+
+  .doc-uploaded-cell {
+    @apply text-xs text-[#666];
+  }
+
+  .doc-actions-cell {
+    @apply flex justify-end gap-2;
+  }
+
+  .no-docs {
+    @apply px-0 py-6 text-center text-[#999];
+  }
+
+  /* ─── Profile hero (mini modal) ──────────────────────── */
 
   .profile-hero {
     @apply mb-5 flex items-start gap-3.5 border-b border-[#eee] pb-4;
@@ -489,228 +628,45 @@
     @apply px-0 py-2 text-center text-[#999];
   }
 
-  .table-container {
-    @apply mx-5 overflow-hidden rounded-lg bg-white border border-[#e0e0e0] shadow-sm transition-shadow duration-200;
-  }
-
-  .table-container:hover {
-    @apply shadow-md;
-  }
-
-  .table {
-    table-layout: fixed;
-    @apply w-full border-collapse;
-  }
-
-  .table th,
-  .table td {
-    @apply overflow-hidden border-b border-[#eee] px-5 py-[15px] text-left;
-  }
-
-  .table th {
-    @apply relative bg-white text-xs font-semibold tracking-wide text-[#666];
-  }
-
-  .table th:has(.col-filter-btn) {
-    @apply whitespace-nowrap;
-  }
-
-  .users-table {
-    @apply min-w-[900px];
-  }
-
-  .users-table th,
-  .users-table td {
-    @apply whitespace-nowrap;
-  }
-
-  .users-table th {
-    @apply sticky top-0 z-10;
-  }
-
-  .jobs-table td:nth-child(2) {
-    @apply text-[13px] text-[#888];
-  }
-
-  .verify-table th {
-    @apply whitespace-nowrap;
-  }
-
-  .modal {
-    @apply w-[380px] rounded-xl bg-white p-8 text-center;
-  }
+  /* ─── Dashboard ───────────────────────────────────────── */
 
   .stats-row {
     @apply mb-8 grid grid-cols-4 gap-4 px-5;
   }
 
   .stat-card {
-    @apply flex flex-col gap-2 rounded-lg bg-white px-5 py-3.5 border border-[#e0e0e0] shadow-sm transition-shadow duration-200 border-l-4;
+    @apply flex flex-col items-center justify-center gap-1.5 rounded-xl bg-white px-5 py-5 text-center
+           border border-[#e8e8e8] transition-all duration-200 cursor-default;
   }
 
   .stat-card:hover {
-    @apply shadow-md;
+    @apply shadow-md -translate-y-0.5;
   }
 
-  .stat-card--blue {
-    @apply border-l-blue-400 bg-blue-50/40;
-  }
-
-  .stat-card--blue .stat-value {
-    @apply text-blue-900;
-  }
-
-  .stat-card--amber {
-    @apply border-l-amber-400 bg-amber-50/40;
-  }
-
-  .stat-card--amber .stat-value {
-    @apply text-amber-900;
-  }
-
-  .stat-card--sky {
-    @apply border-l-sky-400 bg-sky-50/40;
-  }
-
-  .stat-card--sky .stat-value {
-    @apply text-sky-900;
-  }
-
-  .stat-card--purple {
-    @apply border-l-purple-400 bg-purple-50/40;
-  }
-
-  .stat-card--purple .stat-value {
-    @apply text-purple-900;
-  }
+  .stat-card--blue   { @apply border-l-[3px] border-l-blue-400;   }
+  .stat-card--amber  { @apply border-l-[3px] border-l-amber-400;  }
+  .stat-card--sky    { @apply border-l-[3px] border-l-sky-400;    }
+  .stat-card--purple { @apply border-l-[3px] border-l-purple-400; }
 
   .stat-label {
-    @apply text-xs font-semibold text-[#666];
+    @apply text-[11px] font-semibold tracking-wide text-[#999];
   }
 
   .stat-value {
-    @apply text-[28px] font-bold text-[#1a1a2e];
+    @apply text-3xl font-bold text-[#1a1a2e];
   }
 
-  section {
-    @apply mb-6 rounded-lg bg-white p-5 border border-[#e0e0e0] shadow-sm;
-  }
+  .stat-card--blue   .stat-value { @apply text-blue-800;   }
+  .stat-card--amber  .stat-value { @apply text-amber-800;  }
+  .stat-card--sky    .stat-value { @apply text-sky-800;    }
+  .stat-card--purple .stat-value { @apply text-purple-800; }
 
   .section-title {
     @apply m-0 border-b border-[#f0f0f0] px-5 pb-3 pt-4 text-[13px] font-bold uppercase tracking-wide text-[#444];
   }
 
-  .btn-action.verify-style {
-    @apply bg-[#e3f2fd] font-medium text-[#1976d2];
-  }
-
-  .btn-action.verify-style:hover {
-    @apply bg-[#bbdefb];
-  }
-
   .dash-table td:nth-child(2) {
     @apply text-[13px] text-[#888];
-  }
-
-  .type-tag.freelancer {
-    @apply bg-[#e0f2fe] text-[#0369a1];
-  }
-
-  .type-tag.employer {
-    @apply bg-[#fdf4ff] text-[#7e22ce];
-  }
-
-  .docs-modal {
-    @apply max-h-[80vh] w-full max-w-[1200px] overflow-y-auto rounded-xl bg-white p-7;
-  }
-
-  .doc-list {
-    @apply flex flex-col gap-3;
-  }
-
-  .doc-row {
-    @apply grid items-center gap-4 rounded-lg border border-[#eee] p-3.5;
-    grid-template-columns: 120px 150px 100px 150px 1fr;
-  }
-
-  .doc-type-cell {
-    @apply text-sm font-semibold text-[#222];
-  }
-
-  .doc-file-cell {
-    @apply flex items-center justify-center;
-  }
-
-  .doc-thumbnail {
-    @apply max-h-[100px] max-w-[120px] cursor-pointer rounded-[5px] object-cover transition-transform duration-200;
-  }
-
-  .doc-thumbnail:hover {
-    @apply scale-105;
-  }
-
-  .doc-status-cell {
-    @apply text-center;
-  }
-
-  .doc-uploaded-cell {
-    @apply text-xs text-[#666];
-  }
-
-  .doc-actions-cell {
-    @apply flex justify-end gap-2;
-  }
-
-  .btn-approve-row {
-    @apply cursor-pointer rounded-[5px] border-none bg-[#e8f5e9] px-3 py-1.5 text-xs font-medium text-[#2e7d32] transition-all duration-200;
-  }
-
-  .btn-approve-row:hover:not(:disabled) {
-    @apply bg-[#c8e6c9];
-  }
-
-  .btn-approve-row:disabled {
-    @apply cursor-not-allowed opacity-40;
-  }
-
-  .btn-reject-row {
-    @apply cursor-pointer rounded-[5px] border-none bg-[#ffebee] px-3 py-1.5 text-xs font-medium text-[#c62828] transition-all duration-200;
-  }
-
-  .btn-reject-row:hover:not(:disabled) {
-    @apply bg-[#ffcdd2];
-  }
-
-  .btn-reject-row:disabled {
-    @apply cursor-not-allowed opacity-40;
-  }
-
-  .doc-badge {
-    @apply rounded-full px-2 py-0.5 text-[10px] font-semibold;
-  }
-
-  .doc-badge.pending {
-    @apply bg-[#fff3e0] text-[#f57c00];
-  }
-
-  .doc-badge.approved {
-    @apply bg-[#e8f5e9] text-[#2e7d32];
-  }
-
-  .doc-badge.rejected {
-    @apply bg-[#ffebee] text-[#c62828];
-  }
-
-  .no-docs {
-    @apply px-0 py-6 text-center text-[#999];
-  }
-
-  .modal-header {
-    @apply mb-5 flex items-start justify-between;
-  }
-
-  .modal-header h3 {
-    @apply m-0 mb-1.5 text-lg;
   }
 
   .dash-profile-avatar {
@@ -728,7 +684,13 @@
   .dash-avatar-initial {
     @apply text-2xl font-bold text-[#555];
   }
+
+  .profile-avatar-wrap {
+    @apply shrink-0;
+  }
 }
+
+/* ─── Responsive ──────────────────────────────────────────── */
 
 @media (max-width: 1024px) {
   .table th,
