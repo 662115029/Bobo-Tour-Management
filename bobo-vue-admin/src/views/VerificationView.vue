@@ -87,91 +87,14 @@
       <button class="col-dropdown-item" @click="setStatusFilter('NOT_VERIFIED')">Not Verified</button>
     </div>
 
-
-
-    <!-- User Detail Modal -->
-    <div v-if="userDetailModal" class="modal-overlay" @click.self="userDetailModal = null">
-      <div class="mini-modal">
-        <div class="mini-modal-header" style="justify-content:flex-end; margin-bottom:8px;">
-          <button class="close-btn" @click="userDetailModal = null">✕</button>
-        </div>
-        <div v-if="userDetailLoading" class="mini-loading">Loading...</div>
-        <div v-else>
-          <!-- Freelancer -->
-          <div v-if="activeTab === 'Freelancer' && userDetailModal">
-            <div class="profile-hero">
-              <div class="profile-avatar-wrap">
-                <img v-if="userDetailModal.fl_profile_image_url" :src="userDetailModal.fl_profile_image_url" class="w-12 h-12 rounded-full object-cover ring-2 ring-[#eee]" />
-                <div v-else class="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ring-2 ring-[#eee]" :style="avatarStyle(userDetailModal.fl_id, userDetailModal.fl_name)">{{ initials2(userDetailModal.fl_name) }}</div>
-              </div>
-              <div class="profile-info">
-                <h3 class="profile-name">{{ userDetailModal.fl_name }}</h3>
-                <p v-if="userDetailModal.fl_bio" class="profile-bio">{{ userDetailModal.fl_bio }}</p>
-                <p v-else class="profile-bio muted">No bio</p>
-              </div>
-            </div>
-            <div class="mini-grid">
-              <div class="mini-item"><label>Status</label>
-                <span class="badge" :class="userDetailModal.fl_verify_status?.toLowerCase()">{{ userDetailModal.fl_verify_status }}</span>
-              </div>
-              <div class="mini-item"><label>Active</label>
-                <div style="display:flex;align-items:center;gap:6px;">
-                  <div style="width:8px;height:8px;border-radius:50%;" :style="{ background: userDetailModal.fl_is_active ? '#06c755' : '#bbb' }"></div>
-                  <span :style="{ color: userDetailModal.fl_is_active ? '#2e7d32' : '#999', fontWeight: 500 }">{{ userDetailModal.fl_is_active ? 'Active' : 'Inactive' }}</span>
-                </div>
-              </div>
-              <div class="mini-item"><label>Rating</label>
-                <span class="flex items-center gap-1">
-                  <span class="font-semibold text-[#333]">{{ Number(userDetailModal.fl_rating_avg || 0).toFixed(1) }}</span>
-                  <svg class="w-3.5 h-3.5 text-[#f9a825]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                </span>
-              </div>
-              <div class="mini-item"><label>Address</label><span>{{ userDetailModal.fl_address || '-' }}</span></div>
-              <div class="mini-item"><label>Created</label><span class="text-muted">{{ formatDateTime(userDetailModal.fl_created_at) }}</span></div>
-              <div class="mini-item"><label>Last Updated</label><span class="text-muted">{{ formatDateTime(userDetailModal.fl_updated_at) }}</span></div>
-            </div>
-          </div>
-          <!-- Employer -->
-          <div v-if="activeTab === 'Employer' && userDetailModal">
-            <div class="profile-hero">
-              <div class="profile-avatar-wrap">
-                <img v-if="userDetailModal.em_profile_image_url" :src="userDetailModal.em_profile_image_url" class="w-12 h-12 rounded-full object-cover ring-2 ring-[#eee]" />
-                <div v-else class="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ring-2 ring-[#eee]" :style="avatarStyle(userDetailModal.em_id, userDetailModal.em_name)">{{ initials2(userDetailModal.em_name) }}</div>
-              </div>
-              <div class="profile-info">
-                <h3 class="profile-name">{{ userDetailModal.em_name }}</h3>
-                <p v-if="userDetailModal.em_bio" class="profile-bio">{{ userDetailModal.em_bio }}</p>
-                <p v-else class="profile-bio muted">No bio</p>
-              </div>
-            </div>
-            <div class="mini-grid">
-              <div class="mini-item"><label>Status</label>
-                <span class="badge" :class="userDetailModal.em_verify_status?.toLowerCase()">{{ userDetailModal.em_verify_status }}</span>
-              </div>
-              <div class="mini-item"><label>Active</label>
-                <div style="display:flex;align-items:center;gap:6px;">
-                  <div style="width:8px;height:8px;border-radius:50%;" :style="{ background: userDetailModal.em_is_active ? '#06c755' : '#bbb' }"></div>
-                  <span :style="{ color: userDetailModal.em_is_active ? '#2e7d32' : '#999', fontWeight: 500 }">{{ userDetailModal.em_is_active ? 'Active' : 'Inactive' }}</span>
-                </div>
-              </div>
-              <div class="mini-item"><label>Rating</label>
-                <span class="flex items-center gap-1">
-                  <span class="font-semibold text-[#333]">{{ Number(userDetailModal.em_rating_avg || 0).toFixed(1) }}</span>
-                  <svg class="w-3.5 h-3.5 text-[#f9a825]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                </span>
-              </div>
-              <div class="mini-item"><label>Phone</label><span>{{ userDetailModal.em_phone || '-' }}</span></div>
-              <div class="mini-item"><label>Address</label><span>{{ userDetailModal.em_address || '-' }}</span></div>
-              <div class="mini-item"><label>Created</label><span class="text-muted">{{ formatDateTime(userDetailModal.em_created_at) }}</span></div>
-              <div class="mini-item"><label>Last Updated</label><span class="text-muted">{{ formatDateTime(userDetailModal.em_updated_at) }}</span></div>
-            </div>
-          </div>
-        </div>
-        <div class="mini-modal-footer">
-          <button class="btn-full-view" @click="openDocsFromUser">ดูรายละเอียดทั้งหมด →</button>
-        </div>
-      </div>
-    </div>
+    <!-- User Detail Modal (UserMiniModal component) -->
+    <UserMiniModal
+      :data="userDetailModal"
+      :type="activeTab === 'Freelancer' ? 'FREELANCER' : 'EMPLOYER'"
+      :loading="userDetailLoading"
+      @close="userDetailModal = null"
+      @view-detail="goToUserDetail"
+    />
 
     <!-- Document Modal -->
     <div v-if="selectedUser" class="modal-overlay" @click.self="selectedUser = null">
@@ -208,9 +131,13 @@
 
 <script setup>
 import BreadcrumbBar from '../components/BreadcrumbBar.vue'
+import UserMiniModal from '../components/UserMiniModal.vue'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAvatar } from '../composables/useAvatar'
 import { formatDateTime } from '../utils/formatDate'
+
+const router = useRouter()
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000'
 const activeTab = ref('Freelancer')
@@ -366,12 +293,12 @@ const openUserModal = (v) => {
   userDetailLoading.value = false
 }
 
-const openDocsFromUser = () => {
-  if (!userDetailModal.value) return
-  const user = activeTab.value === 'Freelancer'
-    ? { id: userDetailModal.value.fl_id, name: userDetailModal.value.fl_name }
-    : { id: userDetailModal.value.em_id, name: userDetailModal.value.em_name }
-  openDocs(user)
+const goToUserDetail = ({ id, type }) => {
+  if (type === 'FREELANCER') {
+    router.push({ name: 'FreelancerDetail', params: { id } })
+  } else {
+    router.push({ name: 'EmployerDetail', params: { id } })
+  }
   userDetailModal.value = null
 }
 
