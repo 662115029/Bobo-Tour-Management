@@ -120,7 +120,12 @@
                   <span :style="{ color: userDetailModal.fl_is_active ? '#2e7d32' : '#999', fontWeight: 500 }">{{ userDetailModal.fl_is_active ? 'Active' : 'Inactive' }}</span>
                 </div>
               </div>
-              <div class="mini-item"><label>Rating</label><span>⭐ {{ userDetailModal.fl_rating_avg ?? '-' }}</span></div>
+              <div class="mini-item"><label>Rating</label>
+                <span class="flex items-center gap-1">
+                  <span class="font-semibold text-[#333]">{{ Number(userDetailModal.fl_rating_avg || 0).toFixed(1) }}</span>
+                  <svg class="w-3.5 h-3.5 text-[#f9a825]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                </span>
+              </div>
               <div class="mini-item"><label>Address</label><span>{{ userDetailModal.fl_address || '-' }}</span></div>
               <div class="mini-item"><label>Created</label><span class="text-muted">{{ formatDateTime(userDetailModal.fl_created_at) }}</span></div>
               <div class="mini-item"><label>Last Updated</label><span class="text-muted">{{ formatDateTime(userDetailModal.fl_updated_at) }}</span></div>
@@ -149,7 +154,12 @@
                   <span :style="{ color: userDetailModal.em_is_active ? '#2e7d32' : '#999', fontWeight: 500 }">{{ userDetailModal.em_is_active ? 'Active' : 'Inactive' }}</span>
                 </div>
               </div>
-              <div class="mini-item"><label>Rating</label><span>⭐ {{ userDetailModal.em_rating_avg ?? '-' }}</span></div>
+              <div class="mini-item"><label>Rating</label>
+                <span class="flex items-center gap-1">
+                  <span class="font-semibold text-[#333]">{{ Number(userDetailModal.em_rating_avg || 0).toFixed(1) }}</span>
+                  <svg class="w-3.5 h-3.5 text-[#f9a825]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                </span>
+              </div>
               <div class="mini-item"><label>Phone</label><span>{{ userDetailModal.em_phone || '-' }}</span></div>
               <div class="mini-item"><label>Address</label><span>{{ userDetailModal.em_address || '-' }}</span></div>
               <div class="mini-item"><label>Created</label><span class="text-muted">{{ formatDateTime(userDetailModal.em_created_at) }}</span></div>
@@ -199,30 +209,12 @@
 <script setup>
 import BreadcrumbBar from '../components/BreadcrumbBar.vue'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useAvatar } from '../composables/useAvatar'
+import { formatDateTime } from '../utils/formatDate'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000'
 const activeTab = ref('Freelancer')
-
-const AVATAR_PALETTES = [
-  { bg: '#e3f2fd', text: '#1565c0' }, { bg: '#fce4ec', text: '#ad1457' },
-  { bg: '#e8f5e9', text: '#2e7d32' }, { bg: '#fff3e0', text: '#e65100' },
-  { bg: '#f3e5f5', text: '#6a1b9a' }, { bg: '#e0f7fa', text: '#00695c' },
-  { bg: '#fff8e1', text: '#f57f17' }, { bg: '#fbe9e7', text: '#bf360c' },
-]
-const avatarPalette = (id, name) => {
-  const str = String(id || name || '?')
-  let hash = 0; for (let i = 0; i < str.length; i++) hash = (hash * 31 + str.charCodeAt(i)) >>> 0
-  return AVATAR_PALETTES[hash % AVATAR_PALETTES.length]
-}
-const avatarStyle = (id, name) => {
-  const p = avatarPalette(id, name)
-  return { backgroundColor: p.bg, color: p.text }
-}
-const initials2 = (name) => {
-  if (!name) return '?'
-  const parts = name.trim().split(/\s+/).slice(0, 2)
-  return parts.map(p => p[0]?.toUpperCase() || '').join('')
-}
+const { avatarStyle, initials2 } = useAvatar()
 const search = ref('')
 const nameSort = ref(localStorage.getItem('verification_nameSort') || '')
 const statusFilter = ref(localStorage.getItem('verification_statusFilter') || '')
@@ -248,10 +240,6 @@ const selectedDocs = ref([])
 const userDetailModal = ref(null)
 const userDetailLoading = ref(false)
 
-const formatDateTime = (date) => {
-  if (!date) return '-'
-  return new Date(date).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-}
 
 const cycleSort = (key) => {
   const map = { name: nameSort, date: dateSort }

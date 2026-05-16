@@ -508,6 +508,7 @@ import BreadcrumbBar from '../components/BreadcrumbBar.vue'
 import { ref, onMounted } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { API_BASE } from "../data/api"
+import { formatDate, formatDateTime } from '../utils/formatDate'
 
 const route = useRoute()
 const router = useRouter()
@@ -528,8 +529,6 @@ const slipModal = ref(null)
 
 const openSlipModal = (url) => { slipModal.value = url }
 
-const formatDate = (d) => { if (!d) return "–"; return new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) }
-const formatDateTime = (d) => { if (!d) return "–"; return new Date(d).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) }
 const formatPickupTime = (val) => {
   if (!val) return "–"
   if (typeof val === "number" || /^\d+$/.test(String(val))) {

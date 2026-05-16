@@ -132,29 +132,11 @@
 <script setup>
 import BreadcrumbBar from '../components/BreadcrumbBar.vue'
 import { computed, onMounted, onUnmounted, ref } from "vue";
+import { useAvatar } from '../composables/useAvatar'
+import { formatDateTime } from '../utils/formatDate'
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
-
-const AVATAR_PALETTES = [
-  { bg: '#e3f2fd', text: '#1565c0' }, { bg: '#fce4ec', text: '#ad1457' },
-  { bg: '#e8f5e9', text: '#2e7d32' }, { bg: '#fff3e0', text: '#e65100' },
-  { bg: '#f3e5f5', text: '#6a1b9a' }, { bg: '#e0f7fa', text: '#00695c' },
-  { bg: '#fff8e1', text: '#f57f17' }, { bg: '#fbe9e7', text: '#bf360c' },
-]
-const avatarPalette = (id, name) => {
-  const str = String(id || name || '?')
-  let hash = 0; for (let i = 0; i < str.length; i++) hash = (hash * 31 + str.charCodeAt(i)) >>> 0
-  return AVATAR_PALETTES[hash % AVATAR_PALETTES.length]
-}
-const avatarStyle = (id, name) => {
-  const p = avatarPalette(id, name)
-  return { backgroundColor: p.bg, color: p.text }
-}
-const initials2 = (name) => {
-  if (!name) return '?'
-  const parts = name.trim().split(/\s+/).slice(0, 2)
-  return parts.map(p => p[0]?.toUpperCase() || '').join('')
-}
+const { avatarStyle, initials2 } = useAvatar()
 const search = ref("");
 const typeFilter = ref(localStorage.getItem("logs_typeFilter") || "All");
 const actionFilter = ref(localStorage.getItem("logs_actionFilter") || "All");
@@ -238,17 +220,6 @@ const handleOutsideClick = (e) => {
   ) {
     closeAllDropdowns();
   }
-};
-
-const formatDateTime = (date) => {
-  if (!date) return "-";
-  return new Date(date).toLocaleString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 };
 
 const getActionClass = (action) => {

@@ -35,7 +35,7 @@
                   : typeFilter + " ▼" }}
                 </button></span>
             </th>
-            <th class="th-sortable" :class="{ 'th-active': targetSort }" style="width: 18%"
+            <th class="th-sortable" :class="{ 'th-active': targetSort }" style="width: 22%"
               @click="cycleSort('target')">
               <span class="th-inner">
                 TARGET
@@ -46,8 +46,8 @@
                 </span>
               </span>
             </th>
-            <th style="width: 20%">NOTE</th>
-            <th style="width: 15%; white-space: nowrap;">
+            <th style="width: 14%">NOTE</th>
+            <th style="width: 18%; white-space: nowrap;">
               <span style="display:inline-flex;align-items:center;white-space:nowrap;gap:4px;">ADMIN
                 <button class="col-filter-btn" :class="{ active: adminFilter !== 'All' }"
                   @click.stop="toggleAdminDropdown($event)">
@@ -100,10 +100,10 @@
             <td class="truncate-cell text-muted text-xs" :title="log.note">
               {{ log.note || "-" }}
             </td>
-            <td>
-              <div class="user-cell">
-                <span class="user-avatar" :style="avatarStyle(log.admin_name, log.admin_name)">{{ initials2(log.admin_name) }}</span>
-                {{ log.admin_name || "-" }}
+            <td style="max-width:0;overflow:hidden;">
+              <div class="user-cell" style="flex-wrap:nowrap;min-width:0;">
+                <span class="user-avatar" :style="avatarStyle(log.admin_name, log.admin_name)" style="flex-shrink:0;">{{ initials2(log.admin_name) }}</span>
+                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ log.admin_name || "-" }}</span>
               </div>
             </td>
             <td class="text-muted text-xs">{{ formatDateTime(log.created_at) }}</td>
@@ -147,123 +147,22 @@
       </button>
     </div>
 
-    <!-- Target Modal: loading -->
-    <div v-if="targetModalLoading" class="modal-overlay">
-      <div class="mini-modal">
-        <div class="mini-modal-header" style="justify-content: flex-end; margin-bottom: 8px">
-          <span class="skeleton skeleton-btn" style="width:24px;height:24px;border-radius:50%"></span>
-        </div>
-        <div class="profile-hero">
-          <span class="skeleton" style="width:48px;height:48px;border-radius:50%;display:block;flex-shrink:0"></span>
-          <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
-            <span class="skeleton skeleton-text" style="width:55%"></span>
-            <span class="skeleton skeleton-text" style="width:80%"></span>
-          </div>
-        </div>
-        <div class="mini-grid" style="margin-top:12px">
-          <div v-for="i in 6" :key="i" class="mini-item">
-            <span class="skeleton skeleton-text" style="width:40%;height:10px"></span>
-            <span class="skeleton skeleton-text" style="width:70%;height:14px;margin-top:4px"></span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Target Modal: Freelancer -->
-    <div v-if="targetModal && targetModalType === 'FREELANCER'" class="modal-overlay" @click.self="targetModal = null">
-      <div class="mini-modal">
-        <div class="mini-modal-header" style="justify-content: flex-end; margin-bottom: 8px">
-          <button class="close-btn" @click="targetModal = null">✕</button>
-        </div>
-        <div class="profile-hero">
-          <div class="profile-avatar-wrap">
-            <img v-if="targetModal.fl_profile_image_url" :src="targetModal.fl_profile_image_url" class="w-12 h-12 rounded-full object-cover ring-2 ring-[#eee]" />
-            <div v-else class="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ring-2 ring-[#eee]" :style="avatarStyle(targetModal.fl_id, targetModal.fl_name)">{{ initials2(targetModal.fl_name) }}</div>
-          </div>
-          <div class="profile-info">
-            <h3 class="profile-name">{{ targetModal.fl_name || targetModal.fl_username }}</h3>
-            <p class="profile-bio" :class="{ muted: !targetModal.fl_bio }">{{ targetModal.fl_bio || 'No bio' }}</p>
-          </div>
-        </div>
-        <div class="mini-grid">
-          <div class="mini-item"><label>Status</label><span class="badge" :class="targetModal.fl_verify_status?.toLowerCase()">{{ targetModal.fl_verify_status }}</span></div>
-          <div class="mini-item">
-            <label>Active</label>
-            <div style="display:flex;align-items:center;gap:6px;">
-              <div style="width:8px;height:8px;border-radius:50%;" :style="{ background: targetModal.fl_is_active ? '#06c755' : '#bbb' }"></div>
-              <span :style="{ color: targetModal.fl_is_active ? '#2e7d32' : '#999', fontWeight: 500 }">{{ targetModal.fl_is_active ? 'Active' : 'Inactive' }}</span>
-            </div>
-          </div>
-          <div class="mini-item"><label>Rating</label><span>⭐ {{ Number(targetModal.fl_rating_avg || 0).toFixed(1) }}</span></div>
-          <div class="mini-item"><label>Phone</label><span>{{ targetModal.fl_phone || '-' }}</span></div>
-          <div class="mini-item"><label>Created</label><span class="text-muted">{{ formatDateTime(targetModal.fl_created_at) }}</span></div>
-          <div class="mini-item"><label>Last Updated</label><span class="text-muted">{{ formatDateTime(targetModal.fl_updated_at) }}</span></div>
-        </div>
-        <div class="mini-modal-footer">
-          <button class="btn-full-view" @click="router.push({ name: 'FreelancerDetail', params: { id: targetModal.fl_id } }); targetModal = null">View Full Detail →</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Target Modal: Employer -->
-    <div v-if="targetModal && targetModalType === 'EMPLOYER'" class="modal-overlay" @click.self="targetModal = null">
-      <div class="mini-modal">
-        <div class="mini-modal-header" style="justify-content: flex-end; margin-bottom: 8px">
-          <button class="close-btn" @click="targetModal = null">✕</button>
-        </div>
-        <div class="profile-hero">
-          <div class="profile-avatar-wrap">
-            <img v-if="targetModal.em_profile_image_url" :src="targetModal.em_profile_image_url" class="w-12 h-12 rounded-full object-cover ring-2 ring-[#eee]" />
-            <div v-else class="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ring-2 ring-[#eee]" :style="avatarStyle(targetModal.em_id, targetModal.em_name)">{{ initials2(targetModal.em_name) }}</div>
-          </div>
-          <div class="profile-info">
-            <h3 class="profile-name">{{ targetModal.em_name || targetModal.em_username }}</h3>
-            <p class="profile-bio" :class="{ muted: !targetModal.em_bio }">{{ targetModal.em_bio || 'No bio' }}</p>
-          </div>
-        </div>
-        <div class="mini-grid">
-          <div class="mini-item"><label>Status</label><span class="badge" :class="targetModal.em_verify_status?.toLowerCase()">{{ targetModal.em_verify_status }}</span></div>
-          <div class="mini-item">
-            <label>Active</label>
-            <div style="display:flex;align-items:center;gap:6px;">
-              <div style="width:8px;height:8px;border-radius:50%;" :style="{ background: targetModal.em_is_active ? '#06c755' : '#bbb' }"></div>
-              <span :style="{ color: targetModal.em_is_active ? '#2e7d32' : '#999', fontWeight: 500 }">{{ targetModal.em_is_active ? 'Active' : 'Inactive' }}</span>
-            </div>
-          </div>
-          <div class="mini-item"><label>Rating</label><span>⭐ {{ Number(targetModal.em_rating_avg || 0).toFixed(1) }}</span></div>
-          <div class="mini-item"><label>Phone</label><span>{{ targetModal.em_phone || '-' }}</span></div>
-          <div class="mini-item"><label>Created</label><span class="text-muted">{{ formatDateTime(targetModal.em_created_at) }}</span></div>
-          <div class="mini-item"><label>Last Updated</label><span class="text-muted">{{ formatDateTime(targetModal.em_updated_at) }}</span></div>
-        </div>
-        <div class="mini-modal-footer">
-          <button class="btn-full-view" @click="router.push({ name: 'EmployerDetail', params: { id: targetModal.em_id } }); targetModal = null">View Full Detail →</button>
-        </div>
-      </div>
-    </div>
+    <!-- Target Modals: Loading / FL / EM -->
+    <UserMiniModal
+      :data="targetModal && (targetModalType === 'FREELANCER' || targetModalType === 'EMPLOYER') ? targetModal : null"
+      :type="targetModalType"
+      :loading="targetModalLoading"
+      @close="targetModal = null"
+      @view-detail="({ id, type }) => { router.push({ name: type === 'FREELANCER' ? 'FreelancerDetail' : 'EmployerDetail', params: { id } }); targetModal = null }"
+    />
 
     <!-- Target Modal: Job -->
-    <div v-if="targetModal && targetModalType === 'JOB'" class="modal-overlay" @click.self="targetModal = null">
-      <div class="mini-modal">
-        <div class="mini-modal-header" style="justify-content: space-between">
-          <h3 class="mini-modal-title">{{ targetModal.job_title }}</h3>
-          <button class="close-btn" @click="targetModal = null">✕</button>
-        </div>
-        <p v-if="targetModal.job_description" class="mini-desc">{{ targetModal.job_description }}</p>
-        <div class="mini-grid">
-          <div class="mini-item"><label>Status</label><span class="badge" :class="targetModal.job_status?.toLowerCase()">{{ targetModal.job_status }}</span></div>
-          <div class="mini-item"><label>Price</label><span>{{ targetModal.job_price ? '฿' + Number(targetModal.job_price).toLocaleString() : '-' }}</span></div>
-          <div class="mini-item"><label>Vehicle</label><span>{{ targetModal.job_required_vehicle_type || '-' }}</span></div>
-          <div class="mini-item"><label>Seats</label><span>{{ targetModal.job_required_seat || '-' }}</span></div>
-          <div class="mini-item"><label>Start</label><span>{{ formatDate(targetModal.job_start_date) }}</span></div>
-          <div class="mini-item"><label>End</label><span>{{ formatDate(targetModal.job_end_date) }}</span></div>
-          <div class="mini-item"><label>Created</label><span class="text-muted">{{ formatDateTime(targetModal.job_created_at) }}</span></div>
-          <div class="mini-item"><label>Last Updated</label><span class="text-muted">{{ formatDateTime(targetModal.job_updated_at) }}</span></div>
-        </div>
-        <div class="mini-modal-footer">
-          <button class="btn-full-view" @click="router.push({ name: 'JobDetail', params: { id: targetModal.job_id } }); targetModal = null">View Full Detail →</button>
-        </div>
-      </div>
-    </div>
+    <JobMiniModal
+      v-if="targetModal && targetModalType === 'JOB'"
+      :data="targetModal"
+      @close="targetModal = null"
+      @view-detail="(id) => { router.push({ name: 'JobDetail', params: { id } }); targetModal = null }"
+    />
 
   </div>
 </template>
@@ -273,29 +172,13 @@ import BreadcrumbBar from '../components/BreadcrumbBar.vue'
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { API_BASE } from "../data/api";
+import { useAvatar } from '../composables/useAvatar'
+import { formatDate, formatDateTime } from '../utils/formatDate'
+import UserMiniModal from '../components/UserMiniModal.vue'
+import JobMiniModal from '../components/JobMiniModal.vue'
 
 const router = useRouter();
-
-const AVATAR_PALETTES = [
-  { bg: '#e3f2fd', text: '#1565c0' }, { bg: '#fce4ec', text: '#ad1457' },
-  { bg: '#e8f5e9', text: '#2e7d32' }, { bg: '#fff3e0', text: '#e65100' },
-  { bg: '#f3e5f5', text: '#6a1b9a' }, { bg: '#e0f7fa', text: '#00695c' },
-  { bg: '#fff8e1', text: '#f57f17' }, { bg: '#fbe9e7', text: '#bf360c' },
-]
-const avatarPalette = (id, name) => {
-  const str = String(id || name || '?')
-  let hash = 0; for (let i = 0; i < str.length; i++) hash = (hash * 31 + str.charCodeAt(i)) >>> 0
-  return AVATAR_PALETTES[hash % AVATAR_PALETTES.length]
-}
-const avatarStyle = (id, name) => {
-  const p = avatarPalette(id, name)
-  return { backgroundColor: p.bg, color: p.text }
-}
-const initials2 = (name) => {
-  if (!name) return '?'
-  const parts = name.trim().split(/\s+/).slice(0, 2)
-  return parts.map(p => p[0]?.toUpperCase() || '').join('')
-}
+const { avatarStyle, jobIconStyle, initials2 } = useAvatar()
 const search = ref("");
 const typeFilter = ref(localStorage.getItem("logs_typeFilter") || "All");
 const actionFilter = ref(localStorage.getItem("logs_actionFilter") || "All");
@@ -405,17 +288,6 @@ const handleOutsideClick = (e) => {
   }
 };
 
-const formatDateTime = (date) => {
-  if (!date) return "-";
-  return new Date(date).toLocaleString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
-
 const getActionClass = (action) => {
   const a = (action || "").toUpperCase();
   if (a === "APPROVE_DOCUMENT") return "action-approve";
@@ -498,14 +370,11 @@ onUnmounted(() => {
   document.removeEventListener("click", handleOutsideClick);
 });
 
+
 const targetModal = ref(null);
 const targetModalType = ref('');
 const targetModalLoading = ref(false);
 
-const formatDate = (date) => {
-  if (!date) return "-";
-  return new Date(date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
-};
 
 const openTargetModal = async (log) => {
   const type = (log.target_type || '').toUpperCase();

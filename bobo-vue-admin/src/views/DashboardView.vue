@@ -57,7 +57,12 @@
             class="row-hover"
           >
             <td class="truncate-cell clickable-cell" @click="openJobModal(job)">
-              {{ job.job_title }}
+              <div class="user-cell">
+                <span class="user-avatar" :style="jobIconStyle(job.job_id)" style="border-radius:6px;flex-shrink:0;">
+                  <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2c-2.5 3-4 6.5-4 10s1.5 7 4 10"/><path d="M12 2c2.5 3 4 6.5 4 10s-1.5 7-4 10"/></svg>
+                </span>
+                {{ job.job_title }}
+              </div>
             </td>
             <td
               class="truncate-cell clickable-cell"
@@ -164,178 +169,20 @@
     </div>
 
     <!-- Job Mini Modal -->
-    <div v-if="jobModal" class="modal-overlay" @click.self="jobModal = null">
-      <div class="mini-modal">
-        <div class="mini-modal-header">
-          <button class="close-btn" @click="jobModal = null" style="margin-left:auto">✕</button>
-        </div>
-        <div class="profile-hero">
-          <div class="w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold ring-2 ring-[#eee] flex-shrink-0" style="background:#f0f4ff;color:#3b5bdb;">
-            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
-          </div>
-          <div class="profile-info">
-            <h3 class="profile-name">{{ jobModal.job_title }}</h3>
-            <p class="profile-bio" :class="{ muted: !jobModal.job_description }">{{ jobModal.job_description || 'No description' }}</p>
-          </div>
-        </div>
-        <div class="mini-grid">
-          <div class="mini-item">
-            <label>Status</label>
-            <span class="badge" :class="jobModal.job_status?.toLowerCase()">{{
-              jobModal.job_status
-            }}</span>
-          </div>
-          <div class="mini-item">
-            <label>Price</label>
-            <span>{{
-              jobModal.job_price
-                ? "฿" + Number(jobModal.job_price).toLocaleString()
-                : "-"
-            }}</span>
-          </div>
-          <div class="mini-item">
-            <label>Job Start</label>
-            <span>{{ formatDate(jobModal.job_start_date) }}</span>
-          </div>
-          <div class="mini-item">
-            <label>Job End</label>
-            <span>{{ formatDate(jobModal.job_end_date) }}</span>
-          </div>
-          <div class="mini-item">
-            <label>Vehicle</label>
-            <span>{{ jobModal.job_required_vehicle_type || "-" }}</span>
-          </div>
-          <div class="mini-item">
-            <label>Seats</label>
-            <span>{{ jobModal.job_required_seat || "-" }}</span>
-          </div>
-          <div class="mini-item">
-            <label>Company</label>
-            <div class="user-cell" style="gap:5px;">
-              <span class="user-avatar" style="width:18px;height:18px;font-size:9px;flex-shrink:0;" :style="avatarStyle(jobModal.em_id, jobModal.company)">{{ initials2(jobModal.company) }}</span>
-              <span>{{ jobModal.company || "-" }}</span>
-            </div>
-          </div>
-          <div class="mini-item">
-            <label>Freelancer</label>
-            <span>{{
-              jobModal.selected_fl_id
-                ? (allFreelancers.find(f => f.fl_id === jobModal.selected_fl_id)?.fl_name || jobModal.selected_fl_id)
-                : '-'
-            }}</span>
-          </div>
-          <div class="mini-item">
-            <label>Created</label>
-            <span class="text-muted">{{
-              formatDateTime(jobModal.job_created_at)
-            }}</span>
-          </div>
-          <div class="mini-item">
-            <label>Last Updated</label>
-            <span class="text-muted">{{
-              formatDateTime(jobModal.job_updated_at)
-            }}</span>
-          </div>
-        </div>
-        <div class="mini-modal-footer">
-          <button class="btn-full-view" @click="viewJob(jobModal.job_id); jobModal = null;">
-            View Full Detail →
-          </button>
-        </div>
-      </div>
-    </div>
+    <JobMiniModal
+      :data="jobModal"
+      @close="jobModal = null"
+      @view-detail="(id) => { viewJob(id); jobModal = null }"
+    />
 
     <!-- Company Mini Modal -->
-    <div
-      v-if="companyModal"
-      class="modal-overlay"
-      @click.self="companyModal = null"
-    >
-      <div class="mini-modal">
-        <div
-          class="mini-modal-header"
-          style="justify-content: flex-end; margin-bottom: 8px"
-        >
-          <button class="close-btn" @click="companyModal = null">✕</button>
-        </div>
-        <div v-if="companyLoading" class="mini-loading">
-          <div v-for="i in 4" :key="'cl-'+i" style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #f5f5f5">
-            <span class="skeleton skeleton-text" style="flex:1"></span>
-            <span class="skeleton skeleton-badge"></span>
-            <span class="skeleton skeleton-btn"></span>
-          </div>
-        </div>
-        <div v-else>
-          <div class="profile-hero">
-            <div class="profile-avatar-wrap">
-              <img v-if="companyModal.em_profile_image_url" :src="companyModal.em_profile_image_url" class="w-12 h-12 rounded-full object-cover ring-2 ring-[#eee]" />
-              <div v-else class="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ring-2 ring-[#eee]" :style="avatarStyle(companyModal.em_id, companyModal.em_name)">{{ initials2(companyModal.em_name) }}</div>
-            </div>
-            <div class="profile-info">
-              <h3 class="profile-name">{{ companyModal.em_name }}</h3>
-              <p class="profile-bio" :class="{ muted: !companyModal.em_bio }">
-                {{ companyModal.em_bio || "No bio" }}
-              </p>
-            </div>
-          </div>
-          <div class="mini-grid">
-            <div class="mini-item">
-              <label>Status</label>
-              <span
-                class="badge"
-                :class="companyModal.em_verify_status?.toLowerCase()"
-                >{{ companyModal.em_verify_status }}</span
-              >
-            </div>
-            <div class="mini-item">
-              <label>Active</label>
-              <div style="display:flex;align-items:center;gap:6px;">
-                <div style="width:8px;height:8px;border-radius:50%;" :style="{ background: companyModal.em_is_active ? '#06c755' : '#bbb' }"></div>
-                <span :style="{ color: companyModal.em_is_active ? '#2e7d32' : '#999', fontWeight: 500 }">{{ companyModal.em_is_active ? 'Active' : 'Inactive' }}</span>
-              </div>
-            </div>
-            <div class="mini-item">
-              <label>Phone</label>
-              <span>{{ companyModal.em_phone || "-" }}</span>
-            </div>
-            <div class="mini-item">
-              <label>Rating</label>
-              <span>⭐ {{ companyModal.em_rating_avg ?? "-" }}</span>
-            </div>
-            <div class="mini-item">
-              <label>Address</label>
-              <span>{{ companyModal.em_address || "-" }}</span>
-            </div>
-            <div class="mini-item">
-              <label>Created</label>
-              <span class="text-muted">{{
-                formatDateTime(companyModal.em_created_at)
-              }}</span>
-            </div>
-            <div class="mini-item">
-              <label>Last Updated</label>
-              <span class="text-muted">{{
-                formatDateTime(companyModal.em_updated_at)
-              }}</span>
-            </div>
-          </div>
-        </div>
-        <div class="mini-modal-footer">
-          <button
-            class="btn-full-view"
-            @click="
-              router.push({
-                name: 'EmployerDetail',
-                params: { id: companyModal.em_id },
-              });
-              companyModal = null;
-            "
-          >
-            View Full Detail →
-          </button>
-        </div>
-      </div>
-    </div>
+    <UserMiniModal
+      :data="companyModal"
+      type="EMPLOYER"
+      :loading="companyLoading"
+      @close="companyModal = null"
+      @view-detail="({ id }) => { router.push({ name: 'EmployerDetail', params: { id } }); companyModal = null }"
+    />
 
     <!-- Verification Mini Modal -->
     <div
@@ -389,14 +236,18 @@
                 >
               </div>
               <div class="mini-item">
-                <label>Active</label
-                ><span>{{
-                  verifyDetail.fl_is_active ? "✅ Active" : "❌ Inactive"
-                }}</span>
+                <label>Active</label>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <div style="width:8px;height:8px;border-radius:50%;" :style="{ background: verifyDetail.fl_is_active ? '#06c755' : '#bbb' }"></div>
+                  <span :style="{ color: verifyDetail.fl_is_active ? '#2e7d32' : '#999', fontWeight: 500 }">{{ verifyDetail.fl_is_active ? 'Active' : 'Inactive' }}</span>
+                </div>
               </div>
               <div class="mini-item">
-                <label>Rating</label
-                ><span>⭐ {{ verifyDetail.fl_rating_avg ?? "-" }}</span>
+                <label>Rating</label>
+                <span class="flex items-center gap-1">
+                  <span class="font-semibold text-[#333]">{{ Number(verifyDetail.fl_rating_avg || 0).toFixed(1) }}</span>
+                  <svg class="w-3.5 h-3.5 text-[#f9a825]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                </span>
               </div>
               <div class="mini-item">
                 <label>Date of Birth</label
@@ -451,14 +302,18 @@
                 >
               </div>
               <div class="mini-item">
-                <label>Active</label
-                ><span>{{
-                  verifyDetail.em_is_active ? "✅ Active" : "❌ Inactive"
-                }}</span>
+                <label>Active</label>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <div style="width:8px;height:8px;border-radius:50%;" :style="{ background: verifyDetail.em_is_active ? '#06c755' : '#bbb' }"></div>
+                  <span :style="{ color: verifyDetail.em_is_active ? '#2e7d32' : '#999', fontWeight: 500 }">{{ verifyDetail.em_is_active ? 'Active' : 'Inactive' }}</span>
+                </div>
               </div>
               <div class="mini-item">
-                <label>Rating</label
-                ><span>⭐ {{ verifyDetail.em_rating_avg ?? "-" }}</span>
+                <label>Rating</label>
+                <span class="flex items-center gap-1">
+                  <span class="font-semibold text-[#333]">{{ Number(verifyDetail.em_rating_avg || 0).toFixed(1) }}</span>
+                  <svg class="w-3.5 h-3.5 text-[#f9a825]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                </span>
               </div>
               <div class="mini-item">
                 <label>Phone</label
@@ -578,30 +433,15 @@
 import { onMounted, ref } from "vue";
 import BreadcrumbBar from '../components/BreadcrumbBar.vue';
 import { useRouter } from "vue-router";
+import { useAvatar } from '../composables/useAvatar'
+import { formatDate, formatDateTime } from '../utils/formatDate'
+import JobMiniModal from '../components/JobMiniModal.vue'
+import UserMiniModal from '../components/UserMiniModal.vue'
+
+const { avatarStyle, jobIconStyle, initials2 } = useAvatar()
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
 const router = useRouter();
-
-const AVATAR_PALETTES = [
-  { bg: '#e3f2fd', text: '#1565c0' }, { bg: '#fce4ec', text: '#ad1457' },
-  { bg: '#e8f5e9', text: '#2e7d32' }, { bg: '#fff3e0', text: '#e65100' },
-  { bg: '#f3e5f5', text: '#6a1b9a' }, { bg: '#e0f7fa', text: '#00695c' },
-  { bg: '#fff8e1', text: '#f57f17' }, { bg: '#fbe9e7', text: '#bf360c' },
-]
-const avatarPalette = (id, name) => {
-  const str = String(id || name || '?')
-  let hash = 0; for (let i = 0; i < str.length; i++) hash = (hash * 31 + str.charCodeAt(i)) >>> 0
-  return AVATAR_PALETTES[hash % AVATAR_PALETTES.length]
-}
-const avatarStyle = (id, name) => {
-  const p = avatarPalette(id, name)
-  return { backgroundColor: p.bg, color: p.text }
-}
-const initials2 = (name) => {
-  if (!name) return '?'
-  const parts = name.trim().split(/\s+/).slice(0, 2)
-  return parts.map(p => p[0]?.toUpperCase() || '').join('')
-}
 
 const stats = ref({
   totalJobs: 0,
@@ -629,26 +469,6 @@ const companyLoading = ref(false);
 const verifyModal = ref(null);
 const verifyDetail = ref(null);
 const verifyLoading = ref(false);
-
-const formatDate = (date) => {
-  if (!date) return "-";
-  return new Date(date).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-};
-
-const formatDateTime = (date) => {
-  if (!date) return "-";
-  return new Date(date).toLocaleString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
 
 const viewJob = (id) => router.push({ name: "JobDetail", params: { id } });
 

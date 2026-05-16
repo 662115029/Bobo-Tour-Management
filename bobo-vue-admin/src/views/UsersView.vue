@@ -204,56 +204,12 @@
       </div>
     </div>
     <!-- User Modal -->
-    <div v-if="userModal" class="modal-overlay" @click.self="userModal = null">
-      <div class="mini-modal">
-        <div class="mini-modal-header">
-          <button class="close-btn" @click="userModal = null" style="margin-left:auto">✕</button>
-        </div>
-        <div class="profile-hero">
-          <div class="profile-avatar-wrap">
-            <img v-if="userModal.imageUrl" :src="userModal.imageUrl" class="w-12 h-12 rounded-full object-cover ring-2 ring-[#eee]" />
-            <div v-else class="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ring-2 ring-[#eee]" :style="avatarStyle(userModal.id, userModal.name)">{{ initials2(userModal.name) }}</div>
-          </div>
-          <div class="profile-info">
-            <h3 class="profile-name">{{ userModal.name }}</h3>
-            <p v-if="userModal.bio" class="profile-bio">{{ userModal.bio }}</p>
-            <p v-else class="profile-bio muted">No bio</p>
-          </div>
-        </div>
-        <div class="mini-grid">
-          <div class="mini-item">
-            <label>Status</label>
-            <span class="badge" :class="userModal.verifyStatus?.toLowerCase()">{{ userModal.verifyStatus }}</span>
-          </div>
-          <div class="mini-item">
-            <label>Active</label>
-            <div style="display:flex;align-items:center;gap:6px;">
-              <div style="width:8px;height:8px;border-radius:50%;" :style="{ background: userModal.isActive ? '#06c755' : '#bbb' }"></div>
-              <span :style="{ color: userModal.isActive ? '#2e7d32' : '#999', fontWeight: 500 }">{{ userModal.isActive ? 'Active' : 'Inactive' }}</span>
-            </div>
-          </div>
-          <div class="mini-item">
-            <label>Rating</label>
-            <span>⭐ {{ Number(userModal.rating || 0).toFixed(1) }}</span>
-          </div>
-          <div class="mini-item">
-            <label>Jobs Done</label>
-            <span>{{ jobsDoneById[userModal.id] || 0 }}</span>
-          </div>
-          <div class="mini-item">
-            <label>Created</label>
-            <span class="text-muted">{{ formatDateTime(userModal.createdAt) }}</span>
-          </div>
-          <div class="mini-item">
-            <label>Last Updated</label>
-            <span class="text-muted">{{ formatDateTime(userModal.updatedAt) }}</span>
-          </div>
-        </div>
-        <div class="mini-modal-footer">
-          <button class="btn-full-view" @click="goToFullDetail">View Full Detail →</button>
-        </div>
-      </div>
-    </div>
+    <UserMiniModal
+      :data="userModalMapped"
+      :type="activeTab === 'Employer' ? 'EMPLOYER' : 'FREELANCER'"
+      @close="userModal = null"
+      @view-detail="goToFullDetail"
+    />
   </div>
 </template>
 
@@ -261,6 +217,9 @@
 import BreadcrumbBar from '../components/BreadcrumbBar.vue'
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useRouter } from "vue-router";
+import { useAvatar } from '../composables/useAvatar'
+import { formatDateTime } from '../utils/formatDate'
+import UserMiniModal from '../components/UserMiniModal.vue'
 
 const activeTab = ref("Freelancer");
 
@@ -268,6 +227,7 @@ const userModal = ref(null)
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
 const router = useRouter();
+const { avatarStyle, initials2 } = useAvatar()
 const showBanModal = ref(false);
 const banTarget = ref(null);
 const jobsDoneByFreelancer = ref({});
@@ -366,6 +326,31 @@ const viewUser = (user) => {
   router.push(route)
 }
 
+const userModalMapped = computed(() => {
+  if (!userModal.value) return null
+  const u = userModal.value
+  if (activeTab.value === 'Employer') {
+    return {
+      em_id: u.id, em_name: u.name, em_bio: u.bio,
+      em_profile_image_url: u.imageUrl,
+      em_verify_status: u.verifyStatus,
+      em_is_active: u.isActive,
+      em_rating_avg: u.rating,
+      em_created_at: u.createdAt,
+      em_updated_at: u.updatedAt,
+    }
+  }
+  return {
+    fl_id: u.id, fl_name: u.name, fl_bio: u.bio,
+    fl_profile_image_url: u.imageUrl,
+    fl_verify_status: u.verifyStatus,
+    fl_is_active: u.isActive,
+    fl_rating_avg: u.rating,
+    fl_created_at: u.createdAt,
+    fl_updated_at: u.updatedAt,
+  }
+})
+
 const goToFullDetail = () => {
   if (!userModal.value) return
   const route = activeTab.value === 'Employer'
@@ -409,37 +394,6 @@ const freelancers = ref([]);
 const jobs = ref([]);
 const search = ref("");
 
-const formatDateTime = (date) => {
-  if (!date) return "-";
-  return new Date(date).toLocaleString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
-
-const AVATAR_PALETTES = [
-  { bg: '#e3f2fd', text: '#1565c0' }, { bg: '#fce4ec', text: '#ad1457' },
-  { bg: '#e8f5e9', text: '#2e7d32' }, { bg: '#fff3e0', text: '#e65100' },
-  { bg: '#f3e5f5', text: '#6a1b9a' }, { bg: '#e0f7fa', text: '#00695c' },
-  { bg: '#fff8e1', text: '#f57f17' }, { bg: '#fbe9e7', text: '#bf360c' },
-]
-const avatarPalette = (id, name) => {
-  const str = String(id || name || '?')
-  let hash = 0; for (let i = 0; i < str.length; i++) hash = (hash * 31 + str.charCodeAt(i)) >>> 0
-  return AVATAR_PALETTES[hash % AVATAR_PALETTES.length]
-}
-const avatarStyle = (id, name) => {
-  const p = avatarPalette(id, name)
-  return { backgroundColor: p.bg, color: p.text }
-}
-const initials2 = (name) => {
-  if (!name) return '?'
-  const parts = name.trim().split(/\s+/).slice(0, 2)
-  return parts.map(p => p[0]?.toUpperCase() || '').join('')
-}
 
 function initialsFromName(name) {
   if (!name) return "?";

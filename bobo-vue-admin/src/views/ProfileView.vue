@@ -273,6 +273,7 @@
 import BreadcrumbBar from '../components/BreadcrumbBar.vue'
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
+import { formatDateTime as formatDate } from '../utils/formatDate'
 
 const router = useRouter()
 const admin = ref({})
@@ -420,13 +421,6 @@ onMounted(async () => {
   }
 })
 
-const formatDate = (date) => {
-  if (!date) return '—'
-  return new Date(date).toLocaleString('en-GB', {
-    day: '2-digit', month: 'short', year: 'numeric',
-    hour: '2-digit', minute: '2-digit'
-  })
-}
 
 const handleLogout = () => {
   localStorage.removeItem('admin_id')
