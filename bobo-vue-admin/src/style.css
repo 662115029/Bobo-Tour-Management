@@ -490,7 +490,11 @@
   }
 
   .table-container {
-    @apply mx-5 overflow-hidden rounded-lg bg-white;
+    @apply mx-5 overflow-hidden rounded-lg bg-white border border-[#e0e0e0] shadow-sm transition-shadow duration-200;
+  }
+
+  .table-container:hover {
+    @apply shadow-md;
   }
 
   .table {
@@ -541,7 +545,11 @@
   }
 
   .stat-card {
-    @apply flex flex-col gap-2 rounded-lg bg-white px-5 py-3.5;
+    @apply flex flex-col gap-2 rounded-lg bg-white px-5 py-3.5 border border-[#e0e0e0] shadow-sm transition-shadow duration-200;
+  }
+
+  .stat-card:hover {
+    @apply shadow-md;
   }
 
   .stat-label {
@@ -553,7 +561,7 @@
   }
 
   section {
-    @apply mb-6 rounded-lg bg-white p-5;
+    @apply mb-6 rounded-lg bg-white p-5 border border-[#e0e0e0] shadow-sm;
   }
 
   .section-title {
