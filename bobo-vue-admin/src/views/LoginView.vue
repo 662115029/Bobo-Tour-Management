@@ -386,10 +386,22 @@ const openTargetModal = async (log) => {
     let url = '';
     if (type === 'FREELANCER') url = `${API_BASE}/freelancers/${id}`;
     else if (type === 'EMPLOYER') url = `${API_BASE}/employers/${id}`;
-    else if (type === 'JOB') url = `${API_BASE}/jobs/${id}`;
+    else if (type === 'JOB') url = `${API_BASE}/jobs?limit=500`;
     const res = await fetch(url);
     const data = await res.json();
-    targetModal.value = data;
+    if (type === 'JOB') {
+      const job = (data.items || []).find(j => String(j.job_id) === String(id));
+      if (job) {
+        const langRes = await fetch(`${API_BASE}/job-required-languages?limit=500`);
+        const langData = await langRes.json();
+        const langs = (langData.items || [])
+          .filter(l => l.job_id === job.job_id)
+          .map(l => l.language_name);
+        targetModal.value = { ...job, languages: langs };
+      }
+    } else {
+      targetModal.value = data;
+    }
     targetModalType.value = type;
   } catch (e) {
     console.error('Failed to load target:', e);

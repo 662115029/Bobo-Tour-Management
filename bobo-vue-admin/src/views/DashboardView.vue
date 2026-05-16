@@ -514,8 +514,20 @@ const confirmDelete = async () => {
   }
 };
 
-const openJobModal = (job) => {
-  jobModal.value = job;
+const allLanguages = ref([])
+
+const openJobModal = async (job) => {
+  if (!allLanguages.value.length) {
+    try {
+      const res = await fetch(`${API_BASE}/job-required-languages?limit=500`)
+      const data = await res.json()
+      allLanguages.value = data.items || []
+    } catch {}
+  }
+  const langs = allLanguages.value
+    .filter(l => l.job_id === job.job_id)
+    .map(l => l.language_name)
+  jobModal.value = { ...job, languages: langs }
 };
 
 const openCompanyModal = async (job) => {
