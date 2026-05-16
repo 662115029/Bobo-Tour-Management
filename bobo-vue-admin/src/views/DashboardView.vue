@@ -185,167 +185,13 @@
     />
 
     <!-- Verification Mini Modal -->
-    <div
-      v-if="verifyModal"
-      class="modal-overlay"
-      @click.self="verifyModal = null"
-    >
-      <div class="mini-modal">
-        <div
-          class="mini-modal-header"
-          style="justify-content: flex-end; margin-bottom: 8px"
-        >
-          <button class="close-btn" @click="verifyModal = null">✕</button>
-        </div>
-        <div v-if="verifyLoading" class="mini-loading">
-  <div v-for="i in 4" :key="'vl-'+i" style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #f5f5f5">
-    <span class="skeleton skeleton-text" style="flex:1"></span>
-    <span class="skeleton skeleton-badge"></span>
-    <span class="skeleton skeleton-btn"></span>
-  </div>
-</div>
-        <div v-else>
-          <!-- Freelancer -->
-          <div v-if="verifyModal.type === 'Freelancer' && verifyDetail">
-            <div class="profile-hero">
-              <div class="dash-profile-avatar fl">
-                <img
-                  v-if="verifyDetail.fl_profile_image_url"
-                  :src="verifyDetail.fl_profile_image_url"
-                  class="avatar-img"
-                />
-                <span v-else class="dash-avatar-initial">{{
-                  verifyDetail.fl_name?.[0] || "?"
-                }}</span>
-              </div>
-              <div class="profile-info">
-                <h3 class="profile-name">{{ verifyDetail.fl_name }}</h3>
-                <p v-if="verifyDetail.fl_bio" class="profile-bio">
-                  {{ verifyDetail.fl_bio }}
-                </p>
-                <p v-else class="profile-bio muted">No bio</p>
-              </div>
-            </div>
-            <div class="mini-grid">
-              <div class="mini-item">
-                <label>Status</label>
-                <span
-                  class="badge"
-                  :class="verifyDetail.fl_verify_status?.toLowerCase()"
-                  >{{ verifyDetail.fl_verify_status }}</span
-                >
-              </div>
-              <div class="mini-item">
-                <label>Active</label>
-                <div style="display:flex;align-items:center;gap:6px;">
-                  <div style="width:8px;height:8px;border-radius:50%;" :style="{ background: verifyDetail.fl_is_active ? '#06c755' : '#bbb' }"></div>
-                  <span :style="{ color: verifyDetail.fl_is_active ? '#2e7d32' : '#999', fontWeight: 500 }">{{ verifyDetail.fl_is_active ? 'Active' : 'Inactive' }}</span>
-                </div>
-              </div>
-              <div class="mini-item">
-                <label>Rating</label>
-                <span class="flex items-center gap-1">
-                  <span class="font-semibold text-[#333]">{{ Number(verifyDetail.fl_rating_avg || 0).toFixed(1) }}</span>
-                  <svg class="w-3.5 h-3.5 text-[#f9a825]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                </span>
-              </div>
-              <div class="mini-item">
-                <label>Date of Birth</label
-                ><span>{{ formatDate(verifyDetail.fl_date_of_birth) }}</span>
-              </div>
-              <div class="mini-item">
-                <label>Address</label
-                ><span>{{ verifyDetail.fl_address || "-" }}</span>
-              </div>
-              <div class="mini-item">
-                <label>Created</label
-                ><span class="text-muted">{{
-                  formatDateTime(verifyDetail.fl_created_at)
-                }}</span>
-              </div>
-              <div class="mini-item">
-                <label>Last Updated</label
-                ><span class="text-muted">{{
-                  formatDateTime(verifyDetail.fl_updated_at)
-                }}</span>
-              </div>
-            </div>
-          </div>
-          <!-- Employer -->
-          <div v-if="verifyModal.type === 'Employer' && verifyDetail">
-            <div class="profile-hero">
-              <div class="dash-profile-avatar em">
-                <img
-                  v-if="verifyDetail.em_profile_image_url"
-                  :src="verifyDetail.em_profile_image_url"
-                  class="avatar-img"
-                />
-                <span v-else class="dash-avatar-initial">{{
-                  verifyDetail.em_name?.[0] || "?"
-                }}</span>
-              </div>
-              <div class="profile-info">
-                <h3 class="profile-name">{{ verifyDetail.em_name }}</h3>
-                <p v-if="verifyDetail.em_bio" class="profile-bio">
-                  {{ verifyDetail.em_bio }}
-                </p>
-                <p v-else class="profile-bio muted">No bio</p>
-              </div>
-            </div>
-            <div class="mini-grid">
-              <div class="mini-item">
-                <label>Status</label>
-                <span
-                  class="badge"
-                  :class="verifyDetail.em_verify_status?.toLowerCase()"
-                  >{{ verifyDetail.em_verify_status }}</span
-                >
-              </div>
-              <div class="mini-item">
-                <label>Active</label>
-                <div style="display:flex;align-items:center;gap:6px;">
-                  <div style="width:8px;height:8px;border-radius:50%;" :style="{ background: verifyDetail.em_is_active ? '#06c755' : '#bbb' }"></div>
-                  <span :style="{ color: verifyDetail.em_is_active ? '#2e7d32' : '#999', fontWeight: 500 }">{{ verifyDetail.em_is_active ? 'Active' : 'Inactive' }}</span>
-                </div>
-              </div>
-              <div class="mini-item">
-                <label>Rating</label>
-                <span class="flex items-center gap-1">
-                  <span class="font-semibold text-[#333]">{{ Number(verifyDetail.em_rating_avg || 0).toFixed(1) }}</span>
-                  <svg class="w-3.5 h-3.5 text-[#f9a825]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                </span>
-              </div>
-              <div class="mini-item">
-                <label>Phone</label
-                ><span>{{ verifyDetail.em_phone || "-" }}</span>
-              </div>
-              <div class="mini-item">
-                <label>Address</label
-                ><span>{{ verifyDetail.em_address || "-" }}</span>
-              </div>
-              <div class="mini-item">
-                <label>Created</label
-                ><span class="text-muted">{{
-                  formatDateTime(verifyDetail.em_created_at)
-                }}</span>
-              </div>
-              <div class="mini-item">
-                <label>Last Updated</label
-                ><span class="text-muted">{{
-                  formatDateTime(verifyDetail.em_updated_at)
-                }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="mini-modal-footer">
-          <button class="btn-full-view" @click="goToVerifyDetail">
-            View Full Detail →
-          </button>
-        </div>
-      </div>
-    </div>
-
+    <UserMiniModal
+      :data="verifyDetailMapped"
+      :type="verifyModal?.type === 'Freelancer' ? 'FREELANCER' : 'EMPLOYER'"
+      :loading="verifyLoading"
+      @close="verifyModal = null; verifyDetail = null"
+      @view-detail="goToVerifyDetail"
+    />
     <!-- Delete Modal -->
     <div
       v-if="showDeleteModal"
@@ -430,7 +276,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import BreadcrumbBar from '../components/BreadcrumbBar.vue';
 import { useRouter } from "vue-router";
 import { useAvatar } from '../composables/useAvatar'
@@ -542,15 +388,37 @@ const openVerifyModal = async (v) => {
   verifyModal.value = v;
   verifyDetail.value = null;
   verifyLoading.value = true;
-  if (v.type === "Freelancer") {
-    verifyDetail.value =
-      allFreelancers.value.find((f) => f.fl_id === v.id) || null;
-  } else {
-    verifyDetail.value =
-      allEmployers.value.find((e) => e.em_id === v.id) || null;
+  try {
+    if (v.type === "Freelancer") {
+      const fl = allFreelancers.value.find((f) => f.fl_id === v.id) || null;
+      if (fl) {
+        const flJobs = jobs.value.filter(j => j.selected_fl_id === fl.fl_id);
+        verifyDetail.value = {
+          ...fl,
+          fl_total_jobs: flJobs.length,
+          fl_completed_jobs: flJobs.filter(j => j.job_status === 'COMPLETED').length,
+        };
+      }
+    } else {
+      const em = allEmployers.value.find((e) => e.em_id === v.id) || null;
+      if (em) {
+        const emJobs = jobs.value.filter(j => j.em_id === em.em_id);
+        verifyDetail.value = {
+          ...em,
+          em_total_jobs: emJobs.length,
+          em_completed_jobs: emJobs.filter(j => j.job_status === 'COMPLETED').length,
+        };
+      }
+    }
+  } finally {
+    verifyLoading.value = false;
   }
-  verifyLoading.value = false;
 };
+
+const verifyDetailMapped = computed(() => {
+  if (!verifyDetail.value || !verifyModal.value) return null;
+  return verifyDetail.value;
+});
 
 const goToVerifyFull = (v) => {
   if (v.type === "Freelancer") {

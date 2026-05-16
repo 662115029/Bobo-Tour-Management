@@ -330,6 +330,7 @@ const userModalMapped = computed(() => {
   if (!userModal.value) return null
   const u = userModal.value
   if (activeTab.value === 'Employer') {
+    const emJobs = jobs.value.filter(j => j.em_id === u.id)
     return {
       em_id: u.id, em_name: u.name, em_bio: u.bio,
       em_profile_image_url: u.imageUrl,
@@ -338,8 +339,15 @@ const userModalMapped = computed(() => {
       em_rating_avg: u.rating,
       em_created_at: u.createdAt,
       em_updated_at: u.updatedAt,
+      em_username: u.username,
+      em_email: u.email,
+      em_phone: u.phone,
+      em_address: u.address,
+      em_total_jobs: emJobs.length,
+      em_completed_jobs: emJobs.filter(j => j.job_status === 'COMPLETED').length,
     }
   }
+  const flJobs = jobs.value.filter(j => j.selected_fl_id === u.id)
   return {
     fl_id: u.id, fl_name: u.name, fl_bio: u.bio,
     fl_profile_image_url: u.imageUrl,
@@ -348,6 +356,13 @@ const userModalMapped = computed(() => {
     fl_rating_avg: u.rating,
     fl_created_at: u.createdAt,
     fl_updated_at: u.updatedAt,
+    fl_username: u.username,
+    fl_email: u.email,
+    fl_phone: u.phone,
+    fl_address: u.address,
+    fl_date_of_birth: u.dateOfBirth,
+    fl_total_jobs: flJobs.length,
+    fl_completed_jobs: flJobs.filter(j => j.job_status === 'COMPLETED').length,
   }
 })
 
@@ -414,6 +429,12 @@ async function loadEmployers() {
     imageUrl: e.em_profile_image_url || "",
     createdAt: e.em_created_at || "",
     updatedAt: e.em_updated_at || "",
+    // extra fields for modal
+    username: e.em_username || "",
+    email: e.em_email || "",
+    phone: e.em_phone || "",
+    address: e.em_address || "",
+    bio: e.em_bio || "",
   }));
 }
 
@@ -430,6 +451,13 @@ async function loadFreelancers() {
     imageUrl: f.fl_profile_image_url || "",
     createdAt: f.fl_created_at || "",
     updatedAt: f.fl_updated_at || "",
+    // extra fields for modal
+    username: f.fl_username || "",
+    email: f.fl_email || "",
+    phone: f.fl_phone || "",
+    address: f.fl_address || "",
+    bio: f.fl_bio || "",
+    dateOfBirth: f.fl_date_of_birth || "",
   }));
 }
 
