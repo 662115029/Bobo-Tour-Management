@@ -94,7 +94,10 @@
               {{ job.job_title }}
             </td>
             <td class="truncate-cell clickable-cell" @click="openCompanyModal(job)">
-              {{ job.company }}
+              <div class="user-cell">
+                <span class="user-avatar" :style="avatarStyle(job.em_id, job.company)">{{ initials2(job.company) }}</span>
+                {{ job.company }}
+              </div>
             </td>
             <td>
               {{
@@ -167,13 +170,18 @@
     <!-- Job Modal -->
     <div v-if="jobModal" class="modal-overlay" @click.self="jobModal = null">
       <div class="mini-modal">
-        <div class="mini-modal-header" style="justify-content: space-between">
-          <h3 class="mini-modal-title">{{ jobModal.job_title }}</h3>
-          <button class="close-btn" @click="jobModal = null">✕</button>
+        <div class="mini-modal-header">
+          <button class="close-btn" @click="jobModal = null" style="margin-left:auto">✕</button>
         </div>
-        <p v-if="jobModal.job_description" class="mini-desc">
-          {{ jobModal.job_description }}
-        </p>
+        <div class="profile-hero">
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold ring-2 ring-[#eee] flex-shrink-0" style="background:#f0f4ff;color:#3b5bdb;">
+            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+          </div>
+          <div class="profile-info">
+            <h3 class="profile-name">{{ jobModal.job_title }}</h3>
+            <p class="profile-bio" :class="{ muted: !jobModal.job_description }">{{ jobModal.job_description || 'No description' }}</p>
+          </div>
+        </div>
         <div class="mini-grid">
           <div class="mini-item">
             <label>Status</label>
@@ -191,7 +199,10 @@
           </div>
           <div class="mini-item">
             <label>Company</label>
-            <span>{{ jobModal.company || "-" }}</span>
+            <div class="user-cell" style="gap:5px;">
+              <span class="user-avatar" style="width:18px;height:18px;font-size:9px;flex-shrink:0;" :style="avatarStyle(jobModal.em_id, jobModal.company)">{{ initials2(jobModal.company) }}</span>
+              <span>{{ jobModal.company || "-" }}</span>
+            </div>
           </div>
           <div class="mini-item">
             <label>Freelancer</label>
@@ -231,10 +242,7 @@
           </div>
         </div>
         <div class="mini-modal-footer">
-          <button class="btn-full-view" @click="
-            viewJob(jobModal.job_id);
-          jobModal = null;
-          ">
+          <button class="btn-full-view" @click="viewJob(jobModal.job_id); jobModal = null;">
             View Full Detail →
           </button>
         </div>
