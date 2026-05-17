@@ -219,12 +219,12 @@ import { useRouter } from "vue-router";
 import { useAvatar } from '../composables/useAvatar'
 import { formatDateTime } from '../utils/formatDate'
 import UserMiniModal from '../components/UserMiniModal.vue'
+import { API_BASE } from '../data/api'
 
 const activeTab = ref("Freelancer");
 
 const userModal = ref(null)
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
 const router = useRouter();
 const { avatarStyle, initials2 } = useAvatar()
 const showBanModal = ref(false);
