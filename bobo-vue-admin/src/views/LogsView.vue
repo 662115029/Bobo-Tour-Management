@@ -164,6 +164,62 @@
       @view-detail="(id) => { router.push({ name: 'JobDetail', params: { id } }); targetModal = null }"
     />
 
+    <!-- Deleted Job Modal -->
+    <div v-if="deletedJobModal" class="modal-overlay" @click.self="deletedJobModal = null">
+      <div class="w-[380px] rounded-2xl bg-white shadow-[0_16px_56px_rgba(0,0,0,0.18)] flex flex-col overflow-hidden">
+
+        <!-- Topbar -->
+        <div class="relative flex items-center justify-center px-5 py-3.5 border-b border-[#f0f0f0]">
+          <span class="text-[11px] font-bold uppercase tracking-widest text-[#e53935]">Job</span>
+          <button
+            class="absolute right-4 w-7 h-7 rounded-full bg-[#f5f5f5] text-[#888] text-[13px] flex items-center justify-center border-none cursor-pointer hover:bg-[#ebebeb] hover:text-[#111] transition-colors"
+            @click="deletedJobModal = null">✕</button>
+        </div>
+
+        <!-- Icon + Title -->
+        <div class="flex flex-col items-center px-6 pt-7 pb-5">
+          <div class="w-16 h-16 rounded-2xl bg-[#fdecea] flex items-center justify-center mb-4 shadow-sm">
+            <svg width="30" height="30" fill="none" viewBox="0 0 24 24" stroke="#e53935" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+          </div>
+          <div class="text-[17px] font-bold text-[#111] text-center leading-snug">This job has been deleted</div>
+          <div class="text-[13px] text-[#999] text-center mt-1.5 leading-relaxed">This job no longer exists in the system.</div>
+        </div>
+
+        <!-- Divider -->
+        <div class="h-px bg-[#f5f5f5] mx-5"></div>
+
+        <!-- Info rows -->
+        <div class="px-5 py-4 flex flex-col gap-3">
+          <div class="flex items-center justify-between bg-[#fafafa] rounded-xl px-4 py-3">
+            <span class="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#bbb]">Job Name</span>
+            <span class="text-[13px] font-semibold text-[#222] max-w-[190px] truncate text-right">{{ deletedJobModal.target_name || deletedJobModal.target_id || '—' }}</span>
+          </div>
+          <div class="flex items-center justify-between bg-[#fafafa] rounded-xl px-4 py-3">
+            <span class="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#bbb]">Deleted by</span>
+            <span class="text-[13px] font-semibold text-[#222]">{{ deletedJobModal.admin_name || '—' }}</span>
+          </div>
+          <div class="flex items-center justify-between bg-[#fafafa] rounded-xl px-4 py-3">
+            <span class="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#bbb]">Deleted at</span>
+            <span class="text-[13px] font-semibold text-[#222]">{{ formatDateTime(deletedJobModal.created_at) }}</span>
+          </div>
+          <div v-if="deletedJobModal.note" class="flex items-start justify-between bg-[#fafafa] rounded-xl px-4 py-3 gap-3">
+            <span class="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#bbb] shrink-0 mt-0.5">Note</span>
+            <span class="text-[13px] text-[#555] text-right leading-relaxed">{{ deletedJobModal.note }}</span>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="px-5 pb-5 pt-1">
+          <button
+            class="w-full py-3 bg-[#f5f5f5] text-[#666] text-[13px] font-semibold rounded-xl border-none cursor-pointer transition-colors hover:bg-[#ebebeb] active:scale-[0.98]"
+            @click="deletedJobModal = null">Close</button>
+        </div>
+
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -352,12 +408,20 @@ onUnmounted(() => {
 const targetModal = ref(null);
 const targetModalType = ref('');
 const targetModalLoading = ref(false);
-
+const deletedJobModal = ref(null); // { target_name, target_id, note, created_at, admin_name }
 
 const openTargetModal = async (log) => {
   const type = (log.target_type || '').toUpperCase();
+  const action = (log.action_type || '').toUpperCase();
   const id = log.target_id;
   if (!id || !['FREELANCER','EMPLOYER','JOB'].includes(type)) return;
+
+  // If this log is a delete action on a JOB → show deleted modal immediately
+  if (type === 'JOB' && (action === 'DELETE_JOB' || action === 'DELETE')) {
+    deletedJobModal.value = log;
+    return;
+  }
+
   targetModal.value = null;
   targetModalType.value = type;
   targetModalLoading.value = true;
