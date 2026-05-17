@@ -114,7 +114,7 @@ import DocReviewModal from '../components/DocReviewModal.vue'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAvatar } from '../composables/useAvatar'
-import { formatDateTime } from '../utils/formatDate'
+import { formatDateTime, groupDocsByLatest } from '../utils/formatDate'
 import { API_BASE } from '../data/api'
 
 const router = useRouter()
@@ -227,38 +227,10 @@ const openDocs = (v) => {
   selectedUser.value = v
   if (activeTab.value === 'Freelancer') {
     const allDocs = flDocs.value.filter(d => d.fl_id === v.id)
-    const docsByType = {}
-    allDocs.forEach(d => {
-      if (!docsByType[d.fl_doc_type] || new Date(d.fl_uploaded_at) > new Date(docsByType[d.fl_doc_type].fl_uploaded_at)) {
-        docsByType[d.fl_doc_type] = d
-      }
-    })
-    selectedDocs.value = Object.values(docsByType).map(d => ({
-      id: d.fl_doc_id,
-      type: d.fl_doc_type,
-      status: d.fl_doc_status,
-      file_url: d.file_url,
-      uploaded: formatDateTime(d.fl_uploaded_at),
-      reviewed: d.reviewed_at ? formatDateTime(d.reviewed_at) : null,
-      _type: 'fl'
-    }))
+    selectedDocs.value = groupDocsByLatest(allDocs, 'fl', formatDateTime)
   } else {
     const allDocs = emDocs.value.filter(d => d.em_id === v.id)
-    const docsByType = {}
-    allDocs.forEach(d => {
-      if (!docsByType[d.em_doc_type] || new Date(d.em_uploaded_at) > new Date(docsByType[d.em_doc_type].em_uploaded_at)) {
-        docsByType[d.em_doc_type] = d
-      }
-    })
-    selectedDocs.value = Object.values(docsByType).map(d => ({
-      id: d.em_doc_id,
-      type: d.em_doc_type,
-      status: d.em_doc_status,
-      file_url: d.file_url,
-      uploaded: formatDateTime(d.em_uploaded_at),
-      reviewed: d.reviewed_at ? formatDateTime(d.reviewed_at) : null,
-      _type: 'em'
-    }))
+    selectedDocs.value = groupDocsByLatest(allDocs, 'em', formatDateTime)
   }
 }
 

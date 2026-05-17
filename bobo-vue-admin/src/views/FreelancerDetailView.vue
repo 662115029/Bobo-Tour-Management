@@ -557,7 +557,11 @@ onMounted(async () => {
     availability.value = (availData.items || []).filter(a => String(a.fl_id) === String(id))
     const allDocs = (docData.items || []).filter(d => String(d.fl_id) === String(id))
     const byType = {}
-    allDocs.forEach(d => { if (!byType[d.fl_doc_type] || new Date(d.fl_uploaded_at) > new Date(byType[d.fl_doc_type].fl_uploaded_at)) byType[d.fl_doc_type] = d })
+    allDocs.forEach(d => {
+      if (!byType[d.fl_doc_type] || new Date(d.fl_uploaded_at) > new Date(byType[d.fl_doc_type].fl_uploaded_at)) {
+        byType[d.fl_doc_type] = d
+      }
+    })
     documents.value = Object.values(byType)
     bankAccounts.value = (bankData.items || []).filter(b => String(b.fl_id) === String(id))
     reviews.value = (reviewData.items || []).filter(r => String(r.fl_id) === String(id))
