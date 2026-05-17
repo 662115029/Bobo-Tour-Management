@@ -408,6 +408,7 @@ import { ref, onMounted } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { API_BASE } from "../data/api"
 import { formatJobStatus } from '../utils/statusClasses'
+import { formatDate, formatDateTime } from '../utils/formatDate'
 
 const route = useRoute()
 const router = useRouter()
@@ -426,8 +427,6 @@ const openDocModal = (d) => {
   modalDoc.value = { url: d.file_url, title: formatDocType(d.em_doc_type), status: d.em_doc_status, uploadedAt: d.em_uploaded_at, reviewedBy: d.reviewed_by_name || null }
 }
 
-const formatDate = (d) => { if (!d) return "–"; return new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) }
-const formatDateTime = (d) => { if (!d) return "–"; return new Date(d).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) }
 const formatDocType = (t) => ({ COMPANY_REGISTRATION: "Company Registration", BUSINESS_LICENSE: "Business License", TOURISM_LICENSE: "Tourism License", TAX_ID_DOCUMENT: "Tax ID Document", AUTHORIZED_PERSON_ID: "Authorized Person ID" }[t] || t)
 
 const confirmBan = async () => {
@@ -456,7 +455,11 @@ onMounted(async () => {
     em.value = emData.em_id ? emData : null
     const allDocs = (docData.items || []).filter(d => String(d.em_id) === String(id))
     const byType = {}
-    allDocs.forEach(d => { if (!byType[d.em_doc_type] || new Date(d.em_uploaded_at) > new Date(byType[d.em_doc_type].em_uploaded_at)) byType[d.em_doc_type] = d })
+    allDocs.forEach(d => {
+      if (!byType[d.em_doc_type] || new Date(d.em_uploaded_at) > new Date(byType[d.em_doc_type].em_uploaded_at)) {
+        byType[d.em_doc_type] = d
+      }
+    })
     documents.value = Object.values(byType)
     jobs.value = (jobsData.items || []).filter(j => String(j.em_id) === String(id))
     bankAccounts.value = (bankData.items || []).filter(b => String(b.em_id) === String(id))

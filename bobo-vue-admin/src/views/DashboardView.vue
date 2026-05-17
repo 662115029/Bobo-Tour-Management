@@ -5,7 +5,7 @@
       <div class="stat-card stat-card--blue">
         <span class="stat-label">TOTAL JOBS</span>
         <span v-if="isLoading" class="skeleton skeleton-stat"></span>
-        <span v-else class="stat-value">{{ stats.totalJobs.toLocaleString() }}</span>
+        <span v-else class="stat-value">{{ localTotalJobs.toLocaleString() }}</span>
       </div>
       <div class="stat-card stat-card--amber">
         <span class="stat-label">PENDING VERIFY</span>
@@ -208,11 +208,11 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import BreadcrumbBar from '../components/BreadcrumbBar.vue';
 import { useRouter } from "vue-router";
 import { useAvatar } from '../composables/useAvatar'
-import { formatDate, formatDateTime } from '../utils/formatDate'
+import { formatDateTime, groupDocsByLatest } from '../utils/formatDate'
 import { formatJobStatus, getTypeClass } from '../utils/statusClasses'
 import JobMiniModal from '../components/JobMiniModal.vue'
 import UserMiniModal from '../components/UserMiniModal.vue'
@@ -225,7 +225,9 @@ const { avatarStyle, jobIconStyle, initials2 } = useAvatar()
 
 const router = useRouter();
 
-const { stats } = useStats();
+const { stats, loadStats } = useStats();
+const localTotalJobs = ref(0);
+watch(() => stats.value.totalJobs, (val) => { localTotalJobs.value = val }, { immediate: true })
 const isLoading = ref(true);
 const jobs = ref([]);
 const verifications = ref([]);
@@ -249,19 +251,6 @@ const verifyLoading = ref(false);
 
 const viewJob = (id) => router.push({ name: "JobDetail", params: { id } });
 
-// Helper: send log to backend
-const logAction = async (action_type, target_type, target_id, target_name, note = null) => {
-  const admin_id = localStorage.getItem('admin_id') || '';
-  if (!admin_id) return;
-  try {
-    await fetch(`${API_BASE}/admin/log`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ admin_id, action_type, target_type, target_id, target_name, note })
-    });
-  } catch (e) {}
-};
-
 const deleteJob = (id, title) => {
   deleteTargetId.value = id;
   deleteTargetTitle.value = title;
@@ -278,7 +267,7 @@ const confirmDelete = async () => {
     });
     if (res.ok) {
       jobs.value = jobs.value.filter((j) => j.job_id !== id);
-      stats.value.totalJobs = Math.max(0, stats.value.totalJobs - 1);
+      localTotalJobs.value = Math.max(0, localTotalJobs.value - 1);
     } else {
       console.error("Delete failed:", res.status);
     }
@@ -351,14 +340,6 @@ const verifyDetailMapped = computed(() => {
   return verifyDetail.value;
 });
 
-const goToVerifyFull = (v) => {
-  if (v.type === "Freelancer") {
-    router.push({ name: "FreelancerDetail", params: { id: v.id } });
-  } else {
-    router.push({ name: "EmployerDetail", params: { id: v.id } });
-  }
-};
-
 const goToVerifyDetail = () => {
   if (!verifyModal.value) return;
   if (verifyModal.value.type === "Freelancer") {
@@ -379,46 +360,10 @@ const openVerifyDocs = (v) => {
   selectedVerifyUser.value = v;
   if (v.type === "Freelancer") {
     const allDocs = flDocs.value.filter((d) => d.fl_id === v.id);
-    const docsByType = {};
-    allDocs.forEach((d) => {
-      if (
-        !docsByType[d.fl_doc_type] ||
-        new Date(d.fl_uploaded_at) >
-          new Date(docsByType[d.fl_doc_type].fl_uploaded_at)
-      ) {
-        docsByType[d.fl_doc_type] = d;
-      }
-    });
-    selectedVerifyDocs.value = Object.values(docsByType).map((d) => ({
-      id: d.fl_doc_id,
-      type: d.fl_doc_type,
-      status: d.fl_doc_status,
-      file_url: d.file_url,
-      uploaded: formatDateTime(d.fl_uploaded_at),
-      reviewed: d.reviewed_at ? formatDateTime(d.reviewed_at) : null,
-      _type: "fl",
-    }));
+    selectedVerifyDocs.value = groupDocsByLatest(allDocs, 'fl', formatDateTime);
   } else {
     const allDocs = emDocs.value.filter((d) => d.em_id === v.id);
-    const docsByType = {};
-    allDocs.forEach((d) => {
-      if (
-        !docsByType[d.em_doc_type] ||
-        new Date(d.em_uploaded_at) >
-          new Date(docsByType[d.em_doc_type].em_uploaded_at)
-      ) {
-        docsByType[d.em_doc_type] = d;
-      }
-    });
-    selectedVerifyDocs.value = Object.values(docsByType).map((d) => ({
-      id: d.em_doc_id,
-      type: d.em_doc_type,
-      status: d.em_doc_status,
-      file_url: d.file_url,
-      uploaded: formatDateTime(d.em_uploaded_at),
-      reviewed: d.reviewed_at ? formatDateTime(d.reviewed_at) : null,
-      _type: "em",
-    }));
+    selectedVerifyDocs.value = groupDocsByLatest(allDocs, 'em', formatDateTime);
   }
 };
 

@@ -1,549 +1,323 @@
 <template>
-  <div>
-    <BreadcrumbBar />
 
-    <div class="tabs-wide">
-      <button
-        class="tab"
-        :class="{ active: activeTab === 'Freelancer' }"
-        @click="activeTab = 'Freelancer'"
-      >
-        Freelancer
-      </button>
-      <button
-        class="tab"
-        :class="{ active: activeTab === 'Employer' }"
-        @click="activeTab = 'Employer'"
-      >
-        Employer
-      </button>
+  <!-- ── Loading skeleton ── -->
+  <div v-if="loading" class="modal-overlay">
+    <div class="w-[400px] rounded-2xl bg-white shadow-[0_16px_56px_rgba(0,0,0,0.18)] flex flex-col overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-3.5 border-b border-[#f0f0f0]">
+        <span class="skeleton w-20 h-5 rounded-full block"></span>
+        <span class="skeleton w-7 h-7 rounded-full block"></span>
+      </div>
+      <div class="relative px-5 pt-5 pb-4">
+        <div class="flex items-start gap-3.5">
+          <span class="skeleton w-12 h-12 rounded-2xl block shrink-0"></span>
+          <div class="flex-1 flex flex-col gap-2 pt-0.5">
+            <span class="skeleton skeleton-text w-2/5 block"></span>
+            <span class="skeleton skeleton-text w-3/5 block"></span>
+            <span class="skeleton w-20 h-5 rounded-full block mt-1"></span>
+          </div>
+        </div>
+        <div class="flex items-center justify-between mt-3.5">
+          <span class="skeleton w-16 h-5 rounded-full block"></span>
+        </div>
+      </div>
+      <div class="h-px bg-[#f0f0f0] mx-5"></div>
+      <div class="px-5 py-4 flex flex-col gap-4">
+        <div v-for="i in 4" :key="i" class="flex items-center gap-3">
+          <span class="skeleton w-8 h-8 rounded-xl block shrink-0"></span>
+          <div class="flex flex-col gap-1.5 flex-1">
+            <span class="skeleton h-2 w-1/4 rounded block"></span>
+            <span class="skeleton h-3.5 w-2/5 rounded block"></span>
+          </div>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 border-t border-[#f0f0f0] bg-[#fafafa]">
+        <div v-for="i in 2" :key="i" class="flex flex-col items-center px-4 py-3">
+          <span class="skeleton h-2 w-2/5 rounded block"></span>
+          <span class="skeleton h-3.5 w-4/5 rounded block mt-1.5"></span>
+        </div>
+      </div>
+      <div class="px-5 py-4"><span class="skeleton w-full h-11 rounded-xl block"></span></div>
     </div>
-
-    <div class="filter-row">
-      <input
-        type="text"
-        v-model="search"
-        placeholder="Search name..."
-        class="search-input"
-      />
-    </div>
-
-    <div class="table-container overflow-x-auto touch-pan-x">
-      <table class="table users-table">
-        <thead>
-          <tr>
-            <th class="th-sortable" :class="{ 'th-active': nameSort }" style="width: 16%" @click="cycleSort('name')">
-              <span class="th-inner">
-                NAME
-                <span class="sort-label">
-                  <span v-if="!nameSort" class="sort-label-dim">⇅</span>
-                  <span v-else-if="nameSort === 'asc'" class="sort-label-active">↑AZ</span>
-                  <span v-else class="sort-label-active">↓ZA</span>
-                </span>
-              </span>
-            </th>
-            <th class="th-sortable" :class="{ 'th-active': ratingSort }" style="width: 12%" @click="cycleSort('rating')">
-              <span class="th-inner">
-                RATING
-                <span class="sort-label">
-                  <span v-if="!ratingSort" class="sort-label-dim">⇅</span>
-                  <span v-else-if="ratingSort === 'asc'" class="sort-label-active">↑09</span>
-                  <span v-else class="sort-label-active">↓90</span>
-                </span>
-              </span>
-            </th>
-            <th class="th-sortable" :class="{ 'th-active': jobsSort }" style="width: 15%" @click="cycleSort('jobs')">
-              <span class="th-inner">
-                JOBS
-                <span class="sort-label">
-                  <span v-if="!jobsSort" class="sort-label-dim">⇅</span>
-                  <span v-else-if="jobsSort === 'asc'" class="sort-label-active">↑09</span>
-                  <span v-else class="sort-label-active">↓90</span>
-                </span>
-              </span>
-            </th>
-            <th style="width: 16%">
-              <span class="inline-flex items-center whitespace-nowrap gap-1">STATUS
-              <button
-                class="col-filter-btn"
-                :class="{ active: verifyFilter !== 'All' }"
-                @click.stop="toggleStatusDropdown($event)"
-              >
-                {{ verifyFilter === "All" ? "All ▼" : verifyFilter === "NOT_VERIFIED" ? "NOT VERIF. ▼" : verifyFilter === "VERIFIED" ? "VERIFIED ▼" : verifyFilter === "PENDING" ? "PENDING ▼" : verifyFilter === "REJECTED" ? "REJECTED ▼" : verifyFilter + " ▼" }}
-              </button></span>
-            </th>
-            <th style="width:11%" class="text-center">ACTION</th>
-            <th class="th-sortable relative" :class="{ 'th-active': dateSort }" style="width:16%" @click="cycleSort('date')">
-              <span class="th-inner">
-                LAST UPDATED
-                <span class="sort-label">
-                  <span v-if="!dateSort" class="sort-label-dim">⇅</span>
-                  <span v-else-if="dateSort === 'asc'" class="sort-label-active">↑</span>
-                  <span v-else class="sort-label-active">↓</span>
-                </span>
-              </span>
-              <button
-                v-if="nameSort || ratingSort || verifyFilter !== 'All' || dateSort || jobsSort"
-                class="reset-btn ml-1.5 absolute right-3 top-1/2 -translate-y-1/2"
-                @click.stop="resetAllFilters"
-              >
-                ✕ Reset
-              </button>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="user in filteredUsers" :key="user.id" class="row-hover">
-            <td class="truncate-cell clickable-cell" @click="openUserModal(user)">
-              <div class="user-cell">
-                <span class="user-avatar" :style="avatarStyle(user.id, user.name)">{{ initials2(user.name) }}</span>
-                <span :title="user.name">
-                  {{ user.name }}
-                </span>
-              </div>
-            </td>
-            <td>
-              <div style="display:inline-flex;align-items:center;gap:4px;">
-                {{ Number(user.rating || 0).toFixed(1) }}
-                <svg style="width:16px;height:16px;color:#f9a825;" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-              </div>
-            </td>
-            <td>{{ jobsDoneById[user.id] || 0 }}</td>
-            <td>
-              <span class="badge" :class="user.verifyStatus?.toLowerCase()">{{
-                user.verifyStatus
-              }}</span>
-            </td>
-            <td>
-              <div class="action-btns">
-                <button class="btn-action view" @click="viewUser(user)">
-                  View
-                </button>
-                <button
-                  class="btn-action"
-                  :class="user.isActive ? 'ban' : 'unban'"
-                  @click="openBanModal(user)"
-                >
-                  {{ user.isActive ? "Ban" : "Unban" }}
-                </button>
-              </div>
-            </td>
-            <td class="text-muted text-[13px]">{{ formatDateTime(user.updatedAt) }}</td>
-          </tr>
-          <template v-if="isLoading">
-            <tr v-for="i in 6" :key="'sk-'+i" class="skeleton-row">
-              <td><span class="skeleton skeleton-text" style="width:65%"></span></td>
-              <td><span class="skeleton skeleton-text" style="width:40%"></span></td>
-              <td><span class="skeleton skeleton-text" style="width:40%"></span></td>
-              <td><span class="skeleton skeleton-badge"></span></td>
-              <td>
-                <div class="action-btns">
-                  <span class="skeleton skeleton-btn"></span>
-                  <span class="skeleton skeleton-btn"></span>
-                </div>
-              </td>
-              <td><span class="skeleton skeleton-text" style="width:80%"></span></td>
-            </tr>
-          </template>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Column Filter Dropdowns -->
-    <div
-      v-if="showStatusDropdown"
-      class="col-dropdown"
-      :style="statusDropdownStyle"
-    >
-      <button class="col-dropdown-item" @click="setVerifyFilter('All')">
-        All
-      </button>
-      <button class="col-dropdown-item" @click="setVerifyFilter('VERIFIED')">
-        Verified
-      </button>
-      <button class="col-dropdown-item" @click="setVerifyFilter('PENDING')">
-        Pending
-      </button>
-      <button
-        class="col-dropdown-item"
-        @click="setVerifyFilter('NOT_VERIFIED')"
-      >
-        Not Verified
-      </button>
-    </div>
-
-    <!-- Ban Modal -->
-    <BanModal
-      :show="showBanModal"
-      :is-active="banTarget?.isActive"
-      :name="banTarget?.name"
-      :user-type="activeTab === 'Employer' ? 'Employer' : 'Freelancer'"
-      @confirm="confirmBan"
-      @cancel="showBanModal = false"
-    />
-    <!-- User Modal -->
-    <UserMiniModal
-      :data="userModalMapped"
-      :type="activeTab === 'Employer' ? 'EMPLOYER' : 'FREELANCER'"
-      @close="userModal = null"
-      @view-detail="goToFullDetail"
-    />
   </div>
+
+  <!-- ── Freelancer Modal ── -->
+  <div v-else-if="data && type === 'FREELANCER'" class="modal-overlay" @click.self="$emit('close')">
+    <div class="w-[400px] rounded-2xl bg-white shadow-[0_16px_56px_rgba(0,0,0,0.18)] flex flex-col max-h-[90vh] overflow-y-auto">
+
+      <!-- Topbar -->
+      <div class="relative flex items-center justify-center px-5 py-3.5 border-b border-[#f0f0f0]">
+        <span class="text-[11px] font-bold uppercase tracking-widest text-[#1565c0]">Freelancer</span>
+        <button class="absolute right-4 w-7 h-7 rounded-full bg-[#f5f5f5] text-[#888] text-[13px] flex items-center justify-center border-none cursor-pointer hover:bg-[#ebebeb] hover:text-[#111] transition-colors" @click="$emit('close')">✕</button>
+      </div>
+
+      <!-- Hero: avatar tinted bg -->
+      <div class="relative overflow-hidden">
+        <div class="absolute inset-0 opacity-[0.07]" :style="{ background: avatarStyle(data.fl_id, data.fl_name).backgroundColor }"></div>
+        <div class="relative px-5 pt-5 pb-4">
+          <div class="flex items-start gap-3.5">
+            <div class="shrink-0 relative">
+              <img v-if="data.fl_profile_image_url" :src="data.fl_profile_image_url" class="w-12 h-12 rounded-2xl object-cover ring-2 ring-white shadow-sm" />
+              <div v-else class="w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-bold ring-2 ring-white shadow-sm" :style="avatarStyle(data.fl_id, data.fl_name)">{{ initials2(data.fl_name) }}</div>
+              <span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white" :class="data.fl_is_active ? 'bg-[#4caf50]' : 'bg-[#bbb]'"></span>
+            </div>
+            <div class="flex-1 min-w-0 pt-0.5">
+              <div class="text-[15px] font-bold text-[#111] leading-snug truncate">{{ data.fl_name || data.fl_username }}</div>
+              <div class="text-[12px] mt-1 line-clamp-2 leading-relaxed" :class="data.fl_bio ? 'text-[#777]' : 'text-[#bbb] italic'">
+                {{ data.fl_bio || 'No bio' }}
+              </div>
+            </div>
+          </div>
+          <!-- status + active pill -->
+          <div class="flex items-center gap-2 mt-3.5 flex-wrap">
+            <span class="badge" :class="data.fl_verify_status?.toLowerCase()">{{ data.fl_verify_status }}</span>
+            <span class="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full"
+              :class="data.fl_is_active ? 'bg-[#e8f5e9] text-[#2e7d32]' : 'bg-[#f5f5f5] text-[#999]'">
+              <span class="w-1.5 h-1.5 rounded-full" :class="data.fl_is_active ? 'bg-[#4caf50]' : 'bg-[#bbb]'"></span>
+              {{ data.fl_is_active ? 'Active' : 'Inactive' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Divider -->
+      <div class="h-px bg-[#f0f0f0] mx-5"></div>
+
+      <!-- Info block -->
+      <div class="px-5 py-4 flex flex-col gap-4">
+
+        <!-- Stats: Rating | Completed | Total Jobs -->
+        <div class="grid grid-cols-3 -mx-5 border-y border-[#f0f0f0] divide-x divide-[#f0f0f0]">
+          <div class="flex flex-col items-center py-3.5 px-1">
+            <div class="flex items-center gap-1">
+              <span class="text-[17px] font-bold text-[#111]">{{ Number(data.fl_rating_avg || 0).toFixed(1) }}</span>
+              <svg width="13" height="13" fill="#f9a825" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+            </div>
+            <div class="text-[10px] font-semibold uppercase tracking-wide text-[#999] mt-0.5">Rating</div>
+          </div>
+          <div class="flex flex-col items-center py-3.5 px-1">
+            <div class="text-[17px] font-bold text-[#111]">{{ data.fl_completed_jobs ?? 0 }}</div>
+            <div class="text-[10px] font-semibold uppercase tracking-wide text-[#999] mt-0.5">Completed</div>
+          </div>
+          <div class="flex flex-col items-center py-3">
+            <div class="text-[17px] font-bold text-[#111]">{{ data.fl_total_jobs ?? 0 }}</div>
+            <div class="text-[10px] font-semibold uppercase tracking-wide text-[#999] mt-0.5">Total Jobs</div>
+          </div>
+        </div>
+
+        <!-- Username -->
+        <div v-if="data.fl_username" class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-xl bg-[#f5f5f5] flex items-center justify-center shrink-0">
+            <svg width="14" height="14" fill="none" stroke="#888" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+          </div>
+          <div class="min-w-0">
+            <div class="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#bbb]">Username</div>
+            <div class="text-[13px] font-semibold text-[#222] mt-0.5 truncate">{{ data.fl_username }}</div>
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div v-if="data.fl_email" class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-xl bg-[#f5f5f5] flex items-center justify-center shrink-0">
+            <svg width="14" height="14" fill="none" stroke="#888" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#bbb]">Email</div>
+            <div class="text-[13px] font-semibold text-[#222] mt-0.5 break-all">{{ data.fl_email }}</div>
+          </div>
+        </div>
+
+        <!-- Phone -->
+        <div v-if="data.fl_phone" class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-xl bg-[#f5f5f5] flex items-center justify-center shrink-0">
+            <svg width="14" height="14" fill="none" stroke="#888" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+          </div>
+          <div>
+            <div class="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#bbb]">Phone</div>
+            <div class="text-[13px] font-semibold text-[#222] mt-0.5">{{ data.fl_phone }}</div>
+          </div>
+        </div>
+
+        <!-- Address -->
+        <div v-if="data.fl_address" class="flex items-start gap-3">
+          <div class="w-8 h-8 rounded-xl bg-[#f5f5f5] flex items-center justify-center shrink-0 mt-0.5">
+            <svg width="14" height="14" fill="none" stroke="#888" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          </div>
+          <div>
+            <div class="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#bbb]">Address</div>
+            <div class="text-[13px] font-semibold text-[#222] mt-0.5 leading-snug">{{ data.fl_address }}</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Timestamps -->
+      <div class="grid grid-cols-2 border-t border-[#f0f0f0] bg-[#fafafa]">
+        <div class="flex flex-col items-center text-center px-4 py-3 border-r border-[#f0f0f0]">
+          <div class="text-[10px] font-semibold uppercase tracking-[0.07em] text-[#bbb]">Created</div>
+          <div class="text-[12px] font-medium text-[#999] mt-0.5">{{ formatDateTime(data.fl_created_at) }}</div>
+        </div>
+        <div class="flex flex-col items-center text-center px-4 py-3">
+          <div class="text-[10px] font-semibold uppercase tracking-[0.07em] text-[#bbb]">Last Updated</div>
+          <div class="text-[12px] font-medium text-[#999] mt-0.5">{{ formatDateTime(data.fl_updated_at) }}</div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="px-5 py-4">
+        <button class="w-full py-3 bg-[#111] text-white text-[13px] font-semibold rounded-xl border-none cursor-pointer transition-colors hover:bg-[#2a2a2a] active:scale-[0.98] flex items-center justify-center gap-1.5"
+          @click="$emit('view-detail', { id: data.fl_id, type: 'FREELANCER' })">
+          View Full Detail
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Employer Modal ── -->
+  <div v-else-if="data && type === 'EMPLOYER'" class="modal-overlay" @click.self="$emit('close')">
+    <div class="w-[400px] rounded-2xl bg-white shadow-[0_16px_56px_rgba(0,0,0,0.18)] flex flex-col max-h-[90vh] overflow-y-auto">
+
+      <!-- Topbar -->
+      <div class="relative flex items-center justify-center px-5 py-3.5 border-b border-[#f0f0f0]">
+        <span class="text-[11px] font-bold uppercase tracking-widest text-[#6a1b9a]">Employer</span>
+        <button class="absolute right-4 w-7 h-7 rounded-full bg-[#f5f5f5] text-[#888] text-[13px] flex items-center justify-center border-none cursor-pointer hover:bg-[#ebebeb] hover:text-[#111] transition-colors" @click="$emit('close')">✕</button>
+      </div>
+
+      <!-- Hero -->
+      <div class="relative overflow-hidden">
+        <div class="absolute inset-0 opacity-[0.07]" :style="{ background: avatarStyle(data.em_id, data.em_name).backgroundColor }"></div>
+        <div class="relative px-5 pt-5 pb-4">
+          <div class="flex items-start gap-3.5">
+            <div class="shrink-0 relative">
+              <img v-if="data.em_profile_image_url" :src="data.em_profile_image_url" class="w-12 h-12 rounded-2xl object-cover ring-2 ring-white shadow-sm" />
+              <div v-else class="w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-bold ring-2 ring-white shadow-sm" :style="avatarStyle(data.em_id, data.em_name)">{{ initials2(data.em_name) }}</div>
+              <span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white" :class="data.em_is_active ? 'bg-[#4caf50]' : 'bg-[#bbb]'"></span>
+            </div>
+            <div class="flex-1 min-w-0 pt-0.5">
+              <div class="text-[15px] font-bold text-[#111] leading-snug truncate">{{ data.em_name || data.em_username }}</div>
+              <div class="text-[12px] mt-1 line-clamp-2 leading-relaxed" :class="data.em_bio ? 'text-[#777]' : 'text-[#bbb] italic'">
+                {{ data.em_bio || 'No bio' }}
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 mt-3.5 flex-wrap">
+            <span class="badge" :class="data.em_verify_status?.toLowerCase()">{{ data.em_verify_status }}</span>
+            <span class="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full"
+              :class="data.em_is_active ? 'bg-[#e8f5e9] text-[#2e7d32]' : 'bg-[#f5f5f5] text-[#999]'">
+              <span class="w-1.5 h-1.5 rounded-full" :class="data.em_is_active ? 'bg-[#4caf50]' : 'bg-[#bbb]'"></span>
+              {{ data.em_is_active ? 'Active' : 'Inactive' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Divider -->
+      <div class="h-px bg-[#f0f0f0] mx-5"></div>
+
+      <!-- Info block -->
+      <div class="px-5 py-4 flex flex-col gap-4">
+
+        <!-- Stats: Rating | Completed | Total Jobs -->
+        <div class="grid grid-cols-3 -mx-5 border-y border-[#f0f0f0] divide-x divide-[#f0f0f0]">
+          <div class="flex flex-col items-center py-3.5 px-1">
+            <div class="flex items-center gap-1">
+              <span class="text-[17px] font-bold text-[#111]">{{ Number(data.em_rating_avg || 0).toFixed(1) }}</span>
+              <svg width="13" height="13" fill="#f9a825" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+            </div>
+            <div class="text-[10px] font-semibold uppercase tracking-wide text-[#999] mt-0.5">Rating</div>
+          </div>
+          <div class="flex flex-col items-center py-3.5 px-1">
+            <div class="text-[17px] font-bold text-[#111]">{{ data.em_completed_jobs ?? 0 }}</div>
+            <div class="text-[10px] font-semibold uppercase tracking-wide text-[#999] mt-0.5">Completed</div>
+          </div>
+          <div class="flex flex-col items-center py-3">
+            <div class="text-[17px] font-bold text-[#111]">{{ data.em_total_jobs ?? 0 }}</div>
+            <div class="text-[10px] font-semibold uppercase tracking-wide text-[#999] mt-0.5">Total Jobs</div>
+          </div>
+        </div>
+
+        <!-- Username -->
+        <div v-if="data.em_username" class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-xl bg-[#f5f5f5] flex items-center justify-center shrink-0">
+            <svg width="14" height="14" fill="none" stroke="#888" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+          </div>
+          <div class="min-w-0">
+            <div class="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#bbb]">Username</div>
+            <div class="text-[13px] font-semibold text-[#222] mt-0.5 truncate">{{ data.em_username }}</div>
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div v-if="data.em_email" class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-xl bg-[#f5f5f5] flex items-center justify-center shrink-0">
+            <svg width="14" height="14" fill="none" stroke="#888" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#bbb]">Email</div>
+            <div class="text-[13px] font-semibold text-[#222] mt-0.5 break-all">{{ data.em_email }}</div>
+          </div>
+        </div>
+
+        <!-- Phone -->
+        <div v-if="data.em_phone" class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-xl bg-[#f5f5f5] flex items-center justify-center shrink-0">
+            <svg width="14" height="14" fill="none" stroke="#888" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+          </div>
+          <div>
+            <div class="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#bbb]">Phone</div>
+            <div class="text-[13px] font-semibold text-[#222] mt-0.5">{{ data.em_phone }}</div>
+          </div>
+        </div>
+
+        <!-- Address -->
+        <div v-if="data.em_address" class="flex items-start gap-3">
+          <div class="w-8 h-8 rounded-xl bg-[#f5f5f5] flex items-center justify-center shrink-0 mt-0.5">
+            <svg width="14" height="14" fill="none" stroke="#888" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          </div>
+          <div>
+            <div class="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#bbb]">Address</div>
+            <div class="text-[13px] font-semibold text-[#222] mt-0.5 leading-snug">{{ data.em_address }}</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Timestamps -->
+      <div class="grid grid-cols-2 border-t border-[#f0f0f0] bg-[#fafafa]">
+        <div class="flex flex-col items-center text-center px-4 py-3 border-r border-[#f0f0f0]">
+          <div class="text-[10px] font-semibold uppercase tracking-[0.07em] text-[#bbb]">Created</div>
+          <div class="text-[12px] font-medium text-[#999] mt-0.5">{{ formatDateTime(data.em_created_at) }}</div>
+        </div>
+        <div class="flex flex-col items-center text-center px-4 py-3">
+          <div class="text-[10px] font-semibold uppercase tracking-[0.07em] text-[#bbb]">Last Updated</div>
+          <div class="text-[12px] font-medium text-[#999] mt-0.5">{{ formatDateTime(data.em_updated_at) }}</div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="px-5 py-4">
+        <button class="w-full py-3 bg-[#111] text-white text-[13px] font-semibold rounded-xl border-none cursor-pointer transition-colors hover:bg-[#2a2a2a] active:scale-[0.98] flex items-center justify-center gap-1.5"
+          @click="$emit('view-detail', { id: data.em_id, type: 'EMPLOYER' })">
+          View Full Detail
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
 </template>
 
 <script setup>
-import BreadcrumbBar from '../components/BreadcrumbBar.vue'
-import { ref, computed, onMounted, onUnmounted, watch } from "vue";
-import { useRouter } from "vue-router";
 import { useAvatar } from '../composables/useAvatar'
 import { formatDateTime } from '../utils/formatDate'
-import UserMiniModal from '../components/UserMiniModal.vue'
-import BanModal from '../components/BanModal.vue'
-import { API_BASE } from '../data/api'
 
-const activeTab = ref("Freelancer");
-
-const userModal = ref(null)
-
-const router = useRouter();
-const { avatarStyle, initials2 } = useAvatar()
-const showBanModal = ref(false);
-const banTarget = ref(null);
-const jobsDoneByFreelancer = ref({});
-const jobsDoneByEmployer = ref({});
-
-// Sort states
-const nameSort = ref(localStorage.getItem("users_nameSort") || "");
-const ratingSort = ref(localStorage.getItem("users_ratingSort") || "");
-const verifyFilter = ref(localStorage.getItem("users_verifyFilter") || "All");
-const dateSort = ref(localStorage.getItem("users_dateSort") || "");
-const jobsSort = ref(localStorage.getItem("users_jobsSort") || "");
-
-const showStatusDropdown = ref(false);
-const statusDropdownStyle = ref({});
-
-const saveFilters = () => {
-  localStorage.setItem("users_nameSort", nameSort.value);
-  localStorage.setItem("users_ratingSort", ratingSort.value);
-  localStorage.setItem("users_verifyFilter", verifyFilter.value);
-  localStorage.setItem("users_dateSort", dateSort.value);
-  localStorage.setItem("users_jobsSort", jobsSort.value);
-};
-
-// กดลูกศร: ไม่มี → asc → desc → ไม่มี (clear คอลัมน์อื่นอัตโนมัติ)
-const cycleSort = (key) => {
-  const map = { name: nameSort, rating: ratingSort, date: dateSort, jobs: jobsSort };
-  const current = map[key];
-  const next = current.value === "" ? "asc" : current.value === "asc" ? "desc" : "";
-  nameSort.value = "";
-  ratingSort.value = "";
-  dateSort.value = "";
-  jobsSort.value = "";
-  current.value = next;
-  saveFilters();
-};
-
-const toggleStatusDropdown = (e) => {
-  showStatusDropdown.value = !showStatusDropdown.value;
-  const rect = e.target.getBoundingClientRect();
-  statusDropdownStyle.value = {
-    position: "fixed",
-    top: rect.bottom + window.scrollY + "px",
-    left: rect.left + "px",
-  };
-};
-
-const setVerifyFilter = (val) => {
-  verifyFilter.value = val;
-  showStatusDropdown.value = false;
-  saveFilters();
-};
-
-const closeAllDropdowns = () => {
-  showStatusDropdown.value = false;
-};
-
-const resetAllFilters = () => {
-  nameSort.value = "";
-  ratingSort.value = "";
-  verifyFilter.value = "All";
-  dateSort.value = "";
-  jobsSort.value = "";
-  saveFilters();
-};
-
-const handleOutsideClick = (e) => {
-  if (
-    !e.target.closest(".col-dropdown") &&
-    !e.target.closest(".col-filter-btn")
-  ) {
-    closeAllDropdowns();
-  }
-};
-
-const openUserModal = (user) => {
-  userModal.value = user
-}
-
-const logAction = async (action_type, target_type, target_id, target_name, note = null) => {
-  const admin_id = localStorage.getItem('admin_id') || '';
-  if (!admin_id) return;
-  try {
-    await fetch(`${API_BASE}/admin/log`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ admin_id, action_type, target_type, target_id, target_name, note })
-    });
-  } catch (e) {}
-};
-
-const viewUser = (user) => {
-  const target_type = activeTab.value === 'Employer' ? 'EMPLOYER' : 'FREELANCER';
-  const route = activeTab.value === 'Employer'
-    ? { name: 'EmployerDetail', params: { id: user.id }, state: { parent: 'Users', parentTo: '/users', userName: user.name } }
-    : { name: 'FreelancerDetail', params: { id: user.id }, state: { parent: 'Users', parentTo: '/users', userName: user.name } }
-  router.push(route)
-}
-
-const userModalMapped = computed(() => {
-  if (!userModal.value) return null
-  const u = userModal.value
-  if (activeTab.value === 'Employer') {
-    const emJobs = jobs.value.filter(j => j.em_id === u.id)
-    return {
-      em_id: u.id, em_name: u.name, em_bio: u.bio,
-      em_profile_image_url: u.imageUrl,
-      em_verify_status: u.verifyStatus,
-      em_is_active: u.isActive,
-      em_rating_avg: u.rating,
-      em_created_at: u.createdAt,
-      em_updated_at: u.updatedAt,
-      em_username: u.username,
-      em_email: u.email,
-      em_phone: u.phone,
-      em_address: u.address,
-      em_total_jobs: emJobs.length,
-      em_completed_jobs: emJobs.filter(j => j.job_status === 'COMPLETED').length,
-    }
-  }
-  const flJobs = jobs.value.filter(j => j.selected_fl_id === u.id)
-  return {
-    fl_id: u.id, fl_name: u.name, fl_bio: u.bio,
-    fl_profile_image_url: u.imageUrl,
-    fl_verify_status: u.verifyStatus,
-    fl_is_active: u.isActive,
-    fl_rating_avg: u.rating,
-    fl_created_at: u.createdAt,
-    fl_updated_at: u.updatedAt,
-    fl_username: u.username,
-    fl_email: u.email,
-    fl_phone: u.phone,
-    fl_address: u.address,
-    fl_date_of_birth: u.dateOfBirth,
-    fl_total_jobs: flJobs.length,
-    fl_completed_jobs: flJobs.filter(j => j.job_status === 'COMPLETED').length,
-  }
+defineProps({
+  data:    { type: Object,  default: null },
+  type:    { type: String,  default: '' },
+  loading: { type: Boolean, default: false },
 })
-
-const goToFullDetail = () => {
-  if (!userModal.value) return
-  const route = activeTab.value === 'Employer'
-    ? { name: 'EmployerDetail', params: { id: userModal.value.id }, state: { parent: 'Users', parentTo: '/users', userName: userModal.value.name } }
-    : { name: 'FreelancerDetail', params: { id: userModal.value.id }, state: { parent: 'Users', parentTo: '/users', userName: userModal.value.name } }
-  router.push(route)
-  userModal.value = null
-}
-
-const openBanModal = (user) => {
-  banTarget.value = user;
-  showBanModal.value = true;
-};
-
-const confirmBan = async () => {
-  const user = banTarget.value;
-  const endpoint =
-    activeTab.value === "Freelancer"
-      ? `${API_BASE}/freelancers/${user.id}/ban`
-      : `${API_BASE}/employers/${user.id}/ban`;
-  try {
-    const res = await fetch(endpoint, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ is_active: !user.isActive, admin_id: localStorage.getItem('admin_id') || '' }),
-    });
-    const data = await res.json();
-    if (data.status === "updated") {
-      user.isActive = !user.isActive;
-    }
-  } catch (e) {
-    console.error("Failed to ban/unban user:", e);
-  } finally {
-    showBanModal.value = false;
-    banTarget.value = null;
-  }
-};
-const isLoading = ref(true);
-const employers = ref([]);
-const freelancers = ref([]);
-const jobs = ref([]);
-const search = ref("");
-
-
-function initialsFromName(name) {
-  if (!name) return "?";
-  const parts = name.trim().split(/\s+/).slice(0, 2);
-  return parts.map((p) => p[0]?.toUpperCase() || "").join("");
-}
-
-async function loadEmployers() {
-  const res = await fetch(`${API_BASE}/admin/employers?limit=50&offset=0`);
-  const data = await res.json();
-  employers.value = (data.items || []).map((e) => ({
-    id: e.em_id,
-    name: e.em_name || e.em_username || e.em_id,
-    initials: initialsFromName(e.em_name || e.em_username || ""),
-    verifyStatus: e.em_verify_status || "UNKNOWN",
-    isActive: !!e.em_is_active,
-    rating: Number(e.em_rating_avg || 0),
-    imageUrl: e.em_profile_image_url || "",
-    createdAt: e.em_created_at || "",
-    updatedAt: e.em_updated_at || "",
-    // extra fields for modal
-    username: e.em_username || "",
-    email: e.em_email || "",
-    phone: e.em_phone || "",
-    address: e.em_address || "",
-    bio: e.em_bio || "",
-  }));
-}
-
-async function loadFreelancers() {
-  const res = await fetch(`${API_BASE}/admin/freelancers?limit=50&offset=0`);
-  const data = await res.json();
-  freelancers.value = (data.items || []).map((f) => ({
-    id: f.fl_id,
-    name: f.fl_name || f.fl_id,
-    initials: initialsFromName(f.fl_name || ""),
-    verifyStatus: f.fl_verify_status || "UNKNOWN",
-    isActive: !!f.fl_is_active,
-    rating: Number(f.fl_rating_avg || 0),
-    imageUrl: f.fl_profile_image_url || "",
-    createdAt: f.fl_created_at || "",
-    updatedAt: f.fl_updated_at || "",
-    // extra fields for modal
-    username: f.fl_username || "",
-    email: f.fl_email || "",
-    phone: f.fl_phone || "",
-    address: f.fl_address || "",
-    bio: f.fl_bio || "",
-    dateOfBirth: f.fl_date_of_birth || "",
-  }));
-}
-
-async function loadJobs() {
-  try {
-    const res = await fetch(`${API_BASE}/jobs?limit=500`);
-    const data = await res.json();
-    jobs.value = data.items || [];
-
-    const flMap = {};
-    const emMap = {};
-
-    for (const j of jobs.value) {
-      if (j?.job_status !== "COMPLETED") continue;
-      const flId = j.selected_fl_id;
-      const emId = j.em_id;
-      if (flId) flMap[flId] = (flMap[flId] || 0) + 1;
-      if (emId) emMap[emId] = (emMap[emId] || 0) + 1;
-    }
-
-    jobsDoneByFreelancer.value = flMap;
-    jobsDoneByEmployer.value = emMap;
-  } catch (e) {
-    console.error("Failed to load jobs:", e);
-    jobs.value = [];
-    jobsDoneByFreelancer.value = {};
-    jobsDoneByEmployer.value = {};
-  }
-}
-
-const jobsDoneById = computed(() =>
-  activeTab.value === "Employer"
-    ? jobsDoneByEmployer.value
-    : jobsDoneByFreelancer.value,
-);
-
-const filteredUsers = computed(() => {
-  const list =
-    activeTab.value === "Employer" ? employers.value : freelancers.value;
-  let result = list.filter((u) => {
-    const matchSearch = (u.name || "")
-      .toLowerCase()
-      .includes(search.value.toLowerCase());
-    const matchStatus =
-      verifyFilter.value === "All" || u.verifyStatus === verifyFilter.value;
-    return matchSearch && matchStatus;
-  });
-
-  if (nameSort.value) {
-    result = [...result].sort((a, b) => {
-      const cmp = (a.name || "").localeCompare(b.name || "");
-      return nameSort.value === "desc" ? -cmp : cmp;
-    });
-  }
-
-  if (ratingSort.value) {
-    result = [...result].sort((a, b) => {
-      return ratingSort.value === "desc"
-        ? b.rating - a.rating
-        : a.rating - b.rating;
-    });
-  }
-
-  if (jobsSort.value) {
-    result = [...result].sort((a, b) => {
-      const jobsA = jobsDoneById.value[a.id] || 0;
-      const jobsB = jobsDoneById.value[b.id] || 0;
-      return jobsSort.value === "desc" ? jobsB - jobsA : jobsA - jobsB;
-    });
-  }
-
-  if (dateSort.value) {
-    result = [...result].sort((a, b) => {
-      const dateA = new Date(a.updatedAt) || 0;
-      const dateB = new Date(b.updatedAt) || 0;
-      return dateSort.value === "desc" ? dateB - dateA : dateA - dateB;
-    });
-  } else if (!nameSort.value && !ratingSort.value && !jobsSort.value) {
-    result = [...result].sort((a, b) => {
-      const dateA = new Date(a.updatedAt) || 0;
-      const dateB = new Date(b.updatedAt) || 0;
-      return dateB - dateA;
-    });
-  }
-
-  return result;
-});
-
-onUnmounted(() => {
-  document.removeEventListener("click", handleOutsideClick);
-});
-
-onMounted(async () => {
-  document.addEventListener("click", handleOutsideClick);
-  // Clear sort state on fresh load
-  nameSort.value = "";
-  ratingSort.value = "";
-  dateSort.value = "";
-  jobsSort.value = "";
-  await Promise.allSettled([loadEmployers(), loadFreelancers(), loadJobs()]);
-  isLoading.value = false;
-});
-
-watch(activeTab, async (tab) => {
-  // refresh only the active list
-  if (tab === "Employer" && employers.value.length === 0) await loadEmployers();
-  if (tab === "Freelancer" && freelancers.value.length === 0)
-    await loadFreelancers();
-});
+defineEmits(['close', 'view-detail'])
+const { avatarStyle, initials2 } = useAvatar()
 </script>
