@@ -654,6 +654,132 @@ def update_admin(admin_id: str, body: AdminUpdateRequest):
     except Exception as e:
         return {"error": str(e)}
 
+class AdminRegisterRequest(BaseModel):
+    username: str
+    email: str
+    name: str
+    password: str
+
+@app.post("/admin/register")
+def admin_register(body: AdminRegisterRequest):
+    try:
+        username = body.username.strip()
+        email = body.email.strip()
+        name = body.name.strip()
+        password = body.password
+
+        # Validate all fields non-empty
+        if not username or not email or not name or not password:
+            return {"success": False, "error": "All fields are required."}
+
+        # Email must end with @admin.com (case-insensitive)
+        if not email.lower().endswith("@admin.com"):
+            return {"success": False, "error": "Email must use the @admin.com domain."}
+
+        # Password minimum 6 characters
+        if len(password) < 6:
+            return {"success": False, "error": "Password must be at least 6 characters."}
+
+        conn = get_connection()
+        cursor = get_cursor(conn)
+
+        # Check duplicate username
+        cursor.execute("SELECT admin_id FROM admins WHERE username = %s", (username,))
+        if cursor.fetchone():
+            conn.close()
+            return {"success": False, "error": "Username already taken."}
+
+        # Check duplicate email
+        cursor.execute("SELECT admin_id FROM admins WHERE email = %s", (email,))
+        if cursor.fetchone():
+            conn.close()
+            return {"success": False, "error": "Email already registered."}
+
+        # Hash password
+        password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+        # INSERT new admin
+        cursor.execute(
+            """
+            INSERT INTO admins (admin_id, username, email, name, password_hash, status)
+            VALUES (UUID(), %s, %s, %s, %s, 'active')
+            """,
+            (username, email, name, password_hash)
+        )
+        conn.commit()
+
+        # Fetch created record
+        cursor.execute(
+            "SELECT admin_id, username, email, name, status, created_at FROM admins WHERE username = %s",
+            (username,)
+        )
+        row = cursor.fetchone()
+        conn.close()
+
+        return {
+            "success": True,
+            "admin": {
+                "admin_id":   row["admin_id"],
+                "username":   row["username"],
+                "email":      row["email"],
+                "name":       row["name"],
+                "status":     row["status"],
+                "created_at": row["created_at"],
+            }
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+@app.post("/admin/{admin_id}/change-password")
+def change_admin_password(admin_id: str, body: ChangePasswordRequest):
+    try:
+        current_password = body.current_password
+        new_password = body.new_password
+
+        # Validate both fields non-empty
+        if not current_password or not new_password:
+            return {"success": False, "error": "Both current and new passwords are required."}
+
+        # New password minimum 6 characters
+        if len(new_password) < 6:
+            return {"success": False, "error": "New password must be at least 6 characters."}
+
+        conn = get_connection()
+        cursor = get_cursor(conn)
+
+        # Fetch existing password hash — 404 if not found
+        cursor.execute(
+            "SELECT password_hash FROM admins WHERE admin_id = %s",
+            (admin_id,)
+        )
+        row = cursor.fetchone()
+        if not row:
+            conn.close()
+            from fastapi import HTTPException
+            raise HTTPException(status_code=404, detail="Admin not found.")
+
+        # Verify current password
+        if not bcrypt.checkpw(current_password.encode(), row["password_hash"].encode()):
+            conn.close()
+            return {"success": False, "error": "Current password is incorrect."}
+
+        # Hash and update new password
+        new_hash = bcrypt.hashpw(new_password.encode(), bcrypt.gensalt()).decode()
+        cursor.execute(
+            "UPDATE admins SET password_hash = %s, updated_at = NOW() WHERE admin_id = %s",
+            (new_hash, admin_id)
+        )
+        conn.commit()
+        conn.close()
+
+        return {"success": True, "message": "Password changed successfully."}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
 @app.get("/admin/logs")
 def admin_logs(limit: int = 50, offset: int = 0,
                action_type: str = None, target_type: str = None):
