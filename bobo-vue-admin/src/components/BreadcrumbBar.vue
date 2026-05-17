@@ -20,6 +20,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { pageNames } from '../router/index'
 
 const props = defineProps({
   label: { type: String, default: null }
@@ -50,15 +51,6 @@ const crumbs = computed(() => {
       base.push({ label: props.label, to: null })
     }
     return base
-  }
-
-  const pageNames = {
-    Jobs: 'Jobs Management',
-    Verification: 'Verification',
-    Users: 'Users',
-    Logs: 'Admin Logs',
-    Profile: 'Profile',
-    Dashboard: 'Dashboard',
   }
 
   return [{ label: pageNames[route.name] || route.name, to: null }]

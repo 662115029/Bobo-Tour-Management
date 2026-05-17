@@ -1,5 +1,5 @@
 import { ref, onMounted } from 'vue'
-import { fetchStats } from './api'
+import { fetchStats } from '../data/api'
 
 export const useStats = () => {
   const stats = ref({

@@ -12,7 +12,7 @@ import Profile from "../views/ProfileView.vue";
 import Login from "../views/LoginView.vue";
 import Register from "../views/RegisterView.vue";
 
-const pageNames = {
+export const pageNames = {
   Jobs: "Jobs Management",
   Verification: "Verification",
   Users: "Users",
