@@ -199,7 +199,7 @@ import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { API_BASE } from "../data/api";
 import { useAvatar } from '../composables/useAvatar'
-import { formatDateTime } from '../utils/formatDate'
+import { formatDate, formatDateTime } from '../utils/formatDate'
 import { formatJobStatus } from '../utils/statusClasses'
 import JobMiniModal from '../components/JobMiniModal.vue'
 import UserMiniModal from '../components/UserMiniModal.vue'
@@ -333,6 +333,19 @@ const handleOutsideClick = (e) => {
   if (!e.target.closest(".col-dropdown") && !e.target.closest(".col-filter-btn")) {
     closeAllDropdowns();
   }
+};
+
+// Helper: send log to backend
+const logAction = async (action_type, target_type, target_id, target_name, note = null) => {
+  const admin_id = localStorage.getItem('admin_id') || '';
+  if (!admin_id) return;
+  try {
+    await fetch(`${API_BASE}/admin/log`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ admin_id, action_type, target_type, target_id, target_name, note })
+    });
+  } catch (e) { }
 };
 
 const viewJob = (id) => {

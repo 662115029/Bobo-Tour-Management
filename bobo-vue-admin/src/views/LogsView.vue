@@ -229,13 +229,13 @@ import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { API_BASE } from "../data/api";
 import { useAvatar } from '../composables/useAvatar'
-import { formatDateTime } from '../utils/formatDate'
+import { formatDate, formatDateTime } from '../utils/formatDate'
 import { getActionClass, getTypeClass } from '../utils/statusClasses'
 import UserMiniModal from '../components/UserMiniModal.vue'
 import JobMiniModal from '../components/JobMiniModal.vue'
 
 const router = useRouter();
-const { avatarStyle, initials2 } = useAvatar()
+const { avatarStyle, jobIconStyle, initials2 } = useAvatar()
 const search = ref("");
 const typeFilter = ref(localStorage.getItem("logs_typeFilter") || "All");
 const actionFilter = ref(localStorage.getItem("logs_actionFilter") || "All");

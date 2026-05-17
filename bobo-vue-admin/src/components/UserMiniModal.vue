@@ -311,7 +311,7 @@
 
 <script setup>
 import { useAvatar } from '../composables/useAvatar'
-import { formatDateTime } from '../utils/formatDate'
+import { formatDate, formatDateTime } from '../utils/formatDate'
 
 defineProps({
   data:    { type: Object,  default: null },
