@@ -82,7 +82,7 @@
             </td>
             <td>
               <span class="badge" :class="job.job_status?.toLowerCase()">{{
-                job.job_status
+                formatJobStatus(job.job_status)
               }}</span>
             </td>
             <td>
@@ -285,6 +285,12 @@ import JobMiniModal from '../components/JobMiniModal.vue'
 import UserMiniModal from '../components/UserMiniModal.vue'
 
 const { avatarStyle, jobIconStyle, initials2 } = useAvatar()
+
+function formatJobStatus(status) {
+  if (!status) return ''
+  const map = { MATCHING: 'Pending', SELECTED: 'Matched' }
+  return map[status.toUpperCase()] ?? status
+}
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
 const router = useRouter();

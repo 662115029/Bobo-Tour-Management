@@ -66,7 +66,7 @@
               <span style="display:inline-flex;align-items:center;white-space:nowrap;gap:4px;">STATUS
                 <button class="col-filter-btn" :class="{ active: statusFilter !== 'All' }"
                   @click.stop="toggleStatusDropdown($event)">
-                  {{ statusFilter === "All" ? "All ▼" : statusFilter + " ▼" }}
+                  {{ statusFilter === "All" ? "All ▼" : formatJobStatus(statusFilter) + " ▼" }}
                 </button></span>
             </th>
             <th style="width: 12%; text-align: center;">ACTION</th>
@@ -113,7 +113,7 @@
             </td>
             <td style="text-align: center;">
               <span class="badge" :class="job.job_status?.toLowerCase()">{{
-                job.job_status
+                formatJobStatus(job.job_status)
               }}</span>
             </td>
             <td>
@@ -156,10 +156,10 @@
         Open
       </button>
       <button class="col-dropdown-item" @click="setStatusFilter('MATCHING')">
-        Matching
+        Pending
       </button>
       <button class="col-dropdown-item" @click="setStatusFilter('SELECTED')">
-        Selected
+        Matched
       </button>
       <button class="col-dropdown-item" @click="setStatusFilter('IN_PROGRESS')">
         In Progress
@@ -223,6 +223,12 @@ import UserMiniModal from '../components/UserMiniModal.vue'
 
 const router = useRouter();
 const { avatarStyle, jobIconStyle, initials2 } = useAvatar()
+
+function formatJobStatus(status) {
+  if (!status) return ''
+  const map = { MATCHING: 'Pending', SELECTED: 'Matched' }
+  return map[status.toUpperCase()] ?? status
+}
 const search = ref("");
 const statusFilter = ref(localStorage.getItem("jobs_statusFilter") || "All");
 const monthFilter = ref("All");

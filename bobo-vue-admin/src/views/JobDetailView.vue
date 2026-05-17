@@ -168,7 +168,7 @@
         <div class="flex items-start justify-between gap-4 mb-5">
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 mb-2">
-              <span class="badge" :class="job.job_status?.toLowerCase()">{{ job.job_status }}</span>
+              <span class="badge" :class="job.job_status?.toLowerCase()">{{ formatJobStatus(job.job_status) }}</span>
             </div>
             <h1 class="text-[20px] font-bold text-[#111] leading-tight mb-1.5">{{ job.job_title }}</h1>
             <div class="flex items-center gap-1.5 text-[13px] text-[#666]">
@@ -512,6 +512,13 @@ import { formatDate, formatDateTime } from '../utils/formatDate'
 
 const route = useRoute()
 const router = useRouter()
+
+function formatJobStatus(status) {
+  if (!status) return ''
+  const map = { MATCHING: 'Pending', SELECTED: 'Matched' }
+  return map[status.toUpperCase()] ?? status
+}
+
 const job = ref(null)
 const languages = ref([])
 const pickups = ref([])

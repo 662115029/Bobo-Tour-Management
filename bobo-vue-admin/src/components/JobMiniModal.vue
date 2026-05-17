@@ -34,7 +34,7 @@
 
           <!-- status + price -->
           <div class="flex items-center justify-between mt-3.5">
-            <span class="badge" :class="data.job_status?.toLowerCase()">{{ data.job_status }}</span>
+            <span class="badge" :class="data.job_status?.toLowerCase()">{{ formatJobStatus(data.job_status) }}</span>
             <span v-if="data.job_price" class="text-[15px] font-bold text-[#1a73e8]">
               ฿{{ Number(data.job_price).toLocaleString() }}
             </span>
@@ -176,4 +176,10 @@ defineEmits(['close', 'view-detail'])
 
 const { jobIconStyle, avatarStyle, initials2 } = useAvatar()
 const jobBg = computed(() => props.data ? jobIconStyle(props.data.job_id).backgroundColor : '#e8f0fe')
+
+function formatJobStatus(status) {
+  if (!status) return ''
+  const map = { MATCHING: 'Pending', SELECTED: 'Matched' }
+  return map[status.toUpperCase()] ?? status
+}
 </script>

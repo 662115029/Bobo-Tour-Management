@@ -427,7 +427,7 @@
                   <div class="text-[12px] text-[#999] mt-0.5">{{ j.company }} · {{ formatDate(j.job_start_date) }}</div>
                 </div>
                 <div class="flex flex-col items-end gap-1 shrink-0">
-                  <span class="badge" :class="j.job_status?.toLowerCase()">{{ j.job_status }}</span>
+                  <span class="badge" :class="j.job_status?.toLowerCase()">{{ formatJobStatus(j.job_status) }}</span>
                   <span class="text-[12px] font-semibold text-[#333]">{{ j.job_price ? "฿" + Number(j.job_price).toLocaleString() : "–" }}</span>
                 </div>
                 <svg class="w-4 h-4 text-[#ccc] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
@@ -497,6 +497,12 @@ import { formatDate, formatDateTime } from '../utils/formatDate'
 const route = useRoute()
 const router = useRouter()
 const showBanModal = ref(false)
+
+function formatJobStatus(status) {
+  if (!status) return ''
+  const map = { MATCHING: 'Pending', SELECTED: 'Matched' }
+  return map[status.toUpperCase()] ?? status
+}
 const fl = ref(null)
 const languages = ref([])
 const vehicle = ref(null)

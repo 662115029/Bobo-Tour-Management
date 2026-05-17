@@ -2,8 +2,8 @@ export const BADGE_BASE = 'inline-flex items-center px-2.5 py-0.5 rounded-full t
 
 const JOB_STATUS_MAP = {
   open:        'bg-blue-100 text-blue-800',
-  matching:    'bg-teal-100 text-teal-800',
-  selected:    'bg-purple-100 text-purple-800',
+  matching:    'bg-amber-100 text-amber-800',
+  selected:    'bg-green-100 text-green-800',
   in_progress: 'bg-amber-100 text-amber-800',
   completed:   'bg-slate-100 text-slate-600',
   cancelled:   'bg-red-100 text-red-800',
