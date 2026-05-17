@@ -27,12 +27,27 @@ const props = defineProps({
 
 const route = useRoute()
 
+// Fallback parent for dynamic detail pages when navigated directly (refresh / share link)
+const fallbackParent = {
+  FreelancerDetail: { label: 'Verification', to: '/verification' },
+  EmployerDetail:   { label: 'Verification', to: '/verification' },
+}
+
 const crumbs = computed(() => {
   if (route.meta?.parent) {
     const base = [{ label: route.meta.parent, to: route.meta.parentTo }]
-    const dynamicLabel = props.label || history.state?.jobTitle
-    if (dynamicLabel) {
-      base.push({ label: dynamicLabel, to: null })
+    if (props.label) {
+      base.push({ label: props.label, to: null })
+    }
+    return base
+  }
+
+  // Dynamic detail page accessed directly (no meta.parent set by beforeEach)
+  const fb = fallbackParent[route.name]
+  if (fb) {
+    const base = [{ label: fb.label, to: fb.to }]
+    if (props.label) {
+      base.push({ label: props.label, to: null })
     }
     return base
   }

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <BreadcrumbBar />
+    <BreadcrumbBar :label="job?.job_title" />
 
     <!-- Loading skeleton — mirrors real layout -->
     <div v-if="loading" class="px-5 pb-8">
