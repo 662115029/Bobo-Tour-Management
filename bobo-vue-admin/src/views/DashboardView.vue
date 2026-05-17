@@ -284,6 +284,7 @@ import { formatDate, formatDateTime } from '../utils/formatDate'
 import JobMiniModal from '../components/JobMiniModal.vue'
 import UserMiniModal from '../components/UserMiniModal.vue'
 import { API_BASE } from '../data/api'
+import { useStats } from '../composables/useStats'
 
 const { avatarStyle, jobIconStyle, initials2 } = useAvatar()
 
@@ -295,12 +296,7 @@ function formatJobStatus(status) {
 
 const router = useRouter();
 
-const stats = ref({
-  totalJobs: 0,
-  pendingVerify: 0,
-  freelancers: 0,
-  employers: 0,
-});
+const { stats } = useStats();
 const isLoading = ref(true);
 const jobs = ref([]);
 const verifications = ref([]);
@@ -526,15 +522,6 @@ onMounted(async () => {
   } catch (e) {
     console.error(e);
   }
-
-  try {
-    const res = await fetch(`${API_BASE}/admin/stats`);
-    const data = await res.json();
-    stats.value.totalJobs = data.totalJobs ?? 0;
-    stats.value.pendingVerify = data.pendingVerify ?? 0;
-    stats.value.freelancers = data.freelancers ?? 0;
-    stats.value.employers = data.employers ?? 0;
-  } catch {}
 
   try {
     const jobsRes = await fetch(`${API_BASE}/jobs?limit=500`);

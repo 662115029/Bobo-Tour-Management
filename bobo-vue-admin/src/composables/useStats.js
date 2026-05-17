@@ -1,5 +1,5 @@
 import { ref, onMounted } from 'vue'
-import { fetchStats } from '../data/api'
+import { fetchStats } from './api'
 
 export const useStats = () => {
   const stats = ref({
@@ -16,7 +16,7 @@ export const useStats = () => {
       loading.value = true
       const data = await fetchStats()
       stats.value = {
-        totalJobs: 0,
+        totalJobs: data.totalJobs ?? 0,
         pendingVerify: data.pendingVerify || 0,
         freelancers: data.freelancers || 0,
         employers: data.employers || 0
