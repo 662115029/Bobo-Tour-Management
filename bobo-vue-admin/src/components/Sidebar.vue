@@ -137,17 +137,20 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { API_BASE } from '../data/api'
+import { useAvatar } from '../composables/useAvatar'
 
 const emit = defineEmits(['toggle'])
 const isOpen = ref(true)
 const router = useRouter()
 const adminName = ref('')
 const adminUsername = ref('')
-const adminInitials = ref('?')
 const avatarColor = ref('#1a1a2e')
+
+const { initials2 } = useAvatar()
+const adminInitials = computed(() => initials2(adminName.value))
 
 function navClasses(active) {
   const pad = isOpen.value ? 'px-2.5 py-[11px]' : 'justify-center border-l-0 py-3 px-3'
@@ -168,12 +171,6 @@ const syncFromStorage = () => {
   const storedName = localStorage.getItem('admin_name')
   if (storedName) {
     adminName.value = storedName
-    adminInitials.value = storedName
-      .split(' ')
-      .map(w => w[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2) || '?'
   }
   const colorKey = `avatar_color_${adminId}`
   const storedColor = localStorage.getItem(colorKey)
@@ -196,8 +193,6 @@ onMounted(async () => {
       if (data.name) {
         adminName.value = data.name
         adminUsername.value = data.username || ''
-        adminInitials.value =
-          data.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || '?'
         localStorage.setItem('admin_name', data.name)
       }
       // avatar color: use existing or create
