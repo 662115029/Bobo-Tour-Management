@@ -66,7 +66,7 @@
               <span style="display:inline-flex;align-items:center;white-space:nowrap;gap:4px;">STATUS
                 <button class="col-filter-btn" :class="{ active: statusFilter !== 'All' }"
                   @click.stop="toggleStatusDropdown($event)">
-                  {{ statusFilter === "All" ? "All ▼" : formatJobStatus(statusFilter) + " ▼" }}
+                  {{ statusFilter === "All" ? "All ▼" : ({ MATCHING: 'Pending', SELECTED: 'Matched' }[statusFilter] ?? formatJobStatus(statusFilter)) + " ▼" }}
                 </button></span>
             </th>
             <th style="width: 12%; text-align: center;">ACTION</th>
@@ -226,7 +226,7 @@ const { avatarStyle, jobIconStyle, initials2 } = useAvatar()
 
 function formatJobStatus(status) {
   if (!status) return ''
-  const map = { MATCHING: 'Pending', SELECTED: 'Matched' }
+  const map = { MATCHING: 'PENDING', SELECTED: 'MATCHED' }
   return map[status.toUpperCase()] ?? status
 }
 const search = ref("");

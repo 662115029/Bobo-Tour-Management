@@ -179,7 +179,7 @@ const jobBg = computed(() => props.data ? jobIconStyle(props.data.job_id).backgr
 
 function formatJobStatus(status) {
   if (!status) return ''
-  const map = { MATCHING: 'Pending', SELECTED: 'Matched' }
+  const map = { MATCHING: 'PENDING', SELECTED: 'MATCHED' }
   return map[status.toUpperCase()] ?? status
 }
 </script>

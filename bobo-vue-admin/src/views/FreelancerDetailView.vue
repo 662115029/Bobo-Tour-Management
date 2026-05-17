@@ -500,7 +500,7 @@ const showBanModal = ref(false)
 
 function formatJobStatus(status) {
   if (!status) return ''
-  const map = { MATCHING: 'Pending', SELECTED: 'Matched' }
+  const map = { MATCHING: 'PENDING', SELECTED: 'MATCHED' }
   return map[status.toUpperCase()] ?? status
 }
 const fl = ref(null)
