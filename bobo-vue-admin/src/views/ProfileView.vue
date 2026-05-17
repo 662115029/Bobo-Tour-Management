@@ -431,12 +431,12 @@ import BreadcrumbBar from '../components/BreadcrumbBar.vue'
 import { ref, computed, onMounted, nextTick } from 'vue'
 
 import { useRouter } from 'vue-router'
-import { formatDateTime as formatDate } from '../utils/formatDate'
+import { formatDate } from '../utils/formatDate'
+import { API_BASE } from '../data/api'
 
 const router = useRouter()
 const admin = ref({})
 const isLoading = ref(true)
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000'
 
 // ── Avatar color (random per user, persisted by admin_id) ──────────────────
 const AVATAR_COLORS = [

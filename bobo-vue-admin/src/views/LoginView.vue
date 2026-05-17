@@ -151,6 +151,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { API_BASE } from '../data/api'
 
 const router = useRouter()
 const username = ref('')
@@ -158,8 +159,6 @@ const password = ref('')
 const error = ref('')
 const loading = ref(false)
 const showPassword = ref(false)
-
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000'
 
 const features = [
   { label: 'Freelancer & employer management', icon: 'M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75' },
