@@ -212,7 +212,7 @@ import { computed, onMounted, ref } from "vue";
 import BreadcrumbBar from '../components/BreadcrumbBar.vue';
 import { useRouter } from "vue-router";
 import { useAvatar } from '../composables/useAvatar'
-import { formatDate, formatDateTime } from '../utils/formatDate'
+import { formatDateTime } from '../utils/formatDate'
 import { formatJobStatus, getTypeClass } from '../utils/statusClasses'
 import JobMiniModal from '../components/JobMiniModal.vue'
 import UserMiniModal from '../components/UserMiniModal.vue'
@@ -248,19 +248,6 @@ const verifyDetail = ref(null);
 const verifyLoading = ref(false);
 
 const viewJob = (id) => router.push({ name: "JobDetail", params: { id } });
-
-// Helper: send log to backend
-const logAction = async (action_type, target_type, target_id, target_name, note = null) => {
-  const admin_id = localStorage.getItem('admin_id') || '';
-  if (!admin_id) return;
-  try {
-    await fetch(`${API_BASE}/admin/log`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ admin_id, action_type, target_type, target_id, target_name, note })
-    });
-  } catch (e) {}
-};
 
 const deleteJob = (id, title) => {
   deleteTargetId.value = id;
@@ -350,14 +337,6 @@ const verifyDetailMapped = computed(() => {
   if (!verifyDetail.value || !verifyModal.value) return null;
   return verifyDetail.value;
 });
-
-const goToVerifyFull = (v) => {
-  if (v.type === "Freelancer") {
-    router.push({ name: "FreelancerDetail", params: { id: v.id } });
-  } else {
-    router.push({ name: "EmployerDetail", params: { id: v.id } });
-  }
-};
 
 const goToVerifyDetail = () => {
   if (!verifyModal.value) return;

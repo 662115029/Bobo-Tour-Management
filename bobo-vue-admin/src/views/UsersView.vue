@@ -285,18 +285,6 @@ const openUserModal = (user) => {
   userModal.value = user
 }
 
-const logAction = async (action_type, target_type, target_id, target_name, note = null) => {
-  const admin_id = localStorage.getItem('admin_id') || '';
-  if (!admin_id) return;
-  try {
-    await fetch(`${API_BASE}/admin/log`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ admin_id, action_type, target_type, target_id, target_name, note })
-    });
-  } catch (e) {}
-};
-
 const viewUser = (user) => {
   const target_type = activeTab.value === 'Employer' ? 'EMPLOYER' : 'FREELANCER';
   const route = activeTab.value === 'Employer'
@@ -389,19 +377,13 @@ const jobs = ref([]);
 const search = ref("");
 
 
-function initialsFromName(name) {
-  if (!name) return "?";
-  const parts = name.trim().split(/\s+/).slice(0, 2);
-  return parts.map((p) => p[0]?.toUpperCase() || "").join("");
-}
-
 async function loadEmployers() {
   const res = await fetch(`${API_BASE}/admin/employers?limit=50&offset=0`);
   const data = await res.json();
   employers.value = (data.items || []).map((e) => ({
     id: e.em_id,
     name: e.em_name || e.em_username || e.em_id,
-    initials: initialsFromName(e.em_name || e.em_username || ""),
+    initials: initials2(e.em_name || e.em_username || ""),
     verifyStatus: e.em_verify_status || "UNKNOWN",
     isActive: !!e.em_is_active,
     rating: Number(e.em_rating_avg || 0),
@@ -423,7 +405,7 @@ async function loadFreelancers() {
   freelancers.value = (data.items || []).map((f) => ({
     id: f.fl_id,
     name: f.fl_name || f.fl_id,
-    initials: initialsFromName(f.fl_name || ""),
+    initials: initials2(f.fl_name || ""),
     verifyStatus: f.fl_verify_status || "UNKNOWN",
     isActive: !!f.fl_is_active,
     rating: Number(f.fl_rating_avg || 0),
