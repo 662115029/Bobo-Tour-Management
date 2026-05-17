@@ -30,5 +30,5 @@ export const useStats = () => {
 
   onMounted(loadStats)
 
-  return { stats, loading, error }
+  return { stats, loading, error, loadStats }
 }
