@@ -283,6 +283,7 @@ import { useAvatar } from '../composables/useAvatar'
 import { formatDate, formatDateTime } from '../utils/formatDate'
 import JobMiniModal from '../components/JobMiniModal.vue'
 import UserMiniModal from '../components/UserMiniModal.vue'
+import { API_BASE } from '../data/api'
 
 const { avatarStyle, jobIconStyle, initials2 } = useAvatar()
 
@@ -292,7 +293,6 @@ function formatJobStatus(status) {
   return map[status.toUpperCase()] ?? status
 }
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
 const router = useRouter();
 
 const stats = ref({

@@ -136,10 +136,10 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAvatar } from '../composables/useAvatar'
 import { formatDateTime } from '../utils/formatDate'
+import { API_BASE } from '../data/api'
 
 const router = useRouter()
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000'
 const activeTab = ref('Freelancer')
 const { avatarStyle, initials2 } = useAvatar()
 const search = ref('')

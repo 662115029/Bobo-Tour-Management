@@ -139,12 +139,11 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { API_BASE } from '../data/api'
 
 const emit = defineEmits(['toggle'])
 const isOpen = ref(true)
 const router = useRouter()
-
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000'
 const adminName = ref('')
 const adminUsername = ref('')
 const adminInitials = ref('?')
