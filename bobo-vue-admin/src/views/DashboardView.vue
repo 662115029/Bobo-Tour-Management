@@ -280,19 +280,13 @@ import { computed, onMounted, ref } from "vue";
 import BreadcrumbBar from '../components/BreadcrumbBar.vue';
 import { useRouter } from "vue-router";
 import { useAvatar } from '../composables/useAvatar'
-import { formatDate, formatDateTime } from '../utils/formatDate'
+import { formatDate, formatDateTime, formatJobStatus } from '../utils/formatDate'
 import JobMiniModal from '../components/JobMiniModal.vue'
 import UserMiniModal from '../components/UserMiniModal.vue'
 import { API_BASE } from '../data/api'
 import { useStats } from '../composables/useStats'
 
 const { avatarStyle, jobIconStyle, initials2 } = useAvatar()
-
-function formatJobStatus(status) {
-  if (!status) return ''
-  const map = { MATCHING: 'PENDING', SELECTED: 'MATCHED' }
-  return map[status.toUpperCase()] ?? status
-}
 
 const router = useRouter();
 

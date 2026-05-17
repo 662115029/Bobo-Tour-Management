@@ -169,17 +169,11 @@
 <script setup>
 import { computed } from 'vue'
 import { useAvatar } from '../composables/useAvatar'
-import { formatDate, formatDateTime } from '../utils/formatDate'
+import { formatDate, formatDateTime, formatJobStatus } from '../utils/formatDate'
 
 const props = defineProps({ data: { type: Object, default: null } })
 defineEmits(['close', 'view-detail'])
 
 const { jobIconStyle, avatarStyle, initials2 } = useAvatar()
 const jobBg = computed(() => props.data ? jobIconStyle(props.data.job_id).backgroundColor : '#e8f0fe')
-
-function formatJobStatus(status) {
-  if (!status) return ''
-  const map = { MATCHING: 'PENDING', SELECTED: 'MATCHED' }
-  return map[status.toUpperCase()] ?? status
-}
 </script>
