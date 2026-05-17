@@ -169,7 +169,8 @@
 <script setup>
 import { computed } from 'vue'
 import { useAvatar } from '../composables/useAvatar'
-import { formatDate, formatDateTime, formatJobStatus } from '../utils/formatDate'
+import { formatDate, formatDateTime } from '../utils/formatDate'
+import { formatJobStatus } from '../utils/statusClasses'
 
 const props = defineProps({ data: { type: Object, default: null } })
 defineEmits(['close', 'view-detail'])

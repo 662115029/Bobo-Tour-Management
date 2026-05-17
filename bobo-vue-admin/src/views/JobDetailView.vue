@@ -509,15 +509,10 @@ import { ref, onMounted } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { API_BASE } from "../data/api"
 import { formatDate, formatDateTime } from '../utils/formatDate'
+import { formatJobStatus } from '../utils/statusClasses'
 
 const route = useRoute()
 const router = useRouter()
-
-function formatJobStatus(status) {
-  if (!status) return ''
-  const map = { MATCHING: 'PENDING', SELECTED: 'MATCHED' }
-  return map[status.toUpperCase()] ?? status
-}
 
 const job = ref(null)
 const languages = ref([])

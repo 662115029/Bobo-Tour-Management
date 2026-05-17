@@ -413,16 +413,12 @@ import BreadcrumbBar from '../components/BreadcrumbBar.vue'
 import { ref, onMounted } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { API_BASE } from "../data/api"
+import { formatJobStatus } from '../utils/statusClasses'
 
 const route = useRoute()
 const router = useRouter()
 const showBanModal = ref(false)
 
-function formatJobStatus(status) {
-  if (!status) return ''
-  const map = { MATCHING: 'PENDING', SELECTED: 'MATCHED' }
-  return map[status.toUpperCase()] ?? status
-}
 const em = ref(null)
 const documents = ref([])
 const jobs = ref([])

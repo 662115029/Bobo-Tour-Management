@@ -66,7 +66,7 @@
               <span style="display:inline-flex;align-items:center;white-space:nowrap;gap:4px;">STATUS
                 <button class="col-filter-btn" :class="{ active: statusFilter !== 'All' }"
                   @click.stop="toggleStatusDropdown($event)">
-                  {{ statusFilter === "All" ? "All ▼" : ({ MATCHING: 'Pending', SELECTED: 'Matched' }[statusFilter] ?? formatJobStatus(statusFilter)) + " ▼" }}
+                  {{ statusFilter === "All" ? "All ▼" : (formatJobStatus(statusFilter)) + " ▼" }}
                 </button></span>
             </th>
             <th style="width: 12%; text-align: center;">ACTION</th>
@@ -155,10 +155,10 @@
       <button class="col-dropdown-item" @click="setStatusFilter('OPEN')">
         Open
       </button>
-      <button class="col-dropdown-item" @click="setStatusFilter('MATCHING')">
+      <button class="col-dropdown-item" @click="setStatusFilter('PENDING')">
         Pending
       </button>
-      <button class="col-dropdown-item" @click="setStatusFilter('SELECTED')">
+      <button class="col-dropdown-item" @click="setStatusFilter('MATCHED')">
         Matched
       </button>
       <button class="col-dropdown-item" @click="setStatusFilter('IN_PROGRESS')">
@@ -218,17 +218,13 @@ import { useRouter } from "vue-router";
 import { API_BASE } from "../data/api";
 import { useAvatar } from '../composables/useAvatar'
 import { formatDate, formatDateTime } from '../utils/formatDate'
+import { formatJobStatus } from '../utils/statusClasses'
 import JobMiniModal from '../components/JobMiniModal.vue'
 import UserMiniModal from '../components/UserMiniModal.vue'
 
 const router = useRouter();
 const { avatarStyle, jobIconStyle, initials2 } = useAvatar()
 
-function formatJobStatus(status) {
-  if (!status) return ''
-  const map = { MATCHING: 'PENDING', SELECTED: 'MATCHED' }
-  return map[status.toUpperCase()] ?? status
-}
 const search = ref("");
 const statusFilter = ref(localStorage.getItem("jobs_statusFilter") || "All");
 const monthFilter = ref("All");

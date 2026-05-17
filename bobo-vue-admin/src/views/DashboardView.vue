@@ -280,7 +280,8 @@ import { computed, onMounted, ref } from "vue";
 import BreadcrumbBar from '../components/BreadcrumbBar.vue';
 import { useRouter } from "vue-router";
 import { useAvatar } from '../composables/useAvatar'
-import { formatDate, formatDateTime, formatJobStatus } from '../utils/formatDate'
+import { formatDate, formatDateTime } from '../utils/formatDate'
+import { formatJobStatus } from '../utils/statusClasses'
 import JobMiniModal from '../components/JobMiniModal.vue'
 import UserMiniModal from '../components/UserMiniModal.vue'
 import { API_BASE } from '../data/api'
