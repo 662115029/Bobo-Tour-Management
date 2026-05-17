@@ -63,7 +63,7 @@
               </span>
             </th>
             <th style="width: 16%">
-              <span style="display:inline-flex;align-items:center;white-space:nowrap;gap:4px;">STATUS
+              <span class="inline-flex items-center whitespace-nowrap gap-1">STATUS
               <button
                 class="col-filter-btn"
                 :class="{ active: verifyFilter !== 'All' }"
@@ -72,8 +72,8 @@
                 {{ verifyFilter === "All" ? "All ▼" : verifyFilter === "NOT_VERIFIED" ? "NOT VERIF. ▼" : verifyFilter === "VERIFIED" ? "VERIFIED ▼" : verifyFilter === "PENDING" ? "PENDING ▼" : verifyFilter === "REJECTED" ? "REJECTED ▼" : verifyFilter + " ▼" }}
               </button></span>
             </th>
-            <th style="width: 11%; text-align: center;">ACTION</th>
-            <th class="th-sortable" :class="{ 'th-active': dateSort }" style="width: 16%; position: relative;" @click="cycleSort('date')">
+            <th style="width:11%" class="text-center">ACTION</th>
+            <th class="th-sortable relative" :class="{ 'th-active': dateSort }" style="width:16%" @click="cycleSort('date')">
               <span class="th-inner">
                 LAST UPDATED
                 <span class="sort-label">
@@ -84,9 +84,8 @@
               </span>
               <button
                 v-if="nameSort || ratingSort || verifyFilter !== 'All' || dateSort || jobsSort"
-                class="reset-btn ml-1.5"
+                class="reset-btn ml-1.5 absolute right-3 top-1/2 -translate-y-1/2"
                 @click.stop="resetAllFilters"
-                style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%);"
               >
                 ✕ Reset
               </button>

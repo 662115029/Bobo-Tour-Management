@@ -93,17 +93,17 @@
             </td>
             <td class="truncate-cell" :title="log.target_name">
               <template v-if="log.target_id && ['FREELANCER','EMPLOYER','JOB'].includes((log.target_type||'').toUpperCase())">
-                <span style="cursor:pointer;text-decoration:underline;text-underline-offset:2px;" @click="openTargetModal(log)">{{ log.target_name || log.target_id }}</span>
+                <span class="cursor-pointer underline underline-offset-[2px]" @click="openTargetModal(log)">{{ log.target_name || log.target_id }}</span>
               </template>
               <span v-else>{{ log.target_name || log.target_id || "-" }}</span>
             </td>
             <td class="truncate-cell text-muted text-[11px]" :title="log.note">
               {{ log.note || "-" }}
             </td>
-            <td style="max-width:0;overflow:hidden;">
-              <div class="user-cell" style="flex-wrap:nowrap;min-width:0;">
-                <span class="user-avatar" :style="avatarStyle(log.admin_name, log.admin_name)" style="flex-shrink:0;">{{ initials2(log.admin_name) }}</span>
-                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ log.admin_name || "-" }}</span>
+            <td class="truncate-cell">
+              <div class="user-cell flex-nowrap min-w-0">
+                <span class="user-avatar shrink-0" :style="avatarStyle(log.admin_name, log.admin_name)">{{ initials2(log.admin_name) }}</span>
+                <span class="overflow-hidden text-ellipsis whitespace-nowrap">{{ log.admin_name || "-" }}</span>
               </div>
             </td>
             <td class="text-muted text-[11px]">{{ formatDateTime(log.created_at) }}</td>

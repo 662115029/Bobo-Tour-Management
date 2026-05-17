@@ -62,7 +62,7 @@
             <td class="truncate-cell">
               <div class="user-cell">
                 <span class="user-avatar" :style="avatarStyle(v.id, v.name)">{{ initials2(v.name) }}</span>
-                <span class="clickable-cell" style="cursor:pointer" :title="v.name" @click="openUserModal(v)">{{ v.name }}</span>
+                <span class="clickable-cell" :title="v.name" @click="openUserModal(v)">{{ v.name }}</span>
               </div>
             </td>
             <td>
