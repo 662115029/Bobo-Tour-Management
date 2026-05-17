@@ -10,6 +10,7 @@ import Users from "../views/UsersView.vue";
 import Logs from "../views/LogsView.vue";
 import Profile from "../views/ProfileView.vue";
 import Login from "../views/LoginView.vue";
+import Register from "../views/RegisterView.vue";
 
 const pageNames = {
   Jobs: "Jobs Management",
@@ -22,6 +23,7 @@ const pageNames = {
 
 const routes = [
   { path: "/login", name: "Login", component: Login },
+  { path: "/register", name: "Register", component: Register },
   {
     path: "/",
     component: AdminLayout,
@@ -61,13 +63,13 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const adminId = localStorage.getItem("admin_id");
+  const publicPaths = ["/login", "/register"];
 
-  if (to.path !== "/login" && !adminId) {
+  if (!publicPaths.includes(to.path) && !adminId) {
     next("/login");
-  } else if (to.path === "/login" && adminId) {
+  } else if (publicPaths.includes(to.path) && adminId) {
     next({ name: "Dashboard" });
   } else {
-    // For dynamic detail pages, store the parent info from the previous route
     if (to.meta?.isDynamic && from.name) {
       to.meta.parent = pageNames[from.name] || from.name;
       to.meta.parentTo = from.fullPath;

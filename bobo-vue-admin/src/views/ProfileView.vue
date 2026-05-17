@@ -226,6 +226,163 @@
         </div>
       </div>
 
+      <!-- Security Card -->
+      <div class="overflow-hidden rounded-2xl bg-white shadow-sm">
+        <div class="px-6 py-5">
+          <h2 class="mb-4 text-[13px] font-bold uppercase tracking-wide text-[#1a1a2e]">Security</h2>
+
+          <!-- Password row -->
+          <div
+            class="flex flex-col gap-1 rounded-xl bg-[#f8f9fb] px-4 py-3 transition-all"
+            :class="{ 'ring-2 ring-[#06c755]/40 bg-[#f0fdf4]': editingPassword }"
+          >
+            <span class="text-[10px] font-semibold uppercase tracking-wide text-[#aaa]">Password</span>
+
+            <!-- Collapsed view -->
+            <div v-if="!editingPassword" class="flex items-center gap-2">
+              <svg class="h-3.5 w-3.5 shrink-0 text-[#bbb]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+              </svg>
+              <span class="flex-1 text-[13px] font-medium text-[#555]">••••••••</span>
+              <button
+                class="flex h-6 w-6 items-center justify-center rounded-md text-[#aaa] transition-colors hover:bg-[#e8f5e9] hover:text-[#2e7d32]"
+                title="Change password"
+                @click="startEditPassword"
+              >
+                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Expanded form -->
+            <div v-else class="mt-2 flex flex-col gap-3">
+
+              <!-- Current Password -->
+              <div>
+                <label class="mb-1 block text-[11px] font-medium text-[#888]">Current Password</label>
+                <div class="flex rounded-md border border-[#ddd] overflow-hidden focus-within:border-[#06c755]">
+                  <input
+                    :type="showCurrentPw ? 'text' : 'password'"
+                    v-model="currentPassword"
+                    placeholder="Your current password"
+                    autocomplete="current-password"
+                    class="flex-1 min-w-0 border-0 py-2 px-3 text-[13px] outline-none bg-white"
+                  />
+                  <button type="button"
+                    class="shrink-0 px-2.5 border-l border-[#eee] bg-[#fafafa] text-[#888] hover:bg-[#f0f0f0] flex items-center justify-center"
+                    @click="showCurrentPw = !showCurrentPw"
+                  >
+                    <svg v-if="!showCurrentPw" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    <svg v-else class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                      <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- New Password -->
+              <div>
+                <label class="mb-1 block text-[11px] font-medium text-[#888]">New Password</label>
+                <div class="flex rounded-md border border-[#ddd] overflow-hidden focus-within:border-[#06c755]">
+                  <input
+                    :type="showNewPw ? 'text' : 'password'"
+                    v-model="newPassword"
+                    placeholder="Min. 8 characters"
+                    autocomplete="new-password"
+                    @focus="pwChangeTouched = true"
+                    class="flex-1 min-w-0 border-0 py-2 px-3 text-[13px] outline-none bg-white"
+                  />
+                  <button type="button"
+                    class="shrink-0 px-2.5 border-l border-[#eee] bg-[#fafafa] text-[#888] hover:bg-[#f0f0f0] flex items-center justify-center"
+                    @click="showNewPw = !showNewPw"
+                  >
+                    <svg v-if="!showNewPw" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    <svg v-else class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                      <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  </button>
+                </div>
+                <!-- Password checklist -->
+                <div v-if="pwChangeTouched" class="mt-2 rounded-md bg-[#f8f9fb] px-3 py-2 flex flex-col gap-1">
+                  <div v-for="rule in newPasswordRules" :key="rule.label" class="flex items-center gap-2">
+                    <svg v-if="rule.passed" class="w-3 h-3 shrink-0 text-[#06c755]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M20 6L9 17l-5-5"/>
+                    </svg>
+                    <svg v-else class="w-3 h-3 shrink-0 text-[#ccc]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="9"/>
+                    </svg>
+                    <span class="text-[10px]" :class="rule.passed ? 'text-[#2e7d32]' : 'text-[#aaa]'">{{ rule.label }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Confirm New Password -->
+              <div>
+                <label class="mb-1 block text-[11px] font-medium text-[#888]">Confirm New Password</label>
+                <div class="flex rounded-md border border-[#ddd] overflow-hidden focus-within:border-[#06c755]">
+                  <input
+                    :type="showConfirmPw ? 'text' : 'password'"
+                    v-model="confirmNewPassword"
+                    placeholder="Re-enter new password"
+                    autocomplete="new-password"
+                    class="flex-1 min-w-0 border-0 py-2 px-3 text-[13px] outline-none bg-white"
+                  />
+                  <button type="button"
+                    class="shrink-0 px-2.5 border-l border-[#eee] bg-[#fafafa] text-[#888] hover:bg-[#f0f0f0] flex items-center justify-center"
+                    @click="showConfirmPw = !showConfirmPw"
+                  >
+                    <svg v-if="!showConfirmPw" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    <svg v-else class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                      <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Action buttons -->
+              <div class="flex items-center gap-2 pt-1">
+                <button
+                  class="flex items-center gap-1.5 rounded-md bg-[#06c755] px-3 py-1.5 text-[12px] font-semibold text-white transition-opacity hover:opacity-80"
+                  :class="{ 'opacity-50 pointer-events-none': savingPassword }"
+                  @click="savePassword"
+                >
+                  <svg v-if="!savingPassword" class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                  </svg>
+                  <svg v-else class="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                  </svg>
+                  Save
+                </button>
+                <button
+                  class="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[12px] font-semibold text-[#aaa] hover:bg-[#fee2e2] hover:text-[#c62828]"
+                  @click="cancelEditPassword"
+                >
+                  <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                  Cancel
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Toast -->
       <transition
         enter-active-class="transition-all duration-300 ease-out"
@@ -272,6 +429,7 @@
 <script setup>
 import BreadcrumbBar from '../components/BreadcrumbBar.vue'
 import { ref, computed, onMounted, nextTick } from 'vue'
+
 import { useRouter } from 'vue-router'
 import { formatDateTime as formatDate } from '../utils/formatDate'
 
@@ -390,6 +548,82 @@ const saveEmail = async () => {
     showToast('Failed to update email', 'error')
   } finally {
     savingEmail.value = false
+  }
+}
+
+// ── Change Password ────────────────────────────────────────────────────────
+const editingPassword = ref(false)
+const currentPassword = ref('')
+const newPassword = ref('')
+const confirmNewPassword = ref('')
+const showCurrentPw = ref(false)
+const showNewPw = ref(false)
+const showConfirmPw = ref(false)
+const savingPassword = ref(false)
+const pwChangeTouched = ref(false)
+
+const SPECIAL_RE = /[!@#$%^&*()\-_=+[\]{};':",.<>?/\\|`~]/
+
+const newPasswordRules = computed(() => [
+  { label: 'At least 8 characters',       passed: newPassword.value.length >= 8 },
+  { label: 'At least 1 uppercase letter',  passed: /[A-Z]/.test(newPassword.value) },
+  { label: 'At least 1 number',            passed: /[0-9]/.test(newPassword.value) },
+  { label: 'At least 1 special character', passed: SPECIAL_RE.test(newPassword.value) },
+])
+
+const newPasswordValid = computed(() => newPasswordRules.value.every(r => r.passed))
+
+const startEditPassword = () => {
+  currentPassword.value = ''
+  newPassword.value = ''
+  confirmNewPassword.value = ''
+  showCurrentPw.value = false
+  showNewPw.value = false
+  showConfirmPw.value = false
+  pwChangeTouched.value = false
+  editingPassword.value = true
+}
+
+const cancelEditPassword = () => {
+  editingPassword.value = false
+}
+
+const savePassword = async () => {
+  if (!currentPassword.value) {
+    showToast('Current password is required.', 'error')
+    return
+  }
+  pwChangeTouched.value = true
+  if (!newPasswordValid.value) {
+    showToast('New password does not meet all requirements.', 'error')
+    return
+  }
+  if (newPassword.value !== confirmNewPassword.value) {
+    showToast('Passwords do not match', 'error')
+    return
+  }
+  savingPassword.value = true
+  try {
+    const adminId = localStorage.getItem('admin_id')
+    const res = await fetch(`${API_BASE}/admin/${adminId}/change-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        current_password: currentPassword.value,
+        new_password: newPassword.value,
+      }),
+    })
+    const data = await res.json()
+    if (!res.ok || data.error) throw new Error(data.error || 'Failed to change password')
+    editingPassword.value = false
+    currentPassword.value = ''
+    newPassword.value = ''
+    confirmNewPassword.value = ''
+    showToast('Password changed', 'success')
+  } catch (e) {
+    showToast(e.message || 'Failed to change password', 'error')
+  } finally {
+    savingPassword.value = false
   }
 }
 
