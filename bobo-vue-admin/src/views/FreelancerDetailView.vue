@@ -468,26 +468,20 @@
     </div>
 
     <!-- Ban Modal -->
-    <div v-if="showBanModal" class="modal-overlay" @click.self="showBanModal = false">
-      <div class="modal">
-        <div class="modal-icon">
-          <svg v-if="fl?.fl_is_active" class="w-10 h-10 mx-auto text-red-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
-          <svg v-else class="w-10 h-10 mx-auto text-green-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        </div>
-        <h3>{{ fl?.fl_is_active ? "Ban Freelancer" : "Unban Freelancer" }}</h3>
-        <p>Are you sure you want to {{ fl?.fl_is_active ? "ban" : "unban" }} <strong>{{ fl?.fl_name }}</strong>?</p>
-        <p v-if="fl?.fl_is_active" class="modal-warning">They will not be able to accept jobs or use the platform.</p>
-        <div class="modal-actions">
-          <button class="btn-cancel" @click="showBanModal = false">Cancel</button>
-          <button class="btn-confirm" :class="fl?.fl_is_active ? 'ban' : 'unban'" @click="confirmBan">{{ fl?.fl_is_active ? "Ban" : "Unban" }}</button>
-        </div>
-      </div>
-    </div>
+    <BanModal
+      :show="showBanModal"
+      :is-active="fl?.fl_is_active"
+      :name="fl?.fl_name"
+      user-type="Freelancer"
+      @confirm="confirmBan"
+      @cancel="showBanModal = false"
+    />
   </div>
 </template>
 
 <script setup>
 import BreadcrumbBar from '../components/BreadcrumbBar.vue'
+import BanModal from '../components/BanModal.vue'
 import { ref, computed, onMounted } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { API_BASE } from "../data/api"

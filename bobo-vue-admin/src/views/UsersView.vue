@@ -173,35 +173,14 @@
     </div>
 
     <!-- Ban Modal -->
-    <div
-      v-if="showBanModal"
-      class="modal-overlay"
-      @click.self="showBanModal = false">
-      <div class="modal">
-        <div class="modal-icon">{{ banTarget?.isActive ? "🚫" : "✅" }}</div>
-        <h3>{{ banTarget?.isActive ? "Ban User" : "Unban User" }}</h3>
-        <p>
-          Are you sure you want to {{ banTarget?.isActive ? "ban" : "unban"
-          }}<br />
-          <strong>"{{ banTarget?.name }}"</strong>?
-        </p>
-        <p v-if="banTarget?.isActive" class="modal-warning">
-          This user will not be able to accept any jobs.
-        </p>
-        <div class="modal-actions">
-          <button class="btn-cancel" @click="showBanModal = false">
-            Cancel
-          </button>
-          <button
-            class="btn-confirm"
-            :class="banTarget?.isActive ? 'ban' : 'unban'"
-            @click="confirmBan"
-          >
-            {{ banTarget?.isActive ? "Ban" : "Unban" }}
-          </button>
-        </div>
-      </div>
-    </div>
+    <BanModal
+      :show="showBanModal"
+      :is-active="banTarget?.isActive"
+      :name="banTarget?.name"
+      :user-type="activeTab === 'Employer' ? 'Employer' : 'Freelancer'"
+      @confirm="confirmBan"
+      @cancel="showBanModal = false"
+    />
     <!-- User Modal -->
     <UserMiniModal
       :data="userModalMapped"
@@ -219,6 +198,7 @@ import { useRouter } from "vue-router";
 import { useAvatar } from '../composables/useAvatar'
 import { formatDateTime } from '../utils/formatDate'
 import UserMiniModal from '../components/UserMiniModal.vue'
+import BanModal from '../components/BanModal.vue'
 import { API_BASE } from '../data/api'
 
 const activeTab = ref("Freelancer");
