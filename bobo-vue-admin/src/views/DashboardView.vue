@@ -5,7 +5,7 @@
       <div class="stat-card stat-card--blue">
         <span class="stat-label">TOTAL JOBS</span>
         <span v-if="isLoading" class="skeleton skeleton-stat"></span>
-        <span v-else class="stat-value">{{ localTotalJobs.toLocaleString() }}</span>
+        <span v-else class="stat-value">{{ stats.totalJobs.toLocaleString() }}</span>
       </div>
       <div class="stat-card stat-card--amber">
         <span class="stat-label">PENDING VERIFY</span>
@@ -208,11 +208,11 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref } from "vue";
 import BreadcrumbBar from '../components/BreadcrumbBar.vue';
 import { useRouter } from "vue-router";
 import { useAvatar } from '../composables/useAvatar'
-import { formatDateTime } from '../utils/formatDate'
+import { formatDate, formatDateTime } from '../utils/formatDate'
 import { formatJobStatus, getTypeClass } from '../utils/statusClasses'
 import JobMiniModal from '../components/JobMiniModal.vue'
 import UserMiniModal from '../components/UserMiniModal.vue'
@@ -225,9 +225,7 @@ const { avatarStyle, jobIconStyle, initials2 } = useAvatar()
 
 const router = useRouter();
 
-const { stats, loadStats } = useStats();
-const localTotalJobs = ref(0);
-watch(() => stats.value.totalJobs, (val) => { localTotalJobs.value = val }, { immediate: true })
+const { stats } = useStats();
 const isLoading = ref(true);
 const jobs = ref([]);
 const verifications = ref([]);
@@ -251,6 +249,19 @@ const verifyLoading = ref(false);
 
 const viewJob = (id) => router.push({ name: "JobDetail", params: { id } });
 
+// Helper: send log to backend
+const logAction = async (action_type, target_type, target_id, target_name, note = null) => {
+  const admin_id = localStorage.getItem('admin_id') || '';
+  if (!admin_id) return;
+  try {
+    await fetch(`${API_BASE}/admin/log`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ admin_id, action_type, target_type, target_id, target_name, note })
+    });
+  } catch (e) {}
+};
+
 const deleteJob = (id, title) => {
   deleteTargetId.value = id;
   deleteTargetTitle.value = title;
@@ -267,7 +278,7 @@ const confirmDelete = async () => {
     });
     if (res.ok) {
       jobs.value = jobs.value.filter((j) => j.job_id !== id);
-      localTotalJobs.value = Math.max(0, localTotalJobs.value - 1);
+      stats.value.totalJobs = Math.max(0, stats.value.totalJobs - 1);
     } else {
       console.error("Delete failed:", res.status);
     }
@@ -339,6 +350,14 @@ const verifyDetailMapped = computed(() => {
   if (!verifyDetail.value || !verifyModal.value) return null;
   return verifyDetail.value;
 });
+
+const goToVerifyFull = (v) => {
+  if (v.type === "Freelancer") {
+    router.push({ name: "FreelancerDetail", params: { id: v.id } });
+  } else {
+    router.push({ name: "EmployerDetail", params: { id: v.id } });
+  }
+};
 
 const goToVerifyDetail = () => {
   if (!verifyModal.value) return;

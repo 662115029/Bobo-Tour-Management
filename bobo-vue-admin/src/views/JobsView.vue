@@ -89,6 +89,45 @@
           </tr>
         </thead>
         <tbody>
+          <tr v-for="job in filteredJobs" :key="job.job_id" class="row-hover">
+            <td class="truncate-cell clickable-cell" @click="openJobModal(job)">
+              <div class="user-cell">
+                <span class="user-avatar" :style="jobIconStyle(job.job_id)" style="border-radius:6px;flex-shrink:0;">
+                  <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2c-2.5 3-4 6.5-4 10s1.5 7 4 10"/><path d="M12 2c2.5 3 4 6.5 4 10s-1.5 7-4 10"/></svg>
+                </span>
+                {{ job.job_title }}
+              </div>
+            </td>
+            <td class="truncate-cell clickable-cell" @click="openCompanyModal(job)">
+              <div class="user-cell">
+                <span class="user-avatar" :style="avatarStyle(job.em_id, job.company)">{{ initials2(job.company) }}</span>
+                {{ job.company }}
+              </div>
+            </td>
+            <td>
+              {{
+                job.job_price
+                  ? "฿" + Number(job.job_price).toLocaleString()
+                  : "-"
+              }}
+            </td>
+            <td style="text-align: center;">
+              <span class="badge" :class="job.job_status?.toLowerCase()">{{
+                formatJobStatus(job.job_status)
+              }}</span>
+            </td>
+            <td>
+              <div class="action-btns">
+                <button class="btn-action view" @click="viewJob(job.job_id)">
+                  View
+                </button>
+                <button class="btn-action delete" @click="deleteJob(job.job_id)">
+                  Delete
+                </button>
+              </div>
+            </td>
+            <td class="text-muted">{{ formatDateTime(job.job_updated_at) }}</td>
+          </tr>
           <template v-if="isLoading">
             <tr v-for="i in 6" :key="'sk-' + i" class="skeleton-row">
               <td><span class="skeleton skeleton-text" style="width:70%"></span></td>
@@ -102,47 +141,6 @@
                 </div>
               </td>
               <td><span class="skeleton skeleton-text" style="width:80%"></span></td>
-            </tr>
-          </template>
-          <template v-else>
-            <tr v-for="job in filteredJobs" :key="job.job_id" class="row-hover">
-              <td class="truncate-cell clickable-cell" @click="openJobModal(job)">
-                <div class="user-cell">
-                  <span class="user-avatar" :style="jobIconStyle(job.job_id)" style="border-radius:6px;flex-shrink:0;">
-                    <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2c-2.5 3-4 6.5-4 10s1.5 7 4 10"/><path d="M12 2c2.5 3 4 6.5 4 10s-1.5 7-4 10"/></svg>
-                  </span>
-                  {{ job.job_title }}
-                </div>
-              </td>
-              <td class="truncate-cell clickable-cell" @click="openCompanyModal(job)">
-                <div class="user-cell">
-                  <span class="user-avatar" :style="avatarStyle(job.em_id, job.company)">{{ initials2(job.company) }}</span>
-                  {{ job.company }}
-                </div>
-              </td>
-              <td>
-                {{
-                  job.job_price
-                    ? "฿" + Number(job.job_price).toLocaleString()
-                    : "-"
-                }}
-              </td>
-              <td style="text-align: center;">
-                <span class="badge" :class="job.job_status?.toLowerCase()">{{
-                  formatJobStatus(job.job_status)
-                }}</span>
-              </td>
-              <td>
-                <div class="action-btns">
-                  <button class="btn-action view" @click="viewJob(job.job_id)">
-                    View
-                  </button>
-                  <button class="btn-action delete" @click="deleteJob(job.job_id)">
-                    Delete
-                  </button>
-                </div>
-              </td>
-              <td class="text-muted">{{ formatDateTime(job.job_updated_at) }}</td>
             </tr>
           </template>
         </tbody>
@@ -201,7 +199,7 @@ import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { API_BASE } from "../data/api";
 import { useAvatar } from '../composables/useAvatar'
-import { formatDateTime } from '../utils/formatDate'
+import { formatDate, formatDateTime } from '../utils/formatDate'
 import { formatJobStatus } from '../utils/statusClasses'
 import JobMiniModal from '../components/JobMiniModal.vue'
 import UserMiniModal from '../components/UserMiniModal.vue'
@@ -335,6 +333,19 @@ const handleOutsideClick = (e) => {
   if (!e.target.closest(".col-dropdown") && !e.target.closest(".col-filter-btn")) {
     closeAllDropdowns();
   }
+};
+
+// Helper: send log to backend
+const logAction = async (action_type, target_type, target_id, target_name, note = null) => {
+  const admin_id = localStorage.getItem('admin_id') || '';
+  if (!admin_id) return;
+  try {
+    await fetch(`${API_BASE}/admin/log`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ admin_id, action_type, target_type, target_id, target_name, note })
+    });
+  } catch (e) { }
 };
 
 const viewJob = (id) => {
