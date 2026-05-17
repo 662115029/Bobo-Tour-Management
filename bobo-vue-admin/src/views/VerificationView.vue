@@ -97,41 +97,20 @@
     />
 
     <!-- Document Modal -->
-    <div v-if="selectedUser" class="modal-overlay" @click.self="selectedUser = null">
-      <div class="docs-modal">
-        <div class="modal-header">
-          <div>
-            <h3>{{ selectedUser.name }} - Documents</h3>
-          </div>
-          <button class="close-btn" @click="selectedUser = null">✕</button>
-        </div>
-
-        <div v-if="selectedDocs.length === 0" class="no-docs">No documents found.</div>
-
-        <div v-else class="doc-list">
-          <div v-for="doc in selectedDocs" :key="doc.id" class="doc-row">
-            <div class="doc-type-cell">{{ doc.type }}</div>
-            <div class="doc-file-cell">
-              <img :src="doc.file_url" class="doc-thumbnail" :alt="doc.type" />
-            </div>
-            <div class="doc-status-cell">
-              <span class="doc-badge" :class="doc.status?.toLowerCase()">{{ doc.status }}</span>
-            </div>
-            <div class="doc-uploaded-cell">{{ doc.uploaded }}</div>
-            <div class="doc-actions-cell">
-              <button class="btn-approve-row" :disabled="doc.status === 'APPROVED'" @click="reviewDoc(doc, 'APPROVED')">✅ Approve</button>
-              <button class="btn-reject-row" :disabled="doc.status === 'REJECTED'" @click="reviewDoc(doc, 'REJECTED')">❌ Reject</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <DocReviewModal
+      :user="selectedUser"
+      :docs="selectedDocs"
+      @close="selectedUser = null"
+      @approve="(doc) => reviewDoc(doc, 'APPROVED')"
+      @reject="(doc) => reviewDoc(doc, 'REJECTED')"
+    />
   </div>
 </template>
 
 <script setup>
 import BreadcrumbBar from '../components/BreadcrumbBar.vue'
 import UserMiniModal from '../components/UserMiniModal.vue'
+import DocReviewModal from '../components/DocReviewModal.vue'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAvatar } from '../composables/useAvatar'

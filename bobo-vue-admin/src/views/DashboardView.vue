@@ -197,57 +197,13 @@
       @confirm="confirmDelete" @cancel="showDeleteModal = false" />
 
     <!-- Verification Documents Modal -->
-    <div
-      v-if="selectedVerifyUser"
-      class="modal-overlay"
-      @click.self="selectedVerifyUser = null"
-    >
-      <div class="docs-modal">
-        <div class="modal-header">
-          <div>
-            <h3>{{ selectedVerifyUser.name }} - Documents</h3>
-          </div>
-          <button class="close-btn" @click="selectedVerifyUser = null">
-            ✕
-          </button>
-        </div>
-
-        <div v-if="selectedVerifyDocs.length === 0" class="no-docs">
-          No documents found.
-        </div>
-
-        <div v-else class="doc-list">
-          <div v-for="doc in selectedVerifyDocs" :key="doc.id" class="doc-row">
-            <div class="doc-type-cell">{{ doc.type }}</div>
-            <div class="doc-file-cell">
-              <img :src="doc.file_url" class="doc-thumbnail" :alt="doc.type" />
-            </div>
-            <div class="doc-status-cell">
-              <span class="doc-badge" :class="doc.status?.toLowerCase()">{{
-                doc.status
-              }}</span>
-            </div>
-            <div class="doc-uploaded-cell">{{ doc.uploaded }}</div>
-            <div class="doc-actions-cell">
-              <button
-                class="btn-approve-row"
-                :disabled="doc.status === 'APPROVED'"
-                @click="reviewVerifyDoc(doc, 'APPROVED')"
-              >
-                ✅ Approve
-              </button>
-              <button
-                class="btn-reject-row"
-                :disabled="doc.status === 'REJECTED'"
-                @click="reviewVerifyDoc(doc, 'REJECTED')"
-              >
-                ❌ Reject
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <DocReviewModal
+      :user="selectedVerifyUser"
+      :docs="selectedVerifyDocs"
+      @close="selectedVerifyUser = null"
+      @approve="(doc) => reviewVerifyDoc(doc, 'APPROVED')"
+      @reject="(doc) => reviewVerifyDoc(doc, 'REJECTED')"
+    />
   </div>
 </template>
 
@@ -261,6 +217,7 @@ import { formatJobStatus, getTypeClass } from '../utils/statusClasses'
 import JobMiniModal from '../components/JobMiniModal.vue'
 import UserMiniModal from '../components/UserMiniModal.vue'
 import DeleteJobModal from '../components/DeleteJobModal.vue'
+import DocReviewModal from '../components/DocReviewModal.vue'
 import { API_BASE } from '../data/api'
 import { useStats } from '../composables/useStats'
 
