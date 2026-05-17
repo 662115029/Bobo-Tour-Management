@@ -4,18 +4,18 @@
       <h1 class="mt-0 mb-6 text-2xl font-semibold text-[#1a1a2e] text-center">Admin Login</h1>
       <form @submit.prevent="handleLogin">
         <div class="mb-5">
-          <label class="block mb-2 text-sm font-medium text-[#333]">Username or email</label>
+          <label class="block mb-2 text-[13px] font-medium text-[#333]">Username or email</label>
           <input
             type="text"
             v-model="username"
             placeholder="e.g. admin_khimmy or name@admin.com"
             required
             autocomplete="username"
-            class="w-full px-[14px] py-3 border border-[#ddd] rounded-md text-sm focus:outline-none focus:border-[#1a1a2e]"
+            class="w-full px-[14px] py-3 border border-[#ddd] rounded-md text-[13px] focus:outline-none focus:border-[#1a1a2e]"
           />
         </div>
         <div class="mb-5">
-          <label class="block mb-2 text-sm font-medium text-[#333]">Password</label>
+          <label class="block mb-2 text-[13px] font-medium text-[#333]">Password</label>
           <div
             class="flex rounded-md border border-[#ddd] overflow-hidden focus-within:border-[#1a1a2e] focus-within:ring-1 focus-within:ring-[#1a1a2e]/20"
           >
@@ -25,7 +25,7 @@
               placeholder="Password"
               required
               autocomplete="current-password"
-              class="flex-1 min-w-0 border-0 py-3 px-[14px] text-sm outline-none bg-white"
+              class="flex-1 min-w-0 border-0 py-3 px-[14px] text-[13px] outline-none bg-white"
             />
             <button
               type="button"
@@ -68,11 +68,11 @@
             </button>
           </div>
         </div>
-        <p v-if="error" class="text-[#dc3545] text-sm mb-4">{{ error }}</p>
+        <p v-if="error" class="text-[#dc3545] text-[13px] mb-4">{{ error }}</p>
         <button
           type="submit"
           :disabled="loading"
-          class="w-full py-[14px] bg-[#1a1a2e] text-white border-none rounded-md text-base font-medium cursor-pointer hover:bg-[#2a2a4e] disabled:opacity-60 disabled:cursor-not-allowed"
+          class="w-full py-[14px] bg-[#1a1a2e] text-white border-none rounded-md text-[15px] font-medium cursor-pointer hover:bg-[#2a2a4e] disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {{ loading ? 'Logging in...' : 'Login' }}
         </button>

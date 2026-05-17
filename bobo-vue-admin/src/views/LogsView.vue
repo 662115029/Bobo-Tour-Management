@@ -97,7 +97,7 @@
               </template>
               <span v-else>{{ log.target_name || log.target_id || "-" }}</span>
             </td>
-            <td class="truncate-cell text-muted text-xs" :title="log.note">
+            <td class="truncate-cell text-muted text-[11px]" :title="log.note">
               {{ log.note || "-" }}
             </td>
             <td style="max-width:0;overflow:hidden;">
@@ -106,7 +106,7 @@
                 <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ log.admin_name || "-" }}</span>
               </div>
             </td>
-            <td class="text-muted text-xs">{{ formatDateTime(log.created_at) }}</td>
+            <td class="text-muted text-[11px]">{{ formatDateTime(log.created_at) }}</td>
           </tr>
           <tr v-if="filteredLogs.length === 0">
             <td colspan="6" class="empty">No logs found.</td>

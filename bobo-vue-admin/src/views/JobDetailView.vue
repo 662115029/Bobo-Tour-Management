@@ -153,7 +153,7 @@
     <div v-else class="px-5 pb-8">
       <!-- Top Bar -->
       <div class="flex items-center justify-between py-3 mb-5">
-        <button class="flex items-center gap-1.5 text-sm text-[#555] hover:text-black cursor-pointer border-none bg-transparent" @click="router.back()">
+        <button class="flex items-center gap-1.5 text-[13px] text-[#555] hover:text-black cursor-pointer border-none bg-transparent" @click="router.back()">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
           Back
         </button>

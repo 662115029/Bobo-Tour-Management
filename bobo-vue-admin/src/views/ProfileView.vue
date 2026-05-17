@@ -36,10 +36,10 @@
               </template>
               <template v-else>
                 <div class="flex items-center gap-2 flex-wrap">
-                  <span class="text-lg font-bold text-[#1a1a2e] leading-tight">{{ admin.name || '—' }}</span>
+                  <span class="text-[15px] font-bold text-[#1a1a2e] leading-tight">{{ admin.name || '—' }}</span>
                   <span class="badge active text-[10px]">{{ admin.status }}</span>
                 </div>
-                <p class="text-xs text-[#999] mt-0.5">@{{ admin.username }}</p>
+                <p class="text-[11px] text-[#999] mt-0.5">@{{ admin.username }}</p>
               </template>
             </div>
           </div>
@@ -66,7 +66,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                 </svg>
-                <span class="text-sm font-medium text-[#555]">{{ admin.username || '—' }}</span>
+                <span class="text-[13px] font-medium text-[#555]">{{ admin.username || '—' }}</span>
                 <span class="ml-auto rounded-md bg-[#eee] px-1.5 py-0.5 text-[9px] font-semibold text-[#999] tracking-wide">FIXED</span>
               </div>
             </div>
@@ -76,7 +76,7 @@
               <span class="text-[10px] font-semibold uppercase tracking-wide text-[#aaa]">Account Status</span>
               <div class="flex items-center gap-2">
                 <div class="h-2 w-2 rounded-full bg-[#06c755]" />
-                <span class="text-sm font-medium text-[#2e7d32]">{{ admin.status || '—' }}</span>
+                <span class="text-[13px] font-medium text-[#2e7d32]">{{ admin.status || '—' }}</span>
               </div>
             </div>
 
@@ -90,7 +90,7 @@
                     d="M5.121 17.804A4 4 0 018 17h8a4 4 0 012.879 1.196M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                 </svg>
                 <template v-if="!editingName">
-                  <span class="flex-1 text-sm font-medium text-[#333]">{{ admin.name || '—' }}</span>
+                  <span class="flex-1 text-[13px] font-medium text-[#333]">{{ admin.name || '—' }}</span>
                   <button
                     class="flex h-6 w-6 items-center justify-center rounded-md text-[#aaa] transition-colors hover:bg-[#e8f5e9] hover:text-[#2e7d32]"
                     title="Edit name"
@@ -106,7 +106,7 @@
                   <input
                     ref="nameInputRef"
                     v-model="nameInput"
-                    class="flex-1 rounded-md border border-[#06c755] bg-white px-2 py-0.5 text-sm outline-none"
+                    class="flex-1 rounded-md border border-[#06c755] bg-white px-2 py-0.5 text-[13px] outline-none"
                     placeholder="Enter name"
                     @keydown.enter="saveName"
                     @keydown.esc="cancelEditName"
@@ -148,7 +148,7 @@
                     d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                 </svg>
                 <template v-if="!editingEmail">
-                  <span class="flex-1 truncate text-sm font-medium text-[#333]">{{ admin.email || '—' }}</span>
+                  <span class="flex-1 truncate text-[13px] font-medium text-[#333]">{{ admin.email || '—' }}</span>
                   <button
                     class="flex h-6 w-6 items-center justify-center rounded-md text-[#aaa] transition-colors hover:bg-[#e8f5e9] hover:text-[#2e7d32]"
                     title="Edit email"
@@ -165,7 +165,7 @@
                     ref="emailInputRef"
                     v-model="emailInput"
                     type="email"
-                    class="flex-1 rounded-md border border-[#06c755] bg-white px-2 py-0.5 text-sm outline-none"
+                    class="flex-1 rounded-md border border-[#06c755] bg-white px-2 py-0.5 text-[13px] outline-none"
                     placeholder="Enter email"
                     @keydown.enter="saveEmail"
                     @keydown.esc="cancelEditEmail"
@@ -205,7 +205,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                 </svg>
-                <span class="text-sm text-[#555]">{{ formatDate(admin.created_at) }}</span>
+                <span class="text-[13px] text-[#555]">{{ formatDate(admin.created_at) }}</span>
               </div>
             </div>
 
@@ -217,7 +217,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                <span class="text-sm text-[#555]">{{ formatDate(admin.updated_at) }}</span>
+                <span class="text-[13px] text-[#555]">{{ formatDate(admin.updated_at) }}</span>
               </div>
             </div>
 
@@ -237,7 +237,7 @@
       >
         <div
           v-if="toast.show"
-          class="fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-xl px-5 py-3 text-sm font-medium text-white shadow-lg"
+          class="fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-xl px-5 py-3 text-[13px] font-medium text-white shadow-lg"
           :class="toast.type === 'success' ? 'bg-[#2e7d32]' : 'bg-[#c62828]'"
         >
           <svg v-if="toast.type === 'success'" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -254,7 +254,7 @@
       <div>
         <button
           type="button"
-          class="flex cursor-pointer items-center gap-2 rounded-xl border-none bg-[#ffebee] px-5 py-3 text-sm font-semibold text-[#c62828] transition-colors hover:bg-[#ffcdd2]"
+          class="flex cursor-pointer items-center gap-2 rounded-xl border-none bg-[#ffebee] px-5 py-3 text-[13px] font-semibold text-[#c62828] transition-colors hover:bg-[#ffcdd2]"
           @click="handleLogout"
         >
           <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
