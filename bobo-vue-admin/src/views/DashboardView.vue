@@ -262,8 +262,9 @@ const confirmDelete = async () => {
   const title = deleteTargetTitle.value;
   try {
     const adminId = localStorage.getItem('admin_id') || '';
-    const res = await fetch(`${API_BASE}/jobs/${id}?admin_id=${adminId}`, {
+    const res = await fetch(`${API_BASE}/jobs/${id}`, {
       method: "DELETE",
+      headers: { "X-Admin-ID": adminId },
     });
     if (res.ok) {
       jobs.value = jobs.value.filter((j) => j.job_id !== id);

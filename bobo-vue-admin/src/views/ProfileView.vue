@@ -205,7 +205,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                 </svg>
-                <span class="text-[13px] text-[#555]">{{ formatDate(admin.created_at) }}</span>
+                <span class="text-[13px] text-[#555]">{{ formatDateTime(admin.created_at) }}</span>
               </div>
             </div>
 
@@ -217,7 +217,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                <span class="text-[13px] text-[#555]">{{ formatDate(admin.updated_at) }}</span>
+                <span class="text-[13px] text-[#555]">{{ formatDateTime(admin.updated_at) }}</span>
               </div>
             </div>
 
@@ -431,7 +431,7 @@ import BreadcrumbBar from '../components/BreadcrumbBar.vue'
 import { ref, computed, onMounted, nextTick } from 'vue'
 
 import { useRouter } from 'vue-router'
-import { formatDate } from '../utils/formatDate'
+import { formatDateTime } from '../utils/formatDate'
 import { API_BASE } from '../data/api'
 
 const router = useRouter()
@@ -642,7 +642,9 @@ onMounted(async () => {
   if (!adminId) { router.push('/login'); return }
 
   try {
-    const res = await fetch(`${API_BASE}/admin/me?admin_id=${adminId}`)
+    const res = await fetch(`${API_BASE}/admin/me`, {
+      headers: { "X-Admin-ID": adminId },
+    })
     const data = await res.json()
     if (data.admin_id) {
       admin.value = data

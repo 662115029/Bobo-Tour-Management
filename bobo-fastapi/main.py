@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, Header
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage, FlexSendMessage
@@ -587,7 +587,8 @@ def admin_login(request: LoginRequest):
         }
 
 @app.get("/admin/me")
-def admin_me(admin_id: str):
+def admin_me(x_admin_id: str = Header(None, alias="X-Admin-ID")):
+    admin_id = x_admin_id
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
@@ -1778,7 +1779,8 @@ def ban_employer(em_id: str, body: BanRequest):
 # =============================================================================
 
 @app.delete("/jobs/{job_id}")
-def delete_job(job_id: str, admin_id: str = None):
+def delete_job(job_id: str, x_admin_id: Optional[str] = Header(None, alias="X-Admin-ID")):
+    admin_id = x_admin_id
     conn = None
     try:
         # TRANSACTION 1: Delete the job (critical)

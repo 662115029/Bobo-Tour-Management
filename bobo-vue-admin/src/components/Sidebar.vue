@@ -188,7 +188,9 @@ onMounted(async () => {
   const adminId = localStorage.getItem('admin_id')
   if (adminId) {
     try {
-      const res = await fetch(`${API_BASE}/admin/me?admin_id=${adminId}`)
+      const res = await fetch(`${API_BASE}/admin/me`, {
+        headers: { "X-Admin-ID": adminId },
+      })
       const data = await res.json()
       if (data.name) {
         adminName.value = data.name
