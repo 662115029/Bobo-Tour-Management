@@ -486,25 +486,14 @@
     </div>
 
     <!-- Delete Modal -->
-    <div v-if="showDeleteModal" class="modal-overlay" @click.self="showDeleteModal = false">
-      <div class="modal">
-        <div class="modal-icon">
-          <svg class="w-10 h-10 mx-auto text-red-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path stroke-linecap="round" stroke-linejoin="round" d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m5 0V4a1 1 0 011-1h2a1 1 0 011 1v2"/></svg>
-        </div>
-        <h3>Delete Job</h3>
-        <p>Are you sure you want to delete<br /><strong>"{{ job?.job_title }}"</strong>?</p>
-        <p class="modal-warning">This action cannot be undone.</p>
-        <div class="modal-actions">
-          <button class="btn-cancel" @click="showDeleteModal = false">Cancel</button>
-          <button class="btn-confirm-delete" @click="confirmDelete">Delete</button>
-        </div>
-      </div>
-    </div>
+    <DeleteJobModal :show="showDeleteModal" :title="job?.job_title"
+      @confirm="confirmDelete" @cancel="showDeleteModal = false" />
   </div>
 </template>
 
 <script setup>
 import BreadcrumbBar from '../components/BreadcrumbBar.vue'
+import DeleteJobModal from '../components/DeleteJobModal.vue'
 import { ref, onMounted } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { API_BASE } from "../data/api"

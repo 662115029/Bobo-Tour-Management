@@ -188,26 +188,8 @@
     />
 
     <!-- Delete Modal -->
-    <div v-if="showDeleteModal" class="modal-overlay" @click.self="showDeleteModal = false">
-      <div class="mini-modal" style="text-align: center; padding: 32px">
-        <div style="font-size: 36px; margin-bottom: 12px">🗑</div>
-        <h3 style="margin: 0 0 12px">Delete Job</h3>
-        <p style="color: #555; margin: 0 0 8px; line-height: 1.5">
-          Are you sure you want to delete<br /><strong>"{{ deleteTargetTitle }}"</strong>?
-        </p>
-        <p style="font-size: 12px; color: #dc3545; margin-bottom: 24px">
-          This action cannot be undone.
-        </p>
-        <div style="display: flex; justify-content: center; gap: 12px">
-          <button class="btn-cancel" @click="showDeleteModal = false">
-            Cancel
-          </button>
-          <button class="btn-confirm-delete" @click="confirmDelete">
-            Delete
-          </button>
-        </div>
-      </div>
-    </div>
+    <DeleteJobModal :show="showDeleteModal" :title="deleteTargetTitle"
+      @confirm="confirmDelete" @cancel="showDeleteModal = false" />
   </div>
 </template>
 
@@ -221,6 +203,7 @@ import { formatDate, formatDateTime } from '../utils/formatDate'
 import { formatJobStatus } from '../utils/statusClasses'
 import JobMiniModal from '../components/JobMiniModal.vue'
 import UserMiniModal from '../components/UserMiniModal.vue'
+import DeleteJobModal from '../components/DeleteJobModal.vue'
 
 const router = useRouter();
 const { avatarStyle, jobIconStyle, initials2 } = useAvatar()
