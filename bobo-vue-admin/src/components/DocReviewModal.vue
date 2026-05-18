@@ -6,6 +6,11 @@
       <div class="modal-header">
         <div>
           <h3>{{ user.name }} - Documents</h3>
+          <div class="text-[12px] mt-0.5 font-medium"
+            :class="allApproved ? 'text-[#2e7d32]' : 'text-[#999]'">
+            {{ approvedCount }} / {{ requiredCount }} Approved
+            <span v-if="allApproved"> ✓ Will be VERIFIED</span>
+          </div>
         </div>
         <button class="close-btn" @click="$emit('close')">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -75,9 +80,17 @@
 </template>
 
 <script setup>
-defineProps({
-  user: { type: Object, default: null },  // { name: string }
-  docs: { type: Array, default: () => [] }
+import { computed } from 'vue'
+
+const props = defineProps({
+  user: { type: Object, default: null },
+  docs: { type: Array, default: () => [] },
+  requiredCount: { type: Number, default: 5 }
 })
 defineEmits(['close', 'approve', 'reject'])
+
+const approvedCount = computed(() =>
+  props.docs.filter(d => d.status === 'APPROVED').length
+)
+const allApproved = computed(() => approvedCount.value >= props.requiredCount)
 </script>

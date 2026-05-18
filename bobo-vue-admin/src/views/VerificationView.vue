@@ -268,15 +268,44 @@ const reviewDoc = async (doc, newStatus) => {
       doc.status = newStatus
       doc.reviewed = formatDateTime(new Date().toISOString())
 
+      // Sync status back to source array so reopening modal shows correct state
+      if (doc._type === 'fl') {
+        const raw = flDocs.value.find(d => d.fl_doc_id === doc.id)
+        if (raw) raw.fl_doc_status = newStatus
+      } else {
+        const raw = emDocs.value.find(d => d.em_doc_id === doc.id)
+        if (raw) raw.em_doc_status = newStatus
+      }
+
+      // Compute new verify status: VERIFIED only when all 5 docs approved, else PENDING
+      const userDocs = doc._type === 'fl'
+        ? flDocs.value.filter(d => d.fl_id === selectedUser.value.id)
+        : emDocs.value.filter(d => d.em_id === selectedUser.value.id)
+      const approvedCount = userDocs.filter(d =>
+        doc._type === 'fl' ? d.fl_doc_status === 'APPROVED' : d.em_doc_status === 'APPROVED'
+      ).length
+      const newUserStatus = approvedCount >= 5 ? 'VERIFIED' : 'PENDING'
+
+      // PATCH verify status to backend so it persists after refresh
+      const userEndpoint = doc._type === 'fl'
+        ? `${API_BASE}/freelancers/${selectedUser.value.id}`
+        : `${API_BASE}/employers/${selectedUser.value.id}`
+      const verifyField = doc._type === 'fl' ? 'fl_verify_status' : 'em_verify_status'
+      try {
+        await fetch(userEndpoint, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ [verifyField]: newUserStatus })
+        })
+      } catch (e) {
+        console.error('Failed to update user verify status:', e)
+      }
+
+      // Update local state
       const list = activeTab.value === 'Freelancer' ? freelancers.value : employers.value
       const user = list.find(u => u.id === selectedUser.value.id)
-      if (user) {
-        const allApproved = selectedDocs.value.every(d => d.status === 'APPROVED')
-        const anyRejected = selectedDocs.value.some(d => d.status === 'REJECTED')
-        if (allApproved) user.status = 'VERIFIED'
-        else if (anyRejected) user.status = 'NOT_VERIFIED'
-        selectedUser.value.status = user.status
-      }
+      if (user) user.status = newUserStatus
+      selectedUser.value.status = newUserStatus
     }
   } catch (e) {
     console.error('Failed to review doc:', e)
@@ -303,26 +332,37 @@ onMounted(async () => {
     allFreelancers.value = flData.items || []
     allEmployers.value = emData.items || []
 
-    freelancers.value = (flData.items || []).map(f => ({
-      id: f.fl_id,
-      name: f.fl_name || f.line_user_id,
-      status: f.fl_verify_status,
-      submitted: formatDateTime(f.fl_created_at),
-      updated: formatDateTime(f.fl_updated_at),
-      createdAt: f.fl_created_at || '',
-    }))
-
-    employers.value = (emData.items || []).map(e => ({
-      id: e.em_id,
-      name: e.em_name || e.em_username,
-      status: e.em_verify_status,
-      submitted: formatDateTime(e.em_created_at),
-      updated: formatDateTime(e.em_updated_at),
-      createdAt: e.em_created_at || '',
-    }))
-
     flDocs.value = flDocData.items || []
     emDocs.value = emDocData.items || []
+
+    // Compute verify status from actual approved doc count — don't trust DB field
+    freelancers.value = (flData.items || []).map(f => {
+      const docs = flDocs.value.filter(d => d.fl_id === f.fl_id)
+      const approvedCount = docs.filter(d => d.fl_doc_status === 'APPROVED').length
+      const computedStatus = approvedCount >= 5 ? 'VERIFIED' : 'PENDING'
+      return {
+        id: f.fl_id,
+        name: f.fl_name || f.line_user_id,
+        status: computedStatus,
+        submitted: formatDateTime(f.fl_created_at),
+        updated: formatDateTime(f.fl_updated_at),
+        createdAt: f.fl_created_at || '',
+      }
+    })
+
+    employers.value = (emData.items || []).map(e => {
+      const docs = emDocs.value.filter(d => d.em_id === e.em_id)
+      const approvedCount = docs.filter(d => d.em_doc_status === 'APPROVED').length
+      const computedStatus = approvedCount >= 5 ? 'VERIFIED' : 'PENDING'
+      return {
+        id: e.em_id,
+        name: e.em_name || e.em_username,
+        status: computedStatus,
+        submitted: formatDateTime(e.em_created_at),
+        updated: formatDateTime(e.em_updated_at),
+        createdAt: e.em_created_at || '',
+      }
+    })
   } catch (e) {
     console.error('Failed to load verifications:', e)
   } finally {
