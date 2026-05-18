@@ -383,6 +383,32 @@ const reviewVerifyDoc = async (doc, newStatus) => {
     if (data.status === "updated") {
       doc.status = newStatus;
       doc.reviewed = formatDateTime(new Date().toISOString());
+
+      // Sync back to source array
+      if (doc._type === 'fl') {
+        const raw = flDocs.value.find(d => d.fl_doc_id === doc.id)
+        if (raw) raw.fl_doc_status = newStatus
+      } else {
+        const raw = emDocs.value.find(d => d.em_doc_id === doc.id)
+        if (raw) raw.em_doc_status = newStatus
+      }
+
+      // Recompute user status from source docs
+      if (selectedVerifyUser.value) {
+        const userId = selectedVerifyUser.value.id
+        const userDocs = doc._type === 'fl'
+          ? flDocs.value.filter(d => d.fl_id === userId)
+          : emDocs.value.filter(d => d.em_id === userId)
+        const approvedCount = userDocs.filter(d =>
+          doc._type === 'fl' ? d.fl_doc_status === 'APPROVED' : d.em_doc_status === 'APPROVED'
+        ).length
+        const newUserStatus = approvedCount >= 5 ? 'VERIFIED' : 'PENDING'
+
+        // Update in verifications list
+        const entry = verifications.value.find(v => v.id === userId)
+        if (entry) entry.status = newUserStatus
+        selectedVerifyUser.value.status = newUserStatus
+      }
     }
   } catch (e) {
     console.error("Failed to review doc:", e);
@@ -420,27 +446,32 @@ onMounted(async () => {
     flDocs.value = flDocData.items || [];
     emDocs.value = emDocData.items || [];
 
-    const pendingFl = allFreelancers.value
-      .filter((f) => f.fl_verify_status === "PENDING")
-      .map((f) => ({
+    // Compute status from actual approved doc count — same logic as VerificationView
+    const allFl = allFreelancers.value.map((f) => {
+      const docs = flDocs.value.filter(d => d.fl_id === f.fl_id)
+      const approvedCount = docs.filter(d => d.fl_doc_status === 'APPROVED').length
+      return {
         id: f.fl_id,
         name: f.fl_name || f.line_user_id,
         type: "Freelancer",
-        status: f.fl_verify_status,
+        status: approvedCount >= 5 ? 'VERIFIED' : 'PENDING',
         created_at: f.fl_created_at,
         updated_at: f.fl_updated_at,
-      }));
-    const pendingEm = allEmployers.value
-      .filter((e) => e.em_verify_status === "PENDING")
-      .map((e) => ({
+      }
+    });
+    const allEm = allEmployers.value.map((e) => {
+      const docs = emDocs.value.filter(d => d.em_id === e.em_id)
+      const approvedCount = docs.filter(d => d.em_doc_status === 'APPROVED').length
+      return {
         id: e.em_id,
         name: e.em_name || e.em_username,
         type: "Employer",
-        status: e.em_verify_status,
+        status: approvedCount >= 5 ? 'VERIFIED' : 'PENDING',
         created_at: e.em_created_at,
         updated_at: e.em_updated_at,
-      }));
-    verifications.value = [...pendingFl, ...pendingEm];
+      }
+    });
+    verifications.value = [...allFl, ...allEm];
   } catch {}
   finally {
     isLoading.value = false;
