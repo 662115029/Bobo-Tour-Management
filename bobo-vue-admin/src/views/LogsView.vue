@@ -92,8 +92,8 @@
               </span>
             </td>
             <td class="truncate-cell" :title="log.target_name">
-              <template v-if="log.target_id && ['FREELANCER','EMPLOYER','JOB'].includes((log.target_type||'').toUpperCase())">
-                <span class="cursor-pointer underline underline-offset-[2px]" @click="openTargetModal(log)">{{ log.target_name || log.target_id }}</span>
+              <template v-if="['DOCUMENT'].includes((log.target_type||'').toUpperCase()) || ((log.target_id || log.target_name) && ['FREELANCER','EMPLOYER','JOB'].includes((log.target_type||'').toUpperCase()))">
+                <span class="cursor-pointer underline underline-offset-[2px]" @click="openTargetModal(log)">{{ log.target_name || log.target_id || '-' }}</span>
               </template>
               <span v-else>{{ log.target_name || log.target_id || "-" }}</span>
             </td>
@@ -164,8 +164,25 @@
       @view-detail="(id) => { router.push({ name: 'JobDetail', params: { id } }); targetModal = null }"
     />
 
+    <!-- Deleted Job Modal: Loading skeleton -->
+    <div v-if="deletedJobModalLoading" class="modal-overlay">
+      <div class="w-[380px] rounded-2xl bg-white shadow-[0_16px_56px_rgba(0,0,0,0.18)] flex flex-col overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-3.5 border-b border-[#f0f0f0]">
+          <span class="skeleton w-20 h-5 rounded-full block"></span>
+          <span class="skeleton w-7 h-7 rounded-full block"></span>
+        </div>
+        <div class="px-5 pt-5 pb-4 flex flex-col gap-3">
+          <div v-for="i in 4" :key="i" class="flex items-center justify-between bg-[#fafafa] rounded-xl px-4 py-3">
+            <span class="skeleton h-3 w-1/4 rounded block"></span>
+            <span class="skeleton h-3.5 w-2/5 rounded block"></span>
+          </div>
+        </div>
+        <div class="px-5 pb-5 pt-1"><span class="skeleton w-full h-11 rounded-xl block"></span></div>
+      </div>
+    </div>
+
     <!-- Deleted Job Modal -->
-    <div v-if="deletedJobModal" class="modal-overlay" @click.self="deletedJobModal = null">
+    <div v-else-if="deletedJobModal" class="modal-overlay" @click.self="deletedJobModal = null">
       <div class="w-[380px] rounded-2xl bg-white shadow-[0_16px_56px_rgba(0,0,0,0.18)] flex flex-col overflow-hidden">
 
         <!-- Topbar -->
@@ -409,16 +426,57 @@ const targetModal = ref(null);
 const targetModalType = ref('');
 const targetModalLoading = ref(false);
 const deletedJobModal = ref(null); // { target_name, target_id, note, created_at, admin_name }
+const deletedJobModalLoading = ref(false);
 
 const openTargetModal = async (log) => {
   const type = (log.target_type || '').toUpperCase();
   const action = (log.action_type || '').toUpperCase();
   const id = log.target_id;
-  if (!id || !['FREELANCER','EMPLOYER','JOB'].includes(type)) return;
+  if (!['FREELANCER','EMPLOYER','JOB','DOCUMENT'].includes(type)) return;
+  if (type !== 'DOCUMENT' && !id) return;
 
-  // If this log is a delete action on a JOB → show deleted modal immediately
+  // DOCUMENT type → match user by target_name and show UserMiniModal
+  if (type === 'DOCUMENT') {
+    targetModal.value = null;
+    targetModalType.value = '';
+    targetModalLoading.value = true;
+    try {
+      const name = (log.target_name || '').trim().toLowerCase();
+      const [flRes, emRes] = await Promise.all([
+        fetch(`${API_BASE}/freelancers?limit=500`),
+        fetch(`${API_BASE}/employers?limit=500`),
+      ]);
+      const [flData, emData] = await Promise.all([flRes.json(), emRes.json()]);
+      const flUser = (flData.items || []).find(f =>
+        (f.fl_name || '').toLowerCase() === name || (f.fl_username || '').toLowerCase() === name
+      );
+      if (flUser) {
+        targetModal.value = flUser;
+        targetModalType.value = 'FREELANCER';
+      } else {
+        const emUser = (emData.items || []).find(e =>
+          (e.em_name || '').toLowerCase() === name || (e.em_username || '').toLowerCase() === name
+        );
+        if (emUser) {
+          targetModal.value = emUser;
+          targetModalType.value = 'EMPLOYER';
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load document target user:', e);
+    } finally {
+      targetModalLoading.value = false;
+    }
+    return;
+  }
+
+  // If this log is a delete action on a JOB → show deleted modal with brief loading
   if (type === 'JOB' && (action === 'DELETE_JOB' || action === 'DELETE')) {
+    deletedJobModalLoading.value = true;
+    deletedJobModal.value = null;
+    await new Promise(r => setTimeout(r, 350));
     deletedJobModal.value = log;
+    deletedJobModalLoading.value = false;
     return;
   }
 
