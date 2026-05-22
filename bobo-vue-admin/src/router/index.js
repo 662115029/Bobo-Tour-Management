@@ -61,20 +61,20 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, from) => {
   const adminId = localStorage.getItem("admin_id");
   const publicPaths = ["/login", "/register"];
 
   if (!publicPaths.includes(to.path) && !adminId) {
-    next("/login");
+    return "/login";
   } else if (publicPaths.includes(to.path) && adminId) {
-    next({ name: "Dashboard" });
+    return { name: "Dashboard" };
   } else {
     if (to.meta?.isDynamic && from.name) {
       to.meta.parent = pageNames[from.name] || from.name;
       to.meta.parentTo = from.fullPath;
     }
-    next();
+    return true;
   }
 });
 
