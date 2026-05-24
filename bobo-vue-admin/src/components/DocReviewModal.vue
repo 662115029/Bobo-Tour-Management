@@ -25,24 +25,22 @@
       <!-- Doc list -->
       <div v-else class="doc-grid">
         <div v-for="doc in docs" :key="doc.id"
-          class="w-[220px] shrink-0 rounded-xl border border-[#eee] overflow-hidden bg-white flex flex-col">
+          class="w-[220px] shrink-0 rounded-xl overflow-hidden bg-white flex flex-col"
+          :class="doc.file_url ? 'border border-[#eee]' : 'border border-dashed border-[#ddd]'">
 
           <!-- Image area -->
           <div class="aspect-square bg-[#f5f5f5] relative overflow-hidden w-full">
-            <template v-if="doc.file_url">
-              <img :src="doc.file_url" :alt="doc.type"
-                class="absolute inset-0 w-full h-full object-cover hover:opacity-90 transition-opacity"
-                @error="(e) => { e.target.style.display='none'; e.target.nextElementSibling.style.display='flex' }" />
-              <div class="absolute inset-0 hidden items-center justify-center bg-[#f5f5f5]">
-                <svg class="w-6 h-6 text-[#ccc]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                  <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
-                </svg>
-              </div>
-            </template>
-            <div v-else class="absolute inset-0 flex items-center justify-center">
-              <svg class="w-6 h-6 text-[#ccc]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <!-- มีรูป -->
+            <img v-if="doc.file_url" :src="doc.file_url" :alt="doc.type"
+              class="absolute inset-0 w-full h-full object-cover hover:opacity-90 transition-opacity"
+              @error="(e) => { e.target.style.display='none' }" />
+            <!-- ไม่มีรูป -->
+            <div class="absolute inset-0 flex flex-col items-center justify-center gap-1.5"
+              :style="doc.file_url ? 'display:none' : ''">
+              <svg class="w-7 h-7 text-[#ddd]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                 <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
               </svg>
+              <span class="text-[10px] text-[#ccc] font-medium">Not uploaded</span>
             </div>
           </div>
 
@@ -52,11 +50,11 @@
               {{ doc.type?.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) }}
             </span>
             <span class="doc-badge self-start" :class="doc.status?.toLowerCase()">{{ doc.status }}</span>
-            <span class="text-[10px] text-[#bbb]">{{ doc.uploaded }}</span>
+            <span class="text-[10px] text-[#bbb]">{{ doc.uploaded || '–' }}</span>
           </div>
 
-          <!-- Actions -->
-          <div class="flex gap-1 px-2 pb-2 mt-auto">
+          <!-- Actions — ซ่อนถ้ายังไม่ได้ upload -->
+          <div v-if="doc.file_url" class="flex gap-1 px-2 pb-2 mt-auto">
             <button class="btn-approve-row !flex flex-1 justify-center !text-[11px] !px-1 !py-1"
               :disabled="doc.status === 'APPROVED'" @click="$emit('approve', doc)">
               <svg class="w-3 h-3 mr-0.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
@@ -71,6 +69,10 @@
               </svg>
               Reject
             </button>
+          </div>
+          
+          <div v-else class="px-2 pb-2 mt-auto">
+            <span class="text-[10px] text-[#ccc] italic">Awaiting upload</span>
           </div>
 
         </div>
