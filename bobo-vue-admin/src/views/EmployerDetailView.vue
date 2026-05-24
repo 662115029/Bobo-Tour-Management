@@ -284,25 +284,27 @@
               <!-- Documents — 5 cols, click → modal -->
               <div>
                 <div class="text-[12px] font-bold text-[#444] uppercase tracking-wide mb-3">Documents</div>
-                <div v-if="documents.length" class="grid grid-cols-5 gap-2">
+                <div class="grid grid-cols-5 gap-2">
                   <div v-for="d in documents" :key="d.em_doc_id"
-                    class="rounded-xl border border-[#eee] overflow-hidden bg-white flex flex-col cursor-pointer hover:border-[#aaa] transition-colors"
-                    @click="openDocModal(d)">
-                    <div class="h-[90px] bg-[#f5f5f5] relative overflow-hidden hover:opacity-90 transition-opacity">
-                      <img :src="d.file_url" class="w-full h-full object-cover"
-                        @error="(e) => { e.target.style.display='none'; e.target.nextElementSibling.style.display='flex' }" />
-                      <div class="absolute inset-0 hidden items-center justify-center bg-[#f5f5f5]">
-                        <svg class="w-5 h-5 text-[#ccc]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    class="rounded-xl border overflow-hidden bg-white flex flex-col transition-colors"
+                    :class="d.file_url ? 'border-[#eee] cursor-pointer hover:border-[#aaa]' : 'border-dashed border-[#ddd] cursor-default'"
+                    @click="d.file_url ? openDocModal(d) : null">
+                    <div class="h-[90px] bg-[#f5f5f5] relative overflow-hidden">
+                      <img v-if="d.file_url" :src="d.file_url" class="w-full h-full object-cover hover:opacity-90 transition-opacity"
+                        @error="(e) => { e.target.style.display='none' }" />
+                      <div class="absolute inset-0 flex items-center justify-center flex-col gap-1"
+                        :style="d.file_url ? 'display:none' : ''">
+                        <svg class="w-5 h-5 text-[#ddd]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                        <span class="text-[9px] text-[#ccc] font-medium">Not uploaded</span>
                       </div>
                     </div>
                     <div class="p-2 flex flex-col gap-0.5">
                       <span class="text-[11px] font-semibold text-[#222] leading-snug truncate">{{ formatDocType(d.em_doc_type) }}</span>
                       <span class="doc-badge self-start" :class="d.em_doc_status?.toLowerCase()">{{ d.em_doc_status }}</span>
-                      <span class="text-[11px] text-[#bbb]">{{ formatDate(d.em_uploaded_at) }}</span>
+                      <span class="text-[11px] text-[#bbb]">{{ d.em_uploaded_at ? formatDate(d.em_uploaded_at) : '–' }}</span>
                     </div>
                   </div>
                 </div>
-                <div v-else class="text-[13px] text-[#bbb]">No documents uploaded.</div>
               </div>
             </div>
           </div>
@@ -454,13 +456,26 @@ onMounted(async () => {
     ])
     em.value = emData.em_id ? emData : null
     const allDocs = (docData.items || []).filter(d => String(d.em_id) === String(id))
+    // ใช้ is_latest=1 เป็นหลัก — หลีกเลี่ยงปัญหา new Date(null) = epoch
     const byType = {}
     allDocs.forEach(d => {
-      if (!byType[d.em_doc_type] || new Date(d.em_uploaded_at) > new Date(byType[d.em_doc_type].em_uploaded_at)) {
+      const isLatest = d.is_latest === 1 || d.is_latest === true
+      if (!byType[d.em_doc_type]) {
+        byType[d.em_doc_type] = d
+      } else if (isLatest && !(byType[d.em_doc_type].is_latest === 1 || byType[d.em_doc_type].is_latest === true)) {
+        byType[d.em_doc_type] = d
+      } else if (isLatest && d.em_uploaded_at && new Date(d.em_uploaded_at) > new Date(byType[d.em_doc_type].em_uploaded_at)) {
         byType[d.em_doc_type] = d
       }
     })
-    documents.value = Object.values(byType)
+    // เติม slot ที่ขาดหายให้ครบ 5 ประเภท
+    const EM_DOC_TYPES = ['COMPANY_REGISTRATION', 'BUSINESS_LICENSE', 'TOURISM_LICENSE', 'TAX_ID_DOCUMENT', 'AUTHORIZED_PERSON_ID']
+    EM_DOC_TYPES.forEach(type => {
+      if (!byType[type]) {
+        byType[type] = { em_doc_id: `empty_${type}`, em_id: id, em_doc_type: type, file_url: null, em_doc_status: 'PENDING', em_uploaded_at: null, reviewed_by_name: null, is_latest: 1 }
+      }
+    })
+    documents.value = EM_DOC_TYPES.map(t => byType[t])
     jobs.value = (jobsData.items || []).filter(j => String(j.em_id) === String(id))
     bankAccounts.value = (bankData.items || []).filter(b => String(b.em_id) === String(id))
     reviewsGiven.value = (reviewData.items || []).filter(r => String(r.em_id) === String(id))

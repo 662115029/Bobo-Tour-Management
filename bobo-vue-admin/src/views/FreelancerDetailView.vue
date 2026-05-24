@@ -332,25 +332,27 @@
               <!-- Documents — 5 cols, click → modal (no open file link) -->
               <div>
                 <div class="text-[12px] font-bold text-[#444] uppercase tracking-wide mb-3">Documents</div>
-                <div v-if="documents.length" class="grid grid-cols-5 gap-2">
+                <div class="grid grid-cols-5 gap-2">
                   <button v-for="d in documents" :key="d.fl_doc_id" type="button"
-                    class="rounded-xl border border-[#eee] overflow-hidden bg-white flex flex-col cursor-pointer hover:border-[#aaa] transition-colors text-left"
-                    @click="openDocModal(d)">
-                    <div class="aspect-square bg-[#f5f5f5] relative overflow-hidden hover:opacity-90 transition-opacity w-full">
-                      <img :src="d.file_url" class="absolute inset-0 w-full h-full object-cover"
-                        @error="(e) => { e.target.style.display='none'; e.target.nextElementSibling.style.display='flex' }" />
-                      <div class="absolute inset-0 hidden items-center justify-center bg-[#f5f5f5]">
-                        <svg class="w-6 h-6 text-[#ccc]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    class="rounded-xl border overflow-hidden bg-white flex flex-col transition-colors text-left"
+                    :class="d.file_url ? 'border-[#eee] cursor-pointer hover:border-[#aaa]' : 'border-dashed border-[#ddd] cursor-default'"
+                    @click="d.file_url ? openDocModal(d) : null">
+                    <div class="aspect-square bg-[#f5f5f5] relative overflow-hidden w-full">
+                      <img v-if="d.file_url" :src="d.file_url" class="absolute inset-0 w-full h-full object-cover hover:opacity-90 transition-opacity"
+                        @error="(e) => { e.target.style.display='none' }" />
+                      <div class="absolute inset-0 flex items-center justify-center flex-col gap-1"
+                        :style="d.file_url ? 'display:none' : ''">
+                        <svg class="w-6 h-6 text-[#ddd]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                        <span class="text-[9px] text-[#ccc] font-medium">Not uploaded</span>
                       </div>
                     </div>
                     <div class="p-2 flex flex-col gap-0.5">
                       <span class="text-[11px] font-semibold text-[#222] leading-snug truncate">{{ formatDocType(d.fl_doc_type) }}</span>
                       <span class="doc-badge self-start" :class="d.fl_doc_status?.toLowerCase()">{{ d.fl_doc_status }}</span>
-                      <span class="text-[10px] text-[#bbb]">{{ formatDate(d.fl_uploaded_at) }}</span>
+                      <span class="text-[10px] text-[#bbb]">{{ d.fl_uploaded_at ? formatDate(d.fl_uploaded_at) : '–' }}</span>
                     </div>
                   </button>
                 </div>
-                <div v-else class="text-[13px] text-[#bbb]">No documents uploaded.</div>
               </div>
             </div>
           </div>
@@ -556,13 +558,25 @@ onMounted(async () => {
     pickupAreas.value = (areaData.items || []).filter(a => String(a.fl_id) === String(id))
     availability.value = (availData.items || []).filter(a => String(a.fl_id) === String(id))
     const allDocs = (docData.items || []).filter(d => String(d.fl_id) === String(id))
+    // ใช้ is_latest=1 เป็นหลัก — หลีกเลี่ยงปัญหา new Date(null) = epoch
     const byType = {}
     allDocs.forEach(d => {
-      if (!byType[d.fl_doc_type] || new Date(d.fl_uploaded_at) > new Date(byType[d.fl_doc_type].fl_uploaded_at)) {
+      const isLatest = d.is_latest === 1 || d.is_latest === true
+      if (!byType[d.fl_doc_type]) {
+        byType[d.fl_doc_type] = d
+      } else if (isLatest && !(byType[d.fl_doc_type].is_latest === 1 || byType[d.fl_doc_type].is_latest === true)) {
+        byType[d.fl_doc_type] = d
+      } else if (isLatest && d.fl_uploaded_at && new Date(d.fl_uploaded_at) > new Date(byType[d.fl_doc_type].fl_uploaded_at)) {
         byType[d.fl_doc_type] = d
       }
     })
-    documents.value = Object.values(byType)
+    const FL_DOC_TYPES = ['PERSONAL_ID', 'DRIVER_LICENSE', 'PUBLIC_DRIVER_LICENSE', 'VEHICLE_REGISTRATION', 'VEHICLE_INSPECTION']
+    FL_DOC_TYPES.forEach(type => {
+      if (!byType[type]) {
+        byType[type] = { fl_doc_id: `empty_${type}`, fl_id: id, fl_doc_type: type, file_url: null, fl_doc_status: 'PENDING', fl_uploaded_at: null, reviewed_by_name: null, is_latest: 1 }
+      }
+    })
+    documents.value = FL_DOC_TYPES.map(t => byType[t])
     bankAccounts.value = (bankData.items || []).filter(b => String(b.fl_id) === String(id))
     reviews.value = (reviewData.items || []).filter(r => String(r.fl_id) === String(id))
     jobHistory.value = (jobsData.items || []).filter(j => String(j.selected_fl_id) === String(id))
