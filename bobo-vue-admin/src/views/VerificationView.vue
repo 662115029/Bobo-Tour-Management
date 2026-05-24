@@ -3,16 +3,12 @@
     <BreadcrumbBar />
 
     <div class="tabs">
-      <button class="tab" :class="{ active: activeTab === 'Freelancer' }" @click="activeTab = 'Freelancer'">
-        Freelancer
-      </button>
-      <button class="tab" :class="{ active: activeTab === 'Employer' }" @click="activeTab = 'Employer'">
-        Employer
-      </button>
+      <button class="tab" :class="{ active: activeTab === 'Freelancer' }" @click="switchTab('Freelancer')">Freelancer</button>
+      <button class="tab" :class="{ active: activeTab === 'Employer' }" @click="switchTab('Employer')">Employer</button>
     </div>
 
     <div class="filter-row">
-      <input type="text" v-model="search" placeholder="Search name..." class="search-input" />
+      <input type="text" v-model="search" placeholder="Search name..." class="search-input" @input="onSearch" />
     </div>
 
     <div class="table-container">
@@ -20,8 +16,7 @@
         <thead>
           <tr>
             <th class="th-sortable" :class="{ 'th-active': nameSort }" style="width:40%" @click="cycleSort('name')">
-              <span class="th-inner">
-                NAME
+              <span class="th-inner">NAME
                 <span class="sort-label">
                   <span v-if="!nameSort" class="sort-label-dim">⇅</span>
                   <span v-else-if="nameSort === 'asc'" class="sort-label-active">↑AZ</span>
@@ -31,21 +26,22 @@
             </th>
             <th style="width:16%">
               <span style="display:inline-flex;align-items:center;white-space:nowrap;gap:4px;">STATUS
-              <button class="col-filter-btn" :class="{ active: statusFilter !== '' }" @click.stop="toggleStatusDropdown($event)">
-                {{ statusFilter ? statusFilter + ' ▼' : 'All ▼' }}
-              </button></span>
+                <button class="col-filter-btn" :class="{ active: statusFilter !== 'PENDING' }" @click.stop="toggleStatusDropdown($event)">
+                  {{ statusFilter || 'PENDING' }} ▼
+                </button>
+              </span>
             </th>
             <th style="width:12%; text-align: center;">ACTION</th>
             <th class="th-sortable" :class="{ 'th-active': dateSort }" style="width:16%; position: relative;" @click="cycleSort('date')">
-              <span class="th-inner">
-                LAST UPDATED
+              <span class="th-inner">LAST UPDATED
                 <span class="sort-label">
                   <span v-if="!dateSort" class="sort-label-dim">⇅</span>
                   <span v-else-if="dateSort === 'asc'" class="sort-label-active">↑</span>
                   <span v-else class="sort-label-active">↓</span>
                 </span>
               </span>
-              <button v-if="nameSort || statusFilter || dateSort" class="reset-btn ml-1.5" @click.stop="resetAllFilters" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%);">✕ Reset</button>
+              <button v-if="nameSort || dateSort || search || statusFilter !== 'PENDING'" class="reset-btn ml-1.5"
+                @click.stop="resetAllFilters" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%);">✕ Reset</button>
             </th>
           </tr>
         </thead>
@@ -58,16 +54,17 @@
               <td><span class="skeleton skeleton-text" style="width:75%"></span></td>
             </tr>
           </template>
-          <tr v-for="v in filteredList" :key="v.id">
+          <tr v-else-if="!isLoading && sortedList.length === 0">
+            <td colspan="4" class="text-center text-muted py-6">No results found</td>
+          </tr>
+          <tr v-for="v in sortedList" :key="v.id">
             <td class="truncate-cell">
               <div class="user-cell">
                 <span class="user-avatar" :style="avatarStyle(v.id, v.name)">{{ initials2(v.name) }}</span>
                 <span class="clickable-cell" :title="v.name" @click="openUserModal(v)">{{ v.name }}</span>
               </div>
             </td>
-            <td>
-              <span class="badge" :class="v.status?.toLowerCase()">{{ v.status }}</span>
-            </td>
+            <td><span class="badge" :class="v.status?.toLowerCase()">{{ v.status }}</span></td>
             <td>
               <div class="action-btns">
                 <button class="btn-action verify-style" @click="openDocs(v)">View Docs</button>
@@ -79,15 +76,30 @@
       </table>
     </div>
 
+    <!-- Pagination -->
+    <div class="flex items-center justify-between px-2 py-3 text-sm text-muted" v-if="sortedList.length > 0 || currentPage > 1">
+      <button
+        class="btn-action view"
+        :disabled="currentPage === 1"
+        :class="{ 'opacity-40 cursor-not-allowed': currentPage === 1 }"
+        @click="loadUsers(currentPage - 1)"
+      >← Prev</button>
+      <span>Page {{ currentPage }}</span>
+      <button
+        class="btn-action view"
+        :disabled="!hasMore"
+        :class="{ 'opacity-40 cursor-not-allowed': !hasMore }"
+        @click="loadUsers(currentPage + 1)"
+      >Next →</button>
+    </div>
+
     <!-- Column Filter Dropdown -->
     <div v-if="showStatusDropdown" class="col-dropdown min-w-[140px]" :style="statusDropdownStyle">
-      <button class="col-dropdown-item" @click="setStatusFilter('')">All</button>
       <button class="col-dropdown-item" @click="setStatusFilter('VERIFIED')">Verified</button>
       <button class="col-dropdown-item" @click="setStatusFilter('PENDING')">Pending</button>
       <button class="col-dropdown-item" @click="setStatusFilter('NOT_VERIFIED')">Not Verified</button>
     </div>
 
-    <!-- User Detail Modal (UserMiniModal component) -->
     <UserMiniModal
       :data="userDetailModal"
       :type="activeTab === 'Freelancer' ? 'FREELANCER' : 'EMPLOYER'"
@@ -96,7 +108,6 @@
       @view-detail="goToUserDetail"
     />
 
-    <!-- Document Modal -->
     <DocReviewModal
       :user="selectedUser"
       :docs="selectedDocs"
@@ -118,27 +129,31 @@ import { formatDateTime, groupDocsByLatest } from '../utils/formatDate'
 import { API_BASE } from '../data/api'
 
 const router = useRouter()
+const { avatarStyle, initials2 } = useAvatar()
 
 const activeTab = ref('Freelancer')
-const { avatarStyle, initials2 } = useAvatar()
+const isLoading = ref(false)
 const search = ref('')
-const nameSort = ref(localStorage.getItem('verification_nameSort') || '')
-const statusFilter = ref(localStorage.getItem('verification_statusFilter') || '')
-const dateSort = ref(localStorage.getItem('verification_dateSort') || '')
+const currentPage = ref(1)
+const pageSize = 10
+const hasMore = ref(false)
+const pageCache = new Map()
+const inFlight = new Map()
+const nameSort = ref('')
+const statusFilter = ref('PENDING')
+const sortField = ref('fl_updated_at')
+const sortOrder = ref('asc')
+
+const SORT_FIELD_MAP = {
+  Freelancer: { name: 'fl_name', date: 'fl_updated_at' },
+  Employer:   { name: 'em_name', date: 'em_updated_at' },
+}
+const dateSort = ref('')
 const showStatusDropdown = ref(false)
 const statusDropdownStyle = ref({})
 
-const saveFilters = () => {
-  localStorage.setItem('verification_nameSort', nameSort.value)
-  localStorage.setItem('verification_statusFilter', statusFilter.value)
-  localStorage.setItem('verification_dateSort', dateSort.value)
-}
-
-const isLoading = ref(true)
 const freelancers = ref([])
 const employers = ref([])
-const allFreelancers = ref([])
-const allEmployers = ref([])
 const flDocs = ref([])
 const emDocs = ref([])
 const selectedUser = ref(null)
@@ -146,6 +161,15 @@ const selectedDocs = ref([])
 const userDetailModal = ref(null)
 const userDetailLoading = ref(false)
 
+const getCacheKey = (page) =>
+  `${activeTab.value}_${page}_${statusFilter.value}_${search.value}_${sortField.value}_${sortOrder.value}`
+
+// Debounce search
+let searchTimer = null
+const onSearch = () => {
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => { pageCache.clear(); loadUsers(1) }, 300)
+}
 
 const cycleSort = (key) => {
   const map = { name: nameSort, date: dateSort }
@@ -154,102 +178,154 @@ const cycleSort = (key) => {
   nameSort.value = ''
   dateSort.value = ''
   current.value = next
-  saveFilters()
+  if (next !== '') {
+    sortField.value = SORT_FIELD_MAP[activeTab.value][key]
+    sortOrder.value = next
+  } else {
+    sortField.value = activeTab.value === 'Employer' ? 'em_updated_at' : 'fl_updated_at'
+    sortOrder.value = 'asc'
+  }
+  pageCache.clear(); inFlight.clear()
+  loadUsers(1)
 }
 
 const toggleStatusDropdown = (e) => {
-  closeAllDropdowns()
-  showStatusDropdown.value = true
+  showStatusDropdown.value = !showStatusDropdown.value
   const rect = e.target.getBoundingClientRect()
-  statusDropdownStyle.value = {
-    position: 'fixed',
-    top: (rect.bottom + window.scrollY) + 'px',
-    left: rect.left + 'px'
-  }
+  statusDropdownStyle.value = { position: 'fixed', top: (rect.bottom + window.scrollY) + 'px', left: rect.left + 'px' }
 }
 
 const setStatusFilter = (val) => {
   statusFilter.value = val
   showStatusDropdown.value = false
-  saveFilters()
-}
-
-const closeAllDropdowns = () => {
-  showStatusDropdown.value = false
+  pageCache.clear(); inFlight.clear()
+  loadUsers(1)
 }
 
 const resetAllFilters = () => {
   nameSort.value = ''
-  statusFilter.value = ''
+  statusFilter.value = 'PENDING'
   dateSort.value = ''
-  saveFilters()
+  search.value = ''
+  sortField.value = activeTab.value === 'Employer' ? 'em_updated_at' : 'fl_updated_at'
+  sortOrder.value = 'asc'
+  pageCache.clear(); inFlight.clear()
+  loadUsers(1)
 }
 
 const handleOutsideClick = (e) => {
   if (!e.target.closest('.col-dropdown') && !e.target.closest('.col-filter-btn')) {
-    closeAllDropdowns()
+    showStatusDropdown.value = false
   }
 }
 
-const filteredList = computed(() => {
-  const list = activeTab.value === 'Freelancer' ? freelancers.value : employers.value
-  let result = list.filter(v => {
-    const matchSearch = (v.name || '').toLowerCase().includes(search.value.toLowerCase())
-    const matchStatus = statusFilter.value === '' || v.status === statusFilter.value
-    return matchSearch && matchStatus
-  })
+async function fetchPageData(page) {
+  const key = getCacheKey(page)
+  if (pageCache.has(key)) return pageCache.get(key)
+  if (inFlight.has(key)) return inFlight.get(key)
 
-  if (nameSort.value) {
-    result = [...result].sort((a, b) => {
-      const cmp = (a.name || '').localeCompare(b.name || '')
-      return nameSort.value === 'desc' ? -cmp : cmp
-    })
+  const offset = (page - 1) * pageSize
+  const statusParam = statusFilter.value ? `&status=${statusFilter.value}` : ''
+  const searchParam = search.value ? `&search=${encodeURIComponent(search.value)}` : ''
+  const isFL = activeTab.value === 'Freelancer'
+  const userUrl = isFL
+    ? `${API_BASE}/freelancers?limit=${pageSize+1}&offset=${offset}${statusParam}${searchParam}&sort_by=${sortField.value}&sort_order=${sortOrder.value}`
+    : `${API_BASE}/employers?limit=${pageSize+1}&offset=${offset}${statusParam}${searchParam}&sort_by=${sortField.value}&sort_order=${sortOrder.value}`
+
+  const promise = (async () => {
+    const userData = await fetch(userUrl).then(r => r.json())
+    const userItems = (userData.items || []).slice(0, pageSize)
+    const ids = isFL
+      ? userItems.map(f => f.fl_id).join(',')
+      : userItems.map(e => e.em_id).join(',')
+    const docUrl = isFL
+      ? `${API_BASE}/fl-documents?fl_ids=${ids}&limit=50`
+      : `${API_BASE}/em-documents?em_ids=${ids}&limit=50`
+    const docData = ids ? await fetch(docUrl).then(r => r.json()) : { items: [] }
+    const result = {
+      allItems: userData.items || [],
+      docs: docData.items || [],
+      type: isFL ? 'fl' : 'em'
+    }
+    pageCache.set(key, result)
+    inFlight.delete(key)
+    return result
+  })().catch(err => { inFlight.delete(key); throw err })
+
+  inFlight.set(key, promise)
+  return promise
+}
+
+async function loadUsers(page = 1) {
+  if (activeTab.value === 'Freelancer') freelancers.value = []
+  else employers.value = []
+  isLoading.value = true
+  currentPage.value = page
+  try {
+    const { allItems, docs, type } = await fetchPageData(page)
+
+    if (type === 'fl') {
+      const allFlItems = allItems
+      hasMore.value = allFlItems.length > pageSize
+      const flItems = allFlItems.slice(0, pageSize)
+      flDocs.value = docs
+      freelancers.value = flItems.map(f => ({
+        id: f.fl_id,
+        name: f.fl_name || f.line_user_id,
+        status: f.fl_verify_status,
+        updated: formatDateTime(f.fl_updated_at),
+        createdAt: f.fl_created_at || '',
+        rawData: f,
+      }))
+    } else {
+      const allEmItems = allItems
+      hasMore.value = allEmItems.length > pageSize
+      const emItems = allEmItems.slice(0, pageSize)
+      emDocs.value = docs
+      employers.value = emItems.map(e => ({
+        id: e.em_id,
+        name: e.em_name || e.em_username,
+        status: e.em_verify_status,
+        updated: formatDateTime(e.em_updated_at),
+        createdAt: e.em_created_at || '',
+        rawData: e,
+      }))
+    }
+
+    if (hasMore.value) fetchPageData(page + 1).catch(() => {})
+  } catch (e) {
+    console.error('Failed to load:', e)
+  } finally {
+    isLoading.value = false
   }
+}
 
-  if (dateSort.value) {
-    result = [...result].sort((a, b) => {
-      const dateA = new Date(a.createdAt || 0)
-      const dateB = new Date(b.createdAt || 0)
-      return dateSort.value === 'desc' ? dateB - dateA : dateA - dateB
-    })
-  } else if (!nameSort.value) {
-    result = [...result].sort((a, b) => {
-      const dateA = new Date(a.createdAt || 0)
-      const dateB = new Date(b.createdAt || 0)
-      return dateB - dateA
-    })
-  }
+const currentList = computed(() =>
+  activeTab.value === 'Freelancer' ? freelancers.value : employers.value
+)
 
-  return result
-})
+const sortedList = computed(() => currentList.value)
 
 const openDocs = (v) => {
   selectedUser.value = v
   if (activeTab.value === 'Freelancer') {
-    const allDocs = flDocs.value.filter(d => d.fl_id === v.id)
+    const allDocs = flDocs.value.filter(d => Number(d.fl_id) === Number(v.id))
     selectedDocs.value = groupDocsByLatest(allDocs, 'fl', formatDateTime)
   } else {
-    const allDocs = emDocs.value.filter(d => d.em_id === v.id)
+    const allDocs = emDocs.value.filter(d => Number(d.em_id) === Number(v.id))
     selectedDocs.value = groupDocsByLatest(allDocs, 'em', formatDateTime)
   }
 }
 
 const openUserModal = (v) => {
   userDetailLoading.value = true
-  if (activeTab.value === 'Freelancer') {
-    userDetailModal.value = allFreelancers.value.find(f => f.fl_id === v.id) || null
-  } else {
-    userDetailModal.value = allEmployers.value.find(e => e.em_id === v.id) || null
-  }
+  userDetailModal.value = v.rawData || null
   userDetailLoading.value = false
 }
 
 const goToUserDetail = ({ id, type }) => {
-  if (type === 'FREELANCER') {
-    router.push({ name: 'FreelancerDetail', params: { id } })
-  } else {
-    router.push({ name: 'EmployerDetail', params: { id } })
-  }
+  if (type === 'FREELANCER') router.push({ name: 'FreelancerDetail', params: { id } })
+  else router.push({ name: 'EmployerDetail', params: { id } })
   userDetailModal.value = null
 }
 
@@ -259,16 +335,14 @@ const reviewDoc = async (doc, newStatus) => {
     : `${API_BASE}/em-documents/${doc.id}`
   try {
     const res = await fetch(endpoint, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: newStatus, reviewed_by: localStorage.getItem('admin_id') || '' })
     })
     const data = await res.json()
     if (data.status === 'updated') {
       doc.status = newStatus
       doc.reviewed = formatDateTime(new Date().toISOString())
-
-      // Sync status back to source array so reopening modal shows correct state
+      // Sync raw doc list
       if (doc._type === 'fl') {
         const raw = flDocs.value.find(d => d.fl_doc_id === doc.id)
         if (raw) raw.fl_doc_status = newStatus
@@ -276,97 +350,30 @@ const reviewDoc = async (doc, newStatus) => {
         const raw = emDocs.value.find(d => d.em_doc_id === doc.id)
         if (raw) raw.em_doc_status = newStatus
       }
-
-      // Compute new verify status: VERIFIED only when all 5 docs approved, else PENDING
-      const userDocs = doc._type === 'fl'
-        ? flDocs.value.filter(d => d.fl_id === selectedUser.value.id)
-        : emDocs.value.filter(d => d.em_id === selectedUser.value.id)
-      const approvedCount = userDocs.filter(d =>
-        doc._type === 'fl' ? d.fl_doc_status === 'APPROVED' : d.em_doc_status === 'APPROVED'
-      ).length
-      const newUserStatus = approvedCount >= 5 ? 'VERIFIED' : 'PENDING'
-
-      // PATCH verify status to backend so it persists after refresh
-      const userEndpoint = doc._type === 'fl'
-        ? `${API_BASE}/freelancers/${selectedUser.value.id}`
-        : `${API_BASE}/employers/${selectedUser.value.id}`
-      const verifyField = doc._type === 'fl' ? 'fl_verify_status' : 'em_verify_status'
-      try {
-        await fetch(userEndpoint, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ [verifyField]: newUserStatus })
-        })
-      } catch (e) {
-        console.error('Failed to update user verify status:', e)
-      }
-
-      // Update local state
-      const list = activeTab.value === 'Freelancer' ? freelancers.value : employers.value
-      const user = list.find(u => u.id === selectedUser.value.id)
-      if (user) user.status = newUserStatus
-      selectedUser.value.status = newUserStatus
+      // Reload list to reflect status change
+      pageCache.clear(); inFlight.clear()
+      await loadUsers(currentPage.value)
     }
   } catch (e) {
     console.error('Failed to review doc:', e)
   }
 }
 
-onUnmounted(() => {
-  document.removeEventListener('click', handleOutsideClick)
-})
+const switchTab = async (tab) => {
+  activeTab.value = tab
+  search.value = ''
+  statusFilter.value = 'PENDING'
+  nameSort.value = ''
+  dateSort.value = ''
+  sortField.value = tab === 'Employer' ? 'em_updated_at' : 'fl_updated_at'
+  sortOrder.value = 'asc'
+  pageCache.clear(); inFlight.clear()
+  await loadUsers(1)
+}
 
+onUnmounted(() => document.removeEventListener('click', handleOutsideClick))
 onMounted(async () => {
   document.addEventListener('click', handleOutsideClick)
-  try {
-    const [flRes, emRes, flDocRes, emDocRes] = await Promise.all([
-      fetch(`${API_BASE}/freelancers?limit=500`),
-      fetch(`${API_BASE}/employers?limit=500`),
-      fetch(`${API_BASE}/fl-documents?limit=500`),
-      fetch(`${API_BASE}/em-documents?limit=500`),
-    ])
-    const [flData, emData, flDocData, emDocData] = await Promise.all([
-      flRes.json(), emRes.json(), flDocRes.json(), emDocRes.json()
-    ])
-
-    allFreelancers.value = flData.items || []
-    allEmployers.value = emData.items || []
-
-    flDocs.value = flDocData.items || []
-    emDocs.value = emDocData.items || []
-
-    // Compute verify status from actual approved doc count — don't trust DB field
-    freelancers.value = (flData.items || []).map(f => {
-      const docs = flDocs.value.filter(d => d.fl_id === f.fl_id)
-      const approvedCount = docs.filter(d => d.fl_doc_status === 'APPROVED').length
-      const computedStatus = approvedCount >= 5 ? 'VERIFIED' : 'PENDING'
-      return {
-        id: f.fl_id,
-        name: f.fl_name || f.line_user_id,
-        status: computedStatus,
-        submitted: formatDateTime(f.fl_created_at),
-        updated: formatDateTime(f.fl_updated_at),
-        createdAt: f.fl_created_at || '',
-      }
-    })
-
-    employers.value = (emData.items || []).map(e => {
-      const docs = emDocs.value.filter(d => d.em_id === e.em_id)
-      const approvedCount = docs.filter(d => d.em_doc_status === 'APPROVED').length
-      const computedStatus = approvedCount >= 5 ? 'VERIFIED' : 'PENDING'
-      return {
-        id: e.em_id,
-        name: e.em_name || e.em_username,
-        status: computedStatus,
-        submitted: formatDateTime(e.em_created_at),
-        updated: formatDateTime(e.em_updated_at),
-        createdAt: e.em_created_at || '',
-      }
-    })
-  } catch (e) {
-    console.error('Failed to load verifications:', e)
-  } finally {
-    isLoading.value = false
-  }
+  await loadUsers()
 })
 </script>
