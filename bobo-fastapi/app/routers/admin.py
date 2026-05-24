@@ -449,7 +449,7 @@ def admin_logs(limit: int = 50, offset: int = 0,
                    al.target_id, al.target_name, al.note,
                    al.created_at
             FROM admin_logs al
-            JOIN admins a ON al.admin_id = a.admin_id
+            LEFT JOIN admins a ON al.admin_id = a.admin_id
             {where_clause}
             ORDER BY al.created_at DESC
             LIMIT %s OFFSET %s
