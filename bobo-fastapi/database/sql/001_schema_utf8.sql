@@ -72,7 +72,8 @@ CREATE TABLE employers (
     em_created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     em_updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_employers_verify_status (em_verify_status),
-    INDEX idx_employers_is_active     (em_is_active)
+    INDEX idx_employers_is_active     (em_is_active),
+    INDEX idx_employers_name          (em_name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- -----------------------------------------------------------------------------
@@ -98,6 +99,7 @@ CREATE TABLE freelancers (
     fl_updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_freelancers_verify_status (fl_verify_status),
     INDEX idx_freelancers_is_active     (fl_is_active),
+    INDEX idx_freelancers_name          (fl_name),
     INDEX idx_freelancers_line_user_id  (line_user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
