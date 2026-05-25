@@ -534,31 +534,34 @@ const confirmBan = async () => {
 onMounted(async () => {
   const id = route.params.id
   try {
-    const [flRes, langRes, vehicleRes, imgRes, areaRes, availRes, docRes, bankRes, reviewRes, jobsRes, verifyRes] = await Promise.all([
+    const [flRes, langRes, vehicleRes, areaRes, availRes, docRes, bankRes, reviewRes, jobsRes, verifyRes] = await Promise.all([
       fetch(`${API_BASE}/freelancers/${id}`),
-      fetch(`${API_BASE}/fl-languages?limit=500`),
-      fetch(`${API_BASE}/fl-vehicle?limit=500`),
-      fetch(`${API_BASE}/fl-vehicle-images?limit=500`),
-      fetch(`${API_BASE}/fl-pickup-areas?limit=500`),
-      fetch(`${API_BASE}/fl-availability?limit=500`),
-      fetch(`${API_BASE}/fl-documents?limit=500`),
-      fetch(`${API_BASE}/fl-bank-accounts?limit=500`),
-      fetch(`${API_BASE}/fl-reviews?limit=500`),
-      fetch(`${API_BASE}/jobs?limit=500`),
-      fetch(`${API_BASE}/fl-verification?limit=500`),
+      fetch(`${API_BASE}/fl-languages?fl_id=${id}&limit=50`),
+      fetch(`${API_BASE}/fl-vehicle?fl_id=${id}&limit=5`),
+      fetch(`${API_BASE}/fl-pickup-areas?fl_id=${id}&limit=50`),
+      fetch(`${API_BASE}/fl-availability?fl_id=${id}&limit=50`),
+      fetch(`${API_BASE}/fl-documents?fl_id=${id}&limit=20`),
+      fetch(`${API_BASE}/fl-bank-accounts?fl_id=${id}&limit=5`),
+      fetch(`${API_BASE}/fl-reviews?fl_id=${id}&limit=50`),
+      fetch(`${API_BASE}/jobs?fl_id=${id}&limit=100`),
+      fetch(`${API_BASE}/fl-verification?fl_id=${id}&limit=5`),
     ])
-    const [flData, langData, vehicleData, imgData, areaData, availData, docData, bankData, reviewData, jobsData, verifyData] = await Promise.all([
-      flRes.json(), langRes.json(), vehicleRes.json(), imgRes.json(), areaRes.json(), availRes.json(), docRes.json(), bankRes.json(), reviewRes.json(), jobsRes.json(), verifyRes.json(),
+    const [flData, langData, vehicleData, areaData, availData, docData, bankData, reviewData, jobsData, verifyData] = await Promise.all([
+      flRes.json(), langRes.json(), vehicleRes.json(), areaRes.json(), availRes.json(), docRes.json(), bankRes.json(), reviewRes.json(), jobsRes.json(), verifyRes.json(),
     ])
     fl.value = flData.fl_id ? flData : null
     languages.value = (langData.items || []).filter(l => String(l.fl_id) === String(id))
     vehicle.value = (vehicleData.items || []).find(v => String(v.fl_id) === String(id)) || null
+    // fetch vehicle images after getting vehicle id
     const vId = vehicle.value?.fl_vehicle_id
-    vehicleImages.value = vId ? (imgData.items || []).filter(i => i.fl_vehicle_id === vId) : []
+    const imgData = vId
+      ? await fetch(`${API_BASE}/fl-vehicle-images?fl_vehicle_id=${vId}&limit=20`).then(r => r.json())
+      : { items: [] }
+    vehicleImages.value = imgData.items || []
     pickupAreas.value = (areaData.items || []).filter(a => String(a.fl_id) === String(id))
     availability.value = (availData.items || []).filter(a => String(a.fl_id) === String(id))
     const allDocs = (docData.items || []).filter(d => String(d.fl_id) === String(id))
-    // ใช้ is_latest=1 เป็นหลัก — หลีกเลี่ยงปัญหา new Date(null) = epoch
+
     const byType = {}
     allDocs.forEach(d => {
       const isLatest = d.is_latest === 1 || d.is_latest === true
@@ -579,8 +582,8 @@ onMounted(async () => {
     documents.value = FL_DOC_TYPES.map(t => byType[t])
     bankAccounts.value = (bankData.items || []).filter(b => String(b.fl_id) === String(id))
     reviews.value = (reviewData.items || []).filter(r => String(r.fl_id) === String(id))
-    jobHistory.value = (jobsData.items || []).filter(j => String(j.selected_fl_id) === String(id))
-    const verList = (verifyData.items || []).filter(v => String(v.fl_id) === String(id) && (v.is_latest === true || v.is_latest === 1))
+    jobHistory.value = jobsData.items || []
+    const verList = (verifyData.items || []).filter(v => v.is_latest === true || v.is_latest === 1)
     verification.value = verList[0] || null
   } catch (e) { console.error(e) } finally { loading.value = false }
 })

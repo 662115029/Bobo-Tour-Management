@@ -445,18 +445,18 @@ onMounted(async () => {
   try {
     const [emRes, docRes, jobsRes, bankRes, reviewRes, verifyRes] = await Promise.all([
       fetch(`${API_BASE}/employers/${id}`),
-      fetch(`${API_BASE}/em-documents?limit=500`),
-      fetch(`${API_BASE}/jobs?limit=500`),
-      fetch(`${API_BASE}/em-bank-accounts?limit=500`),
-      fetch(`${API_BASE}/fl-reviews?limit=500`),
-      fetch(`${API_BASE}/em-verification?limit=500`),
+      fetch(`${API_BASE}/em-documents?em_id=${id}&limit=20`),
+      fetch(`${API_BASE}/jobs?em_id=${id}&limit=100`),
+      fetch(`${API_BASE}/em-bank-accounts?em_id=${id}&limit=5`),
+      fetch(`${API_BASE}/fl-reviews?em_id=${id}&limit=50`),
+      fetch(`${API_BASE}/em-verification?em_id=${id}&limit=5`),
     ])
     const [emData, docData, jobsData, bankData, reviewData, verifyData] = await Promise.all([
       emRes.json(), docRes.json(), jobsRes.json(), bankRes.json(), reviewRes.json(), verifyRes.json(),
     ])
     em.value = emData.em_id ? emData : null
     const allDocs = (docData.items || []).filter(d => String(d.em_id) === String(id))
-    // ใช้ is_latest=1 เป็นหลัก — หลีกเลี่ยงปัญหา new Date(null) = epoch
+
     const byType = {}
     allDocs.forEach(d => {
       const isLatest = d.is_latest === 1 || d.is_latest === true
@@ -468,7 +468,7 @@ onMounted(async () => {
         byType[d.em_doc_type] = d
       }
     })
-    // เติม slot ที่ขาดหายให้ครบ 5 ประเภท
+
     const EM_DOC_TYPES = ['COMPANY_REGISTRATION', 'BUSINESS_LICENSE', 'TOURISM_LICENSE', 'TAX_ID_DOCUMENT', 'AUTHORIZED_PERSON_ID']
     EM_DOC_TYPES.forEach(type => {
       if (!byType[type]) {
@@ -476,10 +476,10 @@ onMounted(async () => {
       }
     })
     documents.value = EM_DOC_TYPES.map(t => byType[t])
-    jobs.value = (jobsData.items || []).filter(j => String(j.em_id) === String(id))
-    bankAccounts.value = (bankData.items || []).filter(b => String(b.em_id) === String(id))
-    reviewsGiven.value = (reviewData.items || []).filter(r => String(r.em_id) === String(id))
-    const verList = (verifyData.items || []).filter(v => String(v.em_id) === String(id) && (v.is_latest === true || v.is_latest === 1))
+    jobs.value = jobsData.items || []
+    bankAccounts.value = bankData.items || []
+    reviewsGiven.value = reviewData.items || []
+    const verList = (verifyData.items || []).filter(v => v.is_latest === true || v.is_latest === 1)
     verification.value = verList[0] || null
   } catch (e) { console.error(e) } finally { loading.value = false }
 })

@@ -135,7 +135,6 @@
       <button class="col-dropdown-item" @click="setTypeFilter('DOCUMENT')">Document</button>
     </div>
 
-
     <div v-if="showAdminDropdown" class="col-dropdown" :style="adminDropdownStyle">
       <button class="col-dropdown-item" @click="setAdminFilter('All')">All</button>
       <button
@@ -421,7 +420,6 @@ onUnmounted(() => {
   document.removeEventListener("click", handleOutsideClick);
 });
 
-
 const targetModal = ref(null);
 const targetModalType = ref('');
 const targetModalLoading = ref(false);
@@ -443,8 +441,8 @@ const openTargetModal = async (log) => {
     try {
       const name = (log.target_name || '').trim().toLowerCase();
       const [flRes, emRes] = await Promise.all([
-        fetch(`${API_BASE}/freelancers?limit=500`),
-        fetch(`${API_BASE}/employers?limit=500`),
+        fetch(`${API_BASE}/freelancers?search=${encodeURIComponent(name)}&limit=5`),
+        fetch(`${API_BASE}/employers?search=${encodeURIComponent(name)}&limit=5`),
       ]);
       const [flData, emData] = await Promise.all([flRes.json(), emRes.json()]);
       const flUser = (flData.items || []).find(f =>
@@ -487,19 +485,15 @@ const openTargetModal = async (log) => {
     let url = '';
     if (type === 'FREELANCER') url = `${API_BASE}/freelancers/${id}`;
     else if (type === 'EMPLOYER') url = `${API_BASE}/employers/${id}`;
-    else if (type === 'JOB') url = `${API_BASE}/jobs?limit=500`;
+    else if (type === 'JOB') url = `${API_BASE}/jobs/${id}`;
     const res = await fetch(url);
     const data = await res.json();
     if (type === 'JOB') {
-      const job = (data.items || []).find(j => String(j.job_id) === String(id));
-      if (job) {
-        // fetch languages
-        const langRes = await fetch(`${API_BASE}/job-required-languages?limit=500`);
+      if (data.job_id) {
+        const langRes = await fetch(`${API_BASE}/job-required-languages?job_id=${id}&limit=20`);
         const langData = await langRes.json();
-        const langs = (langData.items || [])
-          .filter(l => l.job_id === job.job_id)
-          .map(l => l.language_name);
-        targetModal.value = { ...job, languages: langs };
+        const langs = (langData.items || []).map(l => l.language_name);
+        targetModal.value = { ...data, languages: langs };
       }
     } else {
       targetModal.value = data;
@@ -516,8 +510,8 @@ const fetchLogs = async () => {
   isLoading.value = true;
   try {
     const [logsRes, adminsRes] = await Promise.all([
-      fetch(`${API_BASE}/admin/logs?limit=500`),
-      fetch(`${API_BASE}/admin/admins?limit=500`),
+      fetch(`${API_BASE}/admin/logs?limit=200`),
+      fetch(`${API_BASE}/admin/admins?limit=50`),
     ]);
     const logsData = await logsRes.json();
     const adminsData = await adminsRes.json();

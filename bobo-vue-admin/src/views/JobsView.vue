@@ -231,7 +231,6 @@ const saveFilters = () => {
   localStorage.setItem("jobs_dateSort", dateSort.value);
 };
 
-// กดลูกศร: ไม่มี → asc → desc → ไม่มี (และ clear คอลัมน์อื่นทั้งหมด)
 const cycleSort = (key) => {
   const current = { title: titleSort, company: companySort, price: priceSort, date: dateSort }[key];
   const next = current.value === "" ? "asc" : current.value === "asc" ? "desc" : "";
@@ -255,7 +254,6 @@ const companyModal = ref(null);
 
 const currentYear = new Date().getFullYear();
 const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
-
 
 const filteredJobs = computed(() => {
   let result = jobs.value.filter((job) => {
@@ -295,7 +293,7 @@ const filteredJobs = computed(() => {
       return dateSort.value === "desc" ? -cmp : cmp;
     });
   } else {
-    // Default: ล่าสุดก่อน
+
     result = [...result].sort((a, b) => new Date(b.job_updated_at) - new Date(a.job_updated_at));
   }
 
@@ -349,22 +347,24 @@ const viewJob = (id) => {
 const allLanguages = ref([])
 
 const openJobModal = async (job) => {
-  if (!allLanguages.value.length) {
-    try {
-      const res = await fetch(`${API_BASE}/job-required-languages?limit=500`)
-      const data = await res.json()
-      allLanguages.value = data.items || []
-    } catch {}
-  }
-  const langs = allLanguages.value
-    .filter(l => l.job_id === job.job_id)
-    .map(l => l.language_name)
+  try {
+    const res = await fetch(`${API_BASE}/job-required-languages?job_id=${job.job_id}&limit=20`)
+    const data = await res.json()
+    const langs = (data.items || []).map(l => l.language_name)
+    jobModal.value = { ...job, languages: langs }
+    return
+  } catch {}
+  const langs = []
   jobModal.value = { ...job, languages: langs }
 };
 
-const openCompanyModal = (job) => {
-  const em = allEmployers.value.find((e) => e.em_id === job.em_id);
-  companyModal.value = em || { em_name: job.company };
+const openCompanyModal = async (job) => {
+  companyModal.value = { em_name: job.company }
+  try {
+    const res = await fetch(`${API_BASE}/employers/${job.em_id}`)
+    const data = await res.json()
+    companyModal.value = data.em_id ? data : { em_name: job.company }
+  } catch {}
 };
 
 const deleteJob = (id) => {
@@ -404,19 +404,11 @@ onUnmounted(() => {
 onMounted(async () => {
   document.addEventListener("click", handleOutsideClick);
   try {
-    const [jobsRes, emRes, flRes] = await Promise.all([
-      fetch(`${API_BASE}/jobs?limit=500`),
-      fetch(`${API_BASE}/employers?limit=500`),
-      fetch(`${API_BASE}/freelancers?limit=500`),
-    ]);
-    const [jobsData, emData, flData] = await Promise.all([
-      jobsRes.json(),
-      emRes.json(),
-      flRes.json(),
-    ]);
-    jobs.value = jobsData.items || [];
-    allEmployers.value = emData.items || [];
-    allFreelancers.value = flData.items || [];
+    const jobsRes = await fetch(`${API_BASE}/jobs?limit=50`)
+    const jobsData = await jobsRes.json()
+    jobs.value = jobsData.items || []
+    allEmployers.value = []
+    allFreelancers.value = []
   } catch (e) {
     console.error("Failed to load jobs:", e);
   } finally {

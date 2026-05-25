@@ -545,35 +545,34 @@ const confirmDelete = async () => {
 onMounted(async () => {
   const id = route.params.id
   try {
-    const [jobsRes, langRes, pickupsRes, itinRes, passRes, inclRes, feesRes, expRes, custRes, appRes, payRes] = await Promise.all([
-      fetch(`${API_BASE}/jobs?limit=500`),
-      fetch(`${API_BASE}/job-required-languages?limit=500`),
-      fetch(`${API_BASE}/job-pickups?limit=500`),
-      fetch(`${API_BASE}/job-itineraries?limit=500`),
-      fetch(`${API_BASE}/job-passengers?limit=500`),
-      fetch(`${API_BASE}/job-inclusions?limit=500`),
-      fetch(`${API_BASE}/job-entrance-fees?limit=500`),
-      fetch(`${API_BASE}/job-expenses?limit=500`),
-      fetch(`${API_BASE}/job-customers?limit=500`),
-      fetch(`${API_BASE}/job-applications?limit=500`),
-      fetch(`${API_BASE}/job-payments?limit=500`),
+    const [jobRes, langRes, pickupsRes, itinRes, passRes, inclRes, feesRes, expRes, custRes, appRes, payRes] = await Promise.all([
+      fetch(`${API_BASE}/jobs/${id}`),
+      fetch(`${API_BASE}/job-required-languages?job_id=${id}&limit=20`),
+      fetch(`${API_BASE}/job-pickups?job_id=${id}&limit=20`),
+      fetch(`${API_BASE}/job-itineraries?job_id=${id}&limit=50`),
+      fetch(`${API_BASE}/job-passengers?job_id=${id}&limit=50`),
+      fetch(`${API_BASE}/job-inclusions?job_id=${id}&limit=20`),
+      fetch(`${API_BASE}/job-entrance-fees?job_id=${id}&limit=20`),
+      fetch(`${API_BASE}/job-expenses?job_id=${id}&limit=20`),
+      fetch(`${API_BASE}/job-customers?job_id=${id}&limit=50`),
+      fetch(`${API_BASE}/job-applications?job_id=${id}&limit=50`),
+      fetch(`${API_BASE}/job-payments?job_id=${id}&limit=10`),
     ])
-    const [jobsData, langData, pickupsData, itinData, passData, inclData, feesData, expData, custData, appData, payData] = await Promise.all([
-      jobsRes.json(), langRes.json(), pickupsRes.json(), itinRes.json(), passRes.json(),
+    const [jobData, langData, pickupsData, itinData, passData, inclData, feesData, expData, custData, appData, payData] = await Promise.all([
+      jobRes.json(), langRes.json(), pickupsRes.json(), itinRes.json(), passRes.json(),
       inclRes.json(), feesRes.json(), expRes.json(), custRes.json(), appRes.json(), payRes.json(),
     ])
-    const sid = String(id)
-    job.value = (jobsData.items || []).find(j => String(j.job_id) === sid) || null
-    languages.value = (langData.items || []).filter(l => String(l.job_id) === sid)
-    pickups.value = (pickupsData.items || []).filter(p => String(p.job_id) === sid).sort((a, b) => a.sequence - b.sequence)
-    itineraries.value = (itinData.items || []).filter(i => String(i.job_id) === sid).sort((a, b) => a.sequence - b.sequence)
-    passengers.value = (passData.items || []).filter(p => String(p.job_id) === sid)
-    inclusions.value = (inclData.items || []).filter(i => String(i.job_id) === sid).sort((a, b) => a.sequence - b.sequence)
-    entranceFees.value = (feesData.items || []).filter(f => String(f.job_id) === sid).sort((a, b) => a.sequence - b.sequence)
-    expenses.value = (expData.items || []).filter(e => String(e.job_id) === sid).sort((a, b) => a.sequence - b.sequence)
-    customers.value = (custData.items || []).filter(c => String(c.job_id) === sid)
-    applications.value = (appData.items || []).filter(a => String(a.job_id) === sid)
-    payments.value = (payData.items || []).filter(p => String(p.job_id) === sid)
+    job.value = jobData.job_id ? jobData : null
+    languages.value = langData.items || []
+    pickups.value = (pickupsData.items || []).sort((a, b) => a.sequence - b.sequence)
+    itineraries.value = (itinData.items || []).sort((a, b) => a.sequence - b.sequence)
+    passengers.value = passData.items || []
+    inclusions.value = (inclData.items || []).sort((a, b) => a.sequence - b.sequence)
+    entranceFees.value = (feesData.items || []).sort((a, b) => a.sequence - b.sequence)
+    expenses.value = (expData.items || []).sort((a, b) => a.sequence - b.sequence)
+    customers.value = custData.items || []
+    applications.value = appData.items || []
+    payments.value = payData.items || []
   } catch (e) { console.error(e) } finally { loading.value = false }
 })
 </script>
