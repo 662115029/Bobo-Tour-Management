@@ -45,7 +45,6 @@ def register_freelancer(body: FreelancerRegisterRequest):
             (body.fl_email, body.fl_username)
         )
         if cursor.fetchone():
-            conn.close()
             raise HTTPException(status_code=409, detail="Email or username already taken.")
 
         cursor.execute(
@@ -80,7 +79,6 @@ def register_freelancer(body: FreelancerRegisterRequest):
             )
 
         conn.commit()
-        conn.close()
         return {"success": True, "fl_id": fl_id}
 
     except HTTPException:
@@ -88,13 +86,14 @@ def register_freelancer(body: FreelancerRegisterRequest):
     except Exception as e:
         if conn:
             conn.rollback()
-            conn.close()
         return {"success": False, "error": str(e)}
-
-
+    finally:
+        if conn:
+            conn.close()
 @router.get("/freelancers")
 @router.get("/admin/freelancers")
 def get_freelancers(limit: int = 10, offset: int = 0, search: str = "", status: str = "", sort_by: str = "fl_updated_at", sort_order: str = "desc"):
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
@@ -125,14 +124,15 @@ def get_freelancers(limit: int = 10, offset: int = 0, search: str = "", status: 
             params
         )
         rows = cursor.fetchall()
-        conn.close()
         return {"items": rows, "limit": limit, "offset": offset, "search": search, "status": status}
     except Exception as e:
         return {"error": str(e), "items": []}
-
-
+    finally:
+        if conn:
+            conn.close()
 @router.get("/freelancers/{fl_id}")
 def get_freelancer(fl_id: str):
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
@@ -148,7 +148,6 @@ def get_freelancer(fl_id: str):
             (fl_id,)
         )
         row = cursor.fetchone()
-        conn.close()
         if not row:
             raise HTTPException(status_code=404, detail="Freelancer not found")
         return row
@@ -156,10 +155,12 @@ def get_freelancer(fl_id: str):
         raise
     except Exception as e:
         return {"error": str(e)}
-
-
+    finally:
+        if conn:
+            conn.close()
 @router.get("/fl-bank-accounts")
 def get_fl_bank_accounts(limit: int = 10, offset: int = 0):
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
@@ -176,14 +177,15 @@ def get_fl_bank_accounts(limit: int = 10, offset: int = 0):
             (limit, offset)
         )
         rows = cursor.fetchall()
-        conn.close()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
         return {"error": str(e), "items": []}
-
-
+    finally:
+        if conn:
+            conn.close()
 @router.get("/fl-vehicle")
 def get_fl_vehicle(limit: int = 10, offset: int = 0):
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
@@ -202,14 +204,15 @@ def get_fl_vehicle(limit: int = 10, offset: int = 0):
             (limit, offset)
         )
         rows = cursor.fetchall()
-        conn.close()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
         return {"error": str(e), "items": []}
-
-
+    finally:
+        if conn:
+            conn.close()
 @router.get("/fl-vehicle-images")
 def get_fl_vehicle_images(limit: int = 10, offset: int = 0):
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
@@ -228,14 +231,15 @@ def get_fl_vehicle_images(limit: int = 10, offset: int = 0):
             (limit, offset)
         )
         rows = cursor.fetchall()
-        conn.close()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
         return {"error": str(e), "items": []}
-
-
+    finally:
+        if conn:
+            conn.close()
 @router.get("/fl-languages")
 def get_fl_languages(limit: int = 10, offset: int = 0):
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
@@ -252,14 +256,15 @@ def get_fl_languages(limit: int = 10, offset: int = 0):
             (limit, offset)
         )
         rows = cursor.fetchall()
-        conn.close()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
         return {"error": str(e), "items": []}
-
-
+    finally:
+        if conn:
+            conn.close()
 @router.get("/fl-pickup-areas")
 def get_fl_pickup_areas(limit: int = 10, offset: int = 0):
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
@@ -276,14 +281,15 @@ def get_fl_pickup_areas(limit: int = 10, offset: int = 0):
             (limit, offset)
         )
         rows = cursor.fetchall()
-        conn.close()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
         return {"error": str(e), "items": []}
-
-
+    finally:
+        if conn:
+            conn.close()
 @router.get("/fl-availability")
 def get_fl_availability(limit: int = 10, offset: int = 0):
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
@@ -300,14 +306,15 @@ def get_fl_availability(limit: int = 10, offset: int = 0):
             (limit, offset)
         )
         rows = cursor.fetchall()
-        conn.close()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
         return {"error": str(e), "items": []}
-
-
+    finally:
+        if conn:
+            conn.close()
 @router.get("/fl-documents")
 def get_fl_documents(limit: int = 10, offset: int = 0, status: str = "", fl_ids: str = ""):
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
@@ -341,14 +348,15 @@ def get_fl_documents(limit: int = 10, offset: int = 0, status: str = "", fl_ids:
             params
         )
         rows = cursor.fetchall()
-        conn.close()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
         return {"error": str(e), "items": []}
-
-
+    finally:
+        if conn:
+            conn.close()
 @router.get("/fl-verification")
 def get_fl_verification(limit: int = 10, offset: int = 0, status: str = "PENDING"):
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
@@ -370,23 +378,23 @@ def get_fl_verification(limit: int = 10, offset: int = 0, status: str = "PENDING
             params
         )
         rows = cursor.fetchall()
-        conn.close()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
         return {"error": str(e), "items": []}
-
-
+    finally:
+        if conn:
+            conn.close()
 @router.patch("/fl-documents/{doc_id}")
 def review_fl_document(doc_id: str, body: DocReviewRequest):
     if body.status not in ("APPROVED", "REJECTED"):
         raise HTTPException(status_code=400, detail="status must be APPROVED or REJECTED")
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
         cursor.execute("SELECT fl_doc_id, fl_id FROM fl_documents WHERE fl_doc_id = %s", (doc_id,))
         doc = cursor.fetchone()
         if not doc:
-            conn.close()
             raise HTTPException(status_code=404, detail="Document not found")
 
         cursor.execute(
@@ -471,24 +479,23 @@ def review_fl_document(doc_id: str, body: DocReviewRequest):
                     )
 
         conn.commit()
-        conn.close()
         return {"status": "updated", "doc_id": doc_id, "new_status": body.status}
     except HTTPException:
         raise
     except Exception as e:
         conn.rollback()
-        conn.close()
         return {"error": str(e)}
-
-
+    finally:
+        if conn:
+            conn.close()
 @router.patch("/freelancers/{fl_id}/ban")
 def ban_freelancer(fl_id: str, body: BanRequest):
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
         cursor.execute("SELECT fl_id FROM freelancers WHERE fl_id = %s", (fl_id,))
         if not cursor.fetchone():
-            conn.close()
             raise HTTPException(status_code=404, detail="Freelancer not found")
         cursor.execute(
             "UPDATE freelancers SET fl_is_active = %s WHERE fl_id = %s",
@@ -506,9 +513,11 @@ def ban_freelancer(fl_id: str, body: BanRequest):
             (body.admin_id, action, fl_id, fl_info["fl_name"] if fl_info else fl_id)
         )
         conn.commit()
-        conn.close()
         return {"status": "updated", "fl_id": fl_id, "is_active": body.is_active}
     except HTTPException:
         raise
     except Exception as e:
         return {"error": str(e)}
+    finally:
+        if conn:
+            conn.close()

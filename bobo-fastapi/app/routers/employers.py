@@ -43,7 +43,6 @@ def register_employer(body: EmployerRegisterRequest):
             (body.em_email, body.em_username)
         )
         if cursor.fetchone():
-            conn.close()
             raise HTTPException(status_code=409, detail="Email or username already taken.")
 
         cursor.execute(
@@ -77,7 +76,6 @@ def register_employer(body: EmployerRegisterRequest):
             )
 
         conn.commit()
-        conn.close()
         return {"success": True, "em_id": em_id}
 
     except HTTPException:
@@ -85,13 +83,14 @@ def register_employer(body: EmployerRegisterRequest):
     except Exception as e:
         if conn:
             conn.rollback()
-            conn.close()
         return {"success": False, "error": str(e)}
-
-
+    finally:
+        if conn:
+            conn.close()
 @router.get("/employers")
 @router.get("/admin/employers")
 def get_employers(limit: int = 10, offset: int = 0, search: str = "", status: str = "", sort_by: str = "em_updated_at", sort_order: str = "desc"):
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
@@ -121,14 +120,15 @@ def get_employers(limit: int = 10, offset: int = 0, search: str = "", status: st
             params
         )
         rows = cursor.fetchall()
-        conn.close()
         return {"items": rows, "limit": limit, "offset": offset, "search": search, "status": status}
     except Exception as e:
         return {"error": str(e), "items": []}
-
-
+    finally:
+        if conn:
+            conn.close()
 @router.get("/employers/{em_id}")
 def get_employer(em_id: str):
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
@@ -143,7 +143,6 @@ def get_employer(em_id: str):
             (em_id,)
         )
         row = cursor.fetchone()
-        conn.close()
         if not row:
             raise HTTPException(status_code=404, detail="Employer not found")
         return row
@@ -151,10 +150,12 @@ def get_employer(em_id: str):
         raise
     except Exception as e:
         return {"error": str(e)}
-
-
+    finally:
+        if conn:
+            conn.close()
 @router.get("/em-bank-accounts")
 def get_em_bank_accounts(limit: int = 10, offset: int = 0):
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
@@ -171,14 +172,15 @@ def get_em_bank_accounts(limit: int = 10, offset: int = 0):
             (limit, offset)
         )
         rows = cursor.fetchall()
-        conn.close()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
         return {"error": str(e), "items": []}
-
-
+    finally:
+        if conn:
+            conn.close()
 @router.get("/em-documents")
 def get_em_documents(limit: int = 10, offset: int = 0, status: str = "", em_ids: str = ""):
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
@@ -212,14 +214,15 @@ def get_em_documents(limit: int = 10, offset: int = 0, status: str = "", em_ids:
             params
         )
         rows = cursor.fetchall()
-        conn.close()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
         return {"error": str(e), "items": []}
-
-
+    finally:
+        if conn:
+            conn.close()
 @router.get("/em-verification")
 def get_em_verification(limit: int = 10, offset: int = 0, status: str = "PENDING"):
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
@@ -241,23 +244,23 @@ def get_em_verification(limit: int = 10, offset: int = 0, status: str = "PENDING
             params
         )
         rows = cursor.fetchall()
-        conn.close()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
         return {"error": str(e), "items": []}
-
-
+    finally:
+        if conn:
+            conn.close()
 @router.patch("/em-documents/{doc_id}")
 def review_em_document(doc_id: str, body: DocReviewRequest):
     if body.status not in ("APPROVED", "REJECTED"):
         raise HTTPException(status_code=400, detail="status must be APPROVED or REJECTED")
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
         cursor.execute("SELECT em_doc_id, em_id FROM em_documents WHERE em_doc_id = %s", (doc_id,))
         doc = cursor.fetchone()
         if not doc:
-            conn.close()
             raise HTTPException(status_code=404, detail="Document not found")
 
         cursor.execute(
@@ -342,24 +345,23 @@ def review_em_document(doc_id: str, body: DocReviewRequest):
                     )
 
         conn.commit()
-        conn.close()
         return {"status": "updated", "doc_id": doc_id, "new_status": body.status}
     except HTTPException:
         raise
     except Exception as e:
         conn.rollback()
-        conn.close()
         return {"error": str(e)}
-
-
+    finally:
+        if conn:
+            conn.close()
 @router.patch("/employers/{em_id}/ban")
 def ban_employer(em_id: str, body: BanRequest):
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
         cursor.execute("SELECT em_id FROM employers WHERE em_id = %s", (em_id,))
         if not cursor.fetchone():
-            conn.close()
             raise HTTPException(status_code=404, detail="Employer not found")
         cursor.execute(
             "UPDATE employers SET em_is_active = %s WHERE em_id = %s",
@@ -377,9 +379,11 @@ def ban_employer(em_id: str, body: BanRequest):
             (body.admin_id, action, em_id, em_info["em_name"] if em_info else em_id)
         )
         conn.commit()
-        conn.close()
         return {"status": "updated", "em_id": em_id, "is_active": body.is_active}
     except HTTPException:
         raise
     except Exception as e:
         return {"error": str(e)}
+    finally:
+        if conn:
+            conn.close()

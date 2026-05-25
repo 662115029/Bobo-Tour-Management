@@ -6,6 +6,7 @@ router = APIRouter(tags=["reviews"])
 
 @router.get("/fl-reviews")
 def get_fl_reviews(limit: int = 50, offset: int = 0):
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
@@ -25,14 +26,16 @@ def get_fl_reviews(limit: int = 50, offset: int = 0):
             (limit, offset)
         )
         rows = cursor.fetchall()
-        conn.close()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
         return {"error": str(e), "items": []}
 
-
+    finally:
+        if conn:
+            conn.close()
 @router.get("/em-reviews")
 def get_em_reviews(limit: int = 50, offset: int = 0):
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
@@ -52,7 +55,9 @@ def get_em_reviews(limit: int = 50, offset: int = 0):
             (limit, offset)
         )
         rows = cursor.fetchall()
-        conn.close()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
         return {"error": str(e), "items": []}
+    finally:
+        if conn:
+            conn.close()

@@ -350,8 +350,8 @@ onMounted(async () => {
     // ดึง 10 PENDING freelancers + employers สำหรับ verifications table
     // ดึง docs เฉพาะ user ที่อยู่ใน list
     const [flRes, emRes] = await Promise.all([
-      fetch(`${API_BASE}/freelancers?limit=10&status=PENDING&sort_by=fl_updated_at&sort_order=asc`),
-      fetch(`${API_BASE}/employers?limit=10&status=PENDING&sort_by=em_updated_at&sort_order=asc`),
+      fetch(`${API_BASE}/freelancers?limit=10&status=PENDING&sort_by=fl_updated_at&sort_order=desc`),
+      fetch(`${API_BASE}/employers?limit=10&status=PENDING&sort_by=em_updated_at&sort_order=desc`),
     ])
     const flData = await flRes.json()
     const emData = await emRes.json()
@@ -385,6 +385,8 @@ onMounted(async () => {
       updated_at: e.em_updated_at,
     }))
     verifications.value = [...allFl, ...allEm]
+      .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
+      .slice(0, 10)
   } catch {} finally {
     isLoading.value = false
   }

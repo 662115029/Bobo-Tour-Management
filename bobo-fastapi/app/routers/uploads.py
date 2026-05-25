@@ -22,13 +22,13 @@ async def upload_image(file: UploadFile = File(...)):
 async def upload_vehicle_image(vehicle_id: str, file: UploadFile = File(...)):
     if file.content_type not in ALLOWED_TYPES:
         raise HTTPException(status_code=400, detail="Invalid file type. Only JPEG, PNG, and WebP allowed.")
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
 
         cursor.execute("SELECT fl_vehicle_id FROM fl_vehicle WHERE fl_vehicle_id = %s", (vehicle_id,))
         if not cursor.fetchone():
-            conn.close()
             raise HTTPException(status_code=404, detail="Vehicle not found")
 
         image_url = await upload_image_to_supabase(file, folder="vehicles")
@@ -39,7 +39,6 @@ async def upload_vehicle_image(vehicle_id: str, file: UploadFile = File(...)):
         )
         conn.commit()
         new_id = cursor.lastrowid
-        conn.close()
 
         return {
             "fl_vehicle_image_id": new_id,
@@ -51,7 +50,9 @@ async def upload_vehicle_image(vehicle_id: str, file: UploadFile = File(...)):
     except Exception as e:
         return {"error": str(e)}
 
-
+    finally:
+        if conn:
+            conn.close()
 @router.post("/fl-documents/{fl_id}/upload")
 async def upload_fl_document(
     fl_id: str,
@@ -66,13 +67,13 @@ async def upload_fl_document(
     if doc_type not in valid_doc_types:
         raise HTTPException(status_code=400, detail=f"Invalid doc_type. Must be one of: {valid_doc_types}")
 
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
 
         cursor.execute("SELECT fl_id FROM freelancers WHERE fl_id = %s", (fl_id,))
         if not cursor.fetchone():
-            conn.close()
             raise HTTPException(status_code=404, detail="Freelancer not found")
 
         cursor.execute(
@@ -111,7 +112,6 @@ async def upload_fl_document(
             )
 
         conn.commit()
-        conn.close()
 
         return {
             "fl_doc_id": doc_id,
@@ -125,7 +125,9 @@ async def upload_fl_document(
     except Exception as e:
         return {"error": str(e)}
 
-
+    finally:
+        if conn:
+            conn.close()
 @router.post("/em-documents/{em_id}/upload")
 async def upload_em_document(
     em_id: str,
@@ -139,13 +141,13 @@ async def upload_em_document(
     if doc_type not in valid_doc_types:
         raise HTTPException(status_code=400, detail=f"Invalid doc_type. Must be one of: {valid_doc_types}")
 
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
 
         cursor.execute("SELECT em_id FROM employers WHERE em_id = %s", (em_id,))
         if not cursor.fetchone():
-            conn.close()
             raise HTTPException(status_code=404, detail="Employer not found")
 
         cursor.execute(
@@ -183,7 +185,6 @@ async def upload_em_document(
             )
 
         conn.commit()
-        conn.close()
 
         return {
             "em_doc_id": doc_id,
@@ -196,3 +197,6 @@ async def upload_em_document(
         raise
     except Exception as e:
         return {"error": str(e)}
+    finally:
+        if conn:
+            conn.close()

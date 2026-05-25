@@ -72,6 +72,7 @@ def handle_message(event):
 
 @router.post("/test/notify-match")
 def test_notify_match(request: NotifyRequest):
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
@@ -85,7 +86,6 @@ def test_notify_match(request: NotifyRequest):
             """
         )
         job = cursor.fetchone()
-        conn.close()
         if job:
             notify_job_matched(request.line_user_id, job)
             return {"status": "notification sent", "job": job}
@@ -93,9 +93,12 @@ def test_notify_match(request: NotifyRequest):
     except Exception as e:
         return {"error": str(e)}
 
-
+    finally:
+        if conn:
+            conn.close()
 @router.post("/jobs/{job_id}/accept")
 def accept_job(job_id: str, request: JobResponseRequest):
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
@@ -110,14 +113,16 @@ def accept_job(job_id: str, request: JobResponseRequest):
         job = cursor.fetchone()
         if job:
             notify_job_confirmed(request.line_user_id, job)
-        conn.close()
         return {"status": "accepted", "job": job if job else None}
     except Exception as e:
         return {"error": str(e)}
 
-
+    finally:
+        if conn:
+            conn.close()
 @router.post("/jobs/{job_id}/decline")
 def decline_job(job_id: str, request: JobResponseRequest):
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
@@ -132,7 +137,9 @@ def decline_job(job_id: str, request: JobResponseRequest):
         job = cursor.fetchone()
         if job:
             notify_job_declined(request.line_user_id, job)
-        conn.close()
         return {"status": "declined", "job": job if job else None}
     except Exception as e:
         return {"error": str(e)}
+    finally:
+        if conn:
+            conn.close()

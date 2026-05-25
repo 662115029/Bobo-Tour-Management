@@ -4,9 +4,9 @@ from app.db.connection import get_connection, get_cursor
 
 router = APIRouter(tags=["jobs"])
 
-
 @router.get("/jobs")
 def get_jobs(limit: int = 50, offset: int = 0):
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
@@ -28,14 +28,16 @@ def get_jobs(limit: int = 50, offset: int = 0):
             (limit, offset),
         )
         rows = cursor.fetchall()
-        conn.close()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
         return {"error": str(e), "items": []}
 
-
+    finally:
+        if conn:
+            conn.close()
 @router.post("/jobs")
 def create_job(data: dict):
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
@@ -105,14 +107,16 @@ def create_job(data: dict):
                 """, (f"EF{job_id[-6:]}{idx}", job_id, fee.get('place_name'), fee.get('thai_price'), fee.get('foreigner_price'), idx + 1))
 
         conn.commit()
-        conn.close()
         return {"success": True, "job_id": job_id}
     except Exception as e:
         return {"error": str(e)}
 
-
+    finally:
+        if conn:
+            conn.close()
 @router.get("/job-required-languages")
 def get_job_required_languages(limit: int = 50, offset: int = 0):
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
@@ -128,14 +132,16 @@ def get_job_required_languages(limit: int = 50, offset: int = 0):
             (limit, offset)
         )
         rows = cursor.fetchall()
-        conn.close()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
         return {"error": str(e), "items": []}
 
-
+    finally:
+        if conn:
+            conn.close()
 @router.get("/job-itineraries")
 def get_job_itineraries(limit: int = 50, offset: int = 0):
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
@@ -152,14 +158,16 @@ def get_job_itineraries(limit: int = 50, offset: int = 0):
             (limit, offset)
         )
         rows = cursor.fetchall()
-        conn.close()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
         return {"error": str(e), "items": []}
 
-
+    finally:
+        if conn:
+            conn.close()
 @router.get("/job-passengers")
 def get_job_passengers(limit: int = 50, offset: int = 0):
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
@@ -177,14 +185,16 @@ def get_job_passengers(limit: int = 50, offset: int = 0):
             (limit, offset)
         )
         rows = cursor.fetchall()
-        conn.close()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
         return {"error": str(e), "items": []}
 
-
+    finally:
+        if conn:
+            conn.close()
 @router.get("/job-expenses")
 def get_job_expenses(limit: int = 50, offset: int = 0):
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
@@ -200,14 +210,16 @@ def get_job_expenses(limit: int = 50, offset: int = 0):
             (limit, offset)
         )
         rows = cursor.fetchall()
-        conn.close()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
         return {"error": str(e), "items": []}
 
-
+    finally:
+        if conn:
+            conn.close()
 @router.get("/job-applications")
 def get_job_applications(limit: int = 50, offset: int = 0):
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
@@ -225,14 +237,16 @@ def get_job_applications(limit: int = 50, offset: int = 0):
             (limit, offset)
         )
         rows = cursor.fetchall()
-        conn.close()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
         return {"error": str(e), "items": []}
 
-
+    finally:
+        if conn:
+            conn.close()
 @router.get("/job-payments")
 def get_job_payments(limit: int = 50, offset: int = 0):
+    conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
@@ -253,12 +267,13 @@ def get_job_payments(limit: int = 50, offset: int = 0):
             (limit, offset)
         )
         rows = cursor.fetchall()
-        conn.close()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
         return {"error": str(e), "items": []}
 
-
+    finally:
+        if conn:
+            conn.close()
 @router.delete("/jobs/{job_id}")
 def delete_job(job_id: str, x_admin_id: Optional[str] = Header(None, alias="X-Admin-ID")):
     admin_id = x_admin_id
@@ -269,7 +284,6 @@ def delete_job(job_id: str, x_admin_id: Optional[str] = Header(None, alias="X-Ad
         cursor.execute("SELECT job_id, job_title FROM jobs WHERE job_id = %s", (job_id,))
         job = cursor.fetchone()
         if not job:
-            conn.close()
             raise HTTPException(status_code=404, detail="Job not found")
 
         job_title = job["job_title"] if job else job_id
@@ -285,12 +299,10 @@ def delete_job(job_id: str, x_admin_id: Optional[str] = Header(None, alias="X-Ad
         cursor.execute("DELETE FROM jobs WHERE job_id = %s", (job_id,))
 
         conn.commit()
-        conn.close()
 
-        print(f"DEBUG: admin_id={admin_id}, type={type(admin_id)}, bool(admin_id)={bool(admin_id)}")
         if admin_id:
+            log_conn = None
             try:
-                print(f"Inserting log for admin_id={admin_id}, job_id={job_id}")
                 log_conn = get_connection()
                 log_cursor = get_cursor(log_conn)
                 log_cursor.execute(
@@ -302,10 +314,9 @@ def delete_job(job_id: str, x_admin_id: Optional[str] = Header(None, alias="X-Ad
                     (admin_id, job_id, job_title)
                 )
                 log_conn.commit()
-                log_conn.close()
-                print(f"Log inserted successfully")
             except Exception as log_error:
                 print(f"ERROR inserting log: {str(log_error)}")
+            finally:
                 if log_conn:
                     log_conn.close()
         else:
@@ -317,5 +328,7 @@ def delete_job(job_id: str, x_admin_id: Optional[str] = Header(None, alias="X-Ad
     except Exception as e:
         if conn:
             conn.rollback()
-            conn.close()
         raise HTTPException(status_code=500, detail=f"Failed to delete job: {str(e)}")
+    finally:
+        if conn:
+            conn.close()
