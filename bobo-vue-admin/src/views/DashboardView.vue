@@ -50,12 +50,7 @@
               <td><span class="skeleton skeleton-text" style="width:80%"></span></td>
             </tr>
           </template>
-          <tr
-            v-else
-            v-for="job in jobs.slice(0, 10)"
-            :key="job.job_id"
-            class="row-hover"
-          >
+          <tr v-else v-for="job in jobs" :key="job.job_id" class="row-hover">
             <td class="truncate-cell clickable-cell" @click="openJobModal(job)">
               <div class="user-cell">
                 <span class="user-avatar" :style="jobIconStyle(job.job_id)" style="border-radius:6px;flex-shrink:0;">
@@ -64,38 +59,20 @@
                 {{ job.job_title }}
               </div>
             </td>
-            <td
-              class="truncate-cell clickable-cell"
-              @click="openCompanyModal(job)"
-            >
+            <td class="truncate-cell clickable-cell" @click="openCompanyModal(job)">
               <div class="user-cell">
                 <span class="user-avatar" :style="avatarStyle(job.em_id, job.company)">{{ initials2(job.company) }}</span>
                 {{ job.company }}
               </div>
             </td>
+            <td>{{ job.job_price ? "฿" + Number(job.job_price).toLocaleString() : "-" }}</td>
             <td>
-              {{
-                job.job_price
-                  ? "฿" + Number(job.job_price).toLocaleString()
-                  : "-"
-              }}
-            </td>
-            <td>
-              <span class="badge" :class="job.job_status?.toLowerCase()">{{
-                formatJobStatus(job.job_status)
-              }}</span>
+              <span class="badge" :class="job.job_status?.toLowerCase()">{{ formatJobStatus(job.job_status) }}</span>
             </td>
             <td>
               <div class="action-btns">
-                <button class="btn-action view" @click="viewJob(job.job_id)">
-                  View
-                </button>
-                <button
-                  class="btn-action delete"
-                  @click="deleteJob(job.job_id, job.job_title)"
-                >
-                  Delete
-                </button>
+                <button class="btn-action view" @click="viewJob(job.job_id)">View</button>
+                <button class="btn-action delete" @click="deleteJob(job.job_id, job.job_title)">Delete</button>
               </div>
             </td>
             <td class="text-muted">{{ formatDateTime(job.job_updated_at) }}</td>
@@ -129,36 +106,18 @@
               <td style="text-align:center"><span class="skeleton skeleton-text" style="width:75%"></span></td>
             </tr>
           </template>
-          <tr
-            v-else
-            v-for="v in verifications.slice(0, 10)"
-            :key="v.id"
-            class="row-hover"
-          >
-            <td
-              class="truncate-cell clickable-cell"
-              @click="openVerifyModal(v)"
-            >
+          <tr v-else v-for="v in verifications" :key="v.id" class="row-hover">
+            <td class="truncate-cell clickable-cell" @click="openVerifyModal(v)">
               <div class="user-cell">
                 <span class="user-avatar" :style="avatarStyle(v.id, v.name)">{{ initials2(v.name) }}</span>
                 {{ v.name }}
               </div>
             </td>
-            <td>
-              <span class="type-tag" :class="getTypeClass(v.type)">{{
-                v.type
-              }}</span>
-            </td>
-            <td>
-              <span class="badge" :class="v.status?.toLowerCase()">{{
-                v.status
-              }}</span>
-            </td>
+            <td><span class="type-tag" :class="getTypeClass(v.type)">{{ v.type }}</span></td>
+            <td><span class="badge" :class="v.status?.toLowerCase()">{{ v.status }}</span></td>
             <td>
               <div class="action-btns">
-                <button class="btn-action verify-style" @click="openVerifyDocs(v)">
-                  View Docs
-                </button>
+                <button class="btn-action verify-style" @click="openVerifyDocs(v)">View Docs</button>
               </div>
             </td>
             <td class="text-muted">{{ formatDateTime(v.updated_at) }}</td>
@@ -168,49 +127,28 @@
       </section>
     </div>
 
-    <!-- Job Mini Modal -->
-    <JobMiniModal
-      :data="jobModal"
-      @close="jobModal = null"
-      @view-detail="(id) => { viewJob(id); jobModal = null }"
-    />
-
-    <!-- Company Mini Modal -->
-    <UserMiniModal
-      :data="companyModal"
-      type="EMPLOYER"
-      :loading="companyLoading"
+    <JobMiniModal :data="jobModal" @close="jobModal = null" @view-detail="(id) => { viewJob(id); jobModal = null }" />
+    <UserMiniModal :data="companyModal" type="EMPLOYER" :loading="companyLoading"
       @close="companyModal = null"
-      @view-detail="({ id }) => { router.push({ name: 'EmployerDetail', params: { id } }); companyModal = null }"
-    />
-
-    <!-- Verification Mini Modal -->
-    <UserMiniModal
-      :data="verifyDetailMapped"
+      @view-detail="({ id }) => { router.push({ name: 'EmployerDetail', params: { id } }); companyModal = null }" />
+    <UserMiniModal :data="verifyDetailMapped"
       :type="verifyModal?.type === 'Freelancer' ? 'FREELANCER' : 'EMPLOYER'"
       :loading="verifyLoading"
       @close="verifyModal = null; verifyDetail = null"
-      @view-detail="goToVerifyDetail"
-    />
-    <!-- Delete Modal -->
+      @view-detail="goToVerifyDetail" />
     <DeleteJobModal :show="showDeleteModal" :title="deleteTargetTitle"
       @confirm="confirmDelete" @cancel="showDeleteModal = false" />
-
-    <!-- Verification Documents Modal -->
-    <DocReviewModal
-      :user="selectedVerifyUser"
-      :docs="selectedVerifyDocs"
+    <DocReviewModal :user="selectedVerifyUser" :docs="selectedVerifyDocs"
       @close="selectedVerifyUser = null"
       @approve="(doc) => reviewVerifyDoc(doc, 'APPROVED')"
-      @reject="(doc) => reviewVerifyDoc(doc, 'REJECTED')"
-    />
+      @reject="(doc) => reviewVerifyDoc(doc, 'REJECTED')" />
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from "vue";
-import BreadcrumbBar from '../components/BreadcrumbBar.vue';
-import { useRouter } from "vue-router";
+import { computed, onMounted, ref, watch } from 'vue'
+import BreadcrumbBar from '../components/BreadcrumbBar.vue'
+import { useRouter } from 'vue-router'
 import { useAvatar } from '../composables/useAvatar'
 import { formatDateTime, groupDocsByLatest } from '../utils/formatDate'
 import { formatJobStatus, getTypeClass } from '../utils/statusClasses'
@@ -222,71 +160,66 @@ import { API_BASE } from '../data/api'
 import { useStats } from '../composables/useStats'
 
 const { avatarStyle, jobIconStyle, initials2 } = useAvatar()
+const router = useRouter()
 
-const router = useRouter();
-
-const { stats, loadStats } = useStats();
-const localTotalJobs = ref(0);
+const { stats, loadStats } = useStats()
+const localTotalJobs = ref(0)
 watch(() => stats.value.totalJobs, (val) => { localTotalJobs.value = val }, { immediate: true })
-const isLoading = ref(true);
-const jobs = ref([]);
-const verifications = ref([]);
-const allEmployers = ref([]);
-const allFreelancers = ref([]);
-const flDocs = ref([]);
-const emDocs = ref([]);
-const selectedVerifyUser = ref(null);
-const selectedVerifyDocs = ref([]);
 
-const showDeleteModal = ref(false);
-const deleteTargetId = ref(null);
-const deleteTargetTitle = ref("");
+const isLoading = ref(true)
+const jobs = ref([])
+const verifications = ref([])
+const flDocs = ref([])
+const emDocs = ref([])
+const selectedVerifyUser = ref(null)
+const selectedVerifyDocs = ref([])
 
-const jobModal = ref(null);
-const companyModal = ref(null);
-const companyLoading = ref(false);
-const verifyModal = ref(null);
-const verifyDetail = ref(null);
-const verifyLoading = ref(false);
+const showDeleteModal = ref(false)
+const deleteTargetId = ref(null)
+const deleteTargetTitle = ref('')
 
-const viewJob = (id) => router.push({ name: "JobDetail", params: { id } });
-
-const deleteJob = (id, title) => {
-  deleteTargetId.value = id;
-  deleteTargetTitle.value = title;
-  showDeleteModal.value = true;
-};
-
-const confirmDelete = async () => {
-  const id = deleteTargetId.value;
-  const title = deleteTargetTitle.value;
-  try {
-    const adminId = localStorage.getItem('admin_id') || '';
-    const res = await fetch(`${API_BASE}/jobs/${id}`, {
-      method: "DELETE",
-      headers: { "X-Admin-ID": adminId },
-    });
-    if (res.ok) {
-      jobs.value = jobs.value.filter((j) => j.job_id !== id);
-      localTotalJobs.value = Math.max(0, localTotalJobs.value - 1);
-    } else {
-      console.error("Delete failed:", res.status);
-    }
-  } catch (e) {
-    console.error("Failed to delete job:", e);
-  } finally {
-    showDeleteModal.value = false;
-    deleteTargetId.value = null;
-    deleteTargetTitle.value = "";
-  }
-};
+const jobModal = ref(null)
+const companyModal = ref(null)
+const companyLoading = ref(false)
+const verifyModal = ref(null)
+const verifyDetail = ref(null)
+const verifyLoading = ref(false)
 
 const allLanguages = ref([])
+const verifyUserCache = ref({})
+
+const viewJob = (id) => router.push({ name: 'JobDetail', params: { id } })
+
+const deleteJob = (id, title) => {
+  deleteTargetId.value = id
+  deleteTargetTitle.value = title
+  showDeleteModal.value = true
+}
+
+const confirmDelete = async () => {
+  const id = deleteTargetId.value
+  try {
+    const res = await fetch(`${API_BASE}/jobs/${id}`, {
+      method: 'DELETE',
+      headers: { 'X-Admin-ID': localStorage.getItem('admin_id') || '' },
+    })
+    if (res.ok) {
+      jobs.value = jobs.value.filter(j => j.job_id !== id)
+      localTotalJobs.value = Math.max(0, localTotalJobs.value - 1)
+    }
+  } catch (e) {
+    console.error('Failed to delete job:', e)
+  } finally {
+    showDeleteModal.value = false
+    deleteTargetId.value = null
+    deleteTargetTitle.value = ''
+  }
+}
 
 const openJobModal = async (job) => {
   if (!allLanguages.value.length) {
     try {
-      const res = await fetch(`${API_BASE}/job-required-languages?limit=500`)
+      const res = await fetch(`${API_BASE}/job-required-languages?job_id=${job.job_id}&limit=20`)
       const data = await res.json()
       allLanguages.value = data.items || []
     } catch {}
@@ -295,96 +228,82 @@ const openJobModal = async (job) => {
     .filter(l => l.job_id === job.job_id)
     .map(l => l.language_name)
   jobModal.value = { ...job, languages: langs }
-};
+}
 
 const openCompanyModal = async (job) => {
-  companyLoading.value = true;
-  companyModal.value = { em_name: job.company };
-  const em = allEmployers.value.find((e) => e.em_id === job.em_id);
-  companyModal.value = em || { em_name: job.company };
-  companyLoading.value = false;
-};
+  companyLoading.value = true
+  companyModal.value = { em_name: job.company }
+  try {
+    const res = await fetch(`${API_BASE}/employers/${job.em_id}`)
+    const em = await res.json()
+    companyModal.value = em.em_id ? em : { em_name: job.company }
+  } catch {
+    companyModal.value = { em_name: job.company }
+  } finally {
+    companyLoading.value = false
+  }
+}
 
 const openVerifyModal = async (v) => {
-  verifyModal.value = v;
-  verifyDetail.value = null;
-  verifyLoading.value = true;
+  verifyModal.value = v
+  verifyDetail.value = null
+  verifyLoading.value = true
   try {
-    if (v.type === "Freelancer") {
-      const fl = allFreelancers.value.find((f) => f.fl_id === v.id) || null;
-      if (fl) {
-        const flJobs = jobs.value.filter(j => j.selected_fl_id === fl.fl_id);
-        verifyDetail.value = {
-          ...fl,
-          fl_total_jobs: flJobs.length,
-          fl_completed_jobs: flJobs.filter(j => j.job_status === 'COMPLETED').length,
-        };
-      }
-    } else {
-      const em = allEmployers.value.find((e) => e.em_id === v.id) || null;
-      if (em) {
-        const emJobs = jobs.value.filter(j => j.em_id === em.em_id);
-        verifyDetail.value = {
-          ...em,
-          em_total_jobs: emJobs.length,
-          em_completed_jobs: emJobs.filter(j => j.job_status === 'COMPLETED').length,
-        };
-      }
+    if (verifyUserCache.value[v.id]) {
+      verifyDetail.value = verifyUserCache.value[v.id]
+      return
     }
-  } finally {
-    verifyLoading.value = false;
+    const endpoint = v.type === 'Freelancer'
+      ? `${API_BASE}/freelancers/${v.id}`
+      : `${API_BASE}/employers/${v.id}`
+    const res = await fetch(endpoint)
+    const data = await res.json()
+    verifyUserCache.value[v.id] = data
+    verifyDetail.value = data
+  } catch {} finally {
+    verifyLoading.value = false
   }
-};
+}
 
 const verifyDetailMapped = computed(() => {
-  if (!verifyDetail.value || !verifyModal.value) return null;
-  return verifyDetail.value;
-});
+  if (!verifyDetail.value || !verifyModal.value) return null
+  return verifyDetail.value
+})
 
 const goToVerifyDetail = () => {
-  if (!verifyModal.value) return;
-  if (verifyModal.value.type === "Freelancer") {
-    router.push({
-      name: "FreelancerDetail",
-      params: { id: verifyModal.value.id },
-    });
-  } else {
-    router.push({
-      name: "EmployerDetail",
-      params: { id: verifyModal.value.id },
-    });
-  }
-  verifyModal.value = null;
-};
+  if (!verifyModal.value) return
+  const route = verifyModal.value.type === 'Freelancer'
+    ? { name: 'FreelancerDetail', params: { id: verifyModal.value.id } }
+    : { name: 'EmployerDetail', params: { id: verifyModal.value.id } }
+  router.push(route)
+  verifyModal.value = null
+}
 
 const openVerifyDocs = (v) => {
-  selectedVerifyUser.value = v;
-  if (v.type === "Freelancer") {
-    const allDocs = flDocs.value.filter((d) => d.fl_id === v.id);
-    selectedVerifyDocs.value = groupDocsByLatest(allDocs, 'fl', formatDateTime);
+  selectedVerifyUser.value = v
+  if (v.type === 'Freelancer') {
+    const allDocs = flDocs.value.filter(d => Number(d.fl_id) === Number(v.id))
+    selectedVerifyDocs.value = groupDocsByLatest(allDocs, 'fl', formatDateTime)
   } else {
-    const allDocs = emDocs.value.filter((d) => d.em_id === v.id);
-    selectedVerifyDocs.value = groupDocsByLatest(allDocs, 'em', formatDateTime);
+    const allDocs = emDocs.value.filter(d => Number(d.em_id) === Number(v.id))
+    selectedVerifyDocs.value = groupDocsByLatest(allDocs, 'em', formatDateTime)
   }
-};
+}
 
 const reviewVerifyDoc = async (doc, newStatus) => {
-  const endpoint =
-    doc._type === "fl"
-      ? `${API_BASE}/fl-documents/${doc.id}`
-      : `${API_BASE}/em-documents/${doc.id}`;
+  const endpoint = doc._type === 'fl'
+    ? `${API_BASE}/fl-documents/${doc.id}`
+    : `${API_BASE}/em-documents/${doc.id}`
   try {
     const res = await fetch(endpoint, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: newStatus, reviewed_by: localStorage.getItem("admin_id") || "" }),
-    });
-    const data = await res.json();
-    if (data.status === "updated") {
-      doc.status = newStatus;
-      doc.reviewed = formatDateTime(new Date().toISOString());
-
-      // Sync back to source array
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus, reviewed_by: localStorage.getItem('admin_id') || '' }),
+    })
+    const data = await res.json()
+    if (data.status === 'updated') {
+      doc.status = newStatus
+      doc.reviewed = formatDateTime(new Date().toISOString())
       if (doc._type === 'fl') {
         const raw = flDocs.value.find(d => d.fl_doc_id === doc.id)
         if (raw) raw.fl_doc_status = newStatus
@@ -392,89 +311,82 @@ const reviewVerifyDoc = async (doc, newStatus) => {
         const raw = emDocs.value.find(d => d.em_doc_id === doc.id)
         if (raw) raw.em_doc_status = newStatus
       }
-
-      // Recompute user status from source docs
       if (selectedVerifyUser.value) {
         const userId = selectedVerifyUser.value.id
         const userDocs = doc._type === 'fl'
-          ? flDocs.value.filter(d => d.fl_id === userId)
-          : emDocs.value.filter(d => d.em_id === userId)
+          ? flDocs.value.filter(d => Number(d.fl_id) === Number(userId))
+          : emDocs.value.filter(d => Number(d.em_id) === Number(userId))
         const approvedCount = userDocs.filter(d =>
           doc._type === 'fl' ? d.fl_doc_status === 'APPROVED' : d.em_doc_status === 'APPROVED'
         ).length
         const newUserStatus = approvedCount >= 5 ? 'VERIFIED' : 'PENDING'
-
-        // Update in verifications list
         const entry = verifications.value.find(v => v.id === userId)
         if (entry) entry.status = newUserStatus
         selectedVerifyUser.value.status = newUserStatus
       }
     }
   } catch (e) {
-    console.error("Failed to review doc:", e);
+    console.error('Failed to review doc:', e)
   }
-};
+}
 
 onMounted(async () => {
   try {
-    const pingRes = await fetch(`${API_BASE}/admin/db/ping`);
-    const ping = await pingRes.json();
-    if (!ping.connected) console.error("DB error:", ping.error);
+    const pingRes = await fetch(`${API_BASE}/admin/db/ping`)
+    const ping = await pingRes.json()
+    if (!ping.connected) console.error('DB error:', ping.error)
   } catch (e) {
-    console.error(e);
+    console.error(e)
   }
 
   try {
-    const jobsRes = await fetch(`${API_BASE}/jobs?limit=500`);
-    const jobsData = await jobsRes.json();
-    jobs.value = jobsData.items || [];
+    // ดึงแค่ 10 jobs ล่าสุดสำหรับแสดงใน dashboard
+    const jobsRes = await fetch(`${API_BASE}/jobs?limit=10`)
+    const jobsData = await jobsRes.json()
+    jobs.value = jobsData.items || []
   } catch {}
 
   try {
-    const [flRes, emRes, flDocRes, emDocRes] = await Promise.all([
-      fetch(`${API_BASE}/freelancers?limit=500`),
-      fetch(`${API_BASE}/employers?limit=500`),
-      fetch(`${API_BASE}/fl-documents?limit=500`),
-      fetch(`${API_BASE}/em-documents?limit=500`),
-    ]);
-    const flData = await flRes.json();
-    const emData = await emRes.json();
-    const flDocData = await flDocRes.json();
-    const emDocData = await emDocRes.json();
-    allFreelancers.value = flData.items || [];
-    allEmployers.value = emData.items || [];
-    flDocs.value = flDocData.items || [];
-    emDocs.value = emDocData.items || [];
+    // ดึง 10 PENDING freelancers + employers สำหรับ verifications table
+    // ดึง docs เฉพาะ user ที่อยู่ใน list
+    const [flRes, emRes] = await Promise.all([
+      fetch(`${API_BASE}/freelancers?limit=10&status=PENDING&sort_by=fl_updated_at&sort_order=asc`),
+      fetch(`${API_BASE}/employers?limit=10&status=PENDING&sort_by=em_updated_at&sort_order=asc`),
+    ])
+    const flData = await flRes.json()
+    const emData = await emRes.json()
+    const flItems = flData.items || []
+    const emItems = emData.items || []
 
-    // Compute status from actual approved doc count — same logic as VerificationView
-    const allFl = allFreelancers.value.map((f) => {
-      const docs = flDocs.value.filter(d => d.fl_id === f.fl_id)
-      const approvedCount = docs.filter(d => d.fl_doc_status === 'APPROVED').length
-      return {
-        id: f.fl_id,
-        name: f.fl_name || f.line_user_id,
-        type: "Freelancer",
-        status: approvedCount >= 5 ? 'VERIFIED' : 'PENDING',
-        created_at: f.fl_created_at,
-        updated_at: f.fl_updated_at,
-      }
-    });
-    const allEm = allEmployers.value.map((e) => {
-      const docs = emDocs.value.filter(d => d.em_id === e.em_id)
-      const approvedCount = docs.filter(d => d.em_doc_status === 'APPROVED').length
-      return {
-        id: e.em_id,
-        name: e.em_name || e.em_username,
-        type: "Employer",
-        status: approvedCount >= 5 ? 'VERIFIED' : 'PENDING',
-        created_at: e.em_created_at,
-        updated_at: e.em_updated_at,
-      }
-    });
-    verifications.value = [...allFl, ...allEm];
-  } catch {}
-  finally {
-    isLoading.value = false;
+    // ดึง docs เฉพาะ id ที่ต้องใช้
+    const flIds = flItems.map(f => f.fl_id).join(',')
+    const emIds = emItems.map(e => e.em_id).join(',')
+    const [flDocRes, emDocRes] = await Promise.all([
+      flIds ? fetch(`${API_BASE}/fl-documents?fl_ids=${flIds}&limit=50`) : Promise.resolve({ json: () => ({ items: [] }) }),
+      emIds ? fetch(`${API_BASE}/em-documents?em_ids=${emIds}&limit=50`) : Promise.resolve({ json: () => ({ items: [] }) }),
+    ])
+    const flDocData = await flDocRes.json()
+    const emDocData = await emDocRes.json()
+    flDocs.value = flDocData.items || []
+    emDocs.value = emDocData.items || []
+
+    const allFl = flItems.map(f => ({
+      id: f.fl_id,
+      name: f.fl_name || f.line_user_id,
+      type: 'Freelancer',
+      status: f.fl_verify_status,
+      updated_at: f.fl_updated_at,
+    }))
+    const allEm = emItems.map(e => ({
+      id: e.em_id,
+      name: e.em_name || e.em_username,
+      type: 'Employer',
+      status: e.em_verify_status,
+      updated_at: e.em_updated_at,
+    }))
+    verifications.value = [...allFl, ...allEm]
+  } catch {} finally {
+    isLoading.value = false
   }
-});
+})
 </script>
