@@ -5,23 +5,8 @@
     <div class="filter-row">
       <input type="text" v-model="search" placeholder="Search job title..." class="search-input" @input="onSearchInput" />
       <div class="filter-group">
-        <select v-model="yearFilter" class="filter-select-jobs" @change="fetchJobs">
-          <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
-        </select>
-        <select v-model="monthFilter" class="filter-select-jobs" @change="fetchJobs">
-          <option value="01">January</option>
-          <option value="02">February</option>
-          <option value="03">March</option>
-          <option value="04">April</option>
-          <option value="05">May</option>
-          <option value="06">June</option>
-          <option value="07">July</option>
-          <option value="08">August</option>
-          <option value="09">September</option>
-          <option value="10">October</option>
-          <option value="11">November</option>
-          <option value="12">December</option>
-        </select>
+        <SelectDropdown v-model="yearFilter" :options="years.map(y => ({ label: String(y), value: y }))" @change="fetchJobs" />
+        <SelectDropdown v-model="monthFilter" :options="monthOptions" @change="fetchJobs" />
       </div>
     </div>
 
@@ -173,6 +158,7 @@ import { formatJobStatus } from '../utils/statusClasses'
 import JobMiniModal from '../components/JobMiniModal.vue'
 import UserMiniModal from '../components/UserMiniModal.vue'
 import DeleteJobModal from '../components/DeleteJobModal.vue'
+import SelectDropdown from '../components/SelectDropdown.vue'
 
 const router = useRouter()
 const { avatarStyle, jobIconStyle, initials2 } = useAvatar()
@@ -181,6 +167,14 @@ const now = new Date()
 const currentYear = now.getFullYear()
 const currentMonth = String(now.getMonth() + 1).padStart(2, '0')
 const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i)
+const monthOptions = [
+  { label: 'January',   value: '01' }, { label: 'February',  value: '02' },
+  { label: 'March',     value: '03' }, { label: 'April',     value: '04' },
+  { label: 'May',       value: '05' }, { label: 'June',      value: '06' },
+  { label: 'July',      value: '07' }, { label: 'August',    value: '08' },
+  { label: 'September', value: '09' }, { label: 'October',   value: '10' },
+  { label: 'November',  value: '11' }, { label: 'December',  value: '12' },
+]
 
 const search = ref("")
 const statusFilter = ref(localStorage.getItem("jobs_statusFilter") || "All")
@@ -202,7 +196,7 @@ const deleteTargetTitle = ref("")
 const jobModal = ref(null)
 const companyModal = ref(null)
 
-const PAGE_SIZE = 20
+const PAGE_SIZE = 10
 const page = ref(1)
 const totalCount = ref(0)
 const hasMore = ref(false)

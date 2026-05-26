@@ -5,23 +5,8 @@
     <div class="filter-row">
       <input type="text" v-model="search" placeholder="Search action or target..." class="search-input" @input="onSearchInput" />
       <div class="filter-group">
-        <select v-model="yearFilter" class="filter-select-jobs" @change="fetchLogs">
-          <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
-        </select>
-        <select v-model="monthFilter" class="filter-select-jobs" @change="fetchLogs">
-          <option value="01">January</option>
-          <option value="02">February</option>
-          <option value="03">March</option>
-          <option value="04">April</option>
-          <option value="05">May</option>
-          <option value="06">June</option>
-          <option value="07">July</option>
-          <option value="08">August</option>
-          <option value="09">September</option>
-          <option value="10">October</option>
-          <option value="11">November</option>
-          <option value="12">December</option>
-        </select>
+        <SelectDropdown v-model="yearFilter" :options="years.map(y => ({ label: String(y), value: y }))" @change="fetchLogs" />
+        <SelectDropdown v-model="monthFilter" :options="monthOptions" @change="fetchLogs" />
       </div>
     </div>
 
@@ -277,14 +262,23 @@ import { formatDateTime } from '../utils/formatDate'
 import { getActionClass, getTypeClass } from '../utils/statusClasses'
 import UserMiniModal from '../components/UserMiniModal.vue'
 import JobMiniModal from '../components/JobMiniModal.vue'
-
-const router = useRouter();
-const { avatarStyle, initials2 } = useAvatar()
+import SelectDropdown from '../components/SelectDropdown.vue'
 
 const now = new Date()
 const currentYear = now.getFullYear()
 const currentMonth = String(now.getMonth() + 1).padStart(2, '0')
 const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i)
+const monthOptions = [
+  { label: 'January',   value: '01' }, { label: 'February',  value: '02' },
+  { label: 'March',     value: '03' }, { label: 'April',     value: '04' },
+  { label: 'May',       value: '05' }, { label: 'June',      value: '06' },
+  { label: 'July',      value: '07' }, { label: 'August',    value: '08' },
+  { label: 'September', value: '09' }, { label: 'October',   value: '10' },
+  { label: 'November',  value: '11' }, { label: 'December',  value: '12' },
+]
+
+const router = useRouter();
+const { avatarStyle, initials2 } = useAvatar()
 
 const search = ref("");
 const yearFilter = ref(currentYear)
@@ -299,7 +293,7 @@ const isLoading = ref(true);
 const logs = ref([]);
 const admins = ref([]);
 
-const PAGE_SIZE = 20
+const PAGE_SIZE = 10
 const currentPage = ref(1)
 const hasMore = ref(false)
 
