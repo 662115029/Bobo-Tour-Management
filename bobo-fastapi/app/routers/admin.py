@@ -393,7 +393,8 @@ def change_admin_password(admin_id: str, body: ChangePasswordRequest):
 
 @router.get("/logs")
 def admin_logs(limit: int = 50, offset: int = 0,
-               action_type: str = None, target_type: str = None):
+               action_type: str = None, target_type: str = None,
+               year: int = None, month: str = None, search: str = None):
     conn = None
     try:
         conn = get_connection()
@@ -406,6 +407,15 @@ def admin_logs(limit: int = 50, offset: int = 0,
         if target_type:
             where.append("al.target_type = %s")
             params.append(target_type)
+        if year:
+            where.append("YEAR(al.created_at) = %s")
+            params.append(year)
+        if month:
+            where.append("MONTH(al.created_at) = %s")
+            params.append(int(month))
+        if search:
+            where.append("(al.target_name LIKE %s OR al.action_type LIKE %s OR al.note LIKE %s)")
+            params += [f"%{search}%", f"%{search}%", f"%{search}%"]
         where_clause = ("WHERE " + " AND ".join(where)) if where else ""
         cursor.execute(
             f"""

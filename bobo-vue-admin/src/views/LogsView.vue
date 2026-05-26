@@ -3,7 +3,26 @@
     <BreadcrumbBar />
 
     <div class="filter-row">
-      <input type="text" v-model="search" placeholder="Search action or target..." class="search-input" />
+      <input type="text" v-model="search" placeholder="Search action or target..." class="search-input" @input="onSearchInput" />
+      <div class="filter-group">
+        <select v-model="yearFilter" class="filter-select-jobs" @change="fetchLogs">
+          <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
+        </select>
+        <select v-model="monthFilter" class="filter-select-jobs" @change="fetchLogs">
+          <option value="01">January</option>
+          <option value="02">February</option>
+          <option value="03">March</option>
+          <option value="04">April</option>
+          <option value="05">May</option>
+          <option value="06">June</option>
+          <option value="07">July</option>
+          <option value="08">August</option>
+          <option value="09">September</option>
+          <option value="10">October</option>
+          <option value="11">November</option>
+          <option value="12">December</option>
+        </select>
+      </div>
     </div>
 
     <div class="table-container">
@@ -113,6 +132,15 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="flex items-center justify-between px-2 py-3 text-sm text-muted" v-if="filteredLogs.length > 0 || currentPage > 1">
+      <button class="btn-action view" :disabled="currentPage === 1" :class="{ 'opacity-40 cursor-not-allowed': currentPage === 1 }"
+        @click="goToPage(currentPage - 1)">← Prev</button>
+      <span>Page {{ currentPage }}</span>
+      <button class="btn-action view" :disabled="!hasMore" :class="{ 'opacity-40 cursor-not-allowed': !hasMore }"
+        @click="goToPage(currentPage + 1)">Next →</button>
     </div>
 
     <!-- Column Filter Dropdowns -->
@@ -252,7 +280,15 @@ import JobMiniModal from '../components/JobMiniModal.vue'
 
 const router = useRouter();
 const { avatarStyle, initials2 } = useAvatar()
+
+const now = new Date()
+const currentYear = now.getFullYear()
+const currentMonth = String(now.getMonth() + 1).padStart(2, '0')
+const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i)
+
 const search = ref("");
+const yearFilter = ref(currentYear)
+const monthFilter = ref(currentMonth)
 const typeFilter = ref(localStorage.getItem("logs_typeFilter") || "All");
 const actionFilter = ref(localStorage.getItem("logs_actionFilter") || "All");
 const targetSort = ref(localStorage.getItem("logs_targetSort") || "");
@@ -263,11 +299,23 @@ const isLoading = ref(true);
 const logs = ref([]);
 const admins = ref([]);
 
+const PAGE_SIZE = 20
+const currentPage = ref(1)
+const hasMore = ref(false)
+
 const showTypeDropdown = ref(false);
 const typeDropdownStyle = ref({});
 const adminFilter = ref(localStorage.getItem("logs_adminFilter") || "All");
 const showAdminDropdown = ref(false);
 const adminDropdownStyle = ref({});
+
+let searchTimer = null
+const onSearchInput = () => {
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => { currentPage.value = 1; fetchLogs() }, 400)
+}
+
+const goToPage = (p) => { currentPage.value = p; fetchLogs() }
 
 const saveFilters = () => {
   localStorage.setItem("logs_actionFilter", actionFilter.value);
@@ -301,6 +349,8 @@ const setActionFilter = (val) => {
   actionFilter.value = val;
   showActionDropdown.value = false;
   saveFilters();
+  currentPage.value = 1;
+  fetchLogs();
 };
 
 const toggleTypeDropdown = (e) => {
@@ -318,6 +368,8 @@ const setTypeFilter = (val) => {
   typeFilter.value = val;
   showTypeDropdown.value = false;
   saveFilters();
+  currentPage.value = 1;
+  fetchLogs();
 };
 
 const toggleAdminDropdown = (e) => {
@@ -350,13 +402,11 @@ const resetAllFilters = () => {
   dateSort.value = "";
   adminFilter.value = "All";
   saveFilters();
+  currentPage.value = 1;
+  fetchLogs();
 };
-
 const handleOutsideClick = (e) => {
-  if (
-    !e.target.closest(".col-dropdown") &&
-    !e.target.closest(".col-filter-btn")
-  ) {
+  if (!e.target.closest(".col-dropdown") && !e.target.closest(".col-filter-btn")) {
     closeAllDropdowns();
   }
 };
@@ -366,54 +416,18 @@ const uniqueAdmins = computed(() => {
 });
 
 const filteredLogs = computed(() => {
-  let result = logs.value.filter((log) => {
-    const matchSearch =
-      search.value === "" ||
-      (log.action_type || "")
-        .toLowerCase()
-        .includes(search.value.toLowerCase()) ||
-      (log.target_name || "")
-        .toLowerCase()
-        .includes(search.value.toLowerCase()) ||
-      (log.note || "").toLowerCase().includes(search.value.toLowerCase()) ||
-      (log.admin_name || "").toLowerCase().includes(search.value.toLowerCase());
-    const matchType =
-      typeFilter.value === "All" ||
-      (log.target_type || "").toUpperCase() === typeFilter.value;
-    const matchAdmin =
-      adminFilter.value === "All" ||
-      (log.admin_name || "") === adminFilter.value;
-    return matchSearch && matchType && matchAdmin;
-  });
-
-  if (actionFilter.value !== "All") {
-    result = result.filter((log) => {
-      const a = (log.action_type || "").toUpperCase();
-      if (actionFilter.value === "DELETE_JOB") return a === "DELETE_JOB" || a === "DELETE";
-      return a === actionFilter.value;
-    });
+  let result = [...logs.value]
+  if (adminFilter.value !== 'All') {
+    result = result.filter(log => (log.admin_name || '') === adminFilter.value)
   }
-
   if (targetSort.value) {
-    result = [...result].sort((a, b) => {
-      const cmp = (a.target_name || "").localeCompare(b.target_name || "");
-      return targetSort.value === "desc" ? -cmp : cmp;
-    });
+    result.sort((a, b) => { const c = (a.target_name||'').localeCompare(b.target_name||''); return targetSort.value === 'desc' ? -c : c })
   } else if (dateSort.value) {
-    result = [...result].sort((a, b) => {
-      const dateA = new Date(a.created_at).getTime() || 0;
-      const dateB = new Date(b.created_at).getTime() || 0;
-      return dateSort.value === "desc" ? dateB - dateA : dateA - dateB;
-    });
+    result.sort((a, b) => { const c = new Date(a.created_at) - new Date(b.created_at); return dateSort.value === 'desc' ? -c : c })
   } else {
-    result = [...result].sort((a, b) => {
-      const dateA = new Date(a.created_at).getTime() || 0;
-      const dateB = new Date(b.created_at).getTime() || 0;
-      return dateB - dateA;
-    });
+    result.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
   }
-
-  return result;
+  return result
 });
 
 onUnmounted(() => {
@@ -509,13 +523,25 @@ const openTargetModal = async (log) => {
 const fetchLogs = async () => {
   isLoading.value = true;
   try {
+    const params = new URLSearchParams({
+      limit: PAGE_SIZE + 1,
+      offset: (currentPage.value - 1) * PAGE_SIZE,
+      year: yearFilter.value,
+      month: monthFilter.value,
+    })
+    if (search.value) params.set('search', search.value)
+    if (actionFilter.value !== 'All') params.set('action_type', actionFilter.value)
+    if (typeFilter.value !== 'All') params.set('target_type', typeFilter.value)
+
     const [logsRes, adminsRes] = await Promise.all([
-      fetch(`${API_BASE}/admin/logs?limit=200`),
+      fetch(`${API_BASE}/admin/logs?${params}`),
       fetch(`${API_BASE}/admin/admins?limit=50`),
     ]);
     const logsData = await logsRes.json();
     const adminsData = await adminsRes.json();
-    logs.value = logsData.items || [];
+    const items = logsData.items || []
+    hasMore.value = items.length === PAGE_SIZE + 1
+    logs.value = items.slice(0, PAGE_SIZE)
     admins.value = adminsData.items || [];
   } catch (e) {
     console.error("Failed to load logs:", e);
