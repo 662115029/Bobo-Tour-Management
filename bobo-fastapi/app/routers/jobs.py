@@ -5,7 +5,7 @@ from app.db.connection import get_connection, get_cursor
 router = APIRouter(tags=["jobs"])
 
 @router.get("/jobs")
-def get_jobs(limit: int = 50, offset: int = 0, fl_id: Optional[int] = None, em_id: Optional[int] = None, status: Optional[str] = None):
+def get_jobs(limit: int = 50, offset: int = 0, fl_id: Optional[int] = None, em_id: Optional[int] = None, status: Optional[str] = None, year: Optional[int] = None, month: Optional[str] = None, search: Optional[str] = None):
     conn = None
     try:
         conn = get_connection()
@@ -21,6 +21,15 @@ def get_jobs(limit: int = 50, offset: int = 0, fl_id: Optional[int] = None, em_i
         if status:
             where.append("j.job_status = %s")
             params.append(status)
+        if year:
+            where.append("YEAR(j.job_start_date) = %s")
+            params.append(year)
+        if month:
+            where.append("MONTH(j.job_start_date) = %s")
+            params.append(int(month))
+        if search:
+            where.append("j.job_title LIKE %s")
+            params.append(f"%{search}%")
         where_sql = ("WHERE " + " AND ".join(where)) if where else ""
         params += [limit, offset]
         cursor.execute(
@@ -45,7 +54,6 @@ def get_jobs(limit: int = 50, offset: int = 0, fl_id: Optional[int] = None, em_i
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
         return {"error": str(e), "items": []}
-
     finally:
         if conn:
             conn.close()
