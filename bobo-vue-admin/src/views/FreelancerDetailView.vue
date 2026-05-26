@@ -159,8 +159,7 @@
           <!-- Profile -->
           <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm p-5 flex flex-col items-center text-center hover:shadow-md transition-shadow">
             <div class="relative mb-3">
-              <img v-if="fl.fl_profile_image_url" :src="fl.fl_profile_image_url" class="w-20 h-20 rounded-full object-cover ring-2 ring-[#eee]" />
-              <div v-else class="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold ring-2 ring-[#eee]" :style="avatarStyle(fl.fl_id, fl.fl_name)">{{ initials2(fl.fl_name) }}</div>
+              <UserAvatar :id="fl.fl_id" :name="fl.fl_name" :image-url="fl.fl_profile_image_url" :size="80" />
               <span class="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-white" :class="fl.fl_is_active ? 'bg-[#4caf50]' : 'bg-[#bbb]'"></span>
             </div>
             <h2 class="text-[15px] font-bold text-[#111] mb-1.5">{{ fl.fl_name }}</h2>
@@ -490,6 +489,7 @@ import BanModal from '../components/BanModal.vue'
 import { ref, computed, onMounted } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { API_BASE } from "../data/api"
+import UserAvatar from '../components/UserAvatar.vue'
 import { useAvatar } from '../composables/useAvatar'
 import { formatDate, formatDateTime } from '../utils/formatDate'
 import { formatJobStatus, formatVerifyStatus } from '../utils/statusClasses'

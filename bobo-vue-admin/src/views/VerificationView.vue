@@ -60,7 +60,7 @@
           <tr v-for="v in sortedList" :key="v.id">
             <td class="truncate-cell">
               <div class="user-cell">
-                <span class="user-avatar" :style="avatarStyle(v.id, v.name)">{{ initials2(v.name) }}</span>
+              <UserAvatar :id="v.id" :name="v.name" :image-url="v.imageUrl" :size="28" />
                 <span class="clickable-cell" :title="v.name" @click="openUserModal(v)">{{ v.name }}</span>
               </div>
             </td>
@@ -122,6 +122,7 @@
 import BreadcrumbBar from '../components/BreadcrumbBar.vue'
 import UserMiniModal from '../components/UserMiniModal.vue'
 import DocReviewModal from '../components/DocReviewModal.vue'
+import UserAvatar from '../components/UserAvatar.vue'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAvatar } from '../composables/useAvatar'
@@ -276,6 +277,7 @@ async function loadUsers(page = 1) {
         status: f.fl_verify_status,
         updated: formatDateTime(f.fl_updated_at),
         createdAt: f.fl_created_at || '',
+        imageUrl: f.fl_profile_image_url || null,
         rawData: f,
       }))
     } else {
@@ -289,6 +291,7 @@ async function loadUsers(page = 1) {
         status: e.em_verify_status,
         updated: formatDateTime(e.em_updated_at),
         createdAt: e.em_created_at || '',
+        imageUrl: e.em_profile_image_url || null,
         rawData: e,
       }))
     }

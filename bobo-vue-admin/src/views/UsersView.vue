@@ -80,7 +80,7 @@
           <tr v-for="user in sortedUsers" :key="user.id" class="row-hover">
             <td class="truncate-cell clickable-cell" @click="openUserModal(user)">
               <div class="user-cell">
-                <span class="user-avatar" :style="avatarStyle(user.id, user.name)">{{ initials2(user.name) }}</span>
+                <UserAvatar :id="user.id" :name="user.name" :image-url="user.imageUrl" :size="28" />
                 <span :title="user.name">{{ user.name }}</span>
               </div>
             </td>
@@ -150,6 +150,7 @@ import { useAvatar } from '../composables/useAvatar'
 import { formatDateTime } from '../utils/formatDate'
 import UserMiniModal from '../components/UserMiniModal.vue'
 import BanModal from '../components/BanModal.vue'
+import UserAvatar from '../components/UserAvatar.vue'
 import { API_BASE } from '../data/api'
 import { formatVerifyStatus } from '../utils/statusClasses'
 

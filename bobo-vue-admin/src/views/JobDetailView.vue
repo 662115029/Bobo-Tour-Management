@@ -226,7 +226,7 @@
               <div>
                 <div class="text-[11px] text-[#aaa] uppercase tracking-wide font-semibold mb-2">Assigned Driver</div>
                 <div v-if="job.selected_driver" class="flex items-center gap-2">
-                  <div class="w-7 h-7 rounded-full bg-[#e3f2fd] flex items-center justify-center text-[12px] font-bold text-[#1976d2]">{{ job.selected_driver[0] }}</div>
+                  <UserAvatar :id="job.selected_fl_id" :name="job.selected_driver" :size="28" />
                   <span class="text-[14px] font-medium text-[#222]">{{ job.selected_driver }}</span>
                 </div>
                 <span v-else class="text-[13px] text-[#bbb]">Not assigned</span>
@@ -318,7 +318,7 @@
               <div v-for="pay in payments" :key="pay.payment_id" class="rounded-xl border border-[#e8e8e8] bg-[#f8f9fa] hover:border-[#ddd] hover:bg-[#f5f5f5] transition-colors overflow-hidden">
                 <div class="px-4 py-3 flex items-center justify-between">
                   <div class="flex items-center gap-2">
-                    <div class="w-7 h-7 rounded-full bg-[#e3f2fd] flex items-center justify-center text-[12px] font-bold text-[#1976d2] shrink-0">{{ (pay.driver_name || "?")[0] }}</div>
+                    <UserAvatar :id="pay.fl_id" :name="pay.driver_name || '?'" :size="28" />
                     <span class="text-[13px] font-medium text-[#222]">{{ pay.driver_name }}</span>
                   </div>
                   <span class="payment-badge" :class="pay.payment_status?.toLowerCase()">{{ pay.payment_status }}</span>
@@ -455,7 +455,7 @@
               <div v-for="app in applications" :key="app.job_application_id"
                 class="flex items-center gap-3 px-4 py-3 bg-[#f8f9fa] rounded-lg border border-[#e8e8e8] cursor-pointer hover:border-[#aaa] hover:bg-[#f0f0f0] transition-all"
                 @click="app.fl_id && router.push({ name: 'FreelancerDetail', params: { id: app.fl_id } })">
-                <div class="w-8 h-8 rounded-full bg-[#e3f2fd] flex items-center justify-center text-[13px] font-bold text-[#1976d2] shrink-0">{{ (app.driver_name || "?")[0] }}</div>
+                <UserAvatar :id="app.fl_id" :name="app.driver_name || '?'" :size="32" />
                 <div class="flex-1 min-w-0">
                   <div class="text-[13px] font-medium text-[#222]">{{ app.driver_name }}</div>
                   <div class="text-[11px] text-[#999] mt-0.5">Applied {{ formatDateTime(app.applied_at) }}</div>
@@ -499,6 +499,7 @@ import { useRoute, useRouter } from "vue-router"
 import { API_BASE } from "../data/api"
 import { formatDate, formatDateTime } from '../utils/formatDate'
 import { formatJobStatus } from '../utils/statusClasses'
+import UserAvatar from '../components/UserAvatar.vue'
 
 const route = useRoute()
 const router = useRouter()

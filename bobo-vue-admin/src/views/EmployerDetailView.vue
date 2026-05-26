@@ -160,8 +160,7 @@
           <!-- Profile -->
           <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm p-5 flex flex-col items-center text-center hover:shadow-md transition-shadow">
             <div class="relative mb-3">
-              <img v-if="em.em_profile_image_url" :src="em.em_profile_image_url" class="w-20 h-20 rounded-full object-cover ring-2 ring-[#eee]" />
-              <div v-else class="w-20 h-20 rounded-full bg-[#f3e5f5] text-[#7b1fa2] flex items-center justify-center text-3xl font-bold ring-2 ring-[#eee]">{{ em.em_name?.[0] || "?" }}</div>
+              <UserAvatar :id="em.em_id" :name="em.em_name" :image-url="em.em_profile_image_url" :size="80" />
               <span class="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-white" :class="em.em_is_active ? 'bg-[#4caf50]' : 'bg-[#bbb]'"></span>
             </div>
             <h2 class="text-[15px] font-bold text-[#111] mb-1.5">{{ em.em_name }}</h2>
@@ -414,9 +413,12 @@ import { useRoute, useRouter } from "vue-router"
 import { API_BASE } from "../data/api"
 import { formatJobStatus, formatVerifyStatus } from '../utils/statusClasses'
 import { formatDate, formatDateTime } from '../utils/formatDate'
+import UserAvatar from '../components/UserAvatar.vue'
+import { useAvatar } from '../composables/useAvatar'
 
 const route = useRoute()
 const router = useRouter()
+const { avatarStyle, initials2 } = useAvatar()
 const showBanModal = ref(false)
 
 const em = ref(null)
