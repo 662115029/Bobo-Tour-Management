@@ -285,25 +285,27 @@
               <div>
                 <div class="text-[12px] font-bold text-[#444] uppercase tracking-wide mb-3">Documents</div>
                 <div class="grid grid-cols-5 gap-2">
-                  <div v-for="d in documents" :key="d.em_doc_id"
-                    class="rounded-xl border overflow-hidden bg-white flex flex-col transition-colors"
+                  <button v-for="d in documents" :key="d.em_doc_id" type="button"
+                    class="rounded-xl border overflow-hidden bg-white flex flex-col transition-colors text-left"
                     :class="d.file_url ? 'border-[#eee] cursor-pointer hover:border-[#aaa]' : 'border-dashed border-[#ddd] cursor-default'"
                     @click="d.file_url ? openDocModal(d) : null">
-                    <div class="h-[90px] bg-[#f5f5f5] relative overflow-hidden">
-                      <img v-if="d.file_url" :src="d.file_url" class="w-full h-full object-cover hover:opacity-90 transition-opacity"
+                    <div class="aspect-square bg-[#f5f5f5] relative overflow-hidden w-full">
+                      <img v-if="d.file_url" :src="d.file_url" class="absolute inset-0 w-full h-full object-cover hover:opacity-90 transition-opacity"
                         @error="(e) => { e.target.style.display='none' }" />
                       <div class="absolute inset-0 flex items-center justify-center flex-col gap-1"
                         :style="d.file_url ? 'display:none' : ''">
-                        <svg class="w-5 h-5 text-[#ddd]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                        <svg class="w-6 h-6 text-[#ddd]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                         <span class="text-[9px] text-[#ccc] font-medium">Not uploaded</span>
                       </div>
+                      <!-- Status badge overlay -->
+                      <span v-if="d.em_doc_status" class="absolute top-1.5 left-1.5 doc-badge" :class="d.em_doc_status?.toLowerCase()">{{ d.em_doc_status }}</span>
                     </div>
                     <div class="p-2 flex flex-col gap-0.5">
                       <span class="text-[11px] font-semibold text-[#222] leading-snug truncate">{{ formatDocType(d.em_doc_type) }}</span>
-                      <span class="doc-badge self-start" :class="d.em_doc_status?.toLowerCase()">{{ d.em_doc_status }}</span>
-                      <span class="text-[11px] text-[#bbb]">{{ d.em_uploaded_at ? formatDate(d.em_uploaded_at) : '–' }}</span>
+                      <span class="text-[10px] text-[#bbb]">{{ d.em_uploaded_at ? formatDate(d.em_uploaded_at) : '–' }}</span>
+                      <span v-if="d.reviewed_by_name" class="text-[10px] text-[#bbb]">By {{ d.reviewed_by_name }}</span>
                     </div>
-                  </div>
+                  </button>
                 </div>
               </div>
             </div>
@@ -363,29 +365,30 @@
       </div>
     </div>
 
-    <!-- Image Modal -->
-    <div v-if="modalDoc" class="modal-overlay" @click.self="modalDoc = null">
-      <div class="bg-white rounded-2xl shadow-2xl overflow-hidden max-w-3xl w-full mx-4 flex flex-col" style="max-height:90vh" @click.stop>
-        <div class="flex items-center justify-between px-5 py-3.5 border-b border-[#eee] shrink-0">
-          <div class="flex items-center gap-2.5">
-            <span class="text-[15px] font-semibold text-[#111]">{{ modalDoc.title || "Preview" }}</span>
-            <span v-if="modalDoc.status" class="doc-badge" :class="modalDoc.status?.toLowerCase()">{{ modalDoc.status }}</span>
-          </div>
-          <button class="text-[#999] hover:text-[#333] border-none bg-transparent cursor-pointer" @click="modalDoc = null">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
+    <!-- Image Lightbox -->
+    <div v-if="modalDoc" class="fixed inset-0 z-[400] flex items-center justify-center bg-black/60"
+      @click.self="modalDoc = null">
+      <div class="relative max-w-3xl w-full mx-4">
+        <button class="absolute -top-10 right-0 text-white/80 hover:text-white transition-colors border-none bg-transparent cursor-pointer"
+          @click="modalDoc = null">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+        <!-- Status overlay มุมซ้ายบนรูป -->
+        <div class="relative">
+          <img :src="modalDoc.url" :alt="modalDoc.title"
+            class="w-full max-h-[80vh] object-contain rounded-xl shadow-2xl" />
+          <span v-if="modalDoc.status" class="absolute top-3 left-3 doc-badge" :class="modalDoc.status?.toLowerCase()">{{ modalDoc.status }}</span>
         </div>
-        <div class="bg-[#111] flex items-center justify-center overflow-auto flex-1" style="min-height:400px">
-          <img :src="modalDoc.url" class="max-w-full object-contain" style="max-height:calc(90vh - 110px)" />
-        </div>
-        <div v-if="modalDoc.uploadedAt || modalDoc.reviewedBy" class="px-5 py-3 border-t border-[#eee] flex flex-wrap items-center gap-5 shrink-0 bg-white">
-          <div v-if="modalDoc.uploadedAt" class="flex items-center gap-1.5 text-[12px] text-[#666]">
-            <svg class="w-3.5 h-3.5 text-[#bbb]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-            Uploaded <strong class="text-[#333] ml-1">{{ formatDateTime(modalDoc.uploadedAt) }}</strong>
+        <div class="flex items-center justify-between mt-3 px-1">
+          <div class="flex-1">
+            <div v-if="modalDoc.uploadedAt || modalDoc.reviewedBy" class="flex flex-col gap-0.5 opacity-0">_</div>
           </div>
-          <div v-if="modalDoc.reviewedBy" class="flex items-center gap-1.5 text-[12px] text-[#666]">
-            <svg class="w-3.5 h-3.5 text-[#bbb]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-            Reviewed by <strong class="text-[#333] ml-1">{{ modalDoc.reviewedBy }}</strong>
+          <span class="text-white/90 text-[13px] font-semibold text-center flex-1">{{ modalDoc.title }}</span>
+          <div class="flex flex-col items-end gap-0.5 flex-1">
+            <span v-if="modalDoc.uploadedAt" class="text-white/40 text-[11px]">Uploaded {{ formatDateTime(modalDoc.uploadedAt) }}</span>
+            <span v-if="modalDoc.reviewedBy" class="text-white/40 text-[11px]">Reviewed by {{ modalDoc.reviewedBy }}</span>
           </div>
         </div>
       </div>

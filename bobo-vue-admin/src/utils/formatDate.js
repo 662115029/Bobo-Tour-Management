@@ -71,6 +71,7 @@ export function groupDocsByLatest(docs, prefix, formatDateTimeFn) {
       file_url: d.file_url,
       uploaded: d[uploadKey] ? formatDateTimeFn(d[uploadKey]) : null,
       reviewed: d.reviewed_at ? formatDateTimeFn(d.reviewed_at) : null,
+      reviewedBy: d.reviewed_by_name || null,
       _type: prefix,
     }
   })

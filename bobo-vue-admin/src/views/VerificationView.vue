@@ -33,9 +33,9 @@
             </th>
             <th style="width:12%; text-align: center;">ACTION</th>
             <th class="th-sortable" :class="{ 'th-active': dateSort }" style="width:16%; position: relative;" @click="cycleSort('date')">
-              <span class="th-inner">LAST UPDATED
+              <span class="th-inner">SUBMITTED
                 <span class="sort-label">
-                  <span v-if="!dateSort" class="sort-label-dim">⇅</span>
+                  <span v-if="!dateSort" class="sort-label-active">↑</span>
                   <span v-else-if="dateSort === 'asc'" class="sort-label-active">↑</span>
                   <span v-else class="sort-label-active">↓</span>
                 </span>
