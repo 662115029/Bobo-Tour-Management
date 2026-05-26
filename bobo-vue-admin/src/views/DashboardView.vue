@@ -332,41 +332,30 @@ const reviewVerifyDoc = async (doc, newStatus) => {
 
 onMounted(async () => {
   try {
-    const pingRes = await fetch(`${API_BASE}/admin/db/ping`)
-    const ping = await pingRes.json()
-    if (!ping.connected) console.error('DB error:', ping.error)
-  } catch (e) {
-    console.error(e)
-  }
-
-  try {
-    // ดึงแค่ 10 jobs ล่าสุดสำหรับแสดงใน dashboard
-    const jobsRes = await fetch(`${API_BASE}/jobs?limit=10`)
-    const jobsData = await jobsRes.json()
-    jobs.value = jobsData.items || []
-  } catch {}
-
-  try {
-    // ดึง 10 PENDING freelancers + employers สำหรับ verifications table
-    // ดึง docs เฉพาะ user ที่อยู่ใน list
-    const [flRes, emRes] = await Promise.all([
+    const [pingRes, jobsRes, flRes, emRes] = await Promise.all([
+      fetch(`${API_BASE}/admin/db/ping`),
+      fetch(`${API_BASE}/jobs?limit=10`),
       fetch(`${API_BASE}/freelancers?limit=10&status=PENDING&sort_by=fl_updated_at&sort_order=desc`),
       fetch(`${API_BASE}/employers?limit=10&status=PENDING&sort_by=em_updated_at&sort_order=desc`),
     ])
-    const flData = await flRes.json()
-    const emData = await emRes.json()
+
+    const [ping, jobsData, flData, emData] = await Promise.all([
+      pingRes.json(), jobsRes.json(), flRes.json(), emRes.json(),
+    ])
+
+    if (!ping.connected) console.error('DB error:', ping.error)
+    jobs.value = jobsData.items || []
+
     const flItems = flData.items || []
     const emItems = emData.items || []
-
-    // ดึง docs เฉพาะ id ที่ต้องใช้
     const flIds = flItems.map(f => f.fl_id).join(',')
     const emIds = emItems.map(e => e.em_id).join(',')
+
     const [flDocRes, emDocRes] = await Promise.all([
       flIds ? fetch(`${API_BASE}/fl-documents?fl_ids=${flIds}&limit=50`) : Promise.resolve({ json: () => ({ items: [] }) }),
       emIds ? fetch(`${API_BASE}/em-documents?em_ids=${emIds}&limit=50`) : Promise.resolve({ json: () => ({ items: [] }) }),
     ])
-    const flDocData = await flDocRes.json()
-    const emDocData = await emDocRes.json()
+    const [flDocData, emDocData] = await Promise.all([flDocRes.json(), emDocRes.json()])
     flDocs.value = flDocData.items || []
     emDocs.value = emDocData.items || []
 
@@ -387,7 +376,9 @@ onMounted(async () => {
     verifications.value = [...allFl, ...allEm]
       .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
       .slice(0, 10)
-  } catch {} finally {
+  } catch (e) {
+    console.error(e)
+  } finally {
     isLoading.value = false
   }
 })
