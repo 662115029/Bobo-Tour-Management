@@ -164,7 +164,7 @@
               <span class="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-white" :class="fl.fl_is_active ? 'bg-[#4caf50]' : 'bg-[#bbb]'"></span>
             </div>
             <h2 class="text-[15px] font-bold text-[#111] mb-1.5">{{ fl.fl_name }}</h2>
-            <span class="badge mb-3" :class="fl.fl_verify_status?.toLowerCase()">{{ fl.fl_verify_status }}</span>
+            <span class="badge mb-3" :class="fl.fl_verify_status?.toLowerCase()">{{ formatVerifyStatus(fl.fl_verify_status) }}</span>
             <p v-if="fl.fl_bio" class="text-[12px] text-[#777] leading-relaxed">{{ fl.fl_bio }}</p>
             <p v-else class="text-[12px] text-[#bbb] italic">No bio provided</p>
           </div>
@@ -318,7 +318,7 @@
               <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
                 <div class="flex items-center gap-2">
                   <span class="text-[12px] text-[#999] font-medium">Status:</span>
-                  <span class="badge" :class="fl.fl_verify_status?.toLowerCase()">{{ fl.fl_verify_status }}</span>
+                  <span class="badge" :class="fl.fl_verify_status?.toLowerCase()">{{ formatVerifyStatus(fl.fl_verify_status) }}</span>
                 </div>
                 <div v-if="verification?.fl_verified_at" class="flex items-center gap-1.5">
                   <span class="text-[12px] text-[#999] font-medium">Verified:</span>
@@ -489,7 +489,7 @@ import { useRoute, useRouter } from "vue-router"
 import { API_BASE } from "../data/api"
 import { useAvatar } from '../composables/useAvatar'
 import { formatDate, formatDateTime } from '../utils/formatDate'
-import { formatJobStatus } from '../utils/statusClasses'
+import { formatJobStatus, formatVerifyStatus } from '../utils/statusClasses'
 
 const route = useRoute()
 const router = useRouter()

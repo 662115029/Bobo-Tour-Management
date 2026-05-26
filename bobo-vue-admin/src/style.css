@@ -208,33 +208,29 @@
   }
 
   /* ─── Badge — Job Status ──────────────────────────────── */
-  /* sync กับ statusClasses.js → getJobStatusClass()        */
 
   .badge {
-    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold;
+    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide;
   }
 
   .badge.open        { @apply bg-blue-100   text-blue-800;   }
-  .badge.matching    { @apply bg-amber-100  text-amber-800;  }
-  .badge.selected    { @apply bg-green-100  text-green-800;  }
-  .badge.in_progress { @apply bg-amber-100  text-amber-800;  }
+  .badge.pending     { @apply bg-amber-100  text-amber-800;  }
+  .badge.matched     { @apply bg-violet-100 text-violet-800; }
+  .badge.in_progress { @apply bg-orange-100 text-orange-800; }
   .badge.completed   { @apply bg-slate-100  text-slate-600;  }
   .badge.cancelled   { @apply bg-red-100    text-red-800;    }
 
   /* ─── Badge — Verify / User Status ───────────────────── */
-  /* sync กับ statusClasses.js → getVerifyStatusClass()     */
 
-  .badge.pending      { @apply bg-amber-100 text-amber-800; }
   .badge.verified     { @apply bg-green-100 text-green-800; }
   .badge.not_verified { @apply bg-red-100   text-red-800;   }
   .badge.unknown      { @apply bg-gray-100  text-gray-500;  }
   .badge.active       { @apply bg-green-100 text-green-800; }
 
   /* ─── Doc Badge — Document Status ────────────────────── */
-  /* sync กับ statusClasses.js → getDocStatusClass()        */
 
   .doc-badge {
-    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold;
+    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide;
   }
 
   .doc-badge.pending  { @apply bg-amber-100 text-amber-800; }
@@ -242,10 +238,9 @@
   .doc-badge.rejected { @apply bg-red-100   text-red-800;   }
 
   /* ─── Action Badge — Log Actions ─────────────────────── */
-  /* sync กับ statusClasses.js → getActionClass()           */
 
   .action-badge {
-    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold;
+    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide;
   }
 
   .action-approve { @apply bg-green-100  text-green-800;  }
@@ -259,10 +254,9 @@
   .action-default { @apply bg-gray-100   text-gray-500;   }
 
   /* ─── Type Tag — Log Types ───────────────────────────── */
-  /* sync กับ statusClasses.js → getTypeClass()             */
 
   .type-tag {
-    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold;
+    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide;
   }
 
   .type-freelancer { @apply bg-sky-100     text-sky-800;     }
@@ -273,20 +267,18 @@
   .type-default    { @apply bg-gray-100    text-gray-500;    }
 
   /* ─── Info Tag — Language / Area chips ───────────────── */
-  /* ใช้สำหรับ tag ที่ไม่ใช่ status เช่น ภาษา, พื้นที่        */
 
   .info-tag {
-    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold;
+    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide;
   }
 
   .info-tag.language { @apply bg-indigo-50  text-indigo-700; }
   .info-tag.area     { @apply bg-cyan-50    text-cyan-700;   }
 
   /* ─── Payment Badge ───────────────────────────────────── */
-  /* ใช้ใน JobDetailView → payment_status                   */
 
   .payment-badge {
-    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold;
+    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide;
   }
 
   .payment-badge.confirmed { @apply bg-green-100  text-green-800;  }
@@ -295,10 +287,9 @@
   .payment-badge.rejected  { @apply bg-red-100    text-red-800;    }
 
   /* ─── Application Badge ───────────────────────────────── */
-  /* ใช้ใน JobDetailView → application_status               */
 
   .application-badge {
-    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold;
+    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide;
   }
 
   .application-badge.accepted { @apply bg-green-100 text-green-800; }

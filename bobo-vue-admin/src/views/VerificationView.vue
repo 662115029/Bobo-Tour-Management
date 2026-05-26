@@ -64,7 +64,7 @@
                 <span class="clickable-cell" :title="v.name" @click="openUserModal(v)">{{ v.name }}</span>
               </div>
             </td>
-            <td><span class="badge" :class="v.status?.toLowerCase()">{{ v.status }}</span></td>
+            <td><span class="badge" :class="v.status?.toLowerCase()">{{ formatVerifyStatus(v.status) }}</span></td>
             <td>
               <div class="action-btns">
                 <button class="btn-action verify-style" @click="openDocs(v)">View Docs</button>
@@ -127,6 +127,7 @@ import { useRouter } from 'vue-router'
 import { useAvatar } from '../composables/useAvatar'
 import { formatDateTime, groupDocsByLatest } from '../utils/formatDate'
 import { API_BASE } from '../data/api'
+import { formatVerifyStatus } from '../utils/statusClasses'
 
 const router = useRouter()
 const { avatarStyle, initials2 } = useAvatar()

@@ -114,7 +114,7 @@
               </div>
             </td>
             <td><span class="type-tag" :class="getTypeClass(v.type)">{{ v.type }}</span></td>
-            <td><span class="badge" :class="v.status?.toLowerCase()">{{ v.status }}</span></td>
+            <td><span class="badge" :class="v.status?.toLowerCase()">{{ formatVerifyStatus(v.status) }}</span></td>
             <td>
               <div class="action-btns">
                 <button class="btn-action verify-style" @click="openVerifyDocs(v)">View Docs</button>
@@ -151,7 +151,7 @@ import BreadcrumbBar from '../components/BreadcrumbBar.vue'
 import { useRouter } from 'vue-router'
 import { useAvatar } from '../composables/useAvatar'
 import { formatDateTime, groupDocsByLatest } from '../utils/formatDate'
-import { formatJobStatus, getTypeClass } from '../utils/statusClasses'
+import { formatJobStatus, getTypeClass, formatVerifyStatus } from '../utils/statusClasses'
 import JobMiniModal from '../components/JobMiniModal.vue'
 import UserMiniModal from '../components/UserMiniModal.vue'
 import DeleteJobModal from '../components/DeleteJobModal.vue'

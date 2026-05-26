@@ -165,7 +165,7 @@
               <span class="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-white" :class="em.em_is_active ? 'bg-[#4caf50]' : 'bg-[#bbb]'"></span>
             </div>
             <h2 class="text-[15px] font-bold text-[#111] mb-1.5">{{ em.em_name }}</h2>
-            <span class="badge mb-3" :class="em.em_verify_status?.toLowerCase()">{{ em.em_verify_status }}</span>
+            <span class="badge mb-3" :class="em.em_verify_status?.toLowerCase()">{{ formatVerifyStatus(em.em_verify_status) }}</span>
             <p v-if="em.em_bio" class="text-[12px] text-[#777] leading-relaxed">{{ em.em_bio }}</p>
             <p v-else class="text-[12px] text-[#bbb] italic">No bio provided</p>
           </div>
@@ -270,7 +270,7 @@
               <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
                 <div class="flex items-center gap-2">
                   <span class="text-[12px] text-[#999] font-medium">Status:</span>
-                  <span class="badge" :class="em.em_verify_status?.toLowerCase()">{{ em.em_verify_status }}</span>
+                  <span class="badge" :class="em.em_verify_status?.toLowerCase()">{{ formatVerifyStatus(em.em_verify_status) }}</span>
                 </div>
                 <div v-if="verification?.em_verified_at" class="flex items-center gap-1.5">
                   <span class="text-[12px] text-[#999] font-medium">Verified:</span>
@@ -409,7 +409,7 @@ import BanModal from '../components/BanModal.vue'
 import { ref, onMounted } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { API_BASE } from "../data/api"
-import { formatJobStatus } from '../utils/statusClasses'
+import { formatJobStatus, formatVerifyStatus } from '../utils/statusClasses'
 import { formatDate, formatDateTime } from '../utils/formatDate'
 
 const route = useRoute()

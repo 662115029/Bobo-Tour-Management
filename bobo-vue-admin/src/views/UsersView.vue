@@ -91,7 +91,7 @@
               </div>
             </td>
             <td>{{ jobsDoneById[user.id] || 0 }}</td>
-            <td><span class="badge" :class="user.verifyStatus?.toLowerCase()">{{ user.verifyStatus }}</span></td>
+            <td><span class="badge" :class="user.verifyStatus?.toLowerCase()">{{ formatVerifyStatus(user.verifyStatus) }}</span></td>
             <td>
               <div class="action-btns">
                 <button class="btn-action view" @click="viewUser(user)">View</button>
@@ -151,6 +151,7 @@ import { formatDateTime } from '../utils/formatDate'
 import UserMiniModal from '../components/UserMiniModal.vue'
 import BanModal from '../components/BanModal.vue'
 import { API_BASE } from '../data/api'
+import { formatVerifyStatus } from '../utils/statusClasses'
 
 const router = useRouter()
 const { avatarStyle, initials2 } = useAvatar()

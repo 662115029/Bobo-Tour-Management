@@ -17,8 +17,8 @@ export function formatJobStatus(status) {
 const JOB_STATUS_MAP = {
   open:        'bg-blue-100 text-blue-800',
   pending:     'bg-amber-100 text-amber-800',
-  matched:     'bg-green-100 text-green-800',
-  in_progress: 'bg-amber-100 text-amber-800',
+  matched:     'bg-violet-100 text-violet-800',
+  in_progress: 'bg-orange-100 text-orange-800',
   completed:   'bg-slate-100 text-slate-600',
   cancelled:   'bg-red-100 text-red-800',
 }
@@ -26,6 +26,17 @@ const JOB_STATUS_MAP = {
 export function getJobStatusClass(status) {
   const key = (status || '').toLowerCase()
   return JOB_STATUS_MAP[key] ?? 'bg-gray-100 text-gray-500'
+}
+
+const VERIFY_STATUS_LABEL_MAP = {
+  PENDING:      'Pending',
+  VERIFIED:     'Verified',
+  NOT_VERIFIED: 'Not Verified',
+}
+
+export function formatVerifyStatus(status) {
+  if (!status) return ''
+  return VERIFY_STATUS_LABEL_MAP[status.toUpperCase()] ?? status
 }
 
 const VERIFY_STATUS_MAP = {
