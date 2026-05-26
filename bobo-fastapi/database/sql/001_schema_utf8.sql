@@ -154,7 +154,7 @@ CREATE TABLE fl_vehicle (
     fl_vehicle_created_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     fl_vehicle_updated_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (fl_id) REFERENCES freelancers(fl_id),
-    INDEX idx_fl_vehicle_fl_id (fl_id)
+    UNIQUE KEY uq_fl_vehicle_fl_id (fl_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- -----------------------------------------------------------------------------
@@ -452,7 +452,7 @@ CREATE TABLE job_applications (
     updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (job_id) REFERENCES jobs(job_id),
     FOREIGN KEY (fl_id)  REFERENCES freelancers(fl_id),
-    INDEX idx_job_applications_job_id    (job_id),
+    UNIQUE KEY uq_job_application (job_id, fl_id),
     INDEX idx_job_applications_fl_id     (fl_id),
     INDEX idx_job_applications_status    (application_status),
     INDEX idx_job_applications_applied_at (applied_at)
@@ -466,6 +466,7 @@ CREATE TABLE job_payments (
     job_id         INT UNSIGNED  NOT NULL,
     em_id          INT UNSIGNED  NOT NULL,
     fl_id          INT UNSIGNED  NOT NULL,
+    is_latest      BOOLEAN       NULL     DEFAULT TRUE,
     payment_status VARCHAR(20)   NOT NULL DEFAULT 'PENDING'
                        CHECK (payment_status IN ('PENDING','CONFIRMED','REJECTED')),
     slip_url       VARCHAR(500),
@@ -476,7 +477,7 @@ CREATE TABLE job_payments (
     FOREIGN KEY (job_id) REFERENCES jobs(job_id),
     FOREIGN KEY (em_id)  REFERENCES employers(em_id),
     FOREIGN KEY (fl_id)  REFERENCES freelancers(fl_id),
-    INDEX idx_job_payments_job_id (job_id),
+    UNIQUE KEY uq_job_latest_payment (job_id, is_latest),
     INDEX idx_job_payments_em_id  (em_id),
     INDEX idx_job_payments_fl_id  (fl_id),
     INDEX idx_job_payments_status (payment_status)
@@ -496,8 +497,8 @@ CREATE TABLE fl_reviews (
     FOREIGN KEY (job_id) REFERENCES jobs(job_id),
     FOREIGN KEY (em_id)  REFERENCES employers(em_id),
     FOREIGN KEY (fl_id)  REFERENCES freelancers(fl_id),
+    UNIQUE KEY uq_fl_review (job_id, em_id, fl_id),
     INDEX idx_fl_reviews_fl_id  (fl_id),
-    INDEX idx_fl_reviews_job_id (job_id),
     INDEX idx_fl_reviews_em_id  (em_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -515,7 +516,7 @@ CREATE TABLE em_reviews (
     FOREIGN KEY (job_id) REFERENCES jobs(job_id),
     FOREIGN KEY (fl_id)  REFERENCES freelancers(fl_id),
     FOREIGN KEY (em_id)  REFERENCES employers(em_id),
+    UNIQUE KEY uq_em_review (job_id, fl_id, em_id),
     INDEX idx_em_reviews_em_id  (em_id),
-    INDEX idx_em_reviews_job_id (job_id),
     INDEX idx_em_reviews_fl_id  (fl_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
