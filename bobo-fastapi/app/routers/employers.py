@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+from typing import Optional
 from app.db.connection import get_connection, get_cursor
 
 router = APIRouter(tags=["employers"])
@@ -154,22 +155,25 @@ def get_employer(em_id: str):
         if conn:
             conn.close()
 @router.get("/em-bank-accounts")
-def get_em_bank_accounts(limit: int = 10, offset: int = 0):
+def get_em_bank_accounts(limit: int = 10, offset: int = 0, em_id: Optional[int] = None):
     conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
+        where_sql = "WHERE eb.em_id = %s" if em_id else ""
+        params = ([em_id] if em_id else []) + [limit, offset]
         cursor.execute(
-            """
+            f"""
             SELECT eb.em_bank_account_id, eb.em_id, e.em_name,
                    eb.account_name, eb.account_number, eb.bank_name,
                    eb.is_primary, eb.created_at, eb.updated_at
             FROM em_bank_accounts eb
             JOIN employers e ON eb.em_id = e.em_id
+            {where_sql}
             ORDER BY eb.created_at DESC
             LIMIT %s OFFSET %s
             """,
-            (limit, offset)
+            params
         )
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
@@ -179,14 +183,17 @@ def get_em_bank_accounts(limit: int = 10, offset: int = 0):
         if conn:
             conn.close()
 @router.get("/em-documents")
-def get_em_documents(limit: int = 10, offset: int = 0, status: str = "", em_ids: str = ""):
+def get_em_documents(limit: int = 10, offset: int = 0, status: str = "", em_id: Optional[int] = None, em_ids: str = ""):
     conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
         where = []
         params = []
-        if em_ids:
+        if em_id:
+            where.append("ed.em_id = %s")
+            params.append(em_id)
+        elif em_ids:
             id_list = [int(i) for i in em_ids.split(',') if i.strip().isdigit()]
             placeholders = ','.join(['%s'] * len(id_list))
             where.append(f"ed.em_id IN ({placeholders})")
@@ -194,7 +201,7 @@ def get_em_documents(limit: int = 10, offset: int = 0, status: str = "", em_ids:
         if status:
             where.append("ed.em_doc_status = %s")
             params.append(status)
-        elif not em_ids:
+        elif not em_id and not em_ids:
             where.append("ed.file_url IS NOT NULL")
         where_sql = "WHERE " + " AND ".join(where) if where else ""
         params += [limit, offset]
@@ -221,13 +228,21 @@ def get_em_documents(limit: int = 10, offset: int = 0, status: str = "", em_ids:
         if conn:
             conn.close()
 @router.get("/em-verification")
-def get_em_verification(limit: int = 10, offset: int = 0, status: str = "PENDING"):
+def get_em_verification(limit: int = 10, offset: int = 0, status: str = "PENDING", em_id: Optional[int] = None):
     conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
-        where_sql = "WHERE ev.em_verify_status = %s" if status else ""
-        params = ([status] if status else []) + [limit, offset]
+        where = []
+        params = []
+        if em_id:
+            where.append("ev.em_id = %s")
+            params.append(em_id)
+        if status:
+            where.append("ev.em_verify_status = %s")
+            params.append(status)
+        where_sql = ("WHERE " + " AND ".join(where)) if where else ""
+        params += [limit, offset]
         cursor.execute(
             f"""
             SELECT ev.em_verify_id, ev.em_id, e.em_name,

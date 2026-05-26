@@ -445,42 +445,34 @@ onMounted(async () => {
   try {
     const [emRes, docRes, jobsRes, bankRes, reviewRes, verifyRes] = await Promise.all([
       fetch(`${API_BASE}/employers/${id}`),
-      fetch(`${API_BASE}/em-documents?em_id=${id}&limit=20`),
-      fetch(`${API_BASE}/jobs?em_id=${id}&limit=100`),
+      fetch(`${API_BASE}/em-documents?em_id=${id}&limit=5`),
+      fetch(`${API_BASE}/jobs?em_id=${id}&limit=10`),
       fetch(`${API_BASE}/em-bank-accounts?em_id=${id}&limit=5`),
-      fetch(`${API_BASE}/fl-reviews?em_id=${id}&limit=50`),
-      fetch(`${API_BASE}/em-verification?em_id=${id}&limit=5`),
+      fetch(`${API_BASE}/fl-reviews?em_id=${id}&limit=10`),
+      fetch(`${API_BASE}/em-verification?em_id=${id}&limit=1`),
     ])
     const [emData, docData, jobsData, bankData, reviewData, verifyData] = await Promise.all([
       emRes.json(), docRes.json(), jobsRes.json(), bankRes.json(), reviewRes.json(), verifyRes.json(),
     ])
     em.value = emData.em_id ? emData : null
-    const allDocs = (docData.items || []).filter(d => String(d.em_id) === String(id))
-
+    const allDocs = docData.items || []
     const byType = {}
     allDocs.forEach(d => {
-      const isLatest = d.is_latest === 1 || d.is_latest === true
-      if (!byType[d.em_doc_type]) {
-        byType[d.em_doc_type] = d
-      } else if (isLatest && !(byType[d.em_doc_type].is_latest === 1 || byType[d.em_doc_type].is_latest === true)) {
-        byType[d.em_doc_type] = d
-      } else if (isLatest && d.em_uploaded_at && new Date(d.em_uploaded_at) > new Date(byType[d.em_doc_type].em_uploaded_at)) {
+      if (!byType[d.em_doc_type] || d.em_uploaded_at > (byType[d.em_doc_type].em_uploaded_at || '')) {
         byType[d.em_doc_type] = d
       }
     })
-
     const EM_DOC_TYPES = ['COMPANY_REGISTRATION', 'BUSINESS_LICENSE', 'TOURISM_LICENSE', 'TAX_ID_DOCUMENT', 'AUTHORIZED_PERSON_ID']
     EM_DOC_TYPES.forEach(type => {
       if (!byType[type]) {
-        byType[type] = { em_doc_id: `empty_${type}`, em_id: id, em_doc_type: type, file_url: null, em_doc_status: 'PENDING', em_uploaded_at: null, reviewed_by_name: null, is_latest: 1 }
+        byType[type] = { em_doc_id: `empty_${type}`, em_id: id, em_doc_type: type, file_url: null, em_doc_status: 'PENDING', em_uploaded_at: null, reviewed_by_name: null }
       }
     })
     documents.value = EM_DOC_TYPES.map(t => byType[t])
     jobs.value = jobsData.items || []
     bankAccounts.value = bankData.items || []
     reviewsGiven.value = reviewData.items || []
-    const verList = (verifyData.items || []).filter(v => v.is_latest === true || v.is_latest === 1)
-    verification.value = verList[0] || null
+    verification.value = (verifyData.items || [])[0] || null
   } catch (e) { console.error(e) } finally { loading.value = false }
 })
 </script>

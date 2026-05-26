@@ -5,7 +5,52 @@ from app.db.connection import get_connection, get_cursor
 router = APIRouter(tags=["jobs"])
 
 @router.get("/jobs")
-def get_jobs(limit: int = 50, offset: int = 0):
+def get_jobs(limit: int = 50, offset: int = 0, fl_id: Optional[int] = None, em_id: Optional[int] = None, status: Optional[str] = None):
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        where = []
+        params = []
+        if fl_id:
+            where.append("j.selected_fl_id = %s")
+            params.append(fl_id)
+        if em_id:
+            where.append("j.em_id = %s")
+            params.append(em_id)
+        if status:
+            where.append("j.job_status = %s")
+            params.append(status)
+        where_sql = ("WHERE " + " AND ".join(where)) if where else ""
+        params += [limit, offset]
+        cursor.execute(
+            f"""
+            SELECT j.job_id, j.em_id, em.em_name AS company,
+                   j.job_title, j.job_description,
+                   j.job_start_date, j.job_end_date,
+                   j.job_required_vehicle_type, j.job_required_seat,
+                   j.job_price, j.job_status,
+                   j.selected_fl_id, f.fl_name AS selected_driver,
+                   j.job_created_at, j.job_updated_at
+            FROM jobs j
+            JOIN employers em ON j.em_id = em.em_id
+            LEFT JOIN freelancers f ON j.selected_fl_id = f.fl_id
+            {where_sql}
+            ORDER BY j.job_created_at DESC
+            LIMIT %s OFFSET %s
+            """,
+            params,
+        )
+        rows = cursor.fetchall()
+        return {"items": rows, "limit": limit, "offset": offset}
+    except Exception as e:
+        return {"error": str(e), "items": []}
+
+    finally:
+        if conn:
+            conn.close()
+@router.get("/jobs/{job_id}")
+def get_job(job_id: str):
     conn = None
     try:
         conn = get_connection()
@@ -22,19 +67,22 @@ def get_jobs(limit: int = 50, offset: int = 0):
             FROM jobs j
             JOIN employers em ON j.em_id = em.em_id
             LEFT JOIN freelancers f ON j.selected_fl_id = f.fl_id
-            ORDER BY j.job_created_at DESC
-            LIMIT %s OFFSET %s
+            WHERE j.job_id = %s
             """,
-            (limit, offset),
+            (job_id,)
         )
-        rows = cursor.fetchall()
-        return {"items": rows, "limit": limit, "offset": offset}
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Job not found")
+        return row
+    except HTTPException:
+        raise
     except Exception as e:
-        return {"error": str(e), "items": []}
-
+        return {"error": str(e)}
     finally:
         if conn:
             conn.close()
+
 @router.post("/jobs")
 def create_job(data: dict):
     conn = None
@@ -115,7 +163,7 @@ def create_job(data: dict):
         if conn:
             conn.close()
 @router.get("/job-required-languages")
-def get_job_required_languages(limit: int = 50, offset: int = 0):
+def get_job_required_languages(limit: int = 50, offset: int = 0, job_id: str = None):
     conn = None
     try:
         conn = get_connection()
@@ -126,10 +174,11 @@ def get_job_required_languages(limit: int = 50, offset: int = 0):
                    jrl.language_name, jrl.created_at
             FROM job_required_languages jrl
             JOIN jobs j ON jrl.job_id = j.job_id
+            {where}
             ORDER BY j.job_title, jrl.language_name
             LIMIT %s OFFSET %s
-            """,
-            (limit, offset)
+            """.format(where="WHERE jrl.job_id = %s" if job_id else ""),
+            ([job_id] if job_id else []) + [limit, offset]
         )
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
@@ -140,7 +189,7 @@ def get_job_required_languages(limit: int = 50, offset: int = 0):
         if conn:
             conn.close()
 @router.get("/job-itineraries")
-def get_job_itineraries(limit: int = 50, offset: int = 0):
+def get_job_itineraries(limit: int = 50, offset: int = 0, job_id: str = None):
     conn = None
     try:
         conn = get_connection()
@@ -152,10 +201,11 @@ def get_job_itineraries(limit: int = 50, offset: int = 0):
                    ji.note, ji.sequence, ji.created_at
             FROM job_itineraries ji
             JOIN jobs j ON ji.job_id = j.job_id
+            {where}
             ORDER BY ji.job_id, ji.sequence
             LIMIT %s OFFSET %s
-            """,
-            (limit, offset)
+            """.format(where="WHERE ji.job_id = %s" if job_id else ""),
+            ([job_id] if job_id else []) + [limit, offset]
         )
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
@@ -166,7 +216,7 @@ def get_job_itineraries(limit: int = 50, offset: int = 0):
         if conn:
             conn.close()
 @router.get("/job-passengers")
-def get_job_passengers(limit: int = 50, offset: int = 0):
+def get_job_passengers(limit: int = 50, offset: int = 0, job_id: str = None):
     conn = None
     try:
         conn = get_connection()
@@ -179,10 +229,11 @@ def get_job_passengers(limit: int = 50, offset: int = 0):
                    jp.note, jp.created_at
             FROM job_passengers jp
             JOIN jobs j ON jp.job_id = j.job_id
+            {where}
             ORDER BY jp.job_id, jp.pickup_time
             LIMIT %s OFFSET %s
-            """,
-            (limit, offset)
+            """.format(where="WHERE jp.job_id = %s" if job_id else ""),
+            ([job_id] if job_id else []) + [limit, offset]
         )
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
@@ -193,7 +244,7 @@ def get_job_passengers(limit: int = 50, offset: int = 0):
         if conn:
             conn.close()
 @router.get("/job-expenses")
-def get_job_expenses(limit: int = 50, offset: int = 0):
+def get_job_expenses(limit: int = 50, offset: int = 0, job_id: str = None):
     conn = None
     try:
         conn = get_connection()
@@ -204,10 +255,11 @@ def get_job_expenses(limit: int = 50, offset: int = 0):
                    je.item_name, je.amount, je.sequence, je.created_at
             FROM job_expenses je
             JOIN jobs j ON je.job_id = j.job_id
+            {where}
             ORDER BY je.job_id, je.sequence
             LIMIT %s OFFSET %s
-            """,
-            (limit, offset)
+            """.format(where="WHERE je.job_id = %s" if job_id else ""),
+            ([job_id] if job_id else []) + [limit, offset]
         )
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
@@ -218,7 +270,7 @@ def get_job_expenses(limit: int = 50, offset: int = 0):
         if conn:
             conn.close()
 @router.get("/job-applications")
-def get_job_applications(limit: int = 50, offset: int = 0):
+def get_job_applications(limit: int = 50, offset: int = 0, job_id: str = None):
     conn = None
     try:
         conn = get_connection()
@@ -231,10 +283,11 @@ def get_job_applications(limit: int = 50, offset: int = 0):
             FROM job_applications ja
             JOIN jobs j ON ja.job_id = j.job_id
             JOIN freelancers f ON ja.fl_id = f.fl_id
+            {where}
             ORDER BY ja.applied_at DESC
             LIMIT %s OFFSET %s
-            """,
-            (limit, offset)
+            """.format(where="WHERE ja.job_id = %s" if job_id else ""),
+            ([job_id] if job_id else []) + [limit, offset]
         )
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
@@ -245,7 +298,46 @@ def get_job_applications(limit: int = 50, offset: int = 0):
         if conn:
             conn.close()
 @router.get("/job-payments")
-def get_job_payments(limit: int = 50, offset: int = 0):
+def get_job_payments(limit: int = 50, offset: int = 0, job_id: int = None):
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        where = "WHERE jp.is_latest = TRUE"
+        params = []
+        if job_id:
+            where += " AND jp.job_id = %s"
+            params.append(job_id)
+        params += [limit, offset]
+        cursor.execute(
+            f"""
+            SELECT jp.payment_id, jp.job_id, j.job_title,
+                   jp.em_id, em.em_name AS company,
+                   jp.fl_id, f.fl_name AS driver_name,
+                   jp.is_latest, jp.payment_status,
+                   jp.slip_url, jp.reject_reason,
+                   jp.paid_at, jp.confirmed_at, jp.updated_at
+            FROM job_payments jp
+            JOIN jobs j        ON jp.job_id = j.job_id
+            JOIN employers em  ON jp.em_id  = em.em_id
+            JOIN freelancers f ON jp.fl_id  = f.fl_id
+            {where}
+            ORDER BY jp.updated_at DESC
+            LIMIT %s OFFSET %s
+            """,
+            params
+        )
+        rows = cursor.fetchall()
+        return {"items": rows, "limit": limit, "offset": offset}
+    except Exception as e:
+        return {"error": str(e), "items": []}
+    finally:
+        if conn:
+            conn.close()
+
+
+@router.get("/job-payments/{job_id}/history")
+def get_job_payment_history(job_id: int):
     conn = None
     try:
         conn = get_connection()
@@ -255,22 +347,174 @@ def get_job_payments(limit: int = 50, offset: int = 0):
             SELECT jp.payment_id, jp.job_id, j.job_title,
                    jp.em_id, em.em_name AS company,
                    jp.fl_id, f.fl_name AS driver_name,
-                   jp.payment_status, jp.slip_url, jp.reject_reason,
+                   jp.is_latest, jp.payment_status,
+                   jp.slip_url, jp.reject_reason,
                    jp.paid_at, jp.confirmed_at, jp.updated_at
             FROM job_payments jp
-            JOIN jobs j ON jp.job_id = j.job_id
-            JOIN employers em ON jp.em_id = em.em_id
-            JOIN freelancers f ON jp.fl_id = f.fl_id
-            ORDER BY jp.paid_at DESC
-            LIMIT %s OFFSET %s
+            JOIN jobs j        ON jp.job_id = j.job_id
+            JOIN employers em  ON jp.em_id  = em.em_id
+            JOIN freelancers f ON jp.fl_id  = f.fl_id
+            WHERE jp.job_id = %s
+            ORDER BY jp.payment_id ASC
             """,
-            (limit, offset)
+            (job_id,)
         )
         rows = cursor.fetchall()
-        return {"items": rows, "limit": limit, "offset": offset}
+        return {"job_id": job_id, "history": rows}
     except Exception as e:
-        return {"error": str(e), "items": []}
+        return {"error": str(e), "history": []}
+    finally:
+        if conn:
+            conn.close()
 
+
+@router.post("/job-payments")
+def create_job_payment(data: dict):
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+
+        job_id  = data.get("job_id")
+        em_id   = data.get("em_id")
+        fl_id   = data.get("fl_id")
+        slip_url = data.get("slip_url")
+
+        cursor.execute(
+            "SELECT payment_id, payment_status FROM job_payments WHERE job_id = %s AND is_latest = TRUE",
+            (job_id,)
+        )
+        existing = cursor.fetchone()
+        if existing:
+            raise HTTPException(
+                status_code=409,
+                detail=f"Payment already exists (payment_id={existing['payment_id']}, status={existing['payment_status']}). Use PATCH to reupload after REJECTED."
+            )
+
+        cursor.execute(
+            """
+            INSERT INTO job_payments
+                (job_id, em_id, fl_id, is_latest, payment_status, slip_url, paid_at)
+            VALUES (%s, %s, %s, TRUE, 'PENDING', %s, NOW())
+            """,
+            (job_id, em_id, fl_id, slip_url)
+        )
+        conn.commit()
+        return {"success": True, "payment_id": cursor.lastrowid}
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        return {"error": str(e)}
+    finally:
+        if conn:
+            conn.close()
+
+
+@router.patch("/job-payments/{job_id}/reupload")
+def reupload_job_payment(job_id: int, data: dict):
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+
+        cursor.execute(
+            "SELECT payment_id, payment_status, em_id, fl_id FROM job_payments WHERE job_id = %s AND is_latest = TRUE",
+            (job_id,)
+        )
+        current = cursor.fetchone()
+        if not current:
+            raise HTTPException(status_code=404, detail="No active payment found for this job.")
+        if current["payment_status"] != "REJECTED":
+            raise HTTPException(
+                status_code=400,
+                detail=f"Cannot reupload. Current payment status is '{current['payment_status']}' (must be REJECTED)."
+            )
+
+        slip_url = data.get("slip_url")
+        if not slip_url:
+            raise HTTPException(status_code=400, detail="slip_url is required.")
+
+        cursor.execute(
+            "UPDATE job_payments SET is_latest = NULL WHERE job_id = %s AND is_latest = TRUE",
+            (job_id,)
+        )
+        cursor.execute(
+            """
+            INSERT INTO job_payments
+                (job_id, em_id, fl_id, is_latest, payment_status, slip_url, paid_at)
+            VALUES (%s, %s, %s, TRUE, 'PENDING', %s, NOW())
+            """,
+            (job_id, current["em_id"], current["fl_id"], slip_url)
+        )
+        conn.commit()
+        return {"success": True, "payment_id": cursor.lastrowid, "job_id": job_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        return {"error": str(e)}
+    finally:
+        if conn:
+            conn.close()
+
+
+@router.patch("/job-payments/{job_id}/review")
+def review_job_payment(job_id: int, data: dict):
+    conn = None
+    try:
+        status = data.get("status")
+        reject_reason = data.get("reject_reason")
+
+        if status not in ("CONFIRMED", "REJECTED"):
+            raise HTTPException(status_code=400, detail="status must be CONFIRMED or REJECTED.")
+        if status == "REJECTED" and not reject_reason:
+            raise HTTPException(status_code=400, detail="reject_reason is required when rejecting.")
+
+        conn = get_connection()
+        cursor = get_cursor(conn)
+
+        cursor.execute(
+            "SELECT payment_id FROM job_payments WHERE job_id = %s AND is_latest = TRUE",
+            (job_id,)
+        )
+        current = cursor.fetchone()
+        if not current:
+            raise HTTPException(status_code=404, detail="No active payment found for this job.")
+
+        if status == "CONFIRMED":
+            cursor.execute(
+                """
+                UPDATE job_payments
+                SET payment_status = 'CONFIRMED',
+                    confirmed_at   = NOW(),
+                    reject_reason  = NULL
+                WHERE job_id = %s AND is_latest = TRUE
+                """,
+                (job_id,)
+            )
+        else:
+            cursor.execute(
+                """
+                UPDATE job_payments
+                SET payment_status = 'REJECTED',
+                    reject_reason  = %s,
+                    confirmed_at   = NULL
+                WHERE job_id = %s AND is_latest = TRUE
+                """,
+                (reject_reason, job_id)
+            )
+
+        conn.commit()
+        return {"success": True, "job_id": job_id, "status": status}
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        return {"error": str(e)}
     finally:
         if conn:
             conn.close()

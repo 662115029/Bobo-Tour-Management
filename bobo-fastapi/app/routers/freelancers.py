@@ -159,22 +159,25 @@ def get_freelancer(fl_id: str):
         if conn:
             conn.close()
 @router.get("/fl-bank-accounts")
-def get_fl_bank_accounts(limit: int = 10, offset: int = 0):
+def get_fl_bank_accounts(limit: int = 10, offset: int = 0, fl_id: Optional[int] = None):
     conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
+        where_sql = "WHERE fb.fl_id = %s" if fl_id else ""
+        params = ([fl_id] if fl_id else []) + [limit, offset]
         cursor.execute(
-            """
+            f"""
             SELECT fb.fl_bank_account_id, fb.fl_id, f.fl_name,
                    fb.account_name, fb.account_number, fb.bank_name,
                    fb.is_primary, fb.created_at, fb.updated_at
             FROM fl_bank_accounts fb
             JOIN freelancers f ON fb.fl_id = f.fl_id
+            {where_sql}
             ORDER BY fb.created_at DESC
             LIMIT %s OFFSET %s
             """,
-            (limit, offset)
+            params
         )
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
@@ -184,13 +187,15 @@ def get_fl_bank_accounts(limit: int = 10, offset: int = 0):
         if conn:
             conn.close()
 @router.get("/fl-vehicle")
-def get_fl_vehicle(limit: int = 10, offset: int = 0):
+def get_fl_vehicle(limit: int = 10, offset: int = 0, fl_id: Optional[int] = None):
     conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
+        where_sql = "WHERE fv.fl_id = %s" if fl_id else ""
+        params = ([fl_id] if fl_id else []) + [limit, offset]
         cursor.execute(
-            """
+            f"""
             SELECT fv.fl_vehicle_id, fv.fl_id, f.fl_name,
                    fv.fl_vehicle_type, fv.fl_vehicle_brand, fv.fl_vehicle_model,
                    fv.fl_vehicle_year, fv.fl_vehicle_seat_capa,
@@ -198,10 +203,11 @@ def get_fl_vehicle(limit: int = 10, offset: int = 0):
                    fv.fl_vehicle_created_at, fv.fl_vehicle_updated_at
             FROM fl_vehicle fv
             JOIN freelancers f ON fv.fl_id = f.fl_id
+            {where_sql}
             ORDER BY fv.fl_vehicle_created_at DESC
             LIMIT %s OFFSET %s
             """,
-            (limit, offset)
+            params
         )
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
@@ -211,13 +217,15 @@ def get_fl_vehicle(limit: int = 10, offset: int = 0):
         if conn:
             conn.close()
 @router.get("/fl-vehicle-images")
-def get_fl_vehicle_images(limit: int = 10, offset: int = 0):
+def get_fl_vehicle_images(limit: int = 10, offset: int = 0, fl_id: Optional[int] = None):
     conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
+        where_sql = "WHERE fv.fl_id = %s" if fl_id else ""
+        params = ([fl_id] if fl_id else []) + [limit, offset]
         cursor.execute(
-            """
+            f"""
             SELECT fvi.fl_vehicle_image_id, fvi.fl_vehicle_id,
                    fv.fl_vehicle_brand, fv.fl_vehicle_model,
                    fv.fl_vehicle_license_plate, f.fl_name,
@@ -225,10 +233,11 @@ def get_fl_vehicle_images(limit: int = 10, offset: int = 0):
             FROM fl_vehicle_images fvi
             JOIN fl_vehicle fv ON fvi.fl_vehicle_id = fv.fl_vehicle_id
             JOIN freelancers f ON fv.fl_id = f.fl_id
+            {where_sql}
             ORDER BY fvi.uploaded_at DESC
             LIMIT %s OFFSET %s
             """,
-            (limit, offset)
+            params
         )
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
@@ -238,22 +247,25 @@ def get_fl_vehicle_images(limit: int = 10, offset: int = 0):
         if conn:
             conn.close()
 @router.get("/fl-languages")
-def get_fl_languages(limit: int = 10, offset: int = 0):
+def get_fl_languages(limit: int = 10, offset: int = 0, fl_id: Optional[int] = None):
     conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
+        where_sql = "WHERE fl.fl_id = %s" if fl_id else ""
+        params = ([fl_id] if fl_id else []) + [limit, offset]
         cursor.execute(
-            """
+            f"""
             SELECT fl.fl_id, f.fl_name,
                    l.language_id, l.language_name
             FROM fl_languages fl
             JOIN freelancers f ON fl.fl_id = f.fl_id
             JOIN languages l ON fl.language_id = l.language_id
+            {where_sql}
             ORDER BY f.fl_name, l.language_name
             LIMIT %s OFFSET %s
             """,
-            (limit, offset)
+            params
         )
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
@@ -263,22 +275,25 @@ def get_fl_languages(limit: int = 10, offset: int = 0):
         if conn:
             conn.close()
 @router.get("/fl-pickup-areas")
-def get_fl_pickup_areas(limit: int = 10, offset: int = 0):
+def get_fl_pickup_areas(limit: int = 10, offset: int = 0, fl_id: Optional[int] = None):
     conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
+        where_sql = "WHERE fp.fl_id = %s" if fl_id else ""
+        params = ([fl_id] if fl_id else []) + [limit, offset]
         cursor.execute(
-            """
+            f"""
             SELECT fp.fl_id, f.fl_name,
                    a.area_id, a.area_name
             FROM fl_pickup_areas fp
             JOIN freelancers f ON fp.fl_id = f.fl_id
             JOIN areas a ON fp.area_id = a.area_id
+            {where_sql}
             ORDER BY f.fl_name, a.area_name
             LIMIT %s OFFSET %s
             """,
-            (limit, offset)
+            params
         )
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
@@ -288,22 +303,25 @@ def get_fl_pickup_areas(limit: int = 10, offset: int = 0):
         if conn:
             conn.close()
 @router.get("/fl-availability")
-def get_fl_availability(limit: int = 10, offset: int = 0):
+def get_fl_availability(limit: int = 10, offset: int = 0, fl_id: Optional[int] = None):
     conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
+        where_sql = "WHERE fa.fl_id = %s" if fl_id else ""
+        params = ([fl_id] if fl_id else []) + [limit, offset]
         cursor.execute(
-            """
+            f"""
             SELECT fa.fl_available_id, fa.fl_id, f.fl_name,
                    fa.fl_available_start_date, fa.fl_available_end_date,
                    fa.is_active, fa.created_at, fa.updated_at
             FROM fl_availability fa
             JOIN freelancers f ON fa.fl_id = f.fl_id
+            {where_sql}
             ORDER BY fa.fl_available_start_date DESC
             LIMIT %s OFFSET %s
             """,
-            (limit, offset)
+            params
         )
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
@@ -313,14 +331,17 @@ def get_fl_availability(limit: int = 10, offset: int = 0):
         if conn:
             conn.close()
 @router.get("/fl-documents")
-def get_fl_documents(limit: int = 10, offset: int = 0, status: str = "", fl_ids: str = ""):
+def get_fl_documents(limit: int = 10, offset: int = 0, status: str = "", fl_id: Optional[int] = None, fl_ids: str = ""):
     conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
         where = []
         params = []
-        if fl_ids:
+        if fl_id:
+            where.append("fd.fl_id = %s")
+            params.append(fl_id)
+        elif fl_ids:
             id_list = [int(i) for i in fl_ids.split(',') if i.strip().isdigit()]
             placeholders = ','.join(['%s'] * len(id_list))
             where.append(f"fd.fl_id IN ({placeholders})")
@@ -328,7 +349,7 @@ def get_fl_documents(limit: int = 10, offset: int = 0, status: str = "", fl_ids:
         if status:
             where.append("fd.fl_doc_status = %s")
             params.append(status)
-        elif not fl_ids:
+        elif not fl_id and not fl_ids:
             where.append("fd.file_url IS NOT NULL")
         where_sql = "WHERE " + " AND ".join(where) if where else ""
         params += [limit, offset]
@@ -355,13 +376,21 @@ def get_fl_documents(limit: int = 10, offset: int = 0, status: str = "", fl_ids:
         if conn:
             conn.close()
 @router.get("/fl-verification")
-def get_fl_verification(limit: int = 10, offset: int = 0, status: str = "PENDING"):
+def get_fl_verification(limit: int = 10, offset: int = 0, status: str = "PENDING", fl_id: Optional[int] = None):
     conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
-        where_sql = "WHERE fv.fl_verify_status = %s" if status else ""
-        params = ([status] if status else []) + [limit, offset]
+        where = []
+        params = []
+        if fl_id:
+            where.append("fv.fl_id = %s")
+            params.append(fl_id)
+        if status:
+            where.append("fv.fl_verify_status = %s")
+            params.append(status)
+        where_sql = ("WHERE " + " AND ".join(where)) if where else ""
+        params += [limit, offset]
         cursor.execute(
             f"""
             SELECT fv.fl_verify_id, fv.fl_id, f.fl_name,

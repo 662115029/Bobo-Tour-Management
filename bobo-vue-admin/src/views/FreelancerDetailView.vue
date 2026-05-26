@@ -534,57 +534,46 @@ const confirmBan = async () => {
 onMounted(async () => {
   const id = route.params.id
   try {
-    const [flRes, langRes, vehicleRes, areaRes, availRes, docRes, bankRes, reviewRes, jobsRes, verifyRes] = await Promise.all([
+    const [flRes, langRes, vehicleRes, imgRes, areaRes, availRes, docRes, bankRes, reviewRes, jobsRes, verifyRes] = await Promise.all([
       fetch(`${API_BASE}/freelancers/${id}`),
-      fetch(`${API_BASE}/fl-languages?fl_id=${id}&limit=50`),
-      fetch(`${API_BASE}/fl-vehicle?fl_id=${id}&limit=5`),
-      fetch(`${API_BASE}/fl-pickup-areas?fl_id=${id}&limit=50`),
-      fetch(`${API_BASE}/fl-availability?fl_id=${id}&limit=50`),
-      fetch(`${API_BASE}/fl-documents?fl_id=${id}&limit=20`),
+      fetch(`${API_BASE}/fl-languages?fl_id=${id}&limit=10`),
+      fetch(`${API_BASE}/fl-vehicle?fl_id=${id}&limit=1`),
+      fetch(`${API_BASE}/fl-vehicle-images?fl_id=${id}&limit=10`),
+      fetch(`${API_BASE}/fl-pickup-areas?fl_id=${id}&limit=5`),
+      fetch(`${API_BASE}/fl-availability?fl_id=${id}&limit=1`),
+      fetch(`${API_BASE}/fl-documents?fl_id=${id}&limit=5`),
       fetch(`${API_BASE}/fl-bank-accounts?fl_id=${id}&limit=5`),
-      fetch(`${API_BASE}/fl-reviews?fl_id=${id}&limit=50`),
-      fetch(`${API_BASE}/jobs?fl_id=${id}&limit=100`),
-      fetch(`${API_BASE}/fl-verification?fl_id=${id}&limit=5`),
+      fetch(`${API_BASE}/fl-reviews?fl_id=${id}&limit=10`),
+      fetch(`${API_BASE}/jobs?fl_id=${id}&status=COMPLETED&limit=10`),
+      fetch(`${API_BASE}/fl-verification?fl_id=${id}&limit=1`),
     ])
-    const [flData, langData, vehicleData, areaData, availData, docData, bankData, reviewData, jobsData, verifyData] = await Promise.all([
-      flRes.json(), langRes.json(), vehicleRes.json(), areaRes.json(), availRes.json(), docRes.json(), bankRes.json(), reviewRes.json(), jobsRes.json(), verifyRes.json(),
+    const [flData, langData, vehicleData, imgData, areaData, availData, docData, bankData, reviewData, jobsData, verifyData] = await Promise.all([
+      flRes.json(), langRes.json(), vehicleRes.json(), imgRes.json(), areaRes.json(), availRes.json(), docRes.json(), bankRes.json(), reviewRes.json(), jobsRes.json(), verifyRes.json(),
     ])
     fl.value = flData.fl_id ? flData : null
-    languages.value = (langData.items || []).filter(l => String(l.fl_id) === String(id))
-    vehicle.value = (vehicleData.items || []).find(v => String(v.fl_id) === String(id)) || null
-    // fetch vehicle images after getting vehicle id
-    const vId = vehicle.value?.fl_vehicle_id
-    const imgData = vId
-      ? await fetch(`${API_BASE}/fl-vehicle-images?fl_vehicle_id=${vId}&limit=20`).then(r => r.json())
-      : { items: [] }
+    languages.value = langData.items || []
+    vehicle.value = (vehicleData.items || [])[0] || null
     vehicleImages.value = imgData.items || []
-    pickupAreas.value = (areaData.items || []).filter(a => String(a.fl_id) === String(id))
-    availability.value = (availData.items || []).filter(a => String(a.fl_id) === String(id))
-    const allDocs = (docData.items || []).filter(d => String(d.fl_id) === String(id))
-
+    pickupAreas.value = areaData.items || []
+    availability.value = (availData.items || [])[0] || null
+    const allDocs = docData.items || []
     const byType = {}
     allDocs.forEach(d => {
-      const isLatest = d.is_latest === 1 || d.is_latest === true
-      if (!byType[d.fl_doc_type]) {
-        byType[d.fl_doc_type] = d
-      } else if (isLatest && !(byType[d.fl_doc_type].is_latest === 1 || byType[d.fl_doc_type].is_latest === true)) {
-        byType[d.fl_doc_type] = d
-      } else if (isLatest && d.fl_uploaded_at && new Date(d.fl_uploaded_at) > new Date(byType[d.fl_doc_type].fl_uploaded_at)) {
+      if (!byType[d.fl_doc_type] || d.fl_uploaded_at > (byType[d.fl_doc_type].fl_uploaded_at || '')) {
         byType[d.fl_doc_type] = d
       }
     })
     const FL_DOC_TYPES = ['PERSONAL_ID', 'DRIVER_LICENSE', 'PUBLIC_DRIVER_LICENSE', 'VEHICLE_REGISTRATION', 'VEHICLE_INSPECTION']
     FL_DOC_TYPES.forEach(type => {
       if (!byType[type]) {
-        byType[type] = { fl_doc_id: `empty_${type}`, fl_id: id, fl_doc_type: type, file_url: null, fl_doc_status: 'PENDING', fl_uploaded_at: null, reviewed_by_name: null, is_latest: 1 }
+        byType[type] = { fl_doc_id: `empty_${type}`, fl_id: id, fl_doc_type: type, file_url: null, fl_doc_status: 'PENDING', fl_uploaded_at: null, reviewed_by_name: null }
       }
     })
     documents.value = FL_DOC_TYPES.map(t => byType[t])
-    bankAccounts.value = (bankData.items || []).filter(b => String(b.fl_id) === String(id))
-    reviews.value = (reviewData.items || []).filter(r => String(r.fl_id) === String(id))
+    bankAccounts.value = bankData.items || []
+    reviews.value = reviewData.items || []
     jobHistory.value = jobsData.items || []
-    const verList = (verifyData.items || []).filter(v => v.is_latest === true || v.is_latest === 1)
-    verification.value = verList[0] || null
+    verification.value = (verifyData.items || [])[0] || null
   } catch (e) { console.error(e) } finally { loading.value = false }
 })
 </script>
