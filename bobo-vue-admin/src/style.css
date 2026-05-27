@@ -220,7 +220,7 @@
     @apply mt-1 block h-8 w-20 rounded-md;
   }
 
-  /* ─── Badge — Job Status ──────────────────────────────── */
+  /* ─── Badge - Job Status ──────────────────────────────── */
 
   .badge {
     @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide;
@@ -233,7 +233,7 @@
   .badge.completed   { @apply bg-slate-100  text-slate-600;  }
   .badge.cancelled   { @apply bg-red-100    text-red-800;    }
 
-  /* ─── Badge — Verify / User Status ───────────────────── */
+  /* ─── Badge - Verify / User Status ───────────────────── */
 
   .badge.verified     { @apply bg-green-100 text-green-800; }
   .badge.not_verified { @apply bg-red-100   text-red-800;   }
@@ -241,7 +241,7 @@
   .badge.unknown      { @apply bg-gray-100  text-gray-500;  }
   .badge.active       { @apply bg-green-100 text-green-800; }
 
-  /* ─── Doc Badge — Document Status ────────────────────── */
+  /* ─── Doc Badge - Document Status ────────────────────── */
 
   .doc-badge {
     @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide;
@@ -251,7 +251,7 @@
   .doc-badge.approved { @apply bg-green-100 text-green-800; }
   .doc-badge.rejected { @apply bg-red-100   text-red-800;   }
 
-  /* ─── Action Badge — Log Actions ─────────────────────── */
+  /* ─── Action Badge - Log Actions ─────────────────────── */
 
   .action-badge {
     @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide;
@@ -267,7 +267,7 @@
   .action-delete  { @apply bg-red-200    text-red-900;    }
   .action-default { @apply bg-gray-100   text-gray-500;   }
 
-  /* ─── Type Tag — Log Types ───────────────────────────── */
+  /* ─── Type Tag - Log Types ───────────────────────────── */
 
   .type-tag {
     @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide;
@@ -280,7 +280,7 @@
   .type-user       { @apply bg-fuchsia-50  text-fuchsia-700; }
   .type-default    { @apply bg-gray-100    text-gray-500;    }
 
-  /* ─── Info Tag — Language / Area chips ───────────────── */
+  /* ─── Info Tag - Language / Area chips ───────────────── */
 
   .info-tag {
     @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide;
@@ -389,6 +389,10 @@
   }
 
   /* ─── Approve / Reject row buttons ───────────────────── */
+
+  .btn-reset-row {
+    @apply inline-flex items-center rounded-md border border-[#ddd] bg-white px-2 py-1 text-[11px] font-medium text-[#888] transition-colors hover:bg-[#f5f5f5] hover:text-[#555];
+  }
 
   .btn-approve-row {
     @apply inline-flex items-center cursor-pointer rounded-[5px] border-none bg-green-100 px-3 py-1.5 text-xs font-medium text-green-800 transition-all duration-200;

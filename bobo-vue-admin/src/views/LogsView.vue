@@ -39,7 +39,7 @@
                   : typeFilter + " ▼" }}
                 </button></span>
             </th>
-            <th class="th-sortable" :class="{ 'th-active': targetSort }" style="width: 22%"
+            <th class="th-sortable" :class="{ 'th-active': targetSort }" style="width: 18%"
               @click="cycleSort('target')">
               <span class="th-inner">
                 TARGET
@@ -50,7 +50,7 @@
                 </span>
               </span>
             </th>
-            <th style="width: 14%">NOTE</th>
+            <th style="width: 18%">NOTE</th>
             <th style="width: 18%; white-space: nowrap;">
               <span style="display:inline-flex;align-items:center;white-space:nowrap;gap:4px;">ADMIN
                 <button class="col-filter-btn" :class="{ active: adminFilter !== 'All' }"
@@ -101,8 +101,13 @@
               </template>
               <span v-else>{{ log.target_name || log.target_id || "-" }}</span>
             </td>
-            <td class="truncate-cell text-muted text-[11px]" :title="log.note">
-              {{ log.note || "-" }}
+            <td class="text-muted text-[11px] max-w-[200px]">
+              <span v-if="log.note" class="block truncate cursor-default" style="max-width:200px"
+                @mouseenter="showTooltip($event, log.note)"
+                @mouseleave="hideTooltip">
+                {{ log.note }}
+              </span>
+              <span v-else>–</span>
             </td>
             <td class="truncate-cell">
               <div class="user-cell flex-nowrap min-w-0">
@@ -217,11 +222,11 @@
         <div class="px-5 py-4 flex flex-col gap-3">
           <div class="flex items-center justify-between bg-[#fafafa] rounded-xl px-4 py-3">
             <span class="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#bbb]">Job Name</span>
-            <span class="text-[13px] font-semibold text-[#222] max-w-[190px] truncate text-right">{{ deletedJobModal.target_name || deletedJobModal.target_id || '—' }}</span>
+            <span class="text-[13px] font-semibold text-[#222] max-w-[190px] truncate text-right">{{ deletedJobModal.target_name || deletedJobModal.target_id || '-' }}</span>
           </div>
           <div class="flex items-center justify-between bg-[#fafafa] rounded-xl px-4 py-3">
             <span class="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#bbb]">Deleted by</span>
-            <span class="text-[13px] font-semibold text-[#222]">{{ deletedJobModal.admin_name || '—' }}</span>
+            <span class="text-[13px] font-semibold text-[#222]">{{ deletedJobModal.admin_name || '-' }}</span>
           </div>
           <div class="flex items-center justify-between bg-[#fafafa] rounded-xl px-4 py-3">
             <span class="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#bbb]">Deleted at</span>
@@ -243,6 +248,13 @@
       </div>
     </div>
 
+    <!-- Note Tooltip -->
+    <Teleport to="body">
+      <div v-if="tooltip.visible" class="fixed z-[9999] w-72 rounded-lg bg-[#1a1a2e] text-white text-[11px] px-3 py-2 shadow-xl leading-relaxed whitespace-pre-wrap break-words pointer-events-none"
+        :style="{ top: tooltip.y + 'px', left: tooltip.x + 'px' }">
+        {{ tooltip.text }}
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -306,6 +318,13 @@ const onSearchInput = () => {
 }
 
 const goToPage = (p) => { currentPage.value = p; fetchLogs() }
+
+const tooltip = ref({ visible: false, text: '', x: 0, y: 0 })
+const showTooltip = (e, text) => {
+  const rect = e.target.getBoundingClientRect()
+  tooltip.value = { visible: true, text, x: rect.left, y: rect.bottom + 6 }
+}
+const hideTooltip = () => { tooltip.value.visible = false }
 
 const saveFilters = () => {
   localStorage.setItem("logs_actionFilter", actionFilter.value);

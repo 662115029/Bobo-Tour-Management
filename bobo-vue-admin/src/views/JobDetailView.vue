@@ -321,7 +321,7 @@
             </div>
           </div>
 
-          <!-- Payment — slip shown inline -->
+          <!-- Payment - slip shown inline -->
           <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow" v-if="payments.length || paymentHistory.length">
             <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
               <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
@@ -471,7 +471,7 @@
             </div>
           </div>
 
-          <!-- Applications — clickable to freelancer detail -->
+          <!-- Applications - clickable to freelancer detail -->
           <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow" v-if="applications.length">
             <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
               <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>

@@ -100,7 +100,8 @@
       :docs="selectedDocs"
       @close="selectedUser = null"
       @approve="(doc) => reviewDoc(doc, 'APPROVED')"
-      @reject="(doc) => reviewDoc(doc, 'REJECTED')"
+      @reject="(doc) => reviewDoc(doc, 'REJECTED', doc.reason)"
+      @reset="(doc) => reviewDoc(doc, 'PENDING')"
     />
   </div>
 </template>
@@ -322,20 +323,29 @@ const goToUserDetail = ({ id, type }) => {
   userDetailModal.value = null
 }
 
-const reviewDoc = async (doc, newStatus) => {
+const reviewDoc = async (doc, newStatus, reason = '') => {
   const endpoint = doc._type === 'fl'
     ? `${API_BASE}/fl-documents/${doc.id}`
     : `${API_BASE}/em-documents/${doc.id}`
+  const docLabel = doc.type?.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) || doc.type
+  const note = newStatus === 'REJECTED' && reason
+    ? `${docLabel}: Rejected - ${reason}`
+    : newStatus === 'APPROVED'
+    ? `${docLabel}: Approved`
+    : null
   try {
     const res = await fetch(endpoint, {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: newStatus, reviewed_by: localStorage.getItem('admin_id') || '' })
+      body: JSON.stringify({ status: newStatus, reviewed_by: localStorage.getItem('admin_id') || '', note })
     })
     const data = await res.json()
     if (data.status === 'updated') {
-      doc.status = newStatus
-      doc.reviewed = formatDateTime(new Date().toISOString())
-      // Sync raw doc list
+      // หา doc ตัวจริงใน selectedDocs แล้วแก้ตรงๆ เพื่อให้ reactive
+      const liveDoc = selectedDocs.value.find(d => d.id === doc.id)
+      if (liveDoc) {
+        liveDoc.status = newStatus
+        liveDoc.reviewed = newStatus !== 'PENDING' ? formatDateTime(new Date().toISOString()) : null
+      }
       if (doc._type === 'fl') {
         const raw = flDocs.value.find(d => d.fl_doc_id === doc.id)
         if (raw) raw.fl_doc_status = newStatus
@@ -343,7 +353,6 @@ const reviewDoc = async (doc, newStatus) => {
         const raw = emDocs.value.find(d => d.em_doc_id === doc.id)
         if (raw) raw.em_doc_status = newStatus
       }
-      // Reload list to reflect status change
       pageCache.clear(); inFlight.clear()
       await loadUsers(currentPage.value)
     }

@@ -54,7 +54,7 @@
             :style="avatarStyle(data.em_id, data.company)">{{ initials2(data.company) }}</div>
           <div class="min-w-0">
             <div class="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#bbb]">Employer</div>
-            <div class="text-[13px] font-semibold text-[#222] truncate mt-0.5">{{ data.company || '—' }}</div>
+            <div class="text-[13px] font-semibold text-[#222] truncate mt-0.5">{{ data.company || '-' }}</div>
           </div>
         </div>
 
@@ -68,14 +68,14 @@
           <div class="flex items-center gap-3 flex-1">
             <div>
               <div class="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#2e7d32]">Start</div>
-              <div class="text-[13px] font-semibold text-[#111] mt-0.5">{{ formatDate(data.job_start_date) || '—' }}</div>
+              <div class="text-[13px] font-semibold text-[#111] mt-0.5">{{ formatDate(data.job_start_date) || '-' }}</div>
             </div>
             <svg width="18" height="18" fill="none" stroke="#ccc" stroke-width="2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/>
             </svg>
             <div>
               <div class="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#c62828]">End</div>
-              <div class="text-[13px] font-semibold text-[#111] mt-0.5">{{ formatDate(data.job_end_date) || '—' }}</div>
+              <div class="text-[13px] font-semibold text-[#111] mt-0.5">{{ formatDate(data.job_end_date) || '-' }}</div>
             </div>
           </div>
         </div>
@@ -88,7 +88,7 @@
             </div>
             <div>
               <div class="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#bbb]">Vehicle</div>
-              <div class="text-[13px] font-semibold text-[#222] mt-0.5">{{ data.job_required_vehicle_type || '—' }}</div>
+              <div class="text-[13px] font-semibold text-[#222] mt-0.5">{{ data.job_required_vehicle_type || '-' }}</div>
             </div>
           </div>
           <div class="flex items-center gap-3">
@@ -97,7 +97,7 @@
             </div>
             <div>
               <div class="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#bbb]">Seats</div>
-              <div class="text-[13px] font-semibold text-[#222] mt-0.5">{{ data.job_required_seat || '—' }}</div>
+              <div class="text-[13px] font-semibold text-[#222] mt-0.5">{{ data.job_required_seat || '-' }}</div>
             </div>
           </div>
         </div>

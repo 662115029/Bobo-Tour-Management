@@ -25,6 +25,7 @@ class EmployerRegisterRequest(BaseModel):
 class DocReviewRequest(BaseModel):
     status: str
     reviewed_by: str
+    note: Optional[str] = None
 
 
 class BanRequest(BaseModel):
@@ -268,7 +269,7 @@ def get_em_verification(limit: int = 10, offset: int = 0, status: str = "PENDING
 @router.patch("/em-documents/{doc_id}")
 def review_em_document(doc_id: str, body: DocReviewRequest):
     if body.status not in ("APPROVED", "REJECTED"):
-        raise HTTPException(status_code=400, detail="status must be APPROVED or REJECTED")
+        raise HTTPException(status_code=400, detail="status must be APPROVED, REJECTED, or PENDING")
     conn = None
     try:
         conn = get_connection()
@@ -308,14 +309,55 @@ def review_em_document(doc_id: str, body: DocReviewRequest):
                     """,
                     (body.reviewed_by, doc["em_id"])
                 )
+            else:
+                cursor.execute(
+                    "UPDATE employers SET em_verify_status = 'PENDING' WHERE em_id = %s",
+                    (doc["em_id"],)
+                )
         elif body.status == "REJECTED":
             cursor.execute(
-                "UPDATE employers SET em_verify_status = 'NOT_VERIFIED' WHERE em_id = %s",
+                """
+                SELECT COUNT(*) AS total,
+                       SUM(CASE WHEN em_doc_status = 'REJECTED' THEN 1 ELSE 0 END) AS rejected
+                FROM em_documents
+                WHERE em_id = %s AND file_url IS NOT NULL
+                """,
+                (doc["em_id"],)
+            )
+            counts = cursor.fetchone()
+            if counts["total"] > 0 and counts["total"] == counts["rejected"]:
+                cursor.execute(
+                    "UPDATE employers SET em_verify_status = 'NOT_VERIFIED' WHERE em_id = %s",
+                    (doc["em_id"],)
+                )
+                cursor.execute(
+                    """
+                    UPDATE em_verification SET em_verify_status = 'NOT_VERIFIED'
+                    WHERE em_id = %s AND is_latest = 1
+                    """,
+                    (doc["em_id"],)
+                )
+            else:
+                cursor.execute(
+                    "UPDATE employers SET em_verify_status = 'PENDING' WHERE em_id = %s",
+                    (doc["em_id"],)
+                )
+                cursor.execute(
+                    """
+                    UPDATE em_verification SET em_verify_status = 'PENDING'
+                    WHERE em_id = %s AND is_latest = 1
+                    """,
+                    (doc["em_id"],)
+                )
+
+        if body.status == "PENDING":
+            cursor.execute(
+                "UPDATE employers SET em_verify_status = 'PENDING' WHERE em_id = %s",
                 (doc["em_id"],)
             )
             cursor.execute(
                 """
-                UPDATE em_verification SET em_verify_status = 'NOT_VERIFIED'
+                UPDATE em_verification SET em_verify_status = 'PENDING'
                 WHERE em_id = %s AND is_latest = 1
                 """,
                 (doc["em_id"],)
@@ -333,6 +375,7 @@ def review_em_document(doc_id: str, body: DocReviewRequest):
         doc_info = cursor.fetchone()
         if doc_info:
             action = 'APPROVE_DOCUMENT' if body.status == 'APPROVED' else 'REJECT_DOCUMENT'
+            log_note = body.note or doc_info["em_doc_type"]
             cursor.execute(
                 """
                 INSERT INTO admin_logs
@@ -340,7 +383,7 @@ def review_em_document(doc_id: str, body: DocReviewRequest):
                 VALUES (%s, %s, 'DOCUMENT', %s, %s, %s)
                 """,
                 (body.reviewed_by, action, doc_id,
-                 doc_info["em_name"], doc_info["em_doc_type"])
+                 doc_info["em_name"], log_note)
             )
             if body.status == "APPROVED":
                 cursor.execute(

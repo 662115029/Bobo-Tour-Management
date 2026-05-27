@@ -1,7 +1,7 @@
 <template>
   <div>
     <BreadcrumbBar :label="fl?.fl_name" />
-    <!-- Loading skeleton — mirrors real layout -->
+    <!-- Loading skeleton - mirrors real layout -->
     <div v-if="loading" class="px-5 pb-8">
       <!-- Top bar -->
       <div class="flex items-center justify-between py-3 mb-5">
@@ -168,7 +168,7 @@
             <p v-else class="text-[12px] text-[#bbb] italic">No bio provided</p>
           </div>
 
-          <!-- Stats — with icon header -->
+          <!-- Stats - with icon header -->
           <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
             <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
               <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
@@ -193,7 +193,7 @@
             </div>
           </div>
 
-          <!-- Account — with icon header -->
+          <!-- Account - with icon header -->
           <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
             <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
               <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
@@ -215,7 +215,7 @@
             </div>
           </div>
 
-          <!-- Information — with icon header -->
+          <!-- Information - with icon header -->
           <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
             <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
               <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -241,7 +241,7 @@
             </div>
           </div>
 
-          <!-- Availability — above Languages -->
+          <!-- Availability - above Languages -->
           <div v-if="availability.length" class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
             <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
               <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -264,7 +264,7 @@
             </div>
           </div>
 
-          <!-- Languages & Areas — with icon header -->
+          <!-- Languages & Areas - with icon header -->
           <!-- Languages -->
           <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
             <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
@@ -289,7 +289,7 @@
             </div>
           </div>
 
-          <!-- Bank Account — with icon header, no Primary badge -->
+          <!-- Bank Account - with icon header, no Primary badge -->
           <div v-if="bankAccounts.length" class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
             <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
               <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6l9-3 9 3M3 6v12a1 1 0 001 1h16a1 1 0 001-1V6M3 6h18M8 10v7m4-7v7m4-7v7"/></svg>
@@ -332,7 +332,7 @@
                   <span class="text-[13px] font-medium text-[#222]">{{ verification.reviewed_by_name }}</span>
                 </div>
               </div>
-              <!-- Documents — 5 cols, click → modal (no open file link) -->
+              <!-- Documents - 5 cols, click → modal (no open file link) -->
               <div>
                 <div class="text-[12px] font-bold text-[#444] uppercase tracking-wide mb-3">Documents</div>
                 <div class="grid grid-cols-5 gap-2">
@@ -376,7 +376,7 @@
                 <div><div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium mb-0.5">Capacity</div><div class="text-[13px] font-medium text-[#222]">{{ vehicle.fl_vehicle_seat_capa }} seats</div></div>
                 <div class="col-span-2"><div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium mb-0.5">License Plate</div><div class="text-[15px] font-bold text-[#222]">{{ vehicle.fl_vehicle_license_plate }}</div></div>
               </div>
-              <!-- Vehicle Photos — 5 cols, full box, aspect-square -->
+              <!-- Vehicle Photos - 5 cols, full box, aspect-square -->
               <div v-if="vehicleImages.length">
                 <div class="text-[12px] font-bold text-[#444] uppercase tracking-wide mb-2">Photos ({{ vehicleImages.length }})</div>
                 <div class="grid grid-cols-5 gap-2">
@@ -418,7 +418,7 @@
             </div>
           </div>
 
-          <!-- Job History — clickable to job detail -->
+          <!-- Job History - clickable to job detail -->
           <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow" v-if="jobHistory.length">
             <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
               <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 3H8a2 2 0 00-2 2v2h12V5a2 2 0 00-2-2z"/></svg>

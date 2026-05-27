@@ -159,7 +159,7 @@
             </div>
           </div>
 
-          <!-- Password checklist — compact 2×2 -->
+          <!-- Password checklist - compact 2×2 -->
           <div v-if="passwordTouched" class="grid grid-cols-2 gap-x-4 gap-y-1.5 bg-[#fafafa] border border-[#e5e7eb] rounded-xl px-4 py-3">
             <div v-for="rule in passwordRules" :key="rule.label" class="flex items-center gap-2">
               <svg v-if="rule.passed" class="w-3 h-3 shrink-0 text-[#06c755]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">

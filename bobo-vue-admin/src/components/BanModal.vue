@@ -31,7 +31,7 @@ defineProps({
   show:     { type: Boolean, default: false },
   isActive: { type: Boolean, default: true },
   name:     { type: String, default: '' },
-  userType: { type: String, default: 'User' }  // 'Freelancer' | 'Employer' | 'User'
+  userType: { type: String, default: 'User' }
 })
 defineEmits(['confirm', 'cancel'])
 </script>

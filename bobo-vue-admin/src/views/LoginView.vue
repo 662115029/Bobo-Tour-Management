@@ -34,7 +34,7 @@
             Welcome<br/>back.
           </h1>
           <p class="text-white/40 text-[13px] leading-relaxed">
-            Manage freelancers, employers, jobs and verifications — all in one place.
+            Manage freelancers, employers, jobs and verifications - all in one place.
           </p>
         </div>
 

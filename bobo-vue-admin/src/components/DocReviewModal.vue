@@ -56,21 +56,53 @@
           </div>
 
           <!-- Actions -->
-          <div v-if="doc.file_url" class="flex gap-1 px-2 pb-2 mt-auto">
-            <button class="btn-approve-row !flex flex-1 justify-center !text-[11px] !px-1 !py-1"
-              :disabled="doc.status === 'APPROVED'" @click="$emit('approve', doc)">
-              <svg class="w-3 h-3 mr-0.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
-              </svg>
-              Approve
-            </button>
-            <button class="btn-reject-row !flex flex-1 justify-center !text-[11px] !px-1 !py-1"
-              :disabled="doc.status === 'REJECTED'" @click="$emit('reject', doc)">
-              <svg class="w-3 h-3 mr-0.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-              </svg>
-              Reject
-            </button>
+          <div v-if="doc.file_url" class="flex flex-col gap-1 px-2 pb-2 mt-auto">
+            <!-- Reject input -->
+            <div v-if="rejectingDoc === doc.id" class="flex flex-col gap-1">
+              <input
+                v-model="rejectReason"
+                type="text"
+                placeholder="Reason for rejection..."
+                class="w-full rounded-lg border border-[#eee] bg-[#f8f8f8] px-2.5 py-1.5 text-[11px] outline-none focus:border-red-300 focus:ring-1 focus:ring-red-100"
+                @keydown.enter="confirmReject(doc)"
+                @keydown.esc="rejectingDoc = null; rejectReason = ''"
+              />
+              <div class="flex gap-1">
+                <button class="btn-reject-row !flex flex-1 justify-center !text-[11px] !px-1 !py-1"
+                  @click="confirmReject(doc)">Confirm</button>
+                <button class="btn-cancel-sm !flex !text-[11px] !px-2 !py-1"
+                  @click="rejectingDoc = null; rejectReason = ''">Cancel</button>
+              </div>
+            </div>
+            <div v-else class="flex gap-1">
+              <button class="btn-approve-row !flex flex-1 justify-center !text-[11px] !px-1 !py-1"
+                :disabled="doc.status === 'APPROVED'"
+                :class="{ 'opacity-40 cursor-not-allowed': doc.status === 'APPROVED' }"
+                @click="$emit('approve', doc)">
+                <svg class="w-3 h-3 mr-0.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+                </svg>
+                Approve
+              </button>
+              <button class="btn-reject-row !flex flex-1 justify-center !text-[11px] !px-1 !py-1"
+                :disabled="doc.status === 'REJECTED'"
+                :class="{ 'opacity-40 cursor-not-allowed': doc.status === 'REJECTED' }"
+                @click="doc.status !== 'REJECTED' && (rejectingDoc = doc.id, rejectReason = '')">
+                <svg class="w-3 h-3 mr-0.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+                Reject
+              </button>
+              <button class="btn-reset-row !flex !justify-center !text-[11px] !px-1.5 !py-1"
+                :disabled="doc.status === 'PENDING'"
+                :class="{ 'opacity-40 cursor-not-allowed': doc.status === 'PENDING' }"
+                title="Reset to Pending"
+                @click="doc.status !== 'PENDING' && $emit('reset', doc)">
+                <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8 8 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8 8 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+              </button>
+            </div>
           </div>
 
           <div v-else class="px-2 pb-2 mt-auto">
@@ -122,11 +154,20 @@ const props = defineProps({
   docs: { type: Array, default: () => [] },
   requiredCount: { type: Number, default: 5 }
 })
-defineEmits(['close', 'approve', 'reject'])
+const emit = defineEmits(['close', 'approve', 'reject', 'reset'])
 
 const lightboxDoc = ref(null)
+const rejectingDoc = ref(null)
+const rejectReason = ref('')
+
 function openLightbox(doc) {
   lightboxDoc.value = doc
+}
+
+function confirmReject(doc) {
+  emit('reject', { ...doc, reason: rejectReason.value.trim() })
+  rejectingDoc.value = null
+  rejectReason.value = ''
 }
 
 const approvedCount = computed(() =>

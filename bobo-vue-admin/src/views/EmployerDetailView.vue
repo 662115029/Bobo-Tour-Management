@@ -1,7 +1,7 @@
 <template>
   <div>
     <BreadcrumbBar :label="em?.em_name" />
-    <!-- Loading skeleton — mirrors real layout -->
+    <!-- Loading skeleton - mirrors real layout -->
     <div v-if="loading" class="px-5 pb-8">
       <!-- Top bar -->
       <div class="flex items-center justify-between py-3 mb-5">
@@ -238,7 +238,7 @@
             </div>
           </div>
 
-          <!-- Bank Account — icon header, no Primary badge -->
+          <!-- Bank Account - icon header, no Primary badge -->
           <div v-if="bankAccounts.length" class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
             <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
               <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6l9-3 9 3M3 6v12a1 1 0 001 1h16a1 1 0 001-1V6M3 6h18M8 10v7m4-7v7m4-7v7"/></svg>
@@ -280,7 +280,7 @@
                   <span class="text-[13px] font-medium text-[#222]">{{ verification.reviewed_by_name }}</span>
                 </div>
               </div>
-              <!-- Documents — 5 cols, click → modal -->
+              <!-- Documents - 5 cols, click → modal -->
               <div>
                 <div class="text-[12px] font-bold text-[#444] uppercase tracking-wide mb-3">Documents</div>
                 <div class="grid grid-cols-5 gap-2">
@@ -310,7 +310,7 @@
             </div>
           </div>
 
-          <!-- Jobs Posted — clickable to job detail -->
+          <!-- Jobs Posted - clickable to job detail -->
           <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow" v-if="jobs.length">
             <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
               <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 3H8a2 2 0 00-2 2v2h12V5a2 2 0 00-2-2z"/></svg>
