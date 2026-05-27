@@ -1,125 +1,144 @@
 <template>
   <AppLayout>
+    <div class="max-w-6xl mx-auto px-8 pt-6 pb-10">
 
-    <div class="max-w-6xl mx-auto p-6 pb-10">
-      <div class="bg-gray-100 rounded-2xl shadow-xl p-6">
+      <!-- Header + filter -->
+      <div class="flex items-center justify-between mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">Applications</h1>
+        <select v-model="selectedJob" class="p-2.5 border border-gray-300 bg-white rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-400 min-w-[220px]">
+          <option value="">All Tours</option>
+          <option v-for="job in jobs" :key="job.job_id" :value="job.job_id">{{ job.job_title }}</option>
+        </select>
+      </div>
 
-        <!-- Header -->
-        <div class="flex items-center justify-between mb-6">
-          <h1 class="text-xl font-bold text-gray-800">Applications</h1>
-          <select v-model="selectedJob" class="p-2 border border-gray-300 bg-white rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-400">
-            <option value="">Select a Tour</option>
-            <option v-for="job in jobs" :key="job.job_id" :value="job.job_id">{{ job.job_title }}</option>
-          </select>
-        </div>
+      <!-- Loading -->
+      <div v-if="loading" class="text-center py-16 text-gray-400 text-sm">Loading applications...</div>
 
-        <!-- Loading -->
-        <div v-if="loading" class="text-center py-12 text-gray-400 text-sm">Loading applications...</div>
+      <!-- Empty -->
+      <div v-else-if="filteredApplications.length === 0" class="text-center py-16 text-gray-400 text-sm bg-white rounded-2xl border border-gray-200">
+        No applications found.
+      </div>
 
-        <!-- Empty states -->
-        <div v-else-if="!selectedJob" class="text-center py-12 text-gray-400 text-sm">Select a tour above to view applications.</div>
-        <div v-else-if="applications.length === 0" class="text-center py-12 text-gray-400 text-sm">No applications received for this tour yet.</div>
+      <!-- Application List -->
+      <div v-else class="space-y-3">
+        <div
+          v-for="(app, idx) in filteredApplications"
+          :key="app.application_id || idx"
+          class="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition p-4 flex items-center gap-4"
+        >
+          <!-- Avatar -->
+          <div class="w-11 h-11 rounded-full bg-[#fef2f2] text-[#dc2626] text-base font-bold flex items-center justify-center shrink-0">
+            {{ (app.guide_name || '?').charAt(0).toUpperCase() }}
+          </div>
 
-        <!-- Application List -->
-        <div v-else class="space-y-3">
-          <div
-            v-for="(app, idx) in applications"
-            :key="app.application_id || idx"
-            class="flex items-stretch bg-gray-300 rounded-xl overflow-hidden"
-          >
-            <!-- Avatar -->
-            <div class="w-24 bg-gray-400 flex flex-col items-center justify-center py-3 px-2 shrink-0">
-              <div class="w-12 h-12 rounded-full bg-gray-500 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
-                </svg>
-              </div>
-            </div>
-
-            <!-- Detail -->
-            <div class="flex-1 bg-gray-200 mx-2 my-2 rounded-lg p-4 flex flex-col justify-center">
-              <p class="font-semibold text-gray-800">{{ app.guide_name || 'Guide Name' }}</p>
-              <div class="flex flex-wrap gap-3 mt-1 text-sm text-gray-600">
-                <span>{{ app.guide_phone || '—' }}</span>
-                <span v-if="app.languages?.length">{{ app.languages.join(', ') }}</span>
-                <span v-if="app.vehicle_type">{{ app.vehicle_type }}</span>
-                <span
-                  class="px-2 py-0.5 rounded-full text-xs font-semibold"
-                  :class="{
-                    'bg-yellow-100 text-yellow-700': app.status === 'PENDING',
-                    'bg-green-100 text-green-700': app.status === 'ACCEPTED',
-                    'bg-red-100 text-red-600': app.status === 'REJECTED',
-                  }"
-                >{{ app.status }}</span>
-              </div>
-            </div>
-
-            <!-- Accept / Reject -->
-            <div class="flex flex-col justify-center gap-2 pr-3 py-2 shrink-0">
-              <button
-                @click="handleAccept(app)"
-                :disabled="app.status !== 'PENDING'"
-                class="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-200 hover:bg-green-100 hover:text-green-700 text-gray-600 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                title="Accept"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-              </button>
-              <button
-                @click="handleReject(app)"
-                :disabled="app.status !== 'PENDING'"
-                class="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-300 hover:bg-red-100 hover:text-red-600 text-gray-600 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                title="Reject"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+          <!-- Info -->
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold text-gray-800 text-sm">{{ app.guide_name || '—' }}</p>
+            <p class="text-xs text-[#dc2626] font-medium mt-0.5 truncate">{{ app.job_title || '—' }}</p>
+            <div class="flex flex-wrap gap-3 mt-1 text-xs text-gray-400">
+              <span v-if="app.guide_phone">{{ app.guide_phone }}</span>
+              <span v-if="app.languages?.length">{{ app.languages.join(', ') }}</span>
+              <span v-if="app.vehicle_type">{{ app.vehicle_type }}</span>
+              <span v-if="app.applied_at">Applied {{ formatDate(app.applied_at) }}</span>
             </div>
           </div>
-        </div>
 
+          <!-- Status badge -->
+          <span
+            class="px-2.5 py-1 rounded-full text-xs font-semibold shrink-0"
+            :class="{
+              'bg-yellow-100 text-yellow-700': app.status === 'APPLIED' || app.status === 'PENDING',
+              'bg-green-100 text-green-700': app.status === 'ACCEPTED',
+              'bg-red-100 text-red-600': app.status === 'REJECTED',
+            }"
+          >{{ app.status }}</span>
+
+          <!-- Accept / Reject -->
+          <div class="flex items-center gap-2 shrink-0">
+            <button
+              @click="handleAccept(app)"
+              :disabled="app.status === 'ACCEPTED' || app.status === 'REJECTED'"
+              class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-green-50 hover:text-green-600 hover:border-green-200 transition disabled:opacity-30 disabled:cursor-not-allowed"
+              title="Accept"
+            >
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </button>
+            <button
+              @click="handleReject(app)"
+              :disabled="app.status === 'ACCEPTED' || app.status === 'REJECTED'"
+              class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition disabled:opacity-30 disabled:cursor-not-allowed"
+              title="Reject"
+            >
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
       </div>
+
     </div>
   </AppLayout>
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import AppLayout from '../components/AppLayout.vue'
 
 const API_BASE = '/api'
 
 const jobs = ref([])
 const selectedJob = ref('')
-const applications = ref([])
+const allApplications = ref([])
 const loading = ref(false)
 
+// Load all employer's tours, then fetch all applications for each
 onMounted(async () => {
   const em_id = localStorage.getItem('em_id')
-  try {
-    const res = await fetch(`${API_BASE}/jobs?em_id=${em_id}`)
-    const data = await res.json()
-    jobs.value = Array.isArray(data) ? data : (data.jobs || [])
-  } catch (e) {
-    jobs.value = []
-  }
-})
-
-watch(selectedJob, async (jobId) => {
-  if (!jobId) { applications.value = []; return }
   loading.value = true
   try {
-    const res = await fetch(`${API_BASE}/jobs/${jobId}/applications`)
+    const res = await fetch(`${API_BASE}/tours?em_id=${em_id}`)
     const data = await res.json()
-    applications.value = Array.isArray(data) ? data : (data.applications || [])
+    jobs.value = Array.isArray(data) ? data : (data.jobs || [])
+
+    // Fetch applications for all tours in parallel
+    const results = await Promise.all(
+      jobs.value.map(async (job) => {
+        try {
+          const r = await fetch(`${API_BASE}/tours/${job.job_id}/applications`)
+          const apps = await r.json()
+          const list = Array.isArray(apps) ? apps : (apps.applications || [])
+          // Attach job title to each application
+          return list.map(a => ({ ...a, job_title: job.job_title, job_id: job.job_id }))
+        } catch {
+          return []
+        }
+      })
+    )
+    // Flatten and sort by applied_at descending
+    allApplications.value = results
+      .flat()
+      .sort((a, b) => new Date(b.applied_at) - new Date(a.applied_at))
   } catch (e) {
-    applications.value = []
+    jobs.value = []
+    allApplications.value = []
   } finally {
     loading.value = false
   }
 })
+
+// Filter by selected tour
+const filteredApplications = computed(() => {
+  if (!selectedJob.value) return allApplications.value
+  return allApplications.value.filter(a => a.job_id === selectedJob.value)
+})
+
+const formatDate = (d) => {
+  if (!d) return ''
+  return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+}
 
 const handleAccept = async (app) => {
   try {
@@ -129,7 +148,7 @@ const handleAccept = async (app) => {
     })
     if (res.ok) app.status = 'ACCEPTED'
     else alert('Failed to accept application.')
-  } catch (e) {
+  } catch {
     alert('Failed to accept application.')
   }
 }
@@ -142,7 +161,7 @@ const handleReject = async (app) => {
     })
     if (res.ok) app.status = 'REJECTED'
     else alert('Failed to reject application.')
-  } catch (e) {
+  } catch {
     alert('Failed to reject application.')
   }
 }
