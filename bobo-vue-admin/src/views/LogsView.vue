@@ -273,6 +273,7 @@ const monthOptions = [
 ]
 
 const router = useRouter();
+defineOptions({ name: 'LogsView' })
 const { avatarStyle, initials2 } = useAvatar()
 
 const search = ref("");

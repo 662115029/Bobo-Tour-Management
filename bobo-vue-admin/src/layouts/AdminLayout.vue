@@ -5,7 +5,11 @@
       class="min-h-screen bg-[#f5f6fa] transition-[margin-left] duration-200 ease-in-out"
       :class="sidebarOpen ? 'ml-[240px]' : 'ml-16'"
     >
-      <router-view />
+      <router-view v-slot="{ Component, route }">
+        <keep-alive :include="['JobsView', 'LogsView', 'UsersView', 'VerificationView']">
+          <component :is="Component" :key="route.name" />
+        </keep-alive>
+      </router-view>
     </main>
   </div>
 </template>

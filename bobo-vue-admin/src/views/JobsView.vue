@@ -156,6 +156,7 @@ import SelectDropdown from '../components/SelectDropdown.vue'
 import PaginationBar from '../components/PaginationBar.vue'
 
 const router = useRouter()
+defineOptions({ name: 'JobsView' })
 const { avatarStyle, jobIconStyle, initials2 } = useAvatar()
 
 const now = new Date()

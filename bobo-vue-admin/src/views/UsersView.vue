@@ -143,6 +143,7 @@ import { API_BASE } from '../data/api'
 import { formatVerifyStatus } from '../utils/statusClasses'
 
 const router = useRouter()
+defineOptions({ name: 'UsersView' })
 const { avatarStyle, initials2 } = useAvatar()
 
 const activeTab = ref('Freelancer')
