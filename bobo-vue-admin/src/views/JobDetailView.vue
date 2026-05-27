@@ -309,12 +309,13 @@
           </div>
 
           <!-- Payment — slip shown inline -->
-          <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow" v-if="payments.length">
+          <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow" v-if="payments.length || paymentHistory.length">
             <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
               <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
               <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Payment</span>
             </div>
             <div class="px-4 py-4 flex flex-col gap-3">
+              <!-- Current payment (is_latest=TRUE) -->
               <div v-for="pay in payments" :key="pay.payment_id" class="rounded-xl border border-[#e8e8e8] bg-[#f8f9fa] hover:border-[#ddd] hover:bg-[#f5f5f5] transition-colors overflow-hidden">
                 <div class="px-4 py-3 flex items-center justify-between">
                   <div class="flex items-center gap-2">
@@ -328,7 +329,6 @@
                   <div v-if="pay.confirmed_at" class="text-[11px] text-[#888]">Confirmed: {{ formatDateTime(pay.confirmed_at) }}</div>
                   <div v-if="pay.reject_reason" class="text-[11px] text-red-600">Reason: {{ pay.reject_reason }}</div>
                 </div>
-                <!-- Slip image shown inline like document preview -->
                 <div v-if="pay.slip_url" class="border-t border-[#eee]">
                   <div class="px-4 py-2 text-[10px] text-[#aaa] uppercase tracking-wide font-medium">Payment Slip</div>
                   <div class="h-[160px] bg-[#f0f0f0] overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
@@ -338,6 +338,38 @@
                     <div class="hidden w-full h-full items-center justify-center flex-col gap-1.5">
                       <svg class="w-7 h-7 text-[#ccc]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                       <span class="text-[11px] text-[#bbb]">Tap to view</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Payment History (REJECTED) -->
+              <div v-if="paymentHistory.length">
+                <button class="flex items-center gap-1.5 text-[11px] text-[#999] hover:text-[#555] transition-colors mt-1 mb-2"
+                  @click="showPaymentHistory = !showPaymentHistory">
+                  <svg class="w-3 h-3 transition-transform" :class="showPaymentHistory ? 'rotate-90' : ''" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+                  {{ showPaymentHistory ? 'Hide' : 'Show' }} payment history ({{ paymentHistory.length }})
+                </button>
+                <div v-if="showPaymentHistory" class="flex flex-col gap-2">
+                  <div v-for="pay in paymentHistory" :key="pay.payment_id"
+                    class="rounded-xl border border-[#f0e0e0] bg-[#fff8f8] overflow-hidden opacity-70">
+                    <div class="px-4 py-2.5 flex items-center justify-between">
+                      <div class="flex items-center gap-2">
+                        <UserAvatar :id="pay.fl_id" :name="pay.driver_name || '?'" :size="24" />
+                        <span class="text-[12px] text-[#666]">{{ pay.driver_name }}</span>
+                      </div>
+                      <span class="payment-badge" :class="pay.payment_status?.toLowerCase()">{{ pay.payment_status }}</span>
+                    </div>
+                    <div class="px-4 pb-2.5 flex flex-col gap-0.5">
+                      <div v-if="pay.paid_at" class="text-[10px] text-[#aaa]">Paid: {{ formatDateTime(pay.paid_at) }}</div>
+                      <div v-if="pay.reject_reason" class="text-[10px] text-red-400">Reason: {{ pay.reject_reason }}</div>
+                    </div>
+                    <div v-if="pay.slip_url" class="border-t border-[#f5e0e0]">
+                      <div class="px-4 py-2 text-[10px] text-[#aaa] uppercase tracking-wide font-medium">Payment Slip</div>
+                      <div class="h-[160px] bg-[#f8f0f0] overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
+                        @click="openSlipModal(pay.slip_url)">
+                        <img :src="pay.slip_url" class="w-full h-full object-contain" />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -515,6 +547,8 @@ const expenses = ref([])
 const customers = ref([])
 const applications = ref([])
 const payments = ref([])
+const paymentHistory = ref([])
+const showPaymentHistory = ref(false)
 const loading = ref(true)
 const showDeleteModal = ref(false)
 const slipModal = ref(null)
@@ -546,7 +580,7 @@ const confirmDelete = async () => {
 onMounted(async () => {
   const id = route.params.id
   try {
-    const [jobRes, langRes, pickupsRes, itinRes, passRes, inclRes, feesRes, expRes, custRes, appRes, payRes] = await Promise.all([
+    const [jobRes, langRes, pickupsRes, itinRes, passRes, inclRes, feesRes, expRes, custRes, appRes, payRes, histRes] = await Promise.all([
       fetch(`${API_BASE}/jobs/${id}`),
       fetch(`${API_BASE}/job-required-languages?job_id=${id}&limit=20`),
       fetch(`${API_BASE}/job-pickups?job_id=${id}&limit=20`),
@@ -558,10 +592,11 @@ onMounted(async () => {
       fetch(`${API_BASE}/job-customers?job_id=${id}&limit=50`),
       fetch(`${API_BASE}/job-applications?job_id=${id}&limit=50`),
       fetch(`${API_BASE}/job-payments?job_id=${id}&limit=10`),
+      fetch(`${API_BASE}/job-payments/${id}/history`),
     ])
-    const [jobData, langData, pickupsData, itinData, passData, inclData, feesData, expData, custData, appData, payData] = await Promise.all([
+    const [jobData, langData, pickupsData, itinData, passData, inclData, feesData, expData, custData, appData, payData, histData] = await Promise.all([
       jobRes.json(), langRes.json(), pickupsRes.json(), itinRes.json(), passRes.json(),
-      inclRes.json(), feesRes.json(), expRes.json(), custRes.json(), appRes.json(), payRes.json(),
+      inclRes.json(), feesRes.json(), expRes.json(), custRes.json(), appRes.json(), payRes.json(), histRes.json(),
     ])
     job.value = jobData.job_id ? jobData : null
     languages.value = langData.items || []
@@ -574,6 +609,8 @@ onMounted(async () => {
     customers.value = custData.items || []
     applications.value = appData.items || []
     payments.value = payData.items || []
+    const allHistory = histData.history || []
+    paymentHistory.value = allHistory.filter(p => !p.is_latest)
   } catch (e) { console.error(e) } finally { loading.value = false }
 })
 </script>
