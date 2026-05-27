@@ -13,7 +13,7 @@
     </button>
 
     <Teleport to="body">
-      <div v-if="isOpen" class="select-panel" :style="panelStyle">
+      <div v-if="isOpen" ref="panelRef" class="select-panel" :style="panelStyle">
         <div
           v-for="opt in options"
           :key="opt.value"
@@ -80,8 +80,13 @@ const select = (opt) => {
   isOpen.value = false
 }
 
+const panelRef = ref(null)
+
 const onOutside = (e) => {
-  if (wrapRef.value && !wrapRef.value.contains(e.target)) {
+  if (
+    wrapRef.value && !wrapRef.value.contains(e.target) &&
+    !(panelRef.value && panelRef.value.contains(e.target))
+  ) {
     isOpen.value = false
   }
 }

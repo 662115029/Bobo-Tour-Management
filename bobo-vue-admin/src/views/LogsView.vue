@@ -119,14 +119,8 @@
       </table>
     </div>
 
-    <!-- Pagination -->
-    <div class="flex items-center justify-between px-2 py-3 text-sm text-muted" v-if="filteredLogs.length > 0 || currentPage > 1">
-      <button class="btn-action view" :disabled="currentPage === 1" :class="{ 'opacity-40 cursor-not-allowed': currentPage === 1 }"
-        @click="goToPage(currentPage - 1)">← Prev</button>
-      <span>Page {{ currentPage }}</span>
-      <button class="btn-action view" :disabled="!hasMore" :class="{ 'opacity-40 cursor-not-allowed': !hasMore }"
-        @click="goToPage(currentPage + 1)">Next →</button>
-    </div>
+    <PaginationBar :page="currentPage" :has-more="hasMore" :has-items="filteredLogs.length > 0"
+      @prev="goToPage(currentPage - 1)" @next="goToPage(currentPage + 1)" />
 
     <!-- Column Filter Dropdowns -->
     <div v-if="showActionDropdown" class="col-dropdown" :style="actionDropdownStyle">
@@ -263,6 +257,7 @@ import { getActionClass, getTypeClass } from '../utils/statusClasses'
 import UserMiniModal from '../components/UserMiniModal.vue'
 import JobMiniModal from '../components/JobMiniModal.vue'
 import SelectDropdown from '../components/SelectDropdown.vue'
+import PaginationBar from '../components/PaginationBar.vue'
 
 const now = new Date()
 const currentYear = now.getFullYear()

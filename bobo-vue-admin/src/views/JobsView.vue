@@ -113,14 +113,8 @@
       </table>
     </div>
 
-    <!-- Pagination -->
-    <div class="flex items-center justify-between px-2 py-3 text-sm text-muted" v-if="filteredJobs.length > 0 || page > 1">
-      <button class="btn-action view" :disabled="page === 1" :class="{ 'opacity-40 cursor-not-allowed': page === 1 }"
-        @click="goToPage(page - 1)">← Prev</button>
-      <span>Page {{ page }}</span>
-      <button class="btn-action view" :disabled="!hasMore" :class="{ 'opacity-40 cursor-not-allowed': !hasMore }"
-        @click="goToPage(page + 1)">Next →</button>
-    </div>
+    <PaginationBar :page="page" :has-more="hasMore" :has-items="filteredJobs.length > 0"
+      @prev="goToPage(page - 1)" @next="goToPage(page + 1)" />
 
     <!-- Column Filter Dropdowns -->
     <div v-if="showStatusDropdown" class="col-dropdown" :style="statusDropdownStyle">
@@ -159,6 +153,7 @@ import JobMiniModal from '../components/JobMiniModal.vue'
 import UserMiniModal from '../components/UserMiniModal.vue'
 import DeleteJobModal from '../components/DeleteJobModal.vue'
 import SelectDropdown from '../components/SelectDropdown.vue'
+import PaginationBar from '../components/PaginationBar.vue'
 
 const router = useRouter()
 const { avatarStyle, jobIconStyle, initials2 } = useAvatar()

@@ -30,7 +30,20 @@
   }
 
   .filter-select-jobs {
-    @apply rounded-lg border-[1.5px] border-[#bbb] px-3.5 py-2.5 text-sm shadow-[0_1px_4px_rgba(0,0,0,0.08)];
+    @apply rounded-lg border-[1.5px] border-[#ddd] bg-white px-3.5 py-2 text-sm font-medium text-[#333] shadow-[0_1px_4px_rgba(0,0,0,0.08)] outline-none transition-[border-color,box-shadow] duration-150 cursor-pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 32px;
+  }
+
+  .filter-select-jobs:hover {
+    @apply border-[#06c755];
+  }
+
+  .filter-select-jobs:focus {
+    @apply border-[#06c755] shadow-[0_0_0_3px_rgba(6,199,85,0.12)];
   }
 
   .col-filter-btn {

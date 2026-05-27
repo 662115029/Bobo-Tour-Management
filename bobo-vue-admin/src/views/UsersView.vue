@@ -107,21 +107,8 @@
     </div>
 
     <!-- Pagination -->
-    <div class="flex items-center justify-between px-2 py-3 text-sm text-muted" v-if="sortedUsers.length > 0 || currentPage > 1">
-      <button
-        class="btn-action view"
-        :disabled="currentPage === 1"
-        :class="{ 'opacity-40 cursor-not-allowed': currentPage === 1 }"
-        @click="loadUsers(currentPage - 1)"
-      >← Prev</button>
-      <span>Page {{ currentPage }}</span>
-      <button
-        class="btn-action view"
-        :disabled="!hasMore"
-        :class="{ 'opacity-40 cursor-not-allowed': !hasMore }"
-        @click="loadUsers(currentPage + 1)"
-      >Next →</button>
-    </div>
+    <PaginationBar :page="currentPage" :has-more="hasMore" :has-items="sortedUsers.length > 0"
+      @prev="loadUsers(currentPage - 1)" @next="loadUsers(currentPage + 1)" />
 
     <!-- Column Filter Dropdown -->
     <div v-if="showStatusDropdown" class="col-dropdown" :style="statusDropdownStyle">
@@ -151,6 +138,7 @@ import { formatDateTime } from '../utils/formatDate'
 import UserMiniModal from '../components/UserMiniModal.vue'
 import BanModal from '../components/BanModal.vue'
 import UserAvatar from '../components/UserAvatar.vue'
+import PaginationBar from '../components/PaginationBar.vue'
 import { API_BASE } from '../data/api'
 import { formatVerifyStatus } from '../utils/statusClasses'
 
