@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex items-center justify-between px-2 py-3 text-sm text-muted"
+    class="flex items-center justify-center gap-3 px-2 py-3 text-sm text-muted"
     v-if="hasItems || page > 1"
   >
     <button
@@ -9,7 +9,7 @@
       :class="{ 'opacity-40 cursor-not-allowed': page === 1 }"
       @click="$emit('prev')"
     >← Prev</button>
-    <span>Page {{ page }}</span>
+    <span class="text-[13px] font-medium text-[#555]">Page {{ page }}</span>
     <button
       class="btn-action view"
       :disabled="!hasMore"
