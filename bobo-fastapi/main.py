@@ -1,12 +1,67 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 from dotenv import load_dotenv
+from apscheduler.schedulers.background import BackgroundScheduler
+from datetime import date
 
 from app.routers import jobs, employers, freelancers, admin, line_bot, reviews, uploads
+from app.db.connection import get_connection, get_cursor
 
 load_dotenv()
 
-app = FastAPI()
+
+def update_job_statuses():
+    today = date.today()
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+
+        # MATCHED → IN_PROGRESS เมื่อถึง job_start_date
+        cursor.execute(
+            """
+            UPDATE jobs
+            SET job_status = 'IN_PROGRESS', job_updated_at = NOW()
+            WHERE job_status = 'MATCHED'
+              AND job_start_date <= %s
+            """,
+            (today,)
+        )
+
+        # IN_PROGRESS → COMPLETED เมื่อผ่าน job_end_date
+        cursor.execute(
+            """
+            UPDATE jobs
+            SET job_status = 'COMPLETED', job_updated_at = NOW()
+            WHERE job_status = 'IN_PROGRESS'
+              AND job_end_date < %s
+            """,
+            (today,)
+        )
+
+        conn.commit()
+        print(f"[Cron] Job statuses updated for {today}")
+    except Exception as e:
+        print(f"[Cron] Error updating job statuses: {e}")
+    finally:
+        if conn:
+            conn.close()
+
+
+scheduler = BackgroundScheduler()
+scheduler.add_job(update_job_statuses, "cron", hour=0, minute=0)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    scheduler.start()
+    update_job_statuses()
+    yield
+    scheduler.shutdown()
+
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
