@@ -36,10 +36,10 @@
               </template>
               <template v-else>
                 <div class="flex items-center gap-2 flex-wrap">
-                  <span class="text-[15px] font-bold text-[#1a1a2e] leading-tight">{{ admin.name || '—' }}</span>
-                  <span class="badge active text-[10px]">{{ admin.status }}</span>
+                  <span class="text-base font-bold text-[#1a1a2e] leading-tight">{{ admin.name || '—' }}</span>
+                  <span class="badge text-xs" :class="isActive ? 'active' : 'inactive'">{{ admin.status }}</span>
                 </div>
-                <p class="text-[11px] text-[#999] mt-0.5">@{{ admin.username }}</p>
+                <p class="text-xs text-[#999] mt-0.5">@{{ admin.username }}</p>
               </template>
             </div>
           </div>
@@ -60,53 +60,69 @@
 
             <!-- Username (read-only) -->
             <div class="flex flex-col gap-1 rounded-xl bg-[#f8f9fb] px-4 py-3">
-              <span class="text-[10px] font-semibold uppercase tracking-wide text-[#aaa]">Username</span>
+              <span class="text-xs font-semibold uppercase tracking-wide text-[#aaa]">Username</span>
               <div class="flex items-center gap-2">
                 <svg class="h-3.5 w-3.5 shrink-0 text-[#bbb]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                 </svg>
-                <span class="text-[13px] font-medium text-[#555]">{{ admin.username || '—' }}</span>
-                <span class="ml-auto rounded-md bg-[#eee] px-1.5 py-0.5 text-[9px] font-semibold text-[#999] tracking-wide">FIXED</span>
+                <span class="text-sm font-medium text-[#555]">{{ admin.username || '—' }}</span>
+                <span class="ml-auto rounded-md bg-[#eee] px-1.5 py-0.5 text-[10px] font-semibold text-[#999] tracking-wide">FIXED</span>
               </div>
             </div>
 
             <!-- Status -->
             <div class="flex flex-col gap-1 rounded-xl bg-[#f8f9fb] px-4 py-3">
-              <span class="text-[10px] font-semibold uppercase tracking-wide text-[#aaa]">Account Status</span>
-              <div class="flex items-center gap-2">
-                <div class="h-2 w-2 rounded-full bg-[#06c755]" />
-                <span class="text-[13px] font-medium text-[#2e7d32]">{{ admin.status || '—' }}</span>
+              <span class="text-xs font-semibold uppercase tracking-wide text-[#aaa]">Account Status</span>
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                  <div class="h-2 w-2 rounded-full transition-colors" :class="isActive ? 'bg-[#06c755]' : 'bg-[#bbb]'" />
+                  <span class="text-sm font-medium transition-colors" :class="isActive ? 'text-[#2e7d32]' : 'text-[#999]'">
+                    {{ isActive ? 'Active' : 'Inactive' }}
+                  </span>
+                </div>
+                <button
+                  class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none"
+                  :class="isActive ? 'bg-[#06c755]' : 'bg-[#ccc]'"
+                  @click="toggleStatus"
+                  :disabled="togglingStatus"
+                >
+                  <span
+                    class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200"
+                    :class="isActive ? 'translate-x-4' : 'translate-x-0'"
+                  />
+                </button>
               </div>
             </div>
 
             <!-- Name (editable) -->
             <div class="flex flex-col gap-1 rounded-xl bg-[#f8f9fb] px-4 py-3 transition-all"
               :class="{ 'ring-2 ring-[#06c755]/40 bg-[#f0fdf4]': editingName }">
-              <span class="text-[10px] font-semibold uppercase tracking-wide text-[#aaa]">Display Name</span>
+              <span class="text-xs font-semibold uppercase tracking-wide text-[#aaa]">Display Name</span>
               <div class="flex items-center gap-2">
                 <svg class="h-3.5 w-3.5 shrink-0 text-[#bbb]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M5.121 17.804A4 4 0 018 17h8a4 4 0 012.879 1.196M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                 </svg>
                 <template v-if="!editingName">
-                  <span class="flex-1 text-[13px] font-medium text-[#333]">{{ admin.name || '—' }}</span>
+                  <span class="flex-1 text-sm font-medium text-[#333]">{{ admin.name || '—' }}</span>
                   <button
-                    class="flex h-6 w-6 items-center justify-center rounded-md text-[#aaa] transition-colors hover:bg-[#e8f5e9] hover:text-[#2e7d32]"
+                    class="flex h-6 items-center gap-1 px-2 rounded-md text-[#aaa] transition-colors hover:bg-[#e8f5e9] hover:text-[#2e7d32] text-[12px] font-medium"
                     title="Edit name"
                     @click="startEditName"
                   >
-                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                     </svg>
+                    Edit
                   </button>
                 </template>
                 <template v-else>
                   <input
                     ref="nameInputRef"
                     v-model="nameInput"
-                    class="flex-1 rounded-md border border-[#06c755] bg-white px-2 py-0.5 text-[13px] outline-none"
+                    class="flex-1 rounded-md border border-[#06c755] bg-white px-2 py-0.5 text-sm outline-none"
                     placeholder="Enter name"
                     @keydown.enter="saveName"
                     @keydown.esc="cancelEditName"
@@ -141,23 +157,24 @@
             <!-- Email (editable) -->
             <div class="flex flex-col gap-1 rounded-xl bg-[#f8f9fb] px-4 py-3 transition-all"
               :class="{ 'ring-2 ring-[#06c755]/40 bg-[#f0fdf4]': editingEmail }">
-              <span class="text-[10px] font-semibold uppercase tracking-wide text-[#aaa]">Email</span>
+              <span class="text-xs font-semibold uppercase tracking-wide text-[#aaa]">Email</span>
               <div class="flex items-center gap-2">
                 <svg class="h-3.5 w-3.5 shrink-0 text-[#bbb]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                 </svg>
                 <template v-if="!editingEmail">
-                  <span class="flex-1 truncate text-[13px] font-medium text-[#333]">{{ admin.email || '—' }}</span>
+                  <span class="flex-1 truncate text-sm font-medium text-[#333]">{{ admin.email || '—' }}</span>
                   <button
-                    class="flex h-6 w-6 items-center justify-center rounded-md text-[#aaa] transition-colors hover:bg-[#e8f5e9] hover:text-[#2e7d32]"
+                    class="flex h-6 items-center gap-1 px-2 rounded-md text-[#aaa] transition-colors hover:bg-[#e8f5e9] hover:text-[#2e7d32] text-[12px] font-medium"
                     title="Edit email"
                     @click="startEditEmail"
                   >
-                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                     </svg>
+                    Edit
                   </button>
                 </template>
                 <template v-else>
@@ -165,7 +182,7 @@
                     ref="emailInputRef"
                     v-model="emailInput"
                     type="email"
-                    class="flex-1 rounded-md border border-[#06c755] bg-white px-2 py-0.5 text-[13px] outline-none"
+                    class="flex-1 rounded-md border border-[#06c755] bg-white px-2 py-0.5 text-sm outline-none"
                     placeholder="Enter email"
                     @keydown.enter="saveEmail"
                     @keydown.esc="cancelEditEmail"
@@ -199,25 +216,25 @@
 
             <!-- Created -->
             <div class="flex flex-col gap-1 rounded-xl bg-[#f8f9fb] px-4 py-3">
-              <span class="text-[10px] font-semibold uppercase tracking-wide text-[#aaa]">Created</span>
+              <span class="text-xs font-semibold uppercase tracking-wide text-[#aaa]">Created</span>
               <div class="flex items-center gap-2">
                 <svg class="h-3.5 w-3.5 shrink-0 text-[#bbb]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                 </svg>
-                <span class="text-[13px] text-[#555]">{{ formatDateTime(admin.created_at) }}</span>
+                <span class="text-sm text-[#555]">{{ formatDateTime(admin.created_at) }}</span>
               </div>
             </div>
 
             <!-- Last Updated -->
             <div class="flex flex-col gap-1 rounded-xl bg-[#f8f9fb] px-4 py-3">
-              <span class="text-[10px] font-semibold uppercase tracking-wide text-[#aaa]">Last Updated</span>
+              <span class="text-xs font-semibold uppercase tracking-wide text-[#aaa]">Last Updated</span>
               <div class="flex items-center gap-2">
                 <svg class="h-3.5 w-3.5 shrink-0 text-[#bbb]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                <span class="text-[13px] text-[#555]">{{ formatDateTime(admin.updated_at) }}</span>
+                <span class="text-sm text-[#555]">{{ formatDateTime(admin.updated_at) }}</span>
               </div>
             </div>
 
@@ -229,14 +246,14 @@
       <!-- Security Card -->
       <div class="overflow-hidden rounded-2xl bg-white shadow-sm">
         <div class="px-6 py-5">
-          <h2 class="mb-4 text-[13px] font-bold uppercase tracking-wide text-[#1a1a2e]">Security</h2>
+          <h2 class="mb-4 text-sm font-bold uppercase tracking-wide text-[#1a1a2e]">Security</h2>
 
           <!-- Password row -->
           <div
             class="flex flex-col gap-1 rounded-xl bg-[#f8f9fb] px-4 py-3 transition-all"
             :class="{ 'ring-2 ring-[#06c755]/40 bg-[#f0fdf4]': editingPassword }"
           >
-            <span class="text-[10px] font-semibold uppercase tracking-wide text-[#aaa]">Password</span>
+            <span class="text-xs font-semibold uppercase tracking-wide text-[#aaa]">Password</span>
 
             <!-- Collapsed view -->
             <div v-if="!editingPassword" class="flex items-center gap-2">
@@ -244,16 +261,17 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
               </svg>
-              <span class="flex-1 text-[13px] font-medium text-[#555]">••••••••</span>
+              <span class="flex-1 text-sm font-medium text-[#555]">••••••••</span>
               <button
-                class="flex h-6 w-6 items-center justify-center rounded-md text-[#aaa] transition-colors hover:bg-[#e8f5e9] hover:text-[#2e7d32]"
+                class="flex h-6 items-center gap-1 px-2 rounded-md text-[#aaa] transition-colors hover:bg-[#e8f5e9] hover:text-[#2e7d32] text-[12px] font-medium"
                 title="Change password"
                 @click="startEditPassword"
               >
-                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                 </svg>
+                Edit
               </button>
             </div>
 
@@ -262,14 +280,14 @@
 
               <!-- Current Password -->
               <div>
-                <label class="mb-1 block text-[11px] font-medium text-[#888]">Current Password</label>
+                <label class="mb-1 block text-xs font-medium text-[#888]">Current Password</label>
                 <div class="flex rounded-md border border-[#ddd] overflow-hidden focus-within:border-[#06c755]">
                   <input
                     :type="showCurrentPw ? 'text' : 'password'"
                     v-model="currentPassword"
                     placeholder="Your current password"
                     autocomplete="current-password"
-                    class="flex-1 min-w-0 border-0 py-2 px-3 text-[13px] outline-none bg-white"
+                    class="flex-1 min-w-0 border-0 py-2 px-3 text-sm outline-none bg-white"
                   />
                   <button type="button"
                     class="shrink-0 px-2.5 border-l border-[#eee] bg-[#fafafa] text-[#888] hover:bg-[#f0f0f0] flex items-center justify-center"
@@ -288,7 +306,7 @@
 
               <!-- New Password -->
               <div>
-                <label class="mb-1 block text-[11px] font-medium text-[#888]">New Password</label>
+                <label class="mb-1 block text-xs font-medium text-[#888]">New Password</label>
                 <div class="flex rounded-md border border-[#ddd] overflow-hidden focus-within:border-[#06c755]">
                   <input
                     :type="showNewPw ? 'text' : 'password'"
@@ -296,7 +314,7 @@
                     placeholder="Min. 8 characters"
                     autocomplete="new-password"
                     @focus="pwChangeTouched = true"
-                    class="flex-1 min-w-0 border-0 py-2 px-3 text-[13px] outline-none bg-white"
+                    class="flex-1 min-w-0 border-0 py-2 px-3 text-sm outline-none bg-white"
                   />
                   <button type="button"
                     class="shrink-0 px-2.5 border-l border-[#eee] bg-[#fafafa] text-[#888] hover:bg-[#f0f0f0] flex items-center justify-center"
@@ -320,21 +338,21 @@
                     <svg v-else class="w-3 h-3 shrink-0 text-[#ccc]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                       <circle cx="12" cy="12" r="9"/>
                     </svg>
-                    <span class="text-[10px]" :class="rule.passed ? 'text-[#2e7d32]' : 'text-[#aaa]'">{{ rule.label }}</span>
+                    <span class="text-xs" :class="rule.passed ? 'text-[#2e7d32]' : 'text-[#aaa]'">{{ rule.label }}</span>
                   </div>
                 </div>
               </div>
 
               <!-- Confirm New Password -->
               <div>
-                <label class="mb-1 block text-[11px] font-medium text-[#888]">Confirm New Password</label>
+                <label class="mb-1 block text-xs font-medium text-[#888]">Confirm New Password</label>
                 <div class="flex rounded-md border border-[#ddd] overflow-hidden focus-within:border-[#06c755]">
                   <input
                     :type="showConfirmPw ? 'text' : 'password'"
                     v-model="confirmNewPassword"
                     placeholder="Re-enter new password"
                     autocomplete="new-password"
-                    class="flex-1 min-w-0 border-0 py-2 px-3 text-[13px] outline-none bg-white"
+                    class="flex-1 min-w-0 border-0 py-2 px-3 text-sm outline-none bg-white"
                   />
                   <button type="button"
                     class="shrink-0 px-2.5 border-l border-[#eee] bg-[#fafafa] text-[#888] hover:bg-[#f0f0f0] flex items-center justify-center"
@@ -394,7 +412,7 @@
       >
         <div
           v-if="toast.show"
-          class="fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-xl px-5 py-3 text-[13px] font-medium text-white shadow-lg"
+          class="fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-xl px-5 py-3 text-sm font-medium text-white shadow-lg"
           :class="toast.type === 'success' ? 'bg-[#2e7d32]' : 'bg-[#c62828]'"
         >
           <svg v-if="toast.type === 'success'" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -411,7 +429,7 @@
       <div>
         <button
           type="button"
-          class="flex cursor-pointer items-center gap-2 rounded-xl border-none bg-[#ffebee] px-5 py-3 text-[13px] font-semibold text-[#c62828] transition-colors hover:bg-[#ffcdd2]"
+          class="flex cursor-pointer items-center gap-2 rounded-xl border-none bg-[#ffebee] px-5 py-3 text-sm font-semibold text-[#c62828] transition-colors hover:bg-[#ffcdd2]"
           @click="handleLogout"
         >
           <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -436,6 +454,24 @@ import { API_BASE } from '../data/api'
 
 const router = useRouter()
 const admin = ref({})
+const isActive = computed(() => (admin.value.status || '').toLowerCase() === 'active')
+const togglingStatus = ref(false)
+
+const toggleStatus = async () => {
+  if (togglingStatus.value) return
+  togglingStatus.value = true
+  const newStatus = isActive.value ? 'inactive' : 'active'
+  try {
+    const res = await fetch(`${API_BASE}/admin/admins/${admin.value.admin_id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus }),
+    })
+    const data = await res.json()
+    if (!data.error) admin.value.status = newStatus
+  } catch (e) { console.error(e) }
+  finally { togglingStatus.value = false }
+}
 const isLoading = ref(true)
 
 // ── Avatar color (random per user, persisted by admin_id) ──────────────────

@@ -237,6 +237,7 @@
 
   .badge.verified     { @apply bg-green-100 text-green-800; }
   .badge.not_verified { @apply bg-red-100   text-red-800;   }
+  .badge.inactive     { @apply bg-gray-100  text-gray-500;  }
   .badge.unknown      { @apply bg-gray-100  text-gray-500;  }
   .badge.active       { @apply bg-green-100 text-green-800; }
 

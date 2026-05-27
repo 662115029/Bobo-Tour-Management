@@ -24,6 +24,7 @@ class LogRequest(BaseModel):
 class AdminUpdateRequest(BaseModel):
     name: Optional[str] = None
     email: Optional[str] = None
+    status: Optional[str] = None
 
 
 class AdminRegisterRequest(BaseModel):
@@ -273,6 +274,8 @@ def update_admin(admin_id: str, body: AdminUpdateRequest):
             fields["name"] = body.name.strip()
         if body.email is not None:
             fields["email"] = body.email.strip()
+        if body.status is not None and body.status in ("active", "inactive"):
+            fields["status"] = body.status
         if not fields:
             return {"error": "No fields to update"}
 
