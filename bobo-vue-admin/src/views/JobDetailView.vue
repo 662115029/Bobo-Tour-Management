@@ -2,7 +2,7 @@
   <div>
     <BreadcrumbBar :label="job?.job_title" />
 
-    <!-- Loading skeleton — mirrors real layout -->
+    <!-- Loading skeleton -->
     <div v-if="loading" class="px-5 pb-8">
       <!-- Top bar -->
       <div class="flex items-center justify-between py-3 mb-5">
@@ -209,28 +209,41 @@
         <!-- ── LEFT ── -->
         <div class="flex flex-col gap-3">
 
-          <!-- Languages & Driver -->
+          <!-- Languages -->
           <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
             <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
               <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
-              <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Languages & Driver</span>
+              <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Languages</span>
             </div>
-            <div class="px-4 py-4 flex flex-col gap-4">
-              <div>
-                <div class="text-[11px] text-[#aaa] uppercase tracking-wide font-semibold mb-2">Required Languages</div>
-                <div class="flex flex-wrap gap-1.5">
-                  <span v-for="lang in languages" :key="lang.job_req_lg_id" class="info-tag language">{{ lang.language_name }}</span>
-                  <span v-if="!languages.length" class="text-[13px] text-[#bbb]">None specified</span>
-                </div>
+            <div class="px-4 py-4 flex flex-wrap gap-1.5">
+              <span v-for="lang in languages" :key="lang.language_id" class="info-tag language">{{ lang.language_name }}</span>
+              <span v-if="!languages.length" class="text-[13px] text-[#bbb]">None specified</span>
+            </div>
+          </div>
+
+          <!-- Pickup Areas -->
+          <div v-if="pickups.length" class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+            <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
+              <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Pickup Areas</span>
+            </div>
+            <div class="px-4 py-4 flex flex-wrap gap-1.5">
+              <span v-for="p in pickups" :key="p.area_id" class="info-tag area">{{ p.area_name }}</span>
+            </div>
+          </div>
+
+          <!-- Assigned Driver -->
+          <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+            <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
+              <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+              <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Assigned Driver</span>
+            </div>
+            <div class="px-4 py-4">
+              <div v-if="job.selected_driver" class="flex items-center gap-2">
+                <UserAvatar :id="job.selected_fl_id" :name="job.selected_driver" :size="32" />
+                <span class="text-[14px] font-medium text-[#222]">{{ job.selected_driver }}</span>
               </div>
-              <div>
-                <div class="text-[11px] text-[#aaa] uppercase tracking-wide font-semibold mb-2">Assigned Driver</div>
-                <div v-if="job.selected_driver" class="flex items-center gap-2">
-                  <UserAvatar :id="job.selected_fl_id" :name="job.selected_driver" :size="28" />
-                  <span class="text-[14px] font-medium text-[#222]">{{ job.selected_driver }}</span>
-                </div>
-                <span v-else class="text-[13px] text-[#bbb]">Not assigned</span>
-              </div>
+              <span v-else class="text-[13px] text-[#bbb]">Not assigned</span>
             </div>
           </div>
 
@@ -382,24 +395,6 @@
         <!-- ── RIGHT ── -->
         <div class="flex flex-col gap-3">
 
-          <!-- Pickup Points -->
-          <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow" v-if="pickups.length">
-            <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
-              <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-              <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Pickup Points</span>
-            </div>
-            <div class="px-4 py-4 flex flex-col gap-2">
-              <div v-for="(p, i) in pickups" :key="p.job_pickup_id"
-                class="flex items-center gap-3 px-4 py-3 bg-[#f8f9fa] rounded-lg border border-[#e8e8e8] hover:border-[#ddd] hover:bg-[#f2f2f2] transition-colors">
-                <div class="w-6 h-6 rounded-full bg-[#e3f2fd] text-[#1976d2] text-[11px] font-bold flex items-center justify-center shrink-0">{{ i + 1 }}</div>
-                <div class="flex-1 min-w-0">
-                  <div class="text-[13px] font-medium text-[#222]">{{ p.pickup_location }}</div>
-                  <div v-if="p.hotel_name" class="text-[11px] text-[#999] mt-0.5">{{ p.hotel_name }}</div>
-                </div>
-                <span class="text-[12px] font-bold text-[#1976d2] bg-[#e3f2fd] px-2 py-0.5 rounded-md whitespace-nowrap shrink-0">{{ p.pickup_time }}</span>
-              </div>
-            </div>
-          </div>
 
           <!-- Itinerary -->
           <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow" v-if="itineraries.length">
@@ -580,10 +575,9 @@ const confirmDelete = async () => {
 onMounted(async () => {
   const id = route.params.id
   try {
-    const [jobRes, langRes, pickupsRes, itinRes, passRes, inclRes, feesRes, expRes, custRes, appRes, payRes, histRes] = await Promise.all([
+    const [jobRes, langRes, itinRes, passRes, inclRes, feesRes, expRes, custRes, appRes, payRes, histRes] = await Promise.all([
       fetch(`${API_BASE}/jobs/${id}`),
       fetch(`${API_BASE}/job-required-languages?job_id=${id}&limit=20`),
-      fetch(`${API_BASE}/job-pickups?job_id=${id}&limit=20`),
       fetch(`${API_BASE}/job-itineraries?job_id=${id}&limit=50`),
       fetch(`${API_BASE}/job-passengers?job_id=${id}&limit=50`),
       fetch(`${API_BASE}/job-inclusions?job_id=${id}&limit=20`),
@@ -594,13 +588,12 @@ onMounted(async () => {
       fetch(`${API_BASE}/job-payments?job_id=${id}&limit=10`),
       fetch(`${API_BASE}/job-payments/${id}/history`),
     ])
-    const [jobData, langData, pickupsData, itinData, passData, inclData, feesData, expData, custData, appData, payData, histData] = await Promise.all([
-      jobRes.json(), langRes.json(), pickupsRes.json(), itinRes.json(), passRes.json(),
+    const [jobData, langData, itinData, passData, inclData, feesData, expData, custData, appData, payData, histData] = await Promise.all([
+      jobRes.json(), langRes.json(), itinRes.json(), passRes.json(),
       inclRes.json(), feesRes.json(), expRes.json(), custRes.json(), appRes.json(), payRes.json(), histRes.json(),
     ])
     job.value = jobData.job_id ? jobData : null
     languages.value = langData.items || []
-    pickups.value = (pickupsData.items || []).sort((a, b) => a.sequence - b.sequence)
     itineraries.value = (itinData.items || []).sort((a, b) => a.sequence - b.sequence)
     passengers.value = passData.items || []
     inclusions.value = (inclData.items || []).sort((a, b) => a.sequence - b.sequence)
@@ -611,6 +604,13 @@ onMounted(async () => {
     payments.value = payData.items || []
     const allHistory = histData.history || []
     paymentHistory.value = allHistory.filter(p => !p.is_latest)
+
+    // fetch fl-pickup-areas after getting selected_fl_id
+    if (job.value?.selected_fl_id) {
+      const pickupRes = await fetch(`${API_BASE}/fl-pickup-areas?fl_id=${job.value.selected_fl_id}&limit=5`)
+      const pickupData = await pickupRes.json()
+      pickups.value = pickupData.items || []
+    }
   } catch (e) { console.error(e) } finally { loading.value = false }
 })
 </script>

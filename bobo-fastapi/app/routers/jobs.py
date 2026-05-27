@@ -178,12 +178,13 @@ def get_job_required_languages(limit: int = 50, offset: int = 0, job_id: str = N
         cursor = get_cursor(conn)
         cursor.execute(
             """
-            SELECT jrl.job_req_lg_id, jrl.job_id, j.job_title,
-                   jrl.language_name, jrl.created_at
+            SELECT jrl.job_id, j.job_title,
+                   l.language_id, l.language_name
             FROM job_required_languages jrl
             JOIN jobs j ON jrl.job_id = j.job_id
+            JOIN languages l ON jrl.language_id = l.language_id
             {where}
-            ORDER BY j.job_title, jrl.language_name
+            ORDER BY l.language_name
             LIMIT %s OFFSET %s
             """.format(where="WHERE jrl.job_id = %s" if job_id else ""),
             ([job_id] if job_id else []) + [limit, offset]
@@ -192,10 +193,37 @@ def get_job_required_languages(limit: int = 50, offset: int = 0, job_id: str = N
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
         return {"error": str(e), "items": []}
-
     finally:
         if conn:
             conn.close()
+
+@router.get("/job-pickups")
+def get_job_pickups(limit: int = 50, offset: int = 0, job_id: str = None):
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute(
+            """
+            SELECT jp.job_pickup_id, jp.job_id, j.job_title,
+                   jp.hotel_name, jp.pickup_location, jp.pickup_time,
+                   jp.sequence, jp.created_at
+            FROM job_pickups jp
+            JOIN jobs j ON jp.job_id = j.job_id
+            {where}
+            ORDER BY jp.sequence ASC
+            LIMIT %s OFFSET %s
+            """.format(where="WHERE jp.job_id = %s" if job_id else ""),
+            ([job_id] if job_id else []) + [limit, offset]
+        )
+        rows = cursor.fetchall()
+        return {"items": rows, "limit": limit, "offset": offset}
+    except Exception as e:
+        return {"error": str(e), "items": []}
+    finally:
+        if conn:
+            conn.close()
+
 @router.get("/job-itineraries")
 def get_job_itineraries(limit: int = 50, offset: int = 0, job_id: str = None):
     conn = None

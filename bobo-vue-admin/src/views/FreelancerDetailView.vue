@@ -265,23 +265,27 @@
           </div>
 
           <!-- Languages & Areas — with icon header -->
+          <!-- Languages -->
           <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
             <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
               <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
               <span class="text-[12px] font-bold text-[#444] uppercase tracking-wide">Languages</span>
             </div>
-            <div class="px-4 py-3 flex flex-col gap-3">
-              <div class="flex flex-wrap gap-1.5">
-                <span v-for="l in languages" :key="l.fl_language_id" class="info-tag language">{{ l.fl_language_name }}</span>
-                <span v-if="!languages.length" class="text-[13px] text-[#bbb]">–</span>
-              </div>
-              <div>
-                <div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium mb-1.5">Pickup Areas</div>
-                <div class="flex flex-wrap gap-1.5">
-                  <span v-for="a in pickupAreas" :key="a.fl_area_id" class="info-tag area">{{ a.fl_area_name }}</span>
-                  <span v-if="!pickupAreas.length" class="text-[13px] text-[#bbb]">–</span>
-                </div>
-              </div>
+            <div class="px-4 py-3 flex flex-wrap gap-1.5">
+              <span v-for="l in languages" :key="l.language_id" class="info-tag language">{{ l.language_name }}</span>
+              <span v-if="!languages.length" class="text-[13px] text-[#bbb]">–</span>
+            </div>
+          </div>
+
+          <!-- Pickup Areas -->
+          <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+            <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
+              <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              <span class="text-[12px] font-bold text-[#444] uppercase tracking-wide">Pickup Areas</span>
+            </div>
+            <div class="px-4 py-3 flex flex-wrap gap-1.5">
+              <span v-for="a in pickupAreas" :key="a.area_id" class="info-tag area">{{ a.area_name }}</span>
+              <span v-if="!pickupAreas.length" class="text-[13px] text-[#bbb]">–</span>
             </div>
           </div>
 
