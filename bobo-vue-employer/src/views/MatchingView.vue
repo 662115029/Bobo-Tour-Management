@@ -2,7 +2,7 @@
   <AppLayout>
 
     <div class="max-w-6xl mx-auto p-6 pb-10">
-      <div class="bg-gray-100 rounded-2xl shadow-xl p-6">
+      <div class="bg-white rounded-2xl shadow-md p-6">
 
         <!-- Header -->
         <div class="flex items-center justify-between mb-2">
