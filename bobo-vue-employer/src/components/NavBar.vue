@@ -94,7 +94,7 @@ const staticLabels = {
   '/matching': 'Matching',
   '/applications': 'Applications',
   '/profile': 'Profile',
-  '/create-job': 'Create Tour',
+  '/create-tour': 'Create Tour',
 }
 
 const breadcrumbs = computed(() => {

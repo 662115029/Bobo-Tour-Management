@@ -34,12 +34,12 @@ const titles = {
   '/matching': 'Matching',
   '/applications': 'Applications',
   '/profile': 'Profile',
-  '/create-job': 'Create Tour',
+  '/create-tour': 'Create Tour',
 }
 
 const pageTitle = computed(() => {
-  // Handle dynamic routes like /jobs/:id
-  if (route.path.startsWith('/jobs/')) return 'Tour Detail'
+  // Handle dynamic routes like /tours/:id
+  if (route.path.startsWith('/tours/')) return 'Tour Detail'
   return titles[route.path] || 'Bobo Tour Management'
 })
 </script>

@@ -6,8 +6,20 @@
       <!-- ── Left Panel (persistent) ── -->
       <aside class="hidden lg:flex flex-col gap-4 w-80 shrink-0 sticky top-20">
 
+        <!-- Back button -->
+        <button
+          type="button"
+          @click="$router.back()"
+          class="flex items-center gap-1.5 text-sm font-medium text-gray-600 bg-white hover:bg-[#ffd8d8] hover:text-[#dc2626] px-4 py-2 rounded-full transition w-fit"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+          </svg>
+          Back
+        </button>
+
         <!-- Templates block -->
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-md p-5">
+        <div class="bg-white rounded-2xl border border-gray-200 p-5">
           <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
             <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -45,7 +57,7 @@
       </aside>
 
       <!-- ── Right: Main Form ── -->
-      <div class="flex-1 min-w-0 max-w-3xl mr-16">
+      <div class="flex-1 min-w-0 max-w-3xl">
         <div class="flex items-center justify-between mb-6 mt-4">
           <h1 class="text-2xl font-bold text-gray-800">Create New Tour</h1>
           <div class="flex items-center gap-2">
@@ -95,7 +107,7 @@
         </div>
 
         <!-- ── STEP 1: General Information ── -->
-        <section v-if="currentStep === 1" class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
+        <section v-if="currentStep === 1" class="bg-white rounded-2xl border border-gray-200 p-6">
           <h2 class="text-base font-semibold text-gray-700 mb-5 border-b pb-3">General Information</h2>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="md:col-span-2">
@@ -112,7 +124,7 @@
             </div>
             <div>
               <label class="block text-sm font-medium mb-1">Number of Seats *</label>
-              <input v-model.number="form.job_required_seat" type="number" min="1" max="13" required class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400" placeholder="0" />
+              <input v-model.number="form.job_required_seat" type="number" min="1" max="13" required class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400" placeholder="9–13" />
             </div>
             <div>
               <label class="block text-sm font-medium mb-1">Rate (THB) *</label>
@@ -139,7 +151,7 @@
 
         <!-- ── STEP 2: Logistics ── -->
         <section v-if="currentStep === 2" class="space-y-6">
-          <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
+          <div class="bg-white rounded-2xl border border-gray-200 p-6">
             <h2 class="text-base font-semibold text-gray-700 mb-5 border-b pb-3">Driver & Vehicle</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -160,7 +172,7 @@
             </div>
           </div>
 
-          <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
+          <div class="bg-white rounded-2xl border border-gray-200 p-6">
             <h2 class="text-base font-semibold text-gray-700 mb-5 border-b pb-3">Pickup Points</h2>
             <div v-for="(pickup, idx) in form.job_pickups" :key="idx" class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-3 items-end">
               <div>
@@ -183,7 +195,7 @@
 
         <!-- ── STEP 3: Tour Details ── -->
         <section v-if="currentStep === 3" class="space-y-6">
-          <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
+          <div class="bg-white rounded-2xl border border-gray-200 p-6">
             <h2 class="text-base font-semibold text-gray-700 mb-5 border-b pb-3">Tour Schedule</h2>
             <div v-for="(item, idx) in form.job_itineraries" :key="idx" class="grid grid-cols-1 md:grid-cols-5 gap-2 mb-3 items-end">
               <div>
@@ -203,7 +215,7 @@
             <button type="button" @click="addItinerary" class="mt-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200">+ Add Stop</button>
           </div>
 
-          <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
+          <div class="bg-white rounded-2xl border border-gray-200 p-6">
             <h2 class="text-base font-semibold text-gray-700 mb-5 border-b pb-3">Passenger List</h2>
             <div v-for="(customer, idx) in form.job_customers" :key="idx" class="flex gap-2 mb-3 items-end">
               <div class="flex-1">
@@ -219,7 +231,7 @@
             <button type="button" @click="addCustomer" class="mt-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200">+ Add Passenger</button>
           </div>
 
-          <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
+          <div class="bg-white rounded-2xl border border-gray-200 p-6">
             <h2 class="text-base font-semibold text-gray-700 mb-5 border-b pb-3">Inclusions & Exclusions</h2>
             <div v-for="(inc, idx) in form.job_inclusions" :key="idx" class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-3 items-end">
               <div>
@@ -238,7 +250,7 @@
             <button type="button" @click="addInclusion" class="mt-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200">+ Add Item</button>
           </div>
 
-          <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
+          <div class="bg-white rounded-2xl border border-gray-200 p-6">
             <h2 class="text-base font-semibold text-gray-700 mb-5 border-b pb-3">Entrance Fees</h2>
             <div v-for="(fee, idx) in form.job_entrance_fees" :key="idx" class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-3 items-end">
               <div>
@@ -261,7 +273,7 @@
 
         <!-- ── STEP 4: Review & Submit ── -->
         <section v-if="currentStep === 4" class="space-y-5">
-          <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
+          <div class="bg-white rounded-2xl border border-gray-200 p-6">
             <h2 class="text-base font-semibold text-gray-700 mb-4 border-b pb-3">Review Your Tour</h2>
             <div class="space-y-3 text-sm text-gray-700">
               <div class="flex justify-between"><span class="text-gray-500">Title</span><span class="font-medium">{{ form.job_title || '—' }}</span></div>
@@ -280,7 +292,7 @@
             </div>
           </div>
 
-          <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
+          <div class="bg-white rounded-2xl border border-gray-200 p-6">
             <h2 class="text-base font-semibold text-gray-700 mb-3 border-b pb-3">Remarks</h2>
             <textarea v-model="form.note" rows="4" class="w-full p-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-400" placeholder="Additional remarks or special instructions..."></textarea>
           </div>
@@ -288,7 +300,7 @@
         </section>
 
         <!-- ── Step Navigation (inline) ── -->
-        <div class="mt-6 bg-white rounded-2xl shadow-xl border border-gray-100 p-4">
+        <div class="mt-6 bg-white rounded-2xl border border-gray-200 p-4">
           <div class="flex justify-between items-center">
             <button
               type="button"
@@ -319,6 +331,10 @@
         </div>
 
       </div> <!-- end right column -->
+
+      <!-- Right spacer to balance aside -->
+      <div class="hidden lg:block w-80 shrink-0"></div>
+
     </div> <!-- end flex row -->
 
     <!-- ── Modal: Load Template ── -->
@@ -597,7 +613,7 @@ const submitJob = async () => {
   try {
     const job_id = generateId('JOB')
     const payload = { job_id, em_id: localStorage.getItem('em_id') || 'EM001', ...form }
-    const res = await fetch(`${API_BASE}/jobs`, {
+    const res = await fetch(`${API_BASE}/tours`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),

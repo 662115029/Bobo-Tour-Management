@@ -5,7 +5,7 @@ import LoginView from './views/LoginView.vue'
 import RegisterView from './views/RegisterView.vue'
 import MyToursView from './views/MyToursView.vue'
 import ProfileView from './views/ProfileView.vue'
-import CreateJobView from './views/CreateJobView.vue'
+import CreateTourView from './views/CreateTourView.vue'
 import TourDetailsView from './views/TourDetailsView.vue'
 import MatchingView from './views/MatchingView.vue'
 import ApplicationView from './views/ApplicationView.vue'
@@ -46,9 +46,9 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/create-job',
-    name: 'create-job',
-    component: CreateJobView,
+    path: '/create-tour',
+    name: 'create-tour',
+    component: CreateTourView,
     meta: { requiresAuth: true }
   },
 ]
