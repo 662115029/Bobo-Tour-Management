@@ -1,45 +1,124 @@
 <template>
+  <!-- Fixed top bar that shifts right with the sidebar -->
   <header
-    class="fixed top-0 right-0 h-14 bg-red-600 flex items-center px-4 gap-3 z-30 shadow-sm font-['DM_Sans',sans-serif] transition-all duration-300"
-    :class="isOpen ? 'left-56' : 'left-16'"
+    class="fixed top-0 right-0 z-30 flex items-center px-4 py-2 justify-between transition-all duration-300 font-['DM_Sans',sans-serif] bg-white border-b border-gray-200"
+    style="left: 0;"
   >
-    <!-- Page title -->
-    <slot>
-      <span class="text-white font-semibold text-sm tracking-wide">Bobo Tour Management</span>
-    </slot>
-
-    <!-- Right side actions -->
-    <div class="ml-auto flex items-center gap-1">
-
-      <!-- Notifications -->
+    <!-- Left side: hamburger + logo + page title -->
+    <div class="flex items-center gap-3">
+      <!-- Hamburger toggle -->
       <button
-        class="relative text-white hover:bg-red-700 p-1.5 rounded-lg transition-colors"
-        title="Notifications"
+        @click="toggle"
+        class="p-1.5 rounded-lg text-gray-500 hover:bg-[#fef2f2] hover:text-[#dc2626] transition-colors focus:outline-none"
+        :title="isOpen ? 'Collapse sidebar' : 'Expand sidebar'"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
-        <!-- Badge -->
-        <span class="absolute top-1 right-1 w-2 h-2 bg-yellow-400 rounded-full ring-2 ring-red-600"></span>
       </button>
 
-      <!-- Profile -->
+      <!-- Logo -->
+      <img src="@/assets/logo.png" alt="Bobo Tour" class="h-14 w-auto object-contain" />
+
+      <!-- Breadcrumbs -->
+      <div class="pl-3 border-l border-gray-200 flex items-center gap-1.5 text-sm">
+        <template v-for="(crumb, i) in breadcrumbs" :key="crumb.path">
+          <span v-if="i > 0" class="text-gray-300">/</span>
+          <router-link
+            v-if="i < breadcrumbs.length - 1"
+            :to="crumb.path"
+            class="text-gray-400 hover:text-[#dc2626] transition-colors"
+          >{{ crumb.label }}</router-link>
+          <span v-else class="text-gray-700 font-medium">{{ crumb.label }}</span>
+        </template>
+      </div>
+    </div>
+
+    <!-- Right-side actions -->
+    <div class="flex items-center gap-1">
+      <!-- Profile button -->
       <router-link
         to="/profile"
-        class="flex items-center gap-2 text-white hover:bg-red-700 pl-2 pr-3 py-1.5 rounded-lg transition-colors text-sm font-medium"
-        title="Profile"
+        class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+        :class="route.path === '/profile'
+          ? 'bg-[#fef2f2] text-[#dc2626] font-semibold'
+          : 'text-gray-600 hover:bg-[#fef2f2] hover:text-[#dc2626]'"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-        </svg>
-        <span class="hidden sm:inline whitespace-nowrap">Profile</span>
+        <span
+          class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+          :class="route.path === '/profile' ? 'bg-[#fef2f2] text-[#dc2626]' : 'bg-gray-100 text-gray-600'"
+        >
+          {{ userInitial }}
+        </span>
+        <span class="hidden sm:block">{{ userName }}</span>
       </router-link>
 
+      <!-- Divider -->
+      <div class="w-px h-5 bg-gray-200 mx-1"></div>
+
+      <!-- Logout -->
+      <button
+        @click="logout"
+        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-[#fef2f2] hover:text-[#dc2626] transition-colors"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+        </svg>
+        Logout
+      </button>
     </div>
   </header>
 </template>
 
 <script setup>
-import { useSidebar } from './useSidebar.js'
-const { isOpen } = useSidebar()
+import { computed } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { useSidebar } from '@/components/useSidebar.js'
+
+const router = useRouter()
+const route = useRoute()
+const { isOpen, toggle } = useSidebar()
+
+const userName = computed(() => localStorage.getItem('em_name') || '')
+const userInitial = computed(() => userName.value.charAt(0).toUpperCase() || '?')
+
+const logout = () => {
+  localStorage.removeItem('em_id')
+  localStorage.removeItem('em_name')
+  localStorage.removeItem('em_email')
+  router.push('/login')
+}
+
+const staticLabels = {
+  '/my-tours': 'My Tours',
+  '/matching': 'Matching',
+  '/applications': 'Applications',
+  '/profile': 'Profile',
+  '/create-job': 'Create Tour',
+}
+
+const breadcrumbs = computed(() => {
+  const path = route.path
+
+  // Tour detail: My Tours > [Tour Title]
+  if (path.startsWith('/tours/')) {
+    const tourTitle = history.state?.jobTitle || route.params.id
+    return [
+      { label: 'My Tours', path: '/my-tours' },
+      { label: tourTitle, path },
+    ]
+  }
+
+  // Create tour: My Tours > Create Tour
+  if (path === '/create-job') {
+    return [
+      { label: 'My Tours', path: '/my-tours' },
+      { label: 'Create Tour', path: '/create-job' },
+    ]
+  }
+
+  // All other pages: single crumb
+  const label = staticLabels[path] || 'Bobo Tour'
+  return [{ label, path }]
+})
 </script>

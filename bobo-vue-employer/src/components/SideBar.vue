@@ -1,23 +1,9 @@
 <template>
-  <!-- Overlay (mobile / when open) -->
-  <div
-    v-if="isOpen"
-    class="fixed inset-0 z-30 bg-black/20 lg:hidden"
-    @click="toggle"
-  />
-
   <!-- Sidebar -->
   <aside
-    class="fixed top-0 left-0 h-screen bg-white border-r border-gray-200 flex flex-col z-40 font-['DM_Sans',sans-serif] shadow-sm transition-all duration-300 overflow-hidden"
+    class="fixed top-[72px] left-0 bg-white border-r border-gray-200 flex flex-col z-40 font-['DM_Sans',sans-serif] transition-all duration-300 overflow-hidden" style="height: calc(100vh - 72px)"
     :class="isOpen ? 'w-56' : 'w-16'"
   >
-    <!-- Logo (click to toggle sidebar) -->
-    <div class="px-3 py-5 border-b border-gray-100 flex items-center justify-center shrink-0" :class="isOpen ? 'px-5' : 'px-3'">
-      <button @click="toggle" class="flex items-center overflow-hidden cursor-pointer focus:outline-none" :title="isOpen ? 'Collapse sidebar' : 'Expand sidebar'">
-        <img v-if="isOpen" src="@/assets/logo.png" alt="Bobo Tour" class="h-16 w-auto object-contain hover:opacity-80 transition-opacity" />
-        <img v-else src="@/assets/logo_b.png" alt="Bobo Tour" class="h-10 w-auto object-contain hover:opacity-70 transition-opacity" />      </button>
-    </div>
-
     <!-- Nav Items -->
     <nav class="flex-1 overflow-y-auto py-4 px-2 space-y-1">
 
@@ -43,14 +29,13 @@
       </router-link>
 
     </nav>
-
-
   </aside>
 </template>
 
 <script setup>
 import { useRoute } from 'vue-router'
-import { useSidebar } from './useSidebar.js'
+// FIX: use @/ alias so this resolves correctly from any location
+import { useSidebar } from '@/components/useSidebar.js'
 
 const route = useRoute()
 const { isOpen, toggle } = useSidebar()
