@@ -44,11 +44,19 @@
           ? 'bg-[#fef2f2] text-[#dc2626] font-semibold'
           : 'text-gray-600 hover:bg-[#fef2f2] hover:text-[#dc2626]'"
       >
+        <!-- Avatar: profile image if available, else initial -->
         <span
-          class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+          class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 overflow-hidden"
           :class="route.path === '/profile' ? 'bg-[#fef2f2] text-[#dc2626]' : 'bg-gray-100 text-gray-600'"
         >
-          {{ userInitial }}
+          <img
+            v-if="profileImageUrl"
+            :src="profileImageUrl"
+            :alt="userName"
+            class="w-full h-full object-cover rounded-full"
+            @error="profileImageUrl = ''"
+          />
+          <template v-else>{{ userInitial }}</template>
         </span>
         <span class="hidden sm:block">{{ userName }}</span>
       </router-link>
@@ -71,16 +79,32 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useSidebar } from '@/components/useSidebar.js'
 
+const API_BASE = '/api'
 const router = useRouter()
 const route = useRoute()
 const { isOpen, toggle } = useSidebar()
 
 const userName = computed(() => localStorage.getItem('em_name') || '')
 const userInitial = computed(() => userName.value.charAt(0).toUpperCase() || '?')
+const profileImageUrl = ref('')
+
+onMounted(async () => {
+  const em_id = localStorage.getItem('em_id')
+  if (!em_id) return
+  try {
+    const res = await fetch(`${API_BASE}/employers/${em_id}`)
+    if (res.ok) {
+      const data = await res.json()
+      profileImageUrl.value = data.em_profile_image_url || data.em_profile_url || ''
+    }
+  } catch {
+    // silently fall back to initial
+  }
+})
 
 const logout = () => {
   localStorage.removeItem('em_id')
