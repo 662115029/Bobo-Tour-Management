@@ -6,22 +6,30 @@
         <h1 class="text-5xl font-bold text-center tracking-tight text-[#dc2626]" style="font-family: 'Georgia', serif;">My Tours</h1>
       </div>
 
-      <!-- Filters + Create Tour -->
+      <!-- Filters -->
       <div class="bg-white rounded-xl border border-gray-200 p-4 mb-6 flex flex-wrap gap-3 items-center">
         <input
           v-model="search"
           type="text"
           placeholder="Search tour title..."
-          class="flex-1 min-w-0 p-3 border border-gray-300 rounded-lg text-sm focus:outline-none"        />
+          class="flex-1 min-w-0 p-3 border border-gray-300 rounded-lg text-sm focus:outline-none"
+        />
         <select v-model="statusFilter" class="p-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option value="ALL">All</option>
           <option value="OPEN">Open</option>
-          <option value="MATCHING">Matched</option>
-          <option value="SELECTED">Pending</option>
+          <option value="PENDING">Pending</option>
+          <option value="MATCHED">Matched</option>
           <option value="IN_PROGRESS">In Progress</option>
           <option value="COMPLETED">Completed</option>
           <option value="CANCELLED">Cancelled</option>
         </select>
+
+        <!-- Date field toggle -->
+        <select v-model="dateField" class="p-3 border border-gray-300 rounded-lg text-sm focus:outline-none">
+          <option value="start">By Start Date</option>
+          <option value="created">By Created Date</option>
+        </select>
+
         <select v-model="yearFilter" class="p-3 border border-gray-300 rounded-lg text-sm focus:outline-none">
           <option value="">All Years</option>
           <option v-for="y in availableYears" :key="y" :value="y">{{ y }}</option>
@@ -41,11 +49,6 @@
           <option value="11">November</option>
           <option value="12">December</option>
         </select>
-        <router-link
-          to="/create-tour"
-            class="px-5 py-3 bg-white text-black border border-black text-sm font-semibold rounded-lg hover:bg-black hover:text-white transition whitespace-nowrap"        >
-          Create Tour
-        </router-link>
       </div>
 
       <!-- Loading -->
@@ -59,9 +62,6 @@
         <div class="text-5xl mb-4">🗺️</div>
         <h3 class="text-lg font-semibold text-gray-700 mb-1">No tours found</h3>
         <p class="text-gray-400 text-sm mb-6">Get started by creating your first tour.</p>
-        <router-link to="/create-tour" class="px-6 py-2 bg-black text-white rounded-lg text-sm font-semibold hover:bg-black transition">
-          Create Tour
-        </router-link>
       </div>
 
       <!-- Tour Cards Grid -->
@@ -69,24 +69,23 @@
         <div
           v-for="job in filteredJobs"
           :key="job.job_id"
-          class="bg-white rounded-xl border border-gray-200 hover:shadow-lg hover:border-gray-300 transition cursor-pointer flex flex-col shadow-sm overflow-hidden"
+          class="relative bg-white rounded-xl border border-gray-200 hover:shadow-lg hover:border-gray-300 transition cursor-pointer flex flex-col shadow-sm overflow-hidden"
           @click="viewJob(job.job_id, job.job_title)"
         >
+          <!-- New applications badge -->
+          <div
+            v-if="appliedCount(job.job_id) > 0"
+            class="absolute top-2.5 right-2.5 z-10 min-w-[20px] h-5 px-1.5 bg-red-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center shadow"
+          >
+            {{ appliedCount(job.job_id) }}
+          </div>
+
           <!-- Card Body -->
           <div class="p-5 flex flex-col gap-4">
 
-            <!-- Title + Edit -->
-            <div class="flex items-start justify-between gap-2">
-              <h3 class="font-semibold text-gray-800 text-base leading-snug flex-1">{{ job.job_title }}</h3>
-              <button
-                @click.stop="viewJob(job.job_id, job.job_title)"
-                class="flex items-center gap-1 text-xs text-gray-400 hover:text-[#dc2626] hover:bg-[#fef2f2] px-2 py-1 rounded-md transition shrink-0"
-              >
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
-                </svg>
-                Edit
-              </button>
+            <!-- Title -->
+            <div class="flex items-start gap-2">
+              <h3 class="font-semibold text-gray-800 text-base leading-snug flex-1 pr-6">{{ job.job_title }}</h3>
             </div>
 
             <div class="border-t border-gray-100"></div>
@@ -135,10 +134,10 @@
                 class="px-2.5 py-1 rounded-md text-xs font-medium"
                 :class="{
                   'bg-green-100 text-green-700': job.job_status === 'OPEN',
-                  'bg-blue-100 text-blue-600': job.job_status === 'MATCHING',
-                  'bg-yellow-100 text-yellow-700': job.job_status === 'SELECTED',
+                  'bg-yellow-100 text-yellow-700': job.job_status === 'PENDING',
+                  'bg-blue-100 text-blue-600': job.job_status === 'MATCHED',
                   'bg-purple-100 text-purple-700': job.job_status === 'IN_PROGRESS',
-                  'bg-gray-100 text-gray-500': job.job_status === 'COMPLETED' || job.job_status === 'CLOSED',
+                  'bg-gray-100 text-gray-500': job.job_status === 'COMPLETED',
                   'bg-red-100 text-red-600': job.job_status === 'CANCELLED',
                 }"
               >{{ job.job_status }}</span>
@@ -156,7 +155,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import AppLayout from '@/components/AppLayout.vue'
 
@@ -167,13 +166,23 @@ const jobs = ref([])
 const loading = ref(true)
 const search = ref('')
 const statusFilter = ref('ALL')
+const dateField = ref('start') // 'start' | 'created'
 const yearFilter = ref('')
 const monthFilter = ref('')
+
+// job_id → number of APPLIED applications
+const appliedCountMap = ref({})
+
+// Reset year/month when the date field changes so stale selections don't linger
+watch(dateField, () => {
+  yearFilter.value = ''
+  monthFilter.value = ''
+})
 
 onMounted(async () => {
   const em_id = localStorage.getItem('em_id')
   try {
-    const res = await fetch(`${API_BASE}/jobs?em_id=${em_id}`)
+    const res = await fetch(`${API_BASE}/tours?em_id=${em_id}`)
     const data = await res.json()
     jobs.value = Array.isArray(data) ? data : (data.jobs || [])
   } catch (e) {
@@ -181,12 +190,43 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
+
+  // Fetch applications for all tours in parallel and count APPLIED status
+  if (jobs.value.length) {
+    const em_id = localStorage.getItem('em_id')
+    const results = await Promise.allSettled(
+      jobs.value.map(job =>
+        fetch(`${API_BASE}/tours/${job.job_id}/applications?em_id=${em_id}`)
+          .then(r => r.json())
+          .then(d => {
+            const list = Array.isArray(d) ? d : (d.applications || [])
+            const count = list.filter(a => a.status === 'APPLIED').length
+            return { job_id: job.job_id, count }
+          })
+          .catch(() => ({ job_id: job.job_id, count: 0 }))
+      )
+    )
+    const map = {}
+    results.forEach(r => {
+      if (r.status === 'fulfilled') map[r.value.job_id] = r.value.count
+    })
+    appliedCountMap.value = map
+  }
 })
+
+const appliedCount = (job_id) => appliedCountMap.value[job_id] || 0
+
+// Returns the relevant date for a job based on the current dateField selection
+const getFilterDate = (job) => {
+  const raw = dateField.value === 'created' ? job.job_created_at : job.job_start_date
+  return raw ? new Date(raw) : null
+}
 
 const availableYears = computed(() => {
   const years = new Set()
   jobs.value.forEach(job => {
-    if (job.job_start_date) years.add(new Date(job.job_start_date).getFullYear())
+    const d = getFilterDate(job)
+    if (d) years.add(d.getFullYear())
   })
   return [...years].sort((a, b) => b - a)
 })
@@ -195,7 +235,7 @@ const filteredJobs = computed(() => {
   return jobs.value.filter(job => {
     const matchSearch = job.job_title?.toLowerCase().includes(search.value.toLowerCase())
     const matchStatus = statusFilter.value === 'ALL' || job.job_status === statusFilter.value
-    const date = job.job_start_date ? new Date(job.job_start_date) : null
+    const date = getFilterDate(job)
     const matchYear = !yearFilter.value || (date && date.getFullYear() === Number(yearFilter.value))
     const matchMonth = !monthFilter.value || (date && date.getMonth() + 1 === Number(monthFilter.value))
     return matchSearch && matchStatus && matchYear && matchMonth

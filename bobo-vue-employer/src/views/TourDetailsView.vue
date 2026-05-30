@@ -6,7 +6,7 @@
       <div class="mb-4">
         <button
           @click="$router.back()"
-          class="flex items-center gap-1.5 text-sm font-medium text-gray-600 bg-white hover:bg-[#ffd8d8] hover:text-[#dc2626] px-4 py-2 rounded-full transition w-fit"
+          class="flex items-center gap-1.5 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-[#fef2f2] hover:text-[#dc2626] px-4 py-2 rounded-full transition w-fit"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
@@ -154,62 +154,34 @@
             </div>
 
             <!-- Expenses -->
-            <div v-if="editing || job.job_entrance_fees?.length" class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
+            <div v-if="editing || job.job_expenses?.length" class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
               <h2 class="section-title">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 Expenses
               </h2>
               <template v-if="!editing">
                 <div class="space-y-2 mb-3">
-                  <div v-for="(fee, idx) in sortedFees" :key="idx" class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600">{{ fee.place_name }}</span>
-                    <span class="text-sm font-medium text-gray-800">฿{{ Number(fee.foreigner_price).toLocaleString() }}</span>
+                  <div v-for="(exp, idx) in sortedExpenses" :key="idx" class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">{{ exp.item_name }}</span>
+                    <span class="text-sm font-medium text-gray-800">฿{{ Number(exp.amount).toLocaleString() }}</span>
                   </div>
                 </div>
                 <div class="border-t border-gray-100 pt-2 flex justify-between">
                   <span class="text-sm font-bold text-gray-800">Total</span>
-                  <span class="text-sm font-bold text-gray-800">฿{{ sortedFees.reduce((s, f) => s + Number(f.foreigner_price || 0), 0).toLocaleString() }}</span>
+                  <span class="text-sm font-bold text-gray-800">฿{{ sortedExpenses.reduce((s, e) => s + Number(e.amount || 0), 0).toLocaleString() }}</span>
                 </div>
               </template>
               <template v-else>
-                <div v-for="(fee, idx) in form.job_entrance_fees" :key="idx" class="grid grid-cols-2 gap-2 mb-2 items-end">
-                  <div><label class="field-label">Attraction</label><input v-model="fee.place_name" type="text" class="field-input" /></div>
-                  <div><label class="field-label">Amount</label><input v-model.number="fee.foreigner_price" type="number" class="field-input" /></div>
-                  <button type="button" @click="form.job_entrance_fees.splice(idx, 1)" class="col-span-2 text-xs text-red-500 hover:underline text-left">Remove</button>
+                <div v-for="(exp, idx) in form.job_expenses" :key="idx" class="grid grid-cols-2 gap-2 mb-2 items-end">
+                  <div><label class="field-label">Item Name</label><input v-model="exp.item_name" type="text" class="field-input" /></div>
+                  <div><label class="field-label">Amount (THB)</label><input v-model.number="exp.amount" type="number" class="field-input" /></div>
+                  <button type="button" @click="form.job_expenses.splice(idx, 1)" class="col-span-2 text-xs text-red-500 hover:underline text-left">Remove</button>
                 </div>
-                <button type="button" @click="form.job_entrance_fees.push({ place_name: '', foreigner_price: 0, thai_price: 0 })" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs hover:bg-gray-200">+ Add Expense</button>
+                <button type="button" @click="form.job_expenses.push({ item_name: '', amount: 0 })" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs hover:bg-gray-200">+ Add Expense</button>
               </template>
             </div>
 
-            <!-- Inclusions -->
-            <div v-if="editing || job.job_inclusions?.length" class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
-              <h2 class="section-title">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                Inclusions
-              </h2>
-              <template v-if="!editing">
-                <div class="space-y-2">
-                  <div v-for="(inc, idx) in job.job_inclusions" :key="idx" class="flex items-center gap-2">
-                    <span v-if="inc.inclusion_type === 'INCLUSION'" class="w-5 h-5 rounded-full bg-green-100 text-green-600 flex items-center justify-center shrink-0">
-                      <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                    </span>
-                    <span v-else class="w-5 h-5 rounded-full bg-red-100 text-red-500 flex items-center justify-center shrink-0">
-                      <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                    </span>
-                    <span class="text-sm text-gray-700">{{ inc.description }}</span>
-                  </div>
-                </div>
-                <p v-if="!job.job_inclusions?.length" class="text-sm text-gray-400 italic">None added</p>
-              </template>
-              <template v-else>
-                <div v-for="(inc, idx) in form.job_inclusions" :key="idx" class="grid grid-cols-3 gap-2 mb-2 items-end">
-                  <select v-model="inc.inclusion_type" class="field-input"><option value="INCLUSION">Included</option><option value="EXCLUSION">Not Included</option></select>
-                  <input v-model="inc.description" type="text" class="field-input col-span-2" placeholder="Details" />
-                  <button type="button" @click="form.job_inclusions.splice(idx, 1)" class="col-span-3 text-xs text-red-500 hover:underline text-left">Remove</button>
-                </div>
-                <button type="button" @click="form.job_inclusions.push({ inclusion_type: 'INCLUSION', description: '' })" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs hover:bg-gray-200">+ Add Item</button>
-              </template>
-            </div>
+
 
           </div>
 
@@ -346,7 +318,8 @@
                   <span
                     class="px-2.5 py-1 rounded-full text-xs font-semibold shrink-0"
                     :class="{
-                      'bg-yellow-100 text-yellow-700': app.status === 'APPLIED' || app.status === 'PENDING',
+                      'bg-blue-100 text-blue-700': app.status === 'APPLIED',
+                      'bg-yellow-100 text-yellow-700': app.status === 'PENDING',
                       'bg-green-100 text-green-700': app.status === 'ACCEPTED',
                       'bg-red-100 text-red-600': app.status === 'REJECTED',
                     }"
@@ -462,8 +435,7 @@ const form = reactive({
   job_itineraries: [],
   job_pickups: [],
   job_customers: [],
-  job_inclusions: [],
-  job_entrance_fees: [],
+  job_expenses: [],
 })
 
 // ── Fetch tour ─────────────────────────────────────────────────────────────
@@ -551,8 +523,7 @@ const startEditing = () => {
     job_itineraries: (j.job_itineraries || []).map(i => ({ ...i })),
     job_pickups: (j.job_pickups || []).map(p => ({ ...p })),
     job_customers: (j.job_customers || []).map(c => ({ ...c })),
-    job_inclusions: (j.job_inclusions || []).map(i => ({ ...i })),
-    job_entrance_fees: (j.job_entrance_fees || []).map(f => ({ ...f })),
+    job_expenses: (j.job_expenses || []).map(e => ({ ...e })),
   })
   editing.value = true
 }
@@ -594,17 +565,17 @@ const saveJob = async () => {
 const sortedPickups = computed(() =>
   [...(job.value?.job_pickups ?? [])].sort((a, b) => (a.sequence ?? 0) - (b.sequence ?? 0))
 )
-const sortedFees = computed(() =>
-  [...(job.value?.job_entrance_fees ?? [])].sort((a, b) => (a.sequence ?? 0) - (b.sequence ?? 0))
+const sortedExpenses = computed(() =>
+  [...(job.value?.job_expenses ?? [])].sort((a, b) => (a.sequence ?? 0) - (b.sequence ?? 0))
 )
-const canEdit = computed(() => ['OPEN', 'MATCHING'].includes(job.value?.job_status))
-const canCancel = computed(() => ['OPEN', 'MATCHING'].includes(job.value?.job_status))
+const canEdit = computed(() => ['OPEN', 'PENDING'].includes(job.value?.job_status))
+const canCancel = computed(() => ['OPEN', 'PENDING', 'MATCHED'].includes(job.value?.job_status))
 
 // ── Status display ─────────────────────────────────────────────────────────
 const STATUS_MAP = {
   OPEN:        { label: 'Open',        cls: 'bg-green-100 text-green-700' },
-  MATCHING:    { label: 'Matching',    cls: 'bg-blue-100 text-blue-700' },
-  SELECTED:    { label: 'Selected',    cls: 'bg-indigo-100 text-indigo-700' },
+  PENDING:     { label: 'Pending',     cls: 'bg-yellow-100 text-yellow-700' },
+  MATCHED:     { label: 'Matched',     cls: 'bg-blue-100 text-blue-700' },
   IN_PROGRESS: { label: 'In Progress', cls: 'bg-amber-100 text-amber-700' },
   COMPLETED:   { label: 'Completed',   cls: 'bg-gray-100 text-gray-600' },
   CANCELLED:   { label: 'Cancelled',   cls: 'bg-red-100 text-red-600' },

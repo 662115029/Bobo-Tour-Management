@@ -4,7 +4,7 @@
     <div class="flex gap-8 px-8 pt-6 pb-10 min-h-screen items-start">
 
       <!-- ── Left Panel (persistent) ── -->
-      <aside class="hidden lg:flex flex-col gap-4 w-80 shrink-0 sticky top-20">
+      <aside class="flex flex-col gap-4 w-64 xl:w-80 shrink-0 sticky top-20 self-start">
 
         <!-- Back button -->
         <button
@@ -36,7 +36,7 @@
                 @click="confirmLoadTemplate(tpl)"
                 class="flex-1 text-left px-4 py-3 min-w-0"
               >
-                <p class="text-sm font-semibold text-gray-700 group-hover:text-red-600 truncate">{{ tpl.name }}</p>
+                <p class="text-sm font-semibold text-gray-700 group-hover:text-red-600 truncate leading-snug">{{ tpl.name }}</p>
                 <p class="text-sm text-gray-400 mt-0.5 truncate">{{ tpl.subtitle }}</p>
               </button>
               <button
@@ -232,42 +232,21 @@
           </div>
 
           <div class="bg-white rounded-2xl border border-gray-200 p-6">
-            <h2 class="text-base font-semibold text-gray-700 mb-5 border-b pb-3">Inclusions & Exclusions</h2>
-            <div v-for="(inc, idx) in form.job_inclusions" :key="idx" class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-3 items-end">
-              <div>
-                <label class="block text-xs text-gray-500 mb-1">Type</label>
-                <select v-model="inc.inclusion_type" class="w-full p-2 border border-gray-300 rounded-lg text-sm">
-                  <option value="INCLUSION">Included</option>
-                  <option value="EXCLUSION">Not Included</option>
-                </select>
-              </div>
+            <h2 class="text-base font-semibold text-gray-700 mb-5 border-b pb-3">Expenses</h2>
+            <div v-for="(expense, idx) in form.job_expenses" :key="idx" class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3 items-end">
               <div class="md:col-span-2">
-                <label class="block text-xs text-gray-500 mb-1">Details</label>
-                <input v-model="inc.description" type="text" class="w-full p-2 border border-gray-300 rounded-lg text-sm" placeholder="Details" />
+                <label class="block text-xs text-gray-500 mb-1">Item Name</label>
+                <input v-model="expense.item_name" type="text" class="w-full p-2 border border-gray-300 rounded-lg text-sm" placeholder="e.g. Entrance fee — Doi Suthep Temple" />
               </div>
-              <button type="button" @click="removeInclusion(idx)" class="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 text-sm">Delete</button>
+              <div class="flex gap-2 items-end">
+                <div class="flex-1">
+                  <label class="block text-xs text-gray-500 mb-1">Amount (THB)</label>
+                  <input v-model.number="expense.amount" type="number" min="0" step="0.01" class="w-full p-2 border border-gray-300 rounded-lg text-sm" placeholder="0.00" />
+                </div>
+                <button type="button" @click="removeExpense(idx)" class="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 text-sm shrink-0">Delete</button>
+              </div>
             </div>
-            <button type="button" @click="addInclusion" class="mt-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200">+ Add Item</button>
-          </div>
-
-          <div class="bg-white rounded-2xl border border-gray-200 p-6">
-            <h2 class="text-base font-semibold text-gray-700 mb-5 border-b pb-3">Entrance Fees</h2>
-            <div v-for="(fee, idx) in form.job_entrance_fees" :key="idx" class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-3 items-end">
-              <div>
-                <label class="block text-xs text-gray-500 mb-1">Attraction</label>
-                <input v-model="fee.place_name" type="text" class="w-full p-2 border border-gray-300 rounded-lg text-sm" placeholder="Attraction" />
-              </div>
-              <div>
-                <label class="block text-xs text-gray-500 mb-1">Thai (THB)</label>
-                <input v-model.number="fee.thai_price" type="number" class="w-full p-2 border border-gray-300 rounded-lg text-sm" />
-              </div>
-              <div>
-                <label class="block text-xs text-gray-500 mb-1">Foreigner (THB)</label>
-                <input v-model.number="fee.foreigner_price" type="number" class="w-full p-2 border border-gray-300 rounded-lg text-sm" />
-              </div>
-              <button type="button" @click="removeEntranceFee(idx)" class="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 text-sm">Delete</button>
-            </div>
-            <button type="button" @click="addEntranceFee" class="mt-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200">+ Add Entrance Fee</button>
+            <button type="button" @click="addExpense" class="mt-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200">+ Add Expense</button>
           </div>
         </section>
 
@@ -287,8 +266,7 @@
               <div class="flex justify-between"><span class="text-gray-500">Pickup Points</span><span>{{ form.job_pickups.length }}</span></div>
               <div class="flex justify-between"><span class="text-gray-500">Schedule Stops</span><span>{{ form.job_itineraries.length }}</span></div>
               <div class="flex justify-between"><span class="text-gray-500">Passengers</span><span>{{ form.job_customers.length }}</span></div>
-              <div class="flex justify-between"><span class="text-gray-500">Inclusions/Exclusions</span><span>{{ form.job_inclusions.length }}</span></div>
-              <div class="flex justify-between"><span class="text-gray-500">Entrance Fees</span><span>{{ form.job_entrance_fees.length }}</span></div>
+              <div class="flex justify-between"><span class="text-gray-500">Expenses</span><span>{{ form.job_expenses.length }}</span></div>
             </div>
           </div>
 
@@ -333,7 +311,7 @@
       </div> <!-- end right column -->
 
       <!-- Right spacer to balance aside -->
-      <div class="hidden lg:block w-80 shrink-0"></div>
+      <div class="hidden xl:block w-80 shrink-0"></div>
 
     </div> <!-- end flex row -->
 
@@ -407,6 +385,7 @@ const API_BASE = '/api'
 const router = useRouter()
 
 const DRAFT_KEY = 'create_job_draft'
+const TEMPLATES_KEY = 'create_job_templates'
 
 const steps = ['General Info', 'Logistics', 'Tour Details', 'Review']
 const currentStep = ref(1)
@@ -437,8 +416,7 @@ const defaultForm = () => ({
   job_itineraries: [],
   job_pickups: [],
   job_customers: [],
-  job_inclusions: [],
-  job_entrance_fees: [],
+  job_expenses: [],
 })
 
 const form = reactive(defaultForm())
@@ -466,8 +444,7 @@ const formSnapshot = () => JSON.stringify({
   job_itineraries: [...form.job_itineraries],
   job_pickups: [...form.job_pickups],
   job_customers: [...form.job_customers],
-  job_inclusions: [...form.job_inclusions],
-  job_entrance_fees: [...form.job_entrance_fees],
+  job_expenses: [...form.job_expenses],
 })
 let lastSavedSnapshot = formSnapshot()
 
@@ -491,10 +468,10 @@ const openModal = (type, target = null) => { modal.show = true; modal.type = typ
 const closeModal = () => { modal.show = false; modal.type = ''; modal.target = null }
 
 // ── Templates ──────────────────────────────────────────────────────────────
-const templates = ref([
+const DEFAULT_TEMPLATES = [
   {
     id: 'tpl_chiangmai_temple',
-    name: 'Chiang Mai Temple Tour',
+    name: 'Chiang Mai Full Day Temple Tour',
     subtitle: 'Full day · Van · English',
     data: {
       job_title: 'Chiang Mai Full Day Temple Tour',
@@ -505,15 +482,12 @@ const templates = ref([
         { place_name: 'Doi Suthep Temple', start_time: '08:00', end_time: '10:00', note: '' },
         { place_name: 'Wat Chedi Luang', start_time: '11:00', end_time: '12:30', note: '' },
       ],
-      job_inclusions: [
-        { inclusion_type: 'INCLUSION', description: 'English-speaking guide', sequence: 1 },
-        { inclusion_type: 'EXCLUSION', description: 'Entrance fees', sequence: 2 },
-      ],
+      job_expenses: [],
     },
   },
   {
     id: 'tpl_night_market',
-    name: 'Night Market Run',
+    name: 'Chiang Mai Night Market Tour',
     subtitle: 'Evening · Van · Thai, English',
     data: {
       job_title: 'Chiang Mai Night Market Tour',
@@ -524,10 +498,24 @@ const templates = ref([
         { place_name: 'Warorot Market', start_time: '17:00', end_time: '18:30', note: '' },
         { place_name: 'Sunday Walking Street', start_time: '19:00', end_time: '21:00', note: '' },
       ],
-      job_inclusions: [],
+      job_expenses: [],
     },
   },
-])
+]
+
+const loadTemplatesFromStorage = () => {
+  try {
+    const saved = localStorage.getItem(TEMPLATES_KEY)
+    if (saved) return JSON.parse(saved)
+  } catch (_) {}
+  return DEFAULT_TEMPLATES
+}
+
+const saveTemplatesToStorage = (list) => {
+  try { localStorage.setItem(TEMPLATES_KEY, JSON.stringify(list)) } catch (_) {}
+}
+
+const templates = ref(loadTemplatesFromStorage())
 
 const confirmLoadTemplate = (tpl) => openModal('loadTemplate', tpl)
 const confirmDeleteTemplate = (tpl) => openModal('deleteTemplate', tpl)
@@ -541,12 +529,12 @@ const doLoadTemplate = () => {
 
 const doDeleteTemplate = () => {
   templates.value = templates.value.filter(t => t.id !== modal.target.id)
+  saveTemplatesToStorage(templates.value)
   closeModal()
 }
 
 const saveAsTemplate = () => {
-  const name = prompt('Enter a name for this template:')
-  if (!name) return
+  const name = form.job_title?.trim() || 'Untitled Template'
   const newTpl = {
     id: 'tpl_' + Date.now(),
     name,
@@ -557,10 +545,11 @@ const saveAsTemplate = () => {
       job_required_seat: form.job_required_seat,
       job_required_languages: [...form.job_required_languages],
       job_itineraries: form.job_itineraries.map(i => ({ ...i })),
-      job_inclusions: form.job_inclusions.map(i => ({ ...i })),
+      job_expenses: form.job_expenses.map(e => ({ ...e })),
     },
   }
   templates.value.unshift(newTpl)
+  saveTemplatesToStorage(templates.value)
 }
 
 // ── Navigation guard ───────────────────────────────────────────────────────
@@ -596,10 +585,8 @@ const addPickup       = () => form.job_pickups.push({ hotel_name: '', pickup_loc
 const removePickup    = (idx) => form.job_pickups.splice(idx, 1)
 const addCustomer     = () => form.job_customers.push({ customer_name: '', note: '' })
 const removeCustomer  = (idx) => form.job_customers.splice(idx, 1)
-const addInclusion    = () => form.job_inclusions.push({ inclusion_type: 'INCLUSION', description: '', sequence: form.job_inclusions.length + 1 })
-const removeInclusion = (idx) => form.job_inclusions.splice(idx, 1)
-const addEntranceFee  = () => form.job_entrance_fees.push({ place_name: '', thai_price: 0, foreigner_price: 0, sequence: form.job_entrance_fees.length + 1 })
-const removeEntranceFee = (idx) => form.job_entrance_fees.splice(idx, 1)
+const addExpense    = () => form.job_expenses.push({ item_name: '', amount: 0, sequence: form.job_expenses.length + 1 })
+const removeExpense = (idx) => form.job_expenses.splice(idx, 1)
 
 const generateId = (_prefix) => {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
