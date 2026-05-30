@@ -6,7 +6,7 @@
       <div class="mb-4">
         <button
           @click="$router.back()"
-          class="flex items-center gap-1.5 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-[#fef2f2] hover:text-[#dc2626] px-4 py-2 rounded-full transition w-fit"
+          class="flex items-center gap-1.5 text-sm font-medium text-gray-600 bg-white hover:bg-[#ffd8d8] hover:text-[#dc2626] px-4 py-2 rounded-full transition w-fit"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
