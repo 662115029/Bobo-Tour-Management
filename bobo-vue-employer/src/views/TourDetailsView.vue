@@ -6,7 +6,7 @@
       <div class="mb-4">
         <button
           @click="$router.back()"
-          class="flex items-center gap-1.5 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-[#fef2f2] hover:text-[#dc2626] px-4 py-2 rounded-full transition w-fit"
+          class="flex items-center gap-1.5 text-sm font-medium text-gray-600 bg-white hover:bg-[#ffd8d8] hover:text-[#dc2626] px-4 py-2 rounded-full transition w-fit"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
@@ -306,6 +306,79 @@
               </template>
             </div>
 
+            <!-- ── Applications ── -->
+            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
+              <h2 class="section-title">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                Applications
+                <span class="ml-auto text-xs font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full normal-case tracking-normal">{{ applications.length }}</span>
+              </h2>
+
+              <div v-if="appsLoading" class="text-center py-8 text-gray-400 text-sm">Loading applications…</div>
+
+              <div v-else-if="applications.length === 0" class="text-center py-8 text-gray-400 text-sm">
+                No applications yet.
+              </div>
+
+              <div v-else class="space-y-3">
+                <div
+                  v-for="(app, idx) in applications"
+                  :key="app.application_id || idx"
+                  class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100"
+                >
+                  <!-- Avatar -->
+                  <div class="w-10 h-10 rounded-full bg-[#fef2f2] text-[#dc2626] text-sm font-bold flex items-center justify-center shrink-0">
+                    {{ (app.guide_name || '?').charAt(0).toUpperCase() }}
+                  </div>
+
+                  <!-- Info -->
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-gray-800 text-sm">{{ app.guide_name || '—' }}</p>
+                    <div class="flex flex-wrap gap-2 mt-0.5 text-xs text-gray-400">
+                      <span v-if="app.guide_phone">{{ app.guide_phone }}</span>
+                      <span v-if="app.languages?.length">{{ app.languages.join(', ') }}</span>
+                      <span v-if="app.vehicle_type">{{ app.vehicle_type }}</span>
+                      <span v-if="app.applied_at">Applied {{ formatDate(app.applied_at) }}</span>
+                    </div>
+                  </div>
+
+                  <!-- Status badge -->
+                  <span
+                    class="px-2.5 py-1 rounded-full text-xs font-semibold shrink-0"
+                    :class="{
+                      'bg-yellow-100 text-yellow-700': app.status === 'APPLIED' || app.status === 'PENDING',
+                      'bg-green-100 text-green-700': app.status === 'ACCEPTED',
+                      'bg-red-100 text-red-600': app.status === 'REJECTED',
+                    }"
+                  >{{ app.status }}</span>
+
+                  <!-- Accept / Reject -->
+                  <div class="flex items-center gap-1.5 shrink-0">
+                    <button
+                      @click="handleAccept(app)"
+                      :disabled="app.status === 'ACCEPTED' || app.status === 'REJECTED'"
+                      class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-green-50 hover:text-green-600 hover:border-green-200 transition disabled:opacity-30 disabled:cursor-not-allowed"
+                      title="Accept"
+                    >
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </button>
+                    <button
+                      @click="handleReject(app)"
+                      :disabled="app.status === 'ACCEPTED' || app.status === 'REJECTED'"
+                      class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition disabled:opacity-30 disabled:cursor-not-allowed"
+                      title="Reject"
+                    >
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- Edit mode: general info fields -->
             <div v-if="editing" class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
               <h2 class="section-title">Edit General Info</h2>
@@ -359,6 +432,7 @@ import AppLayout from '@/components/AppLayout.vue'
 const API_BASE = '/api'
 const router = useRouter()
 const route = useRoute()
+const emId = localStorage.getItem('em_id')
 
 const job = ref(null)
 const loading = ref(true)
@@ -366,6 +440,10 @@ const error = ref('')
 const cancelling = ref(false)
 const submitting = ref(false)
 const editing = ref(false)
+
+// Applications state
+const applications = ref([])
+const appsLoading = ref(false)
 
 const allLanguages = ['English', 'Thai', 'Mandarin', 'Korean', 'Japanese', 'French', 'German']
 
@@ -388,12 +466,12 @@ const form = reactive({
   job_entrance_fees: [],
 })
 
-// ── Fetch ──────────────────────────────────────────────────────────────────
+// ── Fetch tour ─────────────────────────────────────────────────────────────
 const fetchJob = async () => {
   loading.value = true
   error.value = ''
   try {
-    const res = await fetch(`${API_BASE}/tours/${route.params.id}`)
+    const res = await fetch(`${API_BASE}/tours/${route.params.id}?em_id=${emId}`)
     if (!res.ok) {
       const data = await res.json().catch(() => ({}))
       throw new Error(data.detail || data.message || 'Failed to load tour.')
@@ -406,7 +484,52 @@ const fetchJob = async () => {
   }
 }
 
-onMounted(fetchJob)
+// ── Fetch applications for this tour ──────────────────────────────────────
+const fetchApplications = async () => {
+  appsLoading.value = true
+  try {
+    const res = await fetch(`${API_BASE}/tours/${route.params.id}/applications?em_id=${emId}`)
+    const data = await res.json()
+    const list = Array.isArray(data) ? data : (data.applications || [])
+    applications.value = list.sort((a, b) => new Date(b.applied_at) - new Date(a.applied_at))
+  } catch {
+    applications.value = []
+  } finally {
+    appsLoading.value = false
+  }
+}
+
+onMounted(async () => {
+  await fetchJob()
+  fetchApplications()
+})
+
+// ── Accept / Reject ────────────────────────────────────────────────────────
+const handleAccept = async (app) => {
+  try {
+    const res = await fetch(`${API_BASE}/applications/${app.application_id}/accept`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    if (res.ok) app.status = 'ACCEPTED'
+    else alert('Failed to accept application.')
+  } catch {
+    alert('Failed to accept application.')
+  }
+}
+
+const handleReject = async (app) => {
+  try {
+    const res = await fetch(`${API_BASE}/applications/${app.application_id}/reject`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    if (res.ok) app.status = 'REJECTED'
+    else alert('Failed to reject application.')
+  } catch {
+    alert('Failed to reject application.')
+  }
+}
 
 // ── Edit helpers ───────────────────────────────────────────────────────────
 const toDateInput = (d) => d ? new Date(d).toISOString().slice(0, 10) : ''
@@ -449,14 +572,14 @@ const saveJob = async () => {
     const res = await fetch(`${API_BASE}/tours/${route.params.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
+      body: JSON.stringify({ ...form, em_id: emId }),
     })
     let data = {}
     const text = await res.text()
     if (text) { try { data = JSON.parse(text) } catch (_) {} }
     if (res.ok) {
       editing.value = false
-      await fetchJob() // refresh displayed data
+      await fetchJob()
     } else {
       alert('Failed to save: ' + (data.error || data.message || data.detail || 'Unknown error'))
     }
@@ -504,7 +627,7 @@ const confirmCancel = async () => {
   if (!confirm('Are you sure you want to cancel this tour? This cannot be undone.')) return
   cancelling.value = true
   try {
-    const res = await fetch(`${API_BASE}/tours/${route.params.id}/cancel`, {
+    const res = await fetch(`${API_BASE}/tours/${route.params.id}/cancel?em_id=${emId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
     })
