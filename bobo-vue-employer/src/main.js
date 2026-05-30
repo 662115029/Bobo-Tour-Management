@@ -7,8 +7,6 @@ import MyToursView from './views/MyToursView.vue'
 import ProfileView from './views/ProfileView.vue'
 import CreateTourView from './views/CreateTourView.vue'
 import TourDetailsView from './views/TourDetailsView.vue'
-import MatchingView from './views/MatchingView.vue'
-import ApplicationView from './views/ApplicationView.vue'
 
 const routes = [
   { path: '/', redirect: '/my-tours' },
@@ -25,18 +23,6 @@ const routes = [
     path: '/tours/:id',
     name: 'tour-detail',
     component: TourDetailsView,
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/matching',
-    name: 'matching',
-    component: MatchingView,
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/applications',
-    name: 'applications',
-    component: ApplicationView,
     meta: { requiresAuth: true }
   },
   {
