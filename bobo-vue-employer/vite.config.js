@@ -3,7 +3,6 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import tailwindcss from 'tailwindcss'
 import autoprefixer from 'autoprefixer'
-import postcss from 'postcss'
 
 export default defineConfig({
   plugins: [vue()],
@@ -23,7 +22,8 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '')
       }
     }
