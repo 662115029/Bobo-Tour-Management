@@ -16,7 +16,7 @@ export const useStats = () => {
       loading.value = true
       const data = await fetchStats()
       stats.value = {
-        totalJobs: 0,
+        totalJobs: data.totalJobs ?? 0,
         pendingVerify: data.pendingVerify || 0,
         freelancers: data.freelancers || 0,
         employers: data.employers || 0
@@ -30,5 +30,5 @@ export const useStats = () => {
 
   onMounted(loadStats)
 
-  return { stats, loading, error }
+  return { stats, loading, error, loadStats }
 }
