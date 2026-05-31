@@ -36,6 +36,8 @@ CREATE TABLE admin_logs (
                         'REJECT_DOCUMENT',
                         'VERIFY_FREELANCER',
                         'VERIFY_EMPLOYER',
+                        'NOT_VERIFY_FREELANCER',
+                        'NOT_VERIFY_EMPLOYER',
                         'BAN_USER',
                         'UNBAN_USER',
                         'DELETE_JOB'
