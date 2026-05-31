@@ -29,13 +29,19 @@ def update_job_statuses():
             (today,)
         )
 
-        # IN_PROGRESS → COMPLETED when job_end_date has passed
+        # IN_PROGRESS → COMPLETED when job_end_date has passed AND payment is CONFIRMED
         cursor.execute(
             """
             UPDATE jobs
             SET job_status = 'COMPLETED', job_updated_at = NOW()
             WHERE job_status = 'IN_PROGRESS'
               AND job_end_date < %s
+              AND EXISTS (
+                SELECT 1 FROM job_payments
+                WHERE job_payments.job_id = jobs.job_id
+                  AND job_payments.payment_status = 'CONFIRMED'
+                  AND job_payments.is_latest = TRUE
+              )
             """,
             (today,)
         )

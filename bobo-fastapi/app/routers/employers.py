@@ -26,6 +26,7 @@ class DocReviewRequest(BaseModel):
     status: str
     reviewed_by: str
     note: Optional[str] = None
+    reason: Optional[str] = None
 
 
 class BanRequest(BaseModel):
@@ -250,7 +251,7 @@ def get_em_documents(limit: int = 10, offset: int = 0, status: str = "", em_id: 
             f"""
             SELECT ed.em_doc_id, ed.em_id, e.em_name,
                    ed.em_doc_type, ed.file_url, ed.em_doc_status,
-                   ed.em_uploaded_at,
+                   ed.em_uploaded_at, ed.reject_reason,
                    a.name AS reviewed_by_name, ed.reviewed_at
             FROM em_documents ed
             JOIN employers e ON ed.em_id = e.em_id
@@ -319,20 +320,22 @@ def review_em_document(doc_id: str, body: DocReviewRequest):
         if not doc:
             raise HTTPException(status_code=404, detail="Document not found")
 
+        reject_reason = body.reason if body.status == "REJECTED" else None
         cursor.execute(
             """
             UPDATE em_documents
-            SET em_doc_status = %s, reviewed_by = %s, reviewed_at = NOW()
+            SET em_doc_status = %s, reviewed_by = %s, reviewed_at = NOW(),
+                reject_reason = %s
             WHERE em_doc_id = %s
             """,
-            (body.status, body.reviewed_by, doc_id)
+            (body.status, body.reviewed_by, reject_reason, doc_id)
         )
 
         if body.status == "APPROVED":
             cursor.execute(
                 """
                 SELECT COUNT(*) AS c FROM em_documents
-                WHERE em_id = %s AND em_doc_status != 'APPROVED'
+                WHERE em_id = %s AND em_doc_status != 'APPROVED' AND file_url IS NOT NULL
                 """,
                 (doc["em_id"],)
             )
@@ -357,15 +360,19 @@ def review_em_document(doc_id: str, body: DocReviewRequest):
         elif body.status == "REJECTED":
             cursor.execute(
                 """
-                SELECT COUNT(*) AS total,
-                       SUM(CASE WHEN em_doc_status = 'REJECTED' THEN 1 ELSE 0 END) AS rejected
+                SELECT
+                  SUM(CASE WHEN em_doc_status = 'REJECTED' THEN 1 ELSE 0 END) AS rejected,
+                  SUM(CASE WHEN em_doc_status = 'PENDING' THEN 1 ELSE 0 END) AS pending,
+                  SUM(CASE WHEN em_doc_status = 'APPROVED' THEN 1 ELSE 0 END) AS approved,
+                  COUNT(*) AS total
                 FROM em_documents
                 WHERE em_id = %s AND file_url IS NOT NULL
                 """,
                 (doc["em_id"],)
             )
             counts = cursor.fetchone()
-            if counts["total"] > 0 and counts["total"] == counts["rejected"]:
+            all_rejected = counts["total"] > 0 and counts["pending"] == 0 and counts["approved"] == 0
+            if all_rejected:
                 cursor.execute(
                     "UPDATE employers SET em_verify_status = 'NOT_VERIFIED' WHERE em_id = %s",
                     (doc["em_id"],)
@@ -377,16 +384,7 @@ def review_em_document(doc_id: str, body: DocReviewRequest):
                     """,
                     (doc["em_id"],)
                 )
-                cursor.execute("SELECT em_name FROM employers WHERE em_id = %s", (doc["em_id"],))
-                em_info = cursor.fetchone()
-                cursor.execute(
-                    """
-                    INSERT INTO admin_logs
-                        (admin_id, action_type, target_type, target_id, target_name, note)
-                    VALUES (%s, 'NOT_VERIFY_EMPLOYER', 'EMPLOYER', %s, %s, 'All uploaded documents rejected')
-                    """,
-                    (body.reviewed_by, doc["em_id"], em_info["em_name"] if em_info else doc["em_id"])
-                )
+
             else:
                 cursor.execute(
                     "UPDATE employers SET em_verify_status = 'PENDING' WHERE em_id = %s",
@@ -424,26 +422,39 @@ def review_em_document(doc_id: str, body: DocReviewRequest):
         )
         doc_info = cursor.fetchone()
         if doc_info:
-            if body.status == 'APPROVED':
-                action = 'APPROVE_DOCUMENT'
-            elif body.status == 'REJECTED':
-                action = 'REJECT_DOCUMENT'
-            else:
-                action = None
-            if action:
-                log_note = body.note or doc_info["em_doc_type"]
+            doc_label = doc_info["em_doc_type"].replace('_', ' ').title()
+            if body.status == 'REJECTED':
+                log_note = f"{doc_label}: {body.reason}" if body.reason else doc_label
                 cursor.execute(
                     """
                     INSERT INTO admin_logs
                         (admin_id, action_type, target_type, target_id, target_name, note)
-                    VALUES (%s, %s, 'DOCUMENT', %s, %s, %s)
+                    VALUES (%s, 'REJECT_DOCUMENT', 'DOCUMENT', %s, %s, %s)
                     """,
-                    (body.reviewed_by, action, doc_id,
-                     doc_info["em_name"], log_note)
+                    (body.reviewed_by, doc_id, doc_info["em_name"], log_note)
                 )
-            if body.status == "APPROVED":
+                if all_rejected:
+                    cursor.execute("SELECT em_name FROM employers WHERE em_id = %s", (doc["em_id"],))
+                    em_info = cursor.fetchone()
+                    cursor.execute(
+                        """
+                        INSERT INTO admin_logs
+                            (admin_id, action_type, target_type, target_id, target_name, note)
+                        VALUES (%s, 'NOT_VERIFY_EMPLOYER', 'EMPLOYER', %s, %s, 'All uploaded documents rejected')
+                        """,
+                        (body.reviewed_by, doc["em_id"], em_info["em_name"] if em_info else doc["em_id"])
+                    )
+            elif body.status == "APPROVED":
                 cursor.execute(
-                    "SELECT COUNT(*) AS c FROM em_documents WHERE em_id = %s AND em_doc_status != 'APPROVED'",
+                    """
+                    INSERT INTO admin_logs
+                        (admin_id, action_type, target_type, target_id, target_name, note)
+                    VALUES (%s, 'APPROVE_DOCUMENT', 'DOCUMENT', %s, %s, %s)
+                    """,
+                    (body.reviewed_by, doc_id, doc_info["em_name"], doc_label)
+                )
+                cursor.execute(
+                    "SELECT COUNT(*) AS c FROM em_documents WHERE em_id = %s AND em_doc_status != 'APPROVED' AND file_url IS NOT NULL",
                     (doc["em_id"],)
                 )
                 if cursor.fetchone()["c"] == 0:
@@ -453,9 +464,9 @@ def review_em_document(doc_id: str, body: DocReviewRequest):
                         """
                         INSERT INTO admin_logs
                             (admin_id, action_type, target_type, target_id, target_name, note)
-                        VALUES (%s, 'VERIFY_EMPLOYER', 'EMPLOYER', %s, %s, 'All 5 documents approved')
+                        VALUES (%s, 'VERIFY_EMPLOYER', 'EMPLOYER', %s, %s, 'All documents approved')
                         """,
-                        (body.reviewed_by, doc["em_id"], em_info["em_name"])
+                        (body.reviewed_by, doc["em_id"], em_info["em_name"] if em_info else doc["em_id"])
                     )
 
         conn.commit()
@@ -463,7 +474,9 @@ def review_em_document(doc_id: str, body: DocReviewRequest):
     except HTTPException:
         raise
     except Exception as e:
-        conn.rollback()
+        print(f"[ERROR] review_em_document: {e}")
+        if conn:
+            conn.rollback()
         return {"error": str(e)}
     finally:
         if conn:

@@ -15,6 +15,8 @@ def get_jobs(
     year: Optional[int] = None,
     month: Optional[str] = None,
     search: Optional[str] = None,
+    sort_by: Optional[str] = None,
+    sort_order: Optional[str] = "desc",
 ):
     conn = None
     try:
@@ -41,6 +43,18 @@ def get_jobs(
             where.append("j.job_title LIKE %s")
             params.append(f"%{search}%")
         where_sql = ("WHERE " + " AND ".join(where)) if where else ""
+
+        allowed_sort = {
+            "job_start_date": "j.job_start_date",
+            "job_updated_at": "j.job_updated_at",
+            "job_created_at": "j.job_created_at",
+            "job_title": "j.job_title",
+            "job_price": "j.job_price",
+            "em_name": "em.em_name",
+        }
+        sort_col = allowed_sort.get(sort_by, "j.job_updated_at")
+        order = "ASC" if sort_order == "asc" else "DESC"
+
         params += [limit, offset]
         cursor.execute(
             f"""
@@ -55,7 +69,7 @@ def get_jobs(
             JOIN employers em ON j.em_id = em.em_id
             LEFT JOIN freelancers f ON j.selected_fl_id = f.fl_id
             {where_sql}
-            ORDER BY j.job_created_at DESC
+            ORDER BY {sort_col} {order}
             LIMIT %s OFFSET %s
             """,
             params,
