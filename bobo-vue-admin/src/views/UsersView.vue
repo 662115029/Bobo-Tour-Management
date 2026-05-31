@@ -51,14 +51,10 @@
             </th>
             <th style="width:11%" class="text-center">ACTION</th>
             <th class="th-sortable relative" :class="{ 'th-active': dateSort }" style="width:16%" @click="cycleSort('date')">
-              <span class="th-inner">LAST UPDATED
-                <span class="sort-label">
-                  <span v-if="!dateSort" class="sort-label-dim">⇅</span>
-                  <span v-else-if="dateSort === 'asc'" class="sort-label-active">↑</span>
-                  <span v-else class="sort-label-active">↓</span>
-                </span>
+              <span class="th-inner">{{ dateSort === 'asc' ? "EARLY UPDATE" : "LATEST UPDATE" }}
+                <span class="sort-label"><span class="sort-label-dim">⇅</span></span>
               </span>
-              <button v-if="nameSort || ratingSort || verifyFilter !== 'All' || dateSort || jobsSort || search"
+              <button v-if="nameSort || ratingSort || verifyFilter !== 'All' || dateSort === 'asc' || jobsSort || search"
                 class="reset-btn ml-1.5 absolute right-3 top-1/2 -translate-y-1/2" @click.stop="resetAllFilters">✕ Reset</button>
             </th>
           </tr>
@@ -167,7 +163,7 @@ const inFlight = new Map()
 const nameSort = ref('')
 const ratingSort = ref('')
 const verifyFilter = ref('All')
-const dateSort = ref('')
+const dateSort = ref('desc')
 const jobsSort = ref('')
 // API sort params
 const sortField = ref('fl_updated_at')
@@ -193,7 +189,7 @@ const onSearch = () => {
 const cycleSort = (key) => {
   const map = { name: nameSort, rating: ratingSort, date: dateSort, jobs: jobsSort }
   const current = map[key]
-  const next = current.value === '' ? 'asc' : current.value === 'asc' ? 'desc' : ''
+  const next = current.value === 'desc' ? 'asc' : 'desc'
   nameSort.value = ratingSort.value = dateSort.value = jobsSort.value = ''
   current.value = next
 

@@ -42,7 +42,6 @@
               </svg>
               <span class="text-[10px] text-[#ccc] font-medium">Not uploaded</span>
             </div>
-            <!-- Status badge overlay -->
             <span v-if="doc.status" class="absolute top-1.5 left-1.5 doc-badge" :class="doc.status?.toLowerCase()">{{ doc.status }}</span>
           </div>
 
@@ -53,22 +52,28 @@
             </span>
             <span class="text-[10px] text-[#bbb]">{{ doc.uploaded || '–' }}</span>
             <span v-if="doc.reviewedBy" class="text-[10px] text-[#bbb]">By {{ doc.reviewedBy }}</span>
+            <span v-if="doc.status === 'REJECTED' && doc.rejectReason" class="text-[10px] text-red-400 leading-snug mt-0.5">Reason: {{ doc.rejectReason }}</span>
           </div>
 
           <!-- Actions -->
           <div v-if="doc.file_url" class="flex flex-col gap-1 px-2 pb-2 mt-auto">
-            <!-- Reject input -->
-            <div v-if="rejectingDoc === doc.id" class="flex flex-col gap-1">
-              <input
-                v-model="rejectReason"
-                type="text"
-                placeholder="Reason for rejection..."
-                class="w-full rounded-lg border border-[#eee] bg-[#f8f8f8] px-2.5 py-1.5 text-[11px] outline-none focus:border-red-300 focus:ring-1 focus:ring-red-100"
-                @keydown.enter="confirmReject(doc)"
-                @keydown.esc="rejectingDoc = null; rejectReason = ''"
-              />
-              <div class="flex gap-1">
-                <button class="btn-reject-row !flex flex-1 justify-center !text-[11px] !px-1 !py-1"
+            <div v-if="rejectingDoc == doc.id" class="flex flex-col gap-1">
+              <div class="relative">
+                <input
+                  v-model="rejectReason"
+                  type="text"
+                  maxlength="255"
+                  placeholder="Reason for rejection..."
+                  class="w-full rounded-lg border border-[#eee] bg-[#f8f8f8] px-2.5 py-1.5 pr-12 text-[11px] outline-none focus:border-red-300 focus:ring-1 focus:ring-red-100"
+                  @keydown.esc="rejectingDoc = null; rejectReason = ''"
+                />
+                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] pointer-events-none"
+                  :class="rejectReason.length >= 230 ? 'text-red-400 font-semibold' : 'text-[#bbb]'">
+                  {{ 255 - rejectReason.length }}
+                </span>
+              </div>
+              <div class="flex justify-end gap-1">
+                <button class="btn-reject-row !flex !justify-center !text-[11px] !px-2 !py-1"
                   @click="confirmReject(doc)">Confirm</button>
                 <button class="btn-cancel-sm !flex !text-[11px] !px-2 !py-1"
                   @click="rejectingDoc = null; rejectReason = ''">Cancel</button>
@@ -87,7 +92,7 @@
               <button class="btn-reject-row !flex flex-1 justify-center !text-[11px] !px-1 !py-1"
                 :disabled="doc.status === 'REJECTED'"
                 :class="{ 'opacity-40 cursor-not-allowed': doc.status === 'REJECTED' }"
-                @click="doc.status !== 'REJECTED' && (rejectingDoc = doc.id, rejectReason = '')">
+                @click="doc.status !== 'REJECTED' && (rejectingDoc = doc.id, rejectReason = doc.rejectReason || '')">
                 <svg class="w-3 h-3 mr-0.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
@@ -133,9 +138,14 @@
         </div>
         <div class="flex items-center justify-between mt-3 px-1">
           <div class="flex-1"></div>
-          <span class="text-white/90 text-[13px] font-semibold text-center flex-1">
-            {{ lightboxDoc.type?.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) }}
-          </span>
+          <div class="flex flex-col items-center gap-0.5 flex-1">
+            <span class="text-white/90 text-[13px] font-semibold text-center">
+              {{ lightboxDoc.type?.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) }}
+            </span>
+            <span v-if="lightboxDoc.status === 'REJECTED' && lightboxDoc.rejectReason" class="text-red-400 text-[11px] text-center">
+              Reason: {{ lightboxDoc.rejectReason }}
+            </span>
+          </div>
           <div class="flex flex-col items-end gap-0.5 flex-1">
             <span v-if="lightboxDoc.uploaded" class="text-white/40 text-[11px]">Uploaded {{ lightboxDoc.uploaded }}</span>
             <span v-if="lightboxDoc.reviewedBy" class="text-white/40 text-[11px]">By {{ lightboxDoc.reviewedBy }}</span>
@@ -165,9 +175,10 @@ function openLightbox(doc) {
 }
 
 function confirmReject(doc) {
-  emit('reject', { ...doc, reason: rejectReason.value.trim() })
+  const reason = rejectReason.value.trim()
   rejectingDoc.value = null
   rejectReason.value = ''
+  emit('reject', { id: doc.id, _type: doc._type, reason })
 }
 
 const approvedCount = computed(() =>

@@ -1,7 +1,7 @@
 <template>
   <div>
     <BreadcrumbBar :label="em?.em_name" />
-    <!-- Loading skeleton - mirrors real layout -->
+    <!-- Loading skeleton — mirrors real layout -->
     <div v-if="loading" class="px-5 pb-8">
       <!-- Top bar -->
       <div class="flex items-center justify-between py-3 mb-5">
@@ -238,7 +238,7 @@
             </div>
           </div>
 
-          <!-- Bank Account - icon header, no Primary badge -->
+          <!-- Bank Account — icon header, no Primary badge -->
           <div v-if="bankAccounts.length" class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
             <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
               <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6l9-3 9 3M3 6v12a1 1 0 001 1h16a1 1 0 001-1V6M3 6h18M8 10v7m4-7v7m4-7v7"/></svg>
@@ -280,7 +280,7 @@
                   <span class="text-[13px] font-medium text-[#222]">{{ verification.reviewed_by_name }}</span>
                 </div>
               </div>
-              <!-- Documents - 5 cols, click → modal -->
+              <!-- Documents — 5 cols, click → modal -->
               <div>
                 <div class="text-[12px] font-bold text-[#444] uppercase tracking-wide mb-3">Documents</div>
                 <div class="grid grid-cols-5 gap-2">
@@ -303,6 +303,7 @@
                       <span class="text-[11px] font-semibold text-[#222] leading-snug truncate">{{ formatDocType(d.em_doc_type) }}</span>
                       <span class="text-[10px] text-[#bbb]">{{ d.em_uploaded_at ? formatDate(d.em_uploaded_at) : '–' }}</span>
                       <span v-if="d.reviewed_by_name" class="text-[10px] text-[#bbb]">By {{ d.reviewed_by_name }}</span>
+                      <span v-if="d.em_doc_status === 'REJECTED' && d.reject_reason" class="text-[10px] text-red-400 leading-snug">Reason: {{ d.reject_reason }}</span>
                     </div>
                   </button>
                 </div>
@@ -310,7 +311,7 @@
             </div>
           </div>
 
-          <!-- Jobs Posted - clickable to job detail -->
+          <!-- Jobs Posted — clickable to job detail -->
           <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow" v-if="jobs.length">
             <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
               <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 3H8a2 2 0 00-2 2v2h12V5a2 2 0 00-2-2z"/></svg>
@@ -374,20 +375,20 @@
             <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
           </svg>
         </button>
-        <!-- Status overlay มุมซ้ายบนรูป -->
-        <div class="relative">
+                <div class="relative">
           <img :src="modalDoc.url" :alt="modalDoc.title"
             class="w-full max-h-[80vh] object-contain rounded-xl shadow-2xl" />
           <span v-if="modalDoc.status" class="absolute top-3 left-3 doc-badge" :class="modalDoc.status?.toLowerCase()">{{ modalDoc.status }}</span>
         </div>
         <div class="flex items-center justify-between mt-3 px-1">
-          <div class="flex-1">
-            <div v-if="modalDoc.uploadedAt || modalDoc.reviewedBy" class="flex flex-col gap-0.5 opacity-0">_</div>
+          <div class="flex-1"></div>
+          <div class="flex flex-col items-center gap-0.5 flex-1">
+            <span class="text-white/90 text-[13px] font-semibold text-center">{{ modalDoc.title }}</span>
+            <span v-if="modalDoc.status === 'REJECTED' && modalDoc.rejectReason" class="text-red-400 text-[11px] text-center">Reason: {{ modalDoc.rejectReason }}</span>
           </div>
-          <span class="text-white/90 text-[13px] font-semibold text-center flex-1">{{ modalDoc.title }}</span>
           <div class="flex flex-col items-end gap-0.5 flex-1">
             <span v-if="modalDoc.uploadedAt" class="text-white/40 text-[11px]">Uploaded {{ formatDateTime(modalDoc.uploadedAt) }}</span>
-            <span v-if="modalDoc.reviewedBy" class="text-white/40 text-[11px]">Reviewed by {{ modalDoc.reviewedBy }}</span>
+            <span v-if="modalDoc.reviewedBy" class="text-white/40 text-[11px]">By {{ modalDoc.reviewedBy }}</span>
           </div>
         </div>
       </div>
@@ -431,7 +432,7 @@ const loading = ref(true)
 const modalDoc = ref(null)
 
 const openDocModal = (d) => {
-  modalDoc.value = { url: d.file_url, title: formatDocType(d.em_doc_type), status: d.em_doc_status, uploadedAt: d.em_uploaded_at, reviewedBy: d.reviewed_by_name || null }
+  modalDoc.value = { url: d.file_url, title: formatDocType(d.em_doc_type), status: d.em_doc_status, uploadedAt: d.em_uploaded_at, reviewedBy: d.reviewed_by_name || null, rejectReason: d.reject_reason || null }
 }
 
 const formatDocType = (t) => ({ COMPANY_REGISTRATION: "Company Registration", BUSINESS_LICENSE: "Business License", TOURISM_LICENSE: "Tourism License", TAX_ID_DOCUMENT: "Tax ID Document", AUTHORIZED_PERSON_ID: "Authorized Person ID" }[t] || t)

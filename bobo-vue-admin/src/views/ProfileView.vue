@@ -37,7 +37,7 @@
               <template v-else>
                 <div class="flex items-center gap-2 flex-wrap">
                   <span class="text-base font-bold text-[#1a1a2e] leading-tight">{{ admin.name || '—' }}</span>
-                  <span class="badge text-xs" :class="isActive ? 'active' : 'inactive'">{{ admin.status }}</span>
+                  <span class="badge text-xs" :class="isActive ? 'active' : 'inactive'">{{ (admin.status || '').toUpperCase() }}</span>
                 </div>
                 <p class="text-xs text-[#999] mt-0.5">@{{ admin.username }}</p>
               </template>
@@ -78,7 +78,7 @@
                 <div class="flex items-center gap-2">
                   <div class="h-2 w-2 rounded-full transition-colors" :class="isActive ? 'bg-[#06c755]' : 'bg-[#bbb]'" />
                   <span class="text-sm font-medium transition-colors" :class="isActive ? 'text-[#2e7d32]' : 'text-[#999]'">
-                    {{ isActive ? 'Active' : 'Inactive' }}
+                    {{ isActive ? 'ACTIVE' : 'INACTIVE' }}
                   </span>
                 </div>
                 <button
@@ -454,7 +454,7 @@ import { API_BASE } from '../data/api'
 
 const router = useRouter()
 const admin = ref({})
-const isActive = computed(() => (admin.value.status || '').toLowerCase() === 'active')
+const isActive = computed(() => (admin.value.status || '').toUpperCase() === 'ACTIVE')
 const togglingStatus = ref(false)
 
 const toggleStatus = async () => {

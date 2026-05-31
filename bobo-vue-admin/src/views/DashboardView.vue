@@ -32,7 +32,7 @@
         <thead>
           <tr>
             <th style="width: 20%">JOB TITLE</th>
-            <th style="width: 16%">COMPANY</th>
+            <th style="width: 16%">EMPLOYER</th>
             <th style="width: 10%">PRICE</th>
             <th style="width: 10%">STATUS</th>
             <th style="width: 12%; text-align: center;">ACTION</th>
@@ -138,10 +138,11 @@
       @view-detail="goToVerifyDetail" />
     <DeleteJobModal :show="showDeleteModal" :title="deleteTargetTitle"
       @confirm="confirmDelete" @cancel="showDeleteModal = false" />
-    <DocReviewModal :user="selectedVerifyUser" :docs="selectedVerifyDocs"
+    <DocReviewModal v-if="selectedVerifyUser" :user="selectedVerifyUser" :docs="selectedVerifyDocs"
       @close="selectedVerifyUser = null"
       @approve="(doc) => reviewVerifyDoc(doc, 'APPROVED')"
-      @reject="(doc) => reviewVerifyDoc(doc, 'REJECTED')" />
+      @reject="({ id, reason }) => { const doc = selectedVerifyDocs.find(d => Number(d.id) === Number(id)); if (doc) reviewVerifyDoc(doc, 'REJECTED', reason) }"
+      @reset="(doc) => reviewVerifyDoc(doc, 'PENDING')" />
   </div>
 </template>
 
@@ -290,7 +291,7 @@ const openVerifyDocs = (v) => {
   }
 }
 
-const reviewVerifyDoc = async (doc, newStatus) => {
+const reviewVerifyDoc = async (doc, newStatus, reason = '') => {
   const endpoint = doc._type === 'fl'
     ? `${API_BASE}/fl-documents/${doc.id}`
     : `${API_BASE}/em-documents/${doc.id}`
@@ -298,12 +299,20 @@ const reviewVerifyDoc = async (doc, newStatus) => {
     const res = await fetch(endpoint, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: newStatus, reviewed_by: localStorage.getItem('admin_id') || '' }),
+      body: JSON.stringify({ status: newStatus, reviewed_by: localStorage.getItem('admin_id') || '', reason: reason || null }),
     })
     const data = await res.json()
     if (data.status === 'updated') {
-      doc.status = newStatus
-      doc.reviewed = formatDateTime(new Date().toISOString())
+      selectedVerifyDocs.value = selectedVerifyDocs.value.map(d => {
+        if (Number(d.id) !== Number(doc.id)) return d
+        return {
+          ...d,
+          status: newStatus,
+          reviewed: newStatus !== 'PENDING' ? formatDateTime(new Date().toISOString()) : null,
+          rejectReason: newStatus === 'REJECTED' ? (reason || null) : null,
+          reviewedBy: newStatus !== 'PENDING' ? (localStorage.getItem('admin_name') || 'Admin') : null,
+        }
+      })
       if (doc._type === 'fl') {
         const raw = flDocs.value.find(d => d.fl_doc_id === doc.id)
         if (raw) raw.fl_doc_status = newStatus
@@ -316,10 +325,13 @@ const reviewVerifyDoc = async (doc, newStatus) => {
         const userDocs = doc._type === 'fl'
           ? flDocs.value.filter(d => Number(d.fl_id) === Number(userId))
           : emDocs.value.filter(d => Number(d.em_id) === Number(userId))
-        const approvedCount = userDocs.filter(d =>
-          doc._type === 'fl' ? d.fl_doc_status === 'APPROVED' : d.em_doc_status === 'APPROVED'
-        ).length
-        const newUserStatus = approvedCount >= 5 ? 'VERIFIED' : 'PENDING'
+        const statusKey = doc._type === 'fl' ? 'fl_doc_status' : 'em_doc_status'
+        const approvedCount = userDocs.filter(d => d[statusKey] === 'APPROVED').length
+        const rejectedCount = userDocs.filter(d => d[statusKey] === 'REJECTED').length
+        const pendingCount = userDocs.filter(d => d[statusKey] === 'PENDING').length
+        const newUserStatus = approvedCount >= 5 ? 'VERIFIED'
+          : rejectedCount === userDocs.length && pendingCount === 0 && approvedCount === 0 ? 'NOT_VERIFIED'
+          : 'PENDING'
         const entry = verifications.value.find(v => v.id === userId)
         if (entry) entry.status = newUserStatus
         selectedVerifyUser.value.status = newUserStatus

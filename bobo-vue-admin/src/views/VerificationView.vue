@@ -3,8 +3,12 @@
     <BreadcrumbBar />
 
     <div class="tabs">
-      <button class="tab" :class="{ active: activeTab === 'Freelancer' }" @click="switchTab('Freelancer')">Freelancer</button>
-      <button class="tab" :class="{ active: activeTab === 'Employer' }" @click="switchTab('Employer')">Employer</button>
+      <button class="tab" :class="{ active: activeTab === 'Freelancer' }" @click="switchTab('Freelancer')">
+        Freelancer
+      </button>
+      <button class="tab" :class="{ active: activeTab === 'Employer' }" @click="switchTab('Employer')">
+        Employer
+      </button>
     </div>
 
     <div class="filter-row">
@@ -33,14 +37,12 @@
             </th>
             <th style="width:12%; text-align: center;">ACTION</th>
             <th class="th-sortable" :class="{ 'th-active': dateSort }" style="width:16%; position: relative;" @click="cycleSort('date')">
-              <span class="th-inner">SUBMITTED
+              <span class="th-inner">{{ dateSort === "desc" ? "LATEST SUBMIT" : "EARLY SUBMIT" }}
                 <span class="sort-label">
-                  <span v-if="!dateSort" class="sort-label-active">↑</span>
-                  <span v-else-if="dateSort === 'asc'" class="sort-label-active">↑</span>
-                  <span v-else class="sort-label-active">↓</span>
+                  <span class="sort-label-dim">⇅</span>
                 </span>
               </span>
-              <button v-if="nameSort || dateSort || search || statusFilter !== 'PENDING'" class="reset-btn ml-1.5"
+              <button v-if="nameSort || dateSort === 'desc' || search || statusFilter !== 'PENDING'" class="reset-btn ml-1.5"
                 @click.stop="resetAllFilters" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%);">✕ Reset</button>
             </th>
           </tr>
@@ -98,9 +100,9 @@
     <DocReviewModal
       :user="selectedUser"
       :docs="selectedDocs"
-      @close="selectedUser = null"
+      @close="onDocModalClose"
       @approve="(doc) => reviewDoc(doc, 'APPROVED')"
-      @reject="(doc) => reviewDoc(doc, 'REJECTED', doc.reason)"
+      @reject="({ id, reason }) => reviewDocById(id, 'REJECTED', reason)"
       @reset="(doc) => reviewDoc(doc, 'PENDING')"
     />
   </div>
@@ -112,7 +114,7 @@ import UserMiniModal from '../components/UserMiniModal.vue'
 import DocReviewModal from '../components/DocReviewModal.vue'
 import UserAvatar from '../components/UserAvatar.vue'
 import PaginationBar from '../components/PaginationBar.vue'
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, onActivated, triggerRef } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAvatar } from '../composables/useAvatar'
 import { formatDateTime, groupDocsByLatest } from '../utils/formatDate'
@@ -124,6 +126,7 @@ defineOptions({ name: 'VerificationView' })
 const { avatarStyle, initials2 } = useAvatar()
 
 const activeTab = ref('Freelancer')
+
 const isLoading = ref(false)
 const search = ref('')
 const currentPage = ref(1)
@@ -140,7 +143,7 @@ const SORT_FIELD_MAP = {
   Freelancer: { name: 'fl_name', date: 'fl_updated_at' },
   Employer:   { name: 'em_name', date: 'em_updated_at' },
 }
-const dateSort = ref('')
+const dateSort = ref('asc')
 const showStatusDropdown = ref(false)
 const statusDropdownStyle = ref({})
 
@@ -150,6 +153,17 @@ const flDocs = ref([])
 const emDocs = ref([])
 const selectedUser = ref(null)
 const selectedDocs = ref([])
+const needsReload = ref(false)
+
+const onDocModalClose = async () => {
+  selectedUser.value = null
+  if (needsReload.value) {
+    needsReload.value = false
+    pageCache.clear()
+    inFlight.clear()
+    await loadUsers(currentPage.value)
+  }
+}
 const userDetailModal = ref(null)
 const userDetailLoading = ref(false)
 
@@ -166,7 +180,7 @@ const onSearch = () => {
 const cycleSort = (key) => {
   const map = { name: nameSort, date: dateSort }
   const current = map[key]
-  const next = current.value === '' ? 'asc' : current.value === 'asc' ? 'desc' : ''
+  const next = current.value === 'desc' ? 'asc' : 'desc'
   nameSort.value = ''
   dateSort.value = ''
   current.value = next
@@ -175,7 +189,7 @@ const cycleSort = (key) => {
     sortOrder.value = next
   } else {
     sortField.value = activeTab.value === 'Employer' ? 'em_updated_at' : 'fl_updated_at'
-    sortOrder.value = 'asc'
+    sortOrder.value = 'desc'
   }
   pageCache.clear(); inFlight.clear()
   loadUsers(1)
@@ -323,29 +337,35 @@ const goToUserDetail = ({ id, type }) => {
   userDetailModal.value = null
 }
 
+const reviewDocById = (id, newStatus, reason = '') => {
+  const doc = selectedDocs.value.find(d => Number(d.id) === Number(id))
+  if (doc) reviewDoc(doc, newStatus, reason)
+}
+
 const reviewDoc = async (doc, newStatus, reason = '') => {
   const endpoint = doc._type === 'fl'
     ? `${API_BASE}/fl-documents/${doc.id}`
     : `${API_BASE}/em-documents/${doc.id}`
-  const docLabel = doc.type?.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) || doc.type
-  const note = newStatus === 'REJECTED' && reason
-    ? `${docLabel}: Rejected - ${reason}`
-    : newStatus === 'APPROVED'
-    ? `${docLabel}: Approved`
-    : null
   try {
     const res = await fetch(endpoint, {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: newStatus, reviewed_by: localStorage.getItem('admin_id') || '', note })
+      body: JSON.stringify({ status: newStatus, reviewed_by: localStorage.getItem('admin_id') || '', reason: reason || null })
     })
     const data = await res.json()
     if (data.status === 'updated') {
-      // หา doc ตัวจริงใน selectedDocs แล้วแก้ตรงๆ เพื่อให้ reactive
-      const liveDoc = selectedDocs.value.find(d => d.id === doc.id)
-      if (liveDoc) {
-        liveDoc.status = newStatus
-        liveDoc.reviewed = newStatus !== 'PENDING' ? formatDateTime(new Date().toISOString()) : null
-      }
+      selectedDocs.value = selectedDocs.value.map(d => {
+        if (d.id != doc.id) return d
+        return {
+          ...d,
+          status: newStatus,
+          reviewed: newStatus !== 'PENDING' ? formatDateTime(new Date().toISOString()) : null,
+          rejectReason: newStatus === 'REJECTED' ? (reason || null) : null,
+          reviewedBy: newStatus !== 'PENDING' ? (localStorage.getItem('admin_name') || 'Admin') : null,
+        }
+      })
+      doc.status = newStatus
+      doc.rejectReason = newStatus === 'REJECTED' ? (reason || null) : null
+      doc.reviewedBy = newStatus !== 'PENDING' ? (localStorage.getItem('admin_name') || 'Admin') : null
       if (doc._type === 'fl') {
         const raw = flDocs.value.find(d => d.fl_doc_id === doc.id)
         if (raw) raw.fl_doc_status = newStatus
@@ -353,8 +373,7 @@ const reviewDoc = async (doc, newStatus, reason = '') => {
         const raw = emDocs.value.find(d => d.em_doc_id === doc.id)
         if (raw) raw.em_doc_status = newStatus
       }
-      pageCache.clear(); inFlight.clear()
-      await loadUsers(currentPage.value)
+      needsReload.value = true
     }
   } catch (e) {
     console.error('Failed to review doc:', e)
@@ -374,8 +393,16 @@ const switchTab = async (tab) => {
 }
 
 onUnmounted(() => document.removeEventListener('click', handleOutsideClick))
+
+onActivated(() => {
+  window.dispatchEvent(new Event('verification-visited'))
+  localStorage.setItem('verification_last_seen', new Date().toISOString())
+})
+
 onMounted(async () => {
   document.addEventListener('click', handleOutsideClick)
+  localStorage.setItem('verification_last_seen', new Date().toISOString())
+  window.dispatchEvent(new Event('verification-visited'))
   await loadUsers()
 })
 </script>

@@ -33,6 +33,17 @@ class BanRequest(BaseModel):
     admin_id: str
 
 
+class ProfileUpdateRequest(BaseModel):
+    em_name: Optional[str] = None
+    em_email: Optional[str] = None
+    em_phone: Optional[str] = None
+    em_address: Optional[str] = None
+    em_bio: Optional[str] = None
+
+
+_EMPLOYER_NOT_FOUND = "Employer not found"
+
+
 @router.post("/employers/register")
 def register_employer(body: EmployerRegisterRequest):
     conn = None
@@ -89,6 +100,35 @@ def register_employer(body: EmployerRegisterRequest):
     finally:
         if conn:
             conn.close()
+
+        
+@router.put("/employers/{em_id}")
+def update_employer(em_id: str, body: ProfileUpdateRequest):
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT em_id FROM employers WHERE em_id = %s", (em_id,))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail=_EMPLOYER_NOT_FOUND)
+        cursor.execute(
+            """
+            UPDATE employers
+            SET em_name = %s, em_email = %s, em_phone = %s, em_address = %s, em_bio = %s
+            WHERE em_id = %s
+            """,
+            (body.em_name, body.em_email, body.em_phone, body.em_address, body.em_bio, em_id)
+        )
+        conn.commit()
+        return {"status": "updated"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
+
 @router.get("/employers")
 @router.get("/admin/employers")
 def get_employers(limit: int = 10, offset: int = 0, search: str = "", status: str = "", sort_by: str = "em_updated_at", sort_order: str = "desc"):
@@ -337,6 +377,16 @@ def review_em_document(doc_id: str, body: DocReviewRequest):
                     """,
                     (doc["em_id"],)
                 )
+                cursor.execute("SELECT em_name FROM employers WHERE em_id = %s", (doc["em_id"],))
+                em_info = cursor.fetchone()
+                cursor.execute(
+                    """
+                    INSERT INTO admin_logs
+                        (admin_id, action_type, target_type, target_id, target_name, note)
+                    VALUES (%s, 'NOT_VERIFY_EMPLOYER', 'EMPLOYER', %s, %s, 'All uploaded documents rejected')
+                    """,
+                    (body.reviewed_by, doc["em_id"], em_info["em_name"] if em_info else doc["em_id"])
+                )
             else:
                 cursor.execute(
                     "UPDATE employers SET em_verify_status = 'PENDING' WHERE em_id = %s",
@@ -374,17 +424,23 @@ def review_em_document(doc_id: str, body: DocReviewRequest):
         )
         doc_info = cursor.fetchone()
         if doc_info:
-            action = 'APPROVE_DOCUMENT' if body.status == 'APPROVED' else 'REJECT_DOCUMENT'
-            log_note = body.note or doc_info["em_doc_type"]
-            cursor.execute(
-                """
-                INSERT INTO admin_logs
-                    (admin_id, action_type, target_type, target_id, target_name, note)
-                VALUES (%s, %s, 'DOCUMENT', %s, %s, %s)
-                """,
-                (body.reviewed_by, action, doc_id,
-                 doc_info["em_name"], log_note)
-            )
+            if body.status == 'APPROVED':
+                action = 'APPROVE_DOCUMENT'
+            elif body.status == 'REJECTED':
+                action = 'REJECT_DOCUMENT'
+            else:
+                action = None
+            if action:
+                log_note = body.note or doc_info["em_doc_type"]
+                cursor.execute(
+                    """
+                    INSERT INTO admin_logs
+                        (admin_id, action_type, target_type, target_id, target_name, note)
+                    VALUES (%s, %s, 'DOCUMENT', %s, %s, %s)
+                    """,
+                    (body.reviewed_by, action, doc_id,
+                     doc_info["em_name"], log_note)
+                )
             if body.status == "APPROVED":
                 cursor.execute(
                     "SELECT COUNT(*) AS c FROM em_documents WHERE em_id = %s AND em_doc_status != 'APPROVED'",

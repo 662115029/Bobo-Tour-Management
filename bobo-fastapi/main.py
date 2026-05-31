@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import date
 
-from app.routers import jobs, employers, freelancers, admin, line_bot, reviews, uploads
+from app.routers import jobs, tours, auth, employers, freelancers, admin, line_bot, reviews, uploads
 from app.db.connection import get_connection, get_cursor
 
 load_dotenv()
@@ -18,7 +18,7 @@ def update_job_statuses():
         conn = get_connection()
         cursor = get_cursor(conn)
 
-        # MATCHED → IN_PROGRESS เมื่อถึง job_start_date
+        # MATCHED → IN_PROGRESS when job_start_date is reached
         cursor.execute(
             """
             UPDATE jobs
@@ -29,7 +29,7 @@ def update_job_statuses():
             (today,)
         )
 
-        # IN_PROGRESS → COMPLETED เมื่อผ่าน job_end_date
+        # IN_PROGRESS → COMPLETED when job_end_date has passed
         cursor.execute(
             """
             UPDATE jobs
@@ -76,12 +76,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth.router)
 app.include_router(uploads.router)
 app.include_router(line_bot.router)
 app.include_router(admin.router)
 app.include_router(employers.router)
 app.include_router(freelancers.router)
 app.include_router(jobs.router)
+app.include_router(tours.router)
 app.include_router(reviews.router)
 
 

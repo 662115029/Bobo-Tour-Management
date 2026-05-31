@@ -463,7 +463,6 @@ def review_fl_document(doc_id: str, body: DocReviewRequest):
                     (doc["fl_id"],)
                 )
         elif body.status == "REJECTED":
-            # เช็คว่าเอกสารที่ upload มา (file_url IS NOT NULL) ทั้งหมด reject หมดหรือยัง
             cursor.execute(
                 """
                 SELECT COUNT(*) AS total,
@@ -485,6 +484,16 @@ def review_fl_document(doc_id: str, body: DocReviewRequest):
                     WHERE fl_id = %s AND is_latest = 1
                     """,
                     (doc["fl_id"],)
+                )
+                cursor.execute("SELECT fl_name FROM freelancers WHERE fl_id = %s", (doc["fl_id"],))
+                fl_info = cursor.fetchone()
+                cursor.execute(
+                    """
+                    INSERT INTO admin_logs
+                        (admin_id, action_type, target_type, target_id, target_name, note)
+                    VALUES (%s, 'NOT_VERIFY_FREELANCER', 'FREELANCER', %s, %s, 'All uploaded documents rejected')
+                    """,
+                    (body.reviewed_by, doc["fl_id"], fl_info["fl_name"] if fl_info else doc["fl_id"])
                 )
             else:
                 cursor.execute(
@@ -523,17 +532,23 @@ def review_fl_document(doc_id: str, body: DocReviewRequest):
         )
         doc_info = cursor.fetchone()
         if doc_info:
-            action = 'APPROVE_DOCUMENT' if body.status == 'APPROVED' else 'REJECT_DOCUMENT'
-            log_note = body.note or doc_info["fl_doc_type"]
-            cursor.execute(
-                """
-                INSERT INTO admin_logs
-                    (admin_id, action_type, target_type, target_id, target_name, note)
-                VALUES (%s, %s, 'DOCUMENT', %s, %s, %s)
-                """,
-                (body.reviewed_by, action, doc_id,
-                 doc_info["fl_name"], log_note)
-            )
+            if body.status == 'APPROVED':
+                action = 'APPROVE_DOCUMENT'
+            elif body.status == 'REJECTED':
+                action = 'REJECT_DOCUMENT'
+            else:
+                action = None
+            if action:
+                log_note = body.note or doc_info["fl_doc_type"]
+                cursor.execute(
+                    """
+                    INSERT INTO admin_logs
+                        (admin_id, action_type, target_type, target_id, target_name, note)
+                    VALUES (%s, %s, 'DOCUMENT', %s, %s, %s)
+                    """,
+                    (body.reviewed_by, action, doc_id,
+                     doc_info["fl_name"], log_note)
+                )
             if body.status == "APPROVED":
                 cursor.execute(
                     "SELECT COUNT(*) AS c FROM fl_documents WHERE fl_id = %s AND fl_doc_status != 'APPROVED'",

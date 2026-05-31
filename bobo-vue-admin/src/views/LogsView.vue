@@ -27,6 +27,8 @@
                               : actionFilter === "UNBAN_USER" ? "UNBAN ▼"
                                 : actionFilter === "DELETE" ? "DELETE ▼"
                                   : actionFilter === "DELETE_JOB" ? "DELETE ▼"
+                                  : actionFilter === "NOT_VERIFY_FREELANCER" ? "NOT VERIFY FL ▼"
+                                  : actionFilter === "NOT_VERIFY_EMPLOYER" ? "NOT VERIFY EM ▼"
                                   : actionFilter + " ▼" }}
                 </button></span>
             </th>
@@ -39,7 +41,7 @@
                   : typeFilter + " ▼" }}
                 </button></span>
             </th>
-            <th class="th-sortable" :class="{ 'th-active': targetSort }" style="width: 18%"
+            <th class="th-sortable" :class="{ 'th-active': targetSort }" style="width: 22%"
               @click="cycleSort('target')">
               <span class="th-inner">
                 TARGET
@@ -50,7 +52,7 @@
                 </span>
               </span>
             </th>
-            <th style="width: 18%">NOTE</th>
+            <th style="width: 14%">NOTE</th>
             <th style="width: 18%; white-space: nowrap;">
               <span style="display:inline-flex;align-items:center;white-space:nowrap;gap:4px;">ADMIN
                 <button class="col-filter-btn" :class="{ active: adminFilter !== 'All' }"
@@ -60,13 +62,9 @@
             </th>
             <th class="th-sortable" :class="{ 'th-active': dateSort }" style="width: 17%;" @click="cycleSort('date')">
               <span class="th-inner" style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;">
-                LAST UPDATED
-                <span class="sort-label">
-                  <span v-if="!dateSort" class="sort-label-dim">⇅</span>
-                  <span v-else-if="dateSort === 'asc'" class="sort-label-active">↑</span>
-                  <span v-else class="sort-label-active">↓</span>
-                </span>
-                <button v-if="actionFilter !== 'All' || typeFilter !== 'All' || adminFilter !== 'All' || targetSort || dateSort"
+                {{ dateSort === 'asc' ? "EARLY UPDATE" : "LATEST UPDATE" }}
+                <span class="sort-label"><span class="sort-label-dim">⇅</span></span>
+                <button v-if="actionFilter !== 'All' || typeFilter !== 'All' || adminFilter !== 'All' || targetSort || dateSort === 'asc'"
                   class="reset-btn" style="margin-left:6px;font-size:11px;padding:2px 8px;"
                   @click.stop="resetAllFilters">✕ Reset</button>
               </span>
@@ -134,6 +132,8 @@
       <button class="col-dropdown-item" @click="setActionFilter('REJECT_DOCUMENT')">Reject Document</button>
       <button class="col-dropdown-item" @click="setActionFilter('VERIFY_FREELANCER')">Verify Freelancer</button>
       <button class="col-dropdown-item" @click="setActionFilter('VERIFY_EMPLOYER')">Verify Employer</button>
+      <button class="col-dropdown-item" @click="setActionFilter('NOT_VERIFY_FREELANCER')">Not Verify Freelancer</button>
+      <button class="col-dropdown-item" @click="setActionFilter('NOT_VERIFY_EMPLOYER')">Not Verify Employer</button>
       <button class="col-dropdown-item" @click="setActionFilter('BAN_USER')">Ban</button>
       <button class="col-dropdown-item" @click="setActionFilter('UNBAN_USER')">Unban</button>
       <button class="col-dropdown-item" @click="setActionFilter('DELETE_JOB')">Delete Job</button>
@@ -222,11 +222,11 @@
         <div class="px-5 py-4 flex flex-col gap-3">
           <div class="flex items-center justify-between bg-[#fafafa] rounded-xl px-4 py-3">
             <span class="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#bbb]">Job Name</span>
-            <span class="text-[13px] font-semibold text-[#222] max-w-[190px] truncate text-right">{{ deletedJobModal.target_name || deletedJobModal.target_id || '-' }}</span>
+            <span class="text-[13px] font-semibold text-[#222] max-w-[190px] truncate text-right">{{ deletedJobModal.target_name || deletedJobModal.target_id || '—' }}</span>
           </div>
           <div class="flex items-center justify-between bg-[#fafafa] rounded-xl px-4 py-3">
             <span class="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#bbb]">Deleted by</span>
-            <span class="text-[13px] font-semibold text-[#222]">{{ deletedJobModal.admin_name || '-' }}</span>
+            <span class="text-[13px] font-semibold text-[#222]">{{ deletedJobModal.admin_name || '—' }}</span>
           </div>
           <div class="flex items-center justify-between bg-[#fafafa] rounded-xl px-4 py-3">
             <span class="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#bbb]">Deleted at</span>
@@ -296,7 +296,7 @@ const actionFilter = ref(localStorage.getItem("logs_actionFilter") || "All");
 const targetSort = ref(localStorage.getItem("logs_targetSort") || "");
 const showActionDropdown = ref(false);
 const actionDropdownStyle = ref({});
-const dateSort = ref(localStorage.getItem("logs_dateSort") || "");
+const dateSort = ref("desc");
 const isLoading = ref(true);
 const logs = ref([]);
 const admins = ref([]);
@@ -337,7 +337,7 @@ const saveFilters = () => {
 const cycleSort = (key) => {
   const map = { target: targetSort, date: dateSort };
   const current = map[key];
-  const next = current.value === "" ? "asc" : current.value === "asc" ? "desc" : "";
+  const next = current.value === 'desc' ? 'asc' : 'desc';
   targetSort.value = "";
   dateSort.value = "";
   current.value = next;
@@ -432,9 +432,9 @@ const filteredLogs = computed(() => {
   if (targetSort.value) {
     result.sort((a, b) => { const c = (a.target_name||'').localeCompare(b.target_name||''); return targetSort.value === 'desc' ? -c : c })
   } else if (dateSort.value) {
-    result.sort((a, b) => { const c = new Date(a.created_at) - new Date(b.created_at); return dateSort.value === 'desc' ? -c : c })
+    result.sort((a, b) => { const c = a.log_id - b.log_id; return dateSort.value === 'desc' ? -c : c })
   } else {
-    result.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    result.sort((a, b) => b.log_id - a.log_id)
   }
   return result
 });

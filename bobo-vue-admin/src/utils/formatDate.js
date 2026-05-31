@@ -33,17 +33,14 @@ export function groupDocsByLatest(docs, prefix, formatDateTimeFn) {
   const statusKey = `${prefix}_doc_status`
 
   docs.forEach(d => {
-    const isLatest = d.is_latest === 1 || d.is_latest === true
     const existing = byType[d[typeKey]]
     if (!existing) {
       byType[d[typeKey]] = d
     } else {
-      const existingIsLatest = existing.is_latest === 1 || existing.is_latest === true
-      if (isLatest && !existingIsLatest) {
-        byType[d[typeKey]] = d
-      } else if (isLatest && existingIsLatest && d[uploadKey] && new Date(d[uploadKey]) > new Date(existing[uploadKey])) {
-        byType[d[typeKey]] = d
-      }
+      // เอา doc ที่ upload ล่าสุดเสมอ (ไม่พึ่ง is_latest ที่ API ไม่ได้ส่งมา)
+      const dDate = d[uploadKey] ? new Date(d[uploadKey]) : new Date(0)
+      const exDate = existing[uploadKey] ? new Date(existing[uploadKey]) : new Date(0)
+      if (dDate > exDate) byType[d[typeKey]] = d
     }
   })
 
@@ -72,6 +69,7 @@ export function groupDocsByLatest(docs, prefix, formatDateTimeFn) {
       uploaded: d[uploadKey] ? formatDateTimeFn(d[uploadKey]) : null,
       reviewed: d.reviewed_at ? formatDateTimeFn(d.reviewed_at) : null,
       reviewedBy: d.reviewed_by_name || null,
+      rejectReason: d.reject_reason || null,
       _type: prefix,
     }
   })
