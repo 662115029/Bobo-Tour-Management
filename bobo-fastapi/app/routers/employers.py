@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 from app.db.connection import get_connection, get_cursor
+import bcrypt
 
 router = APIRouter(tags=["employers"])
 
@@ -102,7 +103,7 @@ def register_employer(body: EmployerRegisterRequest):
         if conn:
             conn.close()
 
-        
+
 @router.put("/employers/{em_id}")
 def update_employer(em_id: str, body: ProfileUpdateRequest):
     conn = None
@@ -129,6 +130,7 @@ def update_employer(em_id: str, body: ProfileUpdateRequest):
     finally:
         if conn:
             conn.close()
+
 
 @router.get("/employers")
 @router.get("/admin/employers")
@@ -169,6 +171,8 @@ def get_employers(limit: int = 10, offset: int = 0, search: str = "", status: st
     finally:
         if conn:
             conn.close()
+
+
 @router.get("/employers/{em_id}")
 def get_employer(em_id: str):
     conn = None
@@ -196,6 +200,76 @@ def get_employer(em_id: str):
     finally:
         if conn:
             conn.close()
+
+
+@router.post("/employers/{em_id}/verify-password")
+def verify_employer_password(em_id: int, data: dict):
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute(
+            "SELECT em_password_hash FROM employers WHERE em_id = %s",
+            (em_id,)
+        )
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail=_EMPLOYER_NOT_FOUND)
+
+        current_password = data.get("current_password", "")
+        if not bcrypt.checkpw(current_password.encode(), row["em_password_hash"].encode()):
+            raise HTTPException(status_code=401, detail="Incorrect password.")
+
+        return {"success": True}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
+
+
+@router.put("/employers/{em_id}/password")
+def change_employer_password(em_id: int, data: dict):
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute(
+            "SELECT em_password_hash FROM employers WHERE em_id = %s",
+            (em_id,)
+        )
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail=_EMPLOYER_NOT_FOUND)
+
+        current_password = data.get("current_password", "")
+        if not bcrypt.checkpw(current_password.encode(), row["em_password_hash"].encode()):
+            raise HTTPException(status_code=401, detail="Incorrect current password.")
+
+        new_password = data.get("new_password", "")
+        if not new_password or len(new_password) < 6:
+            raise HTTPException(status_code=400, detail="New password must be at least 6 characters.")
+
+        new_hash = bcrypt.hashpw(new_password.encode(), bcrypt.gensalt()).decode()
+        cursor.execute(
+            "UPDATE employers SET em_password_hash = %s WHERE em_id = %s",
+            (new_hash, em_id)
+        )
+        conn.commit()
+        return {"success": True, "message": "Password updated successfully."}
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
+
+
 @router.get("/em-bank-accounts")
 def get_em_bank_accounts(limit: int = 10, offset: int = 0, em_id: Optional[int] = None):
     conn = None
@@ -224,6 +298,8 @@ def get_em_bank_accounts(limit: int = 10, offset: int = 0, em_id: Optional[int] 
     finally:
         if conn:
             conn.close()
+
+
 @router.get("/em-documents")
 def get_em_documents(limit: int = 10, offset: int = 0, status: str = "", em_id: Optional[int] = None, em_ids: str = ""):
     conn = None
@@ -269,6 +345,8 @@ def get_em_documents(limit: int = 10, offset: int = 0, status: str = "", em_id: 
     finally:
         if conn:
             conn.close()
+
+
 @router.get("/em-verification")
 def get_em_verification(limit: int = 10, offset: int = 0, status: str = "PENDING", em_id: Optional[int] = None):
     conn = None
@@ -307,6 +385,8 @@ def get_em_verification(limit: int = 10, offset: int = 0, status: str = "PENDING
     finally:
         if conn:
             conn.close()
+
+
 @router.patch("/em-documents/{doc_id}")
 def review_em_document(doc_id: str, body: DocReviewRequest):
     if body.status not in ("APPROVED", "REJECTED"):
@@ -384,7 +464,6 @@ def review_em_document(doc_id: str, body: DocReviewRequest):
                     """,
                     (doc["em_id"],)
                 )
-
             else:
                 cursor.execute(
                     "UPDATE employers SET em_verify_status = 'PENDING' WHERE em_id = %s",
@@ -481,6 +560,8 @@ def review_em_document(doc_id: str, body: DocReviewRequest):
     finally:
         if conn:
             conn.close()
+
+
 @router.patch("/employers/{em_id}/ban")
 def ban_employer(em_id: str, body: BanRequest):
     conn = None

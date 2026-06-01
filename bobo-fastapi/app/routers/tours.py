@@ -114,22 +114,14 @@ def get_tour(job_id: str, em_id: str):
             job["job_customers"] = []
 
         try:
+            # Fixed: return as job_expenses with item_name and amount to match frontend
             cursor.execute(
-                "SELECT inclusion_type, description, sequence FROM job_inclusions WHERE job_id = %s ORDER BY sequence",
+                "SELECT item_name, amount, sequence FROM job_expenses WHERE job_id = %s ORDER BY sequence",
                 (job_id,)
             )
-            job["job_inclusions"] = [dict(r) for r in cursor.fetchall()]
+            job["job_expenses"] = [dict(r) for r in cursor.fetchall()]
         except Exception:
-            job["job_inclusions"] = []
-
-        try:
-            cursor.execute(
-                "SELECT item_name AS place_name, amount AS foreigner_price, 0 AS thai_price, sequence FROM job_expenses WHERE job_id = %s ORDER BY sequence",
-                (job_id,)
-            )
-            job["job_entrance_fees"] = [dict(r) for r in cursor.fetchall()]
-        except Exception:
-            job["job_entrance_fees"] = []
+            job["job_expenses"] = []
 
         return job
     except HTTPException:
@@ -162,7 +154,7 @@ def create_tour(data: dict):
                 data.get("job_end_date"),
                 data.get("job_required_vehicle_type", "VAN"),
                 data.get("job_required_seat", 9),
-                data.get("job_price", 0),
+                data.get("job_price") or 0,  # Fixed: treat None as 0
             ),
         )
         job_id = cursor.lastrowid
@@ -203,18 +195,12 @@ def create_tour(data: dict):
                     (job_id, parts[0], parts[1] if len(parts) > 1 else None, c.get("note")),
                 )
 
-        for idx, inc in enumerate(data.get("job_inclusions", [])):
-            if inc.get("description"):
-                cursor.execute(
-                    "INSERT INTO job_inclusions (job_id, inclusion_type, description, sequence) VALUES (%s, %s, %s, %s)",
-                    (job_id, inc.get("inclusion_type"), inc.get("description"), idx + 1),
-                )
-
-        for idx, fee in enumerate(data.get("job_entrance_fees", [])):
-            if fee.get("place_name"):
+        # Fixed: read job_expenses (not job_entrance_fees), use item_name and amount
+        for idx, exp in enumerate(data.get("job_expenses", [])):
+            if exp.get("item_name"):
                 cursor.execute(
                     "INSERT INTO job_expenses (job_id, item_name, amount, sequence) VALUES (%s, %s, %s, %s)",
-                    (job_id, fee.get("place_name"), fee.get("foreigner_price", 0), idx + 1),
+                    (job_id, exp.get("item_name"), exp.get("amount", 0), idx + 1),
                 )
 
         conn.commit()
@@ -222,7 +208,7 @@ def create_tour(data: dict):
     except Exception as e:
         if conn:
             conn.rollback()
-        return {"error": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))  # Fixed: return proper error status
     finally:
         if conn:
             conn.close()
@@ -260,7 +246,7 @@ def update_tour(job_id: str, data: dict):
                 data.get("job_start_date"), data.get("job_end_date"),
                 data.get("job_required_vehicle_type", "VAN"),
                 data.get("job_required_seat", 9),
-                data.get("job_price", 0),
+                data.get("job_price") or 0,  # Fixed: treat None as 0
                 job_id,
             ),
         )
@@ -302,20 +288,13 @@ def update_tour(job_id: str, data: dict):
                     (job_id, parts[0], parts[1] if len(parts) > 1 else None, c.get("note")),
                 )
 
-        cursor.execute("DELETE FROM job_inclusions WHERE job_id = %s", (job_id,))
-        for idx, inc in enumerate(data.get("job_inclusions", [])):
-            if inc.get("description"):
-                cursor.execute(
-                    "INSERT INTO job_inclusions (job_id, inclusion_type, description, sequence) VALUES (%s, %s, %s, %s)",
-                    (job_id, inc.get("inclusion_type"), inc.get("description"), idx + 1),
-                )
-
+        # Fixed: read job_expenses (not job_entrance_fees), use item_name and amount
         cursor.execute("DELETE FROM job_expenses WHERE job_id = %s", (job_id,))
-        for idx, fee in enumerate(data.get("job_entrance_fees", [])):
-            if fee.get("place_name"):
+        for idx, exp in enumerate(data.get("job_expenses", [])):
+            if exp.get("item_name"):
                 cursor.execute(
                     "INSERT INTO job_expenses (job_id, item_name, amount, sequence) VALUES (%s, %s, %s, %s)",
-                    (job_id, fee.get("place_name"), fee.get("foreigner_price", 0), idx + 1),
+                    (job_id, exp.get("item_name"), exp.get("amount", 0), idx + 1),
                 )
 
         conn.commit()
@@ -325,7 +304,7 @@ def update_tour(job_id: str, data: dict):
     except Exception as e:
         if conn:
             conn.rollback()
-        return {"error": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))  # Fixed: return proper error status
     finally:
         if conn:
             conn.close()

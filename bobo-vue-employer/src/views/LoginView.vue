@@ -22,7 +22,7 @@
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
               <input
-                v-model="form.em_username"
+                v-model="form.identifier"
                 type="text"
                 required
                 placeholder="Your username"
@@ -82,7 +82,7 @@ import { useRouter } from 'vue-router'
 const API_BASE = '/api'
 const router = useRouter()
 
-const form = reactive({ em_username: '', password: '' })
+const form = reactive({ identifier: '', password: '' })
 const loading = ref(false)
 const error = ref('')
 const showPassword = ref(false)
@@ -101,6 +101,7 @@ const handleLogin = async () => {
       localStorage.setItem('em_id', data.em_id)
       localStorage.setItem('em_name', data.em_name)
       localStorage.setItem('em_email', data.em_email || '')
+      localStorage.setItem('em_profile_image_url', data.em_profile_image_url || '')
       router.push('/my-tours')
     } else {
       error.value = data.detail || 'Invalid username or password.'
