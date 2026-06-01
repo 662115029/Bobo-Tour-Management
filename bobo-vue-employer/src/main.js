@@ -5,7 +5,8 @@ import LoginView from './views/LoginView.vue'
 import RegisterView from './views/RegisterView.vue'
 import MyToursView from './views/MyToursView.vue'
 import ProfileView from './views/ProfileView.vue'
-import CreateJobView from './views/CreateJobView.vue'
+import CreateTourView from './views/CreateTourView.vue'
+import TourDetailsView from './views/TourDetailsView.vue'
 
 const routes = [
   { path: '/', redirect: '/my-tours' },
@@ -18,15 +19,22 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    // FIX: Added missing tour-detail route. Param is :id (matches MyToursView's viewJob call)
+    path: '/tours/:id',
+    name: 'tour-detail',
+    component: TourDetailsView,
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/profile',
     name: 'profile',
     component: ProfileView,
     meta: { requiresAuth: true }
   },
   {
-    path: '/create-job',
-    name: 'create-job',
-    component: CreateJobView,
+    path: '/create-tour',
+    name: 'create-tour',
+    component: CreateTourView,
     meta: { requiresAuth: true }
   },
 ]
