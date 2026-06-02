@@ -85,7 +85,7 @@
               <!-- Row 3: Phone + Address (2-col) -->
               <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label class="block text-sm font-medium text-gray-600 mb-1">Phone <span class="text-gray-400 font-normal">(optional)</span></label>
+                  <label class="block text-sm font-medium text-gray-600 mb-1">Phone <span class="text-red-500">*</span></label>
                   <input
                     v-model="form.em_phone"
                     type="tel"
@@ -95,7 +95,7 @@
                   />
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-600 mb-1">Address <span class="text-gray-400 font-normal">(optional)</span></label>
+                  <label class="block text-sm font-medium text-gray-600 mb-1">Address <span class="text-red-500">*</span></label>
                   <input
                     v-model="form.em_address"
                     type="text"

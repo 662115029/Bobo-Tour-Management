@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray font-['DM_Sans',sans-serif]">
+  <div class="min-h-screen bg-gray-100">
     <!-- Sidebar -->
     <SideBar />
 

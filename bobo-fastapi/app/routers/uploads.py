@@ -18,6 +18,17 @@ async def upload_image(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.post("/upload/payment-slip")
+async def upload_payment_slip(file: UploadFile = File(...)):
+    if file.content_type not in ALLOWED_TYPES:
+        raise HTTPException(status_code=400, detail="Invalid file type. Only JPEG, PNG, and WebP allowed.")
+    try:
+        url = await upload_image_to_supabase(file, folder="uploads/payment")
+        return {"url": url}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/fl-vehicle/{vehicle_id}/images")
 async def upload_vehicle_image(vehicle_id: str, file: UploadFile = File(...)):
     if file.content_type not in ALLOWED_TYPES:

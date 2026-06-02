@@ -6,7 +6,7 @@ router = APIRouter(tags=["reviews"])
 
 
 @router.get("/fl-reviews")
-def get_fl_reviews(limit: int = 50, offset: int = 0, fl_id: Optional[int] = None, em_id: Optional[int] = None):
+def get_fl_reviews(limit: int = 50, offset: int = 0, fl_id: Optional[int] = None, em_id: Optional[int] = None, job_id: Optional[int] = None):
     conn = None
     try:
         conn = get_connection()
@@ -19,6 +19,9 @@ def get_fl_reviews(limit: int = 50, offset: int = 0, fl_id: Optional[int] = None
         if em_id:
             where.append("fr.em_id = %s")
             params.append(em_id)
+        if job_id:
+            where.append("fr.job_id = %s")
+            params.append(job_id)
         where_sql = ("WHERE " + " AND ".join(where)) if where else ""
         params += [limit, offset]
         cursor.execute(
@@ -47,7 +50,7 @@ def get_fl_reviews(limit: int = 50, offset: int = 0, fl_id: Optional[int] = None
             conn.close()
 
 @router.get("/em-reviews")
-def get_em_reviews(limit: int = 50, offset: int = 0, em_id: Optional[int] = None, fl_id: Optional[int] = None):
+def get_em_reviews(limit: int = 50, offset: int = 0, em_id: Optional[int] = None, fl_id: Optional[int] = None, job_id: Optional[int] = None):
     conn = None
     try:
         conn = get_connection()
@@ -60,6 +63,9 @@ def get_em_reviews(limit: int = 50, offset: int = 0, em_id: Optional[int] = None
         if fl_id:
             where.append("er.fl_id = %s")
             params.append(fl_id)
+        if job_id:
+            where.append("er.job_id = %s")
+            params.append(job_id)
         where_sql = ("WHERE " + " AND ".join(where)) if where else ""
         params += [limit, offset]
         cursor.execute(

@@ -1,7 +1,7 @@
 <template>
   <!-- Sidebar -->
   <aside
-    class="fixed top-[72px] left-0 bg-white border-r border-gray-200 flex flex-col z-40 font-['DM_Sans',sans-serif] transition-all duration-300 overflow-hidden" style="height: calc(100vh - 72px)"
+    class="fixed top-[72px] left-0 bg-white border-r border-gray-200 flex flex-col z-40 transition-all duration-300 overflow-hidden" style="height: calc(100vh - 72px)"
     :class="isOpen ? 'w-56' : 'w-16'"
   >
     <!-- Nav Items -->
@@ -34,32 +34,3 @@ const route = useRoute()
 const { isOpen, toggle } = useSidebar()
 const isActive = (path) => route.path === path
 </script>
-
-<style scoped>
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #4b5563;
-  transition: background 0.15s, color 0.15s;
-  text-decoration: none;
-}
-.nav-item:hover {
-  background: #fef2f2;
-  color: #dc2626;
-}
-.nav-item.active {
-  background: #fef2f2;
-  color: #dc2626;
-  font-weight: 600;
-}
-.nav-icon {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-}
-</style>

@@ -1,9 +1,9 @@
 <template>
   <AppLayout>
-    <div class="px-8 pt-6 pb-16 font-['DM_Sans',sans-serif]">
+    <div class="px-5 pb-8">
 
-      <!-- Back button row -->
-      <div class="mb-4">
+      <!-- Top bar: Back + Action buttons -->
+      <div class="flex items-center justify-between py-3 mb-5">
         <button
           @click="$router.back()"
           class="flex items-center gap-1.5 text-sm font-medium text-gray-600 bg-white hover:bg-[#ffd8d8] hover:text-[#dc2626] px-4 py-2 rounded-full transition w-fit"
@@ -13,15 +13,54 @@
           </svg>
           Back
         </button>
+
+        <div v-if="job" class="flex items-center gap-2">
+          <template v-if="!editing">
+            <button v-if="canEdit" @click="startEditing"
+              class="flex items-center gap-1.5 px-3.5 py-2 text-[13px] font-semibold rounded-lg border-2 border-red-500 text-red-600 hover:bg-red-50 transition">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              Edit Tour
+            </button>
+            <button v-if="canCancel" @click="confirmCancel" :disabled="cancelling"
+              class="flex items-center gap-1.5 px-3.5 py-2 text-[13px] font-medium rounded-lg border border-[#e0e0e0] text-[#666] hover:bg-[#f5f5f5] transition disabled:opacity-50">
+              {{ cancelling ? 'Cancelling…' : 'Cancel Tour' }}
+            </button>
+          </template>
+          <template v-else>
+            <button @click="cancelEditing"
+              class="px-3.5 py-2 text-[13px] font-medium rounded-lg border border-[#e0e0e0] text-[#666] hover:bg-[#f5f5f5] transition">
+              Discard
+            </button>
+            <button @click="saveJob" :disabled="submitting"
+              class="px-5 py-2 text-[13px] font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700 transition disabled:opacity-50">
+              {{ submitting ? 'Saving…' : 'Save Changes' }}
+            </button>
+          </template>
+        </div>
       </div>
 
       <!-- Loading -->
-      <div v-if="loading" class="flex flex-col items-center justify-center py-32 text-gray-400">
-        <svg class="animate-spin w-8 h-8 mb-3 text-red-500" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-        </svg>
-        <span class="text-sm">Loading Tour Details…</span>
+      <div v-if="loading">
+        <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm p-6 mb-4">
+          <div class="flex items-start justify-between gap-4 mb-5">
+            <div class="flex-1 flex flex-col gap-2.5">
+              <div class="animate-pulse bg-[#ebebeb] h-5 w-16 rounded-full"></div>
+              <div class="animate-pulse bg-[#ebebeb] h-7 w-72 rounded"></div>
+              <div class="animate-pulse bg-[#ebebeb] h-3.5 w-36 rounded"></div>
+              <div class="animate-pulse bg-[#ebebeb] h-3 w-full max-w-lg rounded"></div>
+            </div>
+            <div class="shrink-0 flex flex-col items-end gap-2">
+              <div class="animate-pulse bg-[#ebebeb] h-2.5 w-10 rounded"></div>
+              <div class="animate-pulse bg-[#ebebeb] h-9 w-32 rounded"></div>
+            </div>
+          </div>
+          <div class="grid grid-cols-4 gap-3 pt-4 border-t border-[#f0f0f0]">
+            <div v-for="i in 4" :key="i" class="bg-[#f8f9fa] rounded-lg border border-[#eee] px-3 py-2.5 flex flex-col gap-1.5">
+              <div class="animate-pulse bg-[#ebebeb] h-2 w-14 rounded"></div>
+              <div class="animate-pulse bg-[#ebebeb] h-4 w-20 rounded"></div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Error -->
@@ -33,360 +72,427 @@
       <!-- Content -->
       <template v-else-if="job">
 
-        <!-- ── Hero card ── -->
-        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-5">
-          <div class="flex items-start justify-between gap-4 mb-4">
+        <!-- Hero Card -->
+        <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm p-6 mb-4 hover:shadow-md transition-shadow">
+          <div class="flex items-start justify-between gap-4 mb-5">
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 mb-2">
-                <span :class="statusClass(job.job_status)" class="text-xs font-semibold px-2.5 py-0.5 rounded-full">
-                  {{ statusLabel(job.job_status) }}
-                </span>
-                <span v-if="editing" class="text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full">Editing</span>
+                <span class="badge" :class="job.job_status?.toLowerCase()">{{ statusLabel(job.job_status) }}</span>
+                <span v-if="editing" class="badge" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a">Editing</span>
               </div>
-              <h1 class="text-2xl font-bold text-gray-800 leading-snug">
+              <h1 class="text-[20px] font-bold text-[#111] leading-tight mb-1.5">
                 {{ editing ? form.job_title || 'Edit Tour' : job.job_title }}
               </h1>
-              <p v-if="job.company" class="text-sm text-gray-400 mt-1 flex items-center gap-1.5">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-                {{ job.company }}
-              </p>
-              <p v-if="job.job_description" class="text-sm text-gray-500 mt-2 leading-relaxed">{{ job.job_description }}</p>
+              <p v-if="job.job_description" class="text-[13px] text-[#888] leading-relaxed mt-2 max-w-2xl">{{ job.job_description }}</p>
             </div>
             <div class="text-right shrink-0">
-              <p class="text-xs text-gray-400 uppercase tracking-wide font-medium mb-1">Price</p>
-              <p class="text-3xl font-bold text-gray-800">฿{{ Number(job.job_price).toLocaleString() }}</p>
+              <div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium mb-1">Price</div>
+              <div class="text-[26px] font-bold text-[#111]">{{ job.job_price ? "฿" + Number(job.job_price).toLocaleString() : "–" }}</div>
             </div>
           </div>
-
-          <!-- Date/Vehicle/Seats row -->
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div class="bg-gray-50 rounded-xl p-3 border border-gray-100">
-              <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Start Date</p>
-              <p class="text-sm font-semibold text-gray-700">{{ formatDate(job.job_start_date) }}</p>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-[#f0f0f0]">
+            <div class="bg-[#f8f9fa] rounded-lg border border-[#eee] px-3 py-2.5 hover:border-[#ddd] hover:bg-[#f0f0f0] transition-colors">
+              <div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium mb-0.5">Start Date</div>
+              <div class="text-[14px] font-semibold text-[#222]">{{ formatDate(job.job_start_date) }}</div>
             </div>
-            <div class="bg-gray-50 rounded-xl p-3 border border-gray-100">
-              <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">End Date</p>
-              <p class="text-sm font-semibold text-gray-700">{{ formatDate(job.job_end_date) }}</p>
+            <div class="bg-[#f8f9fa] rounded-lg border border-[#eee] px-3 py-2.5 hover:border-[#ddd] hover:bg-[#f0f0f0] transition-colors">
+              <div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium mb-0.5">End Date</div>
+              <div class="text-[14px] font-semibold text-[#222]">{{ formatDate(job.job_end_date) }}</div>
             </div>
-            <div class="bg-gray-50 rounded-xl p-3 border border-gray-100">
-              <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Vehicle</p>
-              <p class="text-sm font-semibold text-gray-700">{{ job.job_required_vehicle_type || '—' }}</p>
+            <div class="bg-[#f8f9fa] rounded-lg border border-[#eee] px-3 py-2.5 hover:border-[#ddd] hover:bg-[#f0f0f0] transition-colors">
+              <div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium mb-0.5">Vehicle</div>
+              <div class="text-[14px] font-semibold text-[#222]">{{ job.job_required_vehicle_type || "–" }}</div>
             </div>
-            <div class="bg-gray-50 rounded-xl p-3 border border-gray-100">
-              <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Seats Required</p>
-              <p class="text-sm font-semibold text-gray-700">{{ job.job_required_seat ?? '—' }}</p>
+            <div class="bg-[#f8f9fa] rounded-lg border border-[#eee] px-3 py-2.5 hover:border-[#ddd] hover:bg-[#f0f0f0] transition-colors">
+              <div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium mb-0.5">Seats Required</div>
+              <div class="text-[14px] font-semibold text-[#222]">{{ job.job_required_seat || "–" }}</div>
             </div>
           </div>
         </div>
 
-        <!-- ── Two-column body ── -->
-        <div class="flex gap-5 items-start">
+        <!-- 2-col layout -->
+        <div class="grid gap-4 grid-cols-1 lg:grid-cols-[320px_1fr] items-start">
 
-          <!-- LEFT column -->
-          <div class="flex flex-col gap-4 w-72 shrink-0">
+          <!-- ── LEFT ── -->
+          <div class="flex flex-col gap-3">
 
-            <!-- Languages & Driver -->
-            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
-              <h2 class="section-title">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
-                Languages & Driver
-              </h2>
-
-              <div class="mb-4">
-                <p class="info-label mb-1">Required Languages</p>
+            <!-- Languages -->
+            <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+              <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
+                <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
+                <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Languages</span>
+              </div>
+              <div class="px-4 py-4 flex flex-wrap gap-1.5">
                 <template v-if="!editing">
-                  <div v-if="job.job_required_languages?.length" class="flex flex-wrap gap-1.5">
-                    <span v-for="lang in job.job_required_languages" :key="lang" class="px-2.5 py-0.5 bg-red-50 text-red-700 text-xs font-medium rounded-full border border-red-100">{{ lang }}</span>
-                  </div>
-                  <p v-else class="text-sm text-gray-400 italic">None specified</p>
+                  <span v-for="lang in job.job_required_languages" :key="lang" class="info-tag language">{{ lang }}</span>
+                  <span v-if="!job.job_required_languages?.length" class="text-[13px] text-[#bbb]">None specified</span>
                 </template>
-                <div v-else class="flex flex-wrap gap-2">
+                <div v-else class="flex flex-wrap gap-1.5">
                   <button v-for="lang in allLanguages" :key="lang" type="button" @click="toggleLanguage(lang)"
-                    :class="['px-3 py-1 rounded-full text-xs font-medium border transition-colors', form.job_required_languages.includes(lang) ? 'bg-red-600 text-white border-red-600' : 'bg-white text-gray-600 border-gray-300 hover:border-red-400']">
+                    :class="['px-3 py-1 rounded-full text-xs font-medium border transition-colors', form.job_required_languages.includes(lang) ? 'bg-red-600 text-white border-red-600' : 'bg-white text-[#555] border-[#ddd] hover:border-red-400']">
                     {{ lang }}
                   </button>
                 </div>
               </div>
+            </div>
 
-              <div>
-                <p class="info-label mb-2">Assigned Driver</p>
-                <template v-if="!editing">
-                  <div v-if="job.driver_name" class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-full bg-[#fef2f2] text-[#dc2626] text-sm font-bold flex items-center justify-center shrink-0">
-                      {{ job.driver_name.charAt(0).toUpperCase() }}
-                    </div>
-                    <div>
-                      <p class="text-sm font-medium text-gray-800">{{ job.driver_name }}</p>
-                      <p v-if="job.driver_phone" class="text-xs text-gray-400">{{ job.driver_phone }}</p>
-                    </div>
+            <!-- Pickup Areas -->
+            <div v-if="pickups.length" class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+              <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
+                <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Pickup Areas</span>
+              </div>
+              <div class="px-4 py-4 flex flex-wrap gap-1.5">
+                <span v-for="p in pickups" :key="p.area_id" class="info-tag area">{{ p.area_name }}</span>
+              </div>
+            </div>
+
+            <!-- Assigned Driver -->
+            <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+              <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
+                <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Assigned Driver</span>
+              </div>
+              <div class="px-4 py-4">
+                <div v-if="job.driver_name" class="flex items-center gap-2.5">
+                  <div class="w-8 h-8 rounded-full bg-[#fef2f2] text-[#dc2626] text-sm font-bold flex items-center justify-center shrink-0">{{ job.driver_name.charAt(0).toUpperCase() }}</div>
+                  <div>
+                    <div class="text-[14px] font-medium text-[#222]">{{ job.driver_name }}</div>
+                    <div v-if="job.driver_phone" class="text-[12px] text-[#999]">{{ job.driver_phone }}</div>
                   </div>
-                  <p v-else class="text-sm text-gray-400 italic">Not assigned</p>
-                </template>
-                <template v-else>
-                  <input v-model="form.driver_name" type="text" class="field-input mb-2" placeholder="Driver Name" />
-                  <input v-model="form.driver_phone" type="tel" class="field-input" placeholder="08x xxx xxxx" />
-                </template>
+                </div>
+                <span v-else class="text-[13px] text-[#bbb]">Not assigned</span>
               </div>
             </div>
 
             <!-- Timeline -->
-            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
-              <h2 class="section-title">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2"/></svg>
-                Timeline
-              </h2>
-              <div class="space-y-3">
-                <div class="flex items-start gap-2.5">
-                  <svg class="w-4 h-4 text-gray-300 mt-0.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2"/></svg>
+            <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+              <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
+                <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Timeline</span>
+              </div>
+              <div class="px-4 py-3 flex flex-col gap-3">
+                <div class="flex items-center gap-2.5">
+                  <svg class="w-3.5 h-3.5 text-[#ccc] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                   <div>
-                    <p class="info-label">Created</p>
-                    <p class="text-sm text-gray-700">{{ formatDateTime(job.job_created_at) }}</p>
+                    <div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium">Created</div>
+                    <div class="text-[13px] font-medium text-[#222]">{{ formatDateTime(job.job_created_at) }}</div>
                   </div>
                 </div>
-                <div class="flex items-start gap-2.5">
-                  <svg class="w-4 h-4 text-gray-300 mt-0.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                <div class="flex items-center gap-2.5">
+                  <svg class="w-3.5 h-3.5 text-[#ccc] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8 8 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8 8 0 01-15.357-2m15.357 2H15"/></svg>
                   <div>
-                    <p class="info-label">Last Updated</p>
-                    <p class="text-sm text-gray-700">{{ formatDateTime(job.job_updated_at) }}</p>
+                    <div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium">Last Updated</div>
+                    <div class="text-[13px] font-medium text-[#222]">{{ formatDateTime(job.job_updated_at) }}</div>
                   </div>
                 </div>
               </div>
             </div>
 
             <!-- Expenses -->
-            <div v-if="editing || job.job_expenses?.length" class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
-              <h2 class="section-title">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                Expenses
-              </h2>
-              <template v-if="!editing">
-                <div class="space-y-2 mb-3">
-                  <div v-for="(exp, idx) in sortedExpenses" :key="idx" class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600">{{ exp.item_name }}</span>
-                    <span class="text-sm font-medium text-gray-800">฿{{ Number(exp.amount).toLocaleString() }}</span>
+            <div v-if="editing || job.job_expenses?.length" class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+              <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
+                <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path stroke-linecap="round" stroke-linejoin="round" d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Expenses</span>
+              </div>
+              <div class="px-4 py-4">
+                <template v-if="!editing">
+                  <div class="flex flex-col divide-y divide-[#f0f0f0]">
+                    <div v-for="(exp, idx) in sortedExpenses" :key="idx" class="flex items-center justify-between py-2 hover:bg-[#fafafa] transition-colors px-1 rounded">
+                      <span class="text-[13px] text-[#444]">{{ exp.item_name }}</span>
+                      <span class="text-[13px] font-semibold text-[#222]">{{ exp.amount ? "฿" + Number(exp.amount).toLocaleString() : "–" }}</span>
+                    </div>
                   </div>
-                </div>
-                <div class="border-t border-gray-100 pt-2 flex justify-between">
-                  <span class="text-sm font-bold text-gray-800">Total</span>
-                  <span class="text-sm font-bold text-gray-800">฿{{ sortedExpenses.reduce((s, e) => s + Number(e.amount || 0), 0).toLocaleString() }}</span>
-                </div>
-              </template>
-              <template v-else>
-                <div v-for="(exp, idx) in form.job_expenses" :key="idx" class="grid grid-cols-2 gap-2 mb-2 items-end">
-                  <div><label class="field-label">Item Name</label><input v-model="exp.item_name" type="text" class="field-input" /></div>
-                  <div><label class="field-label">Amount (THB)</label><input v-model.number="exp.amount" type="number" class="field-input" /></div>
-                  <button type="button" @click="form.job_expenses.splice(idx, 1)" class="col-span-2 text-xs text-red-500 hover:underline text-left">Remove</button>
-                </div>
-                <button type="button" @click="form.job_expenses.push({ item_name: '', amount: 0 })" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs hover:bg-gray-200">+ Add Expense</button>
-              </template>
+                  <div class="flex items-center justify-between pt-3 mt-1 border-t-2 border-[#eee]">
+                    <span class="text-[13px] font-bold text-[#111]">Total</span>
+                    <span class="text-[15px] font-bold text-[#111]">฿{{ Number(sortedExpenses.reduce((s, e) => s + Number(e.amount || 0), 0)).toLocaleString() }}</span>
+                  </div>
+                </template>
+                <template v-else>
+                  <div v-for="(exp, idx) in form.job_expenses" :key="idx" class="grid grid-cols-2 gap-2 mb-2 items-end">
+                    <div><label class="field-label">Item Name</label><input v-model="exp.item_name" type="text" class="field-input" /></div>
+                    <div><label class="field-label">Amount (THB)</label><input v-model.number="exp.amount" type="number" class="field-input" /></div>
+                    <button type="button" @click="form.job_expenses.splice(idx, 1)" class="col-span-2 text-xs text-red-500 hover:underline text-left">Remove</button>
+                  </div>
+                  <button type="button" @click="form.job_expenses.push({ item_name: '', amount: 0 })"
+                    class="px-3 py-1.5 bg-[#f5f5f5] text-[#555] rounded-lg text-xs hover:bg-[#ebebeb] transition">+ Add Expense</button>
+                </template>
+              </div>
             </div>
 
+            <!-- Payment -->
+            <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+              <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
+                <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Payment</span>
+              </div>
+              <div class="px-4 py-4 flex flex-col gap-3">
 
+                <!-- Current payment -->
+                <template v-if="payment">
+                  <div class="rounded-xl border border-[#e8e8e8] bg-[#f8f9fa] hover:border-[#ddd] hover:bg-[#f5f5f5] transition-colors overflow-hidden">
+                    <div class="px-4 py-3 flex items-center justify-between">
+                      <div class="flex items-center gap-2">
+                        <div class="w-7 h-7 rounded-full bg-[#fef2f2] text-[#dc2626] text-xs font-bold flex items-center justify-center shrink-0">{{ (payment.driver_name || '?').charAt(0).toUpperCase() }}</div>
+                        <span class="text-[13px] font-medium text-[#222]">{{ payment.driver_name || '—' }}</span>
+                      </div>
+                      <span class="payment-badge" :class="payment.payment_status?.toLowerCase()">{{ payment.payment_status }}</span>
+                    </div>
+                    <div v-if="payment.paid_at || payment.confirmed_at || payment.reject_reason" class="px-4 pb-3 flex flex-col gap-1">
+                      <div v-if="payment.paid_at" class="text-[11px] text-[#888]">Paid: {{ formatDateTime(payment.paid_at) }}</div>
+                      <div v-if="payment.confirmed_at" class="text-[11px] text-[#888]">Confirmed: {{ formatDateTime(payment.confirmed_at) }}</div>
+                      <div v-if="payment.reject_reason" class="text-[11px] text-red-600">Reason: {{ payment.reject_reason }}</div>
+                    </div>
+                    <div v-if="payment.slip_url" class="border-t border-[#eee]">
+                      <div class="px-4 py-2 text-[10px] text-[#aaa] uppercase tracking-wide font-medium">Payment Slip</div>
+                      <div class="h-[160px] bg-[#f0f0f0] overflow-hidden cursor-pointer hover:opacity-90 transition-opacity" @click="slipModalUrl = payment.slip_url">
+                        <img :src="payment.slip_url" class="w-full h-full object-contain" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Reupload when REJECTED -->
+                  <template v-if="payment.payment_status === 'REJECTED'">
+                    <div class="border border-red-100 rounded-xl p-4 bg-red-50">
+                      <p class="text-[12px] font-semibold text-red-600 mb-2">Re-upload Slip</p>
+                      <div class="border-2 border-dashed border-red-200 rounded-xl p-4 text-center hover:border-red-400 transition-colors cursor-pointer relative"
+                        @click="$refs.reuploadInput.click()" @dragover.prevent @drop.prevent="onReuploadDrop">
+                        <input ref="reuploadInput" type="file" accept="image/*" class="hidden" @change="onReuploadFileChange" />
+                        <div v-if="!reuploadPreview">
+                          <svg class="w-7 h-7 text-red-300 mx-auto mb-1.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4-4 4 4 4-8 4 8"/><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+                          <p class="text-[13px] text-[#999]">Click to select a new slip</p>
+                        </div>
+                        <div v-else class="relative">
+                          <img :src="reuploadPreview" class="max-h-32 mx-auto rounded-lg object-contain" />
+                          <button type="button" @click.stop="clearReupload" class="absolute top-1 right-1 w-6 h-6 bg-red-600 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-700">✕</button>
+                        </div>
+                      </div>
+                      <button v-if="reuploadPreview" @click="submitReupload" :disabled="paymentSubmitting"
+                        class="mt-2 w-full py-2 bg-red-600 text-white text-[13px] font-semibold rounded-lg hover:bg-red-700 transition disabled:opacity-50">
+                        {{ paymentSubmitting ? 'Uploading…' : 'Submit New Slip' }}
+                      </button>
+                    </div>
+                  </template>
+                </template>
+
+                <!-- No payment yet -->
+                <template v-else>
+                  <p class="text-[13px] text-[#bbb]">No payment submitted yet.</p>
+                  <div class="border-2 border-dashed border-[#e0e0e0] rounded-xl p-4 text-center hover:border-red-300 transition-colors cursor-pointer relative"
+                    @click="$refs.slipInput.click()" @dragover.prevent @drop.prevent="onSlipDrop">
+                    <input ref="slipInput" type="file" accept="image/*" class="hidden" @change="onSlipFileChange" />
+                    <div v-if="!slipPreview">
+                      <svg class="w-8 h-8 text-[#ccc] mx-auto mb-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4-4 4 4 4-8 4 8"/><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+                      <p class="text-[13px] text-[#999]">Click or drag & drop file here</p>
+                      <p class="text-[11px] text-[#ccc] mt-1">JPEG, PNG, WebP</p>
+                    </div>
+                    <div v-else class="relative">
+                      <img :src="slipPreview" class="max-h-40 mx-auto rounded-lg object-contain" />
+                      <button type="button" @click.stop="clearSlip" class="absolute top-1 right-1 w-6 h-6 bg-red-600 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-700">✕</button>
+                    </div>
+                  </div>
+                  <button v-if="slipPreview" @click="submitPayment" :disabled="paymentSubmitting"
+                    class="w-full py-2 bg-red-600 text-white text-[13px] font-semibold rounded-lg hover:bg-red-700 transition disabled:opacity-50">
+                    {{ paymentSubmitting ? 'Uploading…' : 'Submit Payment Slip' }}
+                  </button>
+                </template>
+
+                <!-- Payment history -->
+                <div v-if="paymentHistory.length">
+                  <button class="flex items-center gap-1.5 text-[11px] text-[#999] hover:text-[#555] transition-colors mt-1 mb-2"
+                    @click="showPaymentHistory = !showPaymentHistory">
+                    <svg class="w-3 h-3 transition-transform" :class="showPaymentHistory ? 'rotate-90' : ''" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+                    {{ showPaymentHistory ? 'Hide' : 'Show' }} payment history ({{ paymentHistory.length }})
+                  </button>
+                  <div v-if="showPaymentHistory" class="flex flex-col gap-2">
+                    <div v-for="pay in paymentHistory" :key="pay.payment_id"
+                      class="rounded-xl border border-[#f0e0e0] bg-[#fff8f8] overflow-hidden opacity-70">
+                      <div class="px-4 py-2.5 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                          <div class="w-6 h-6 rounded-full bg-[#fef2f2] text-[#dc2626] text-xs font-bold flex items-center justify-center shrink-0">{{ (pay.driver_name || '?').charAt(0).toUpperCase() }}</div>
+                          <span class="text-[12px] text-[#666]">{{ pay.driver_name }}</span>
+                        </div>
+                        <span class="payment-badge" :class="pay.payment_status?.toLowerCase()">{{ pay.payment_status }}</span>
+                      </div>
+                      <div class="px-4 pb-2.5 flex flex-col gap-0.5">
+                        <div v-if="pay.paid_at" class="text-[10px] text-[#aaa]">Paid: {{ formatDateTime(pay.paid_at) }}</div>
+                        <div v-if="pay.reject_reason" class="text-[10px] text-red-400">Reason: {{ pay.reject_reason }}</div>
+                      </div>
+                      <div v-if="pay.slip_url" class="border-t border-[#f5e0e0]">
+                        <div class="px-4 py-2 text-[10px] text-[#aaa] uppercase tracking-wide font-medium">Payment Slip</div>
+                        <div class="h-[160px] bg-[#f8f0f0] overflow-hidden cursor-pointer hover:opacity-90 transition-opacity" @click="slipModalUrl = pay.slip_url">
+                          <img :src="pay.slip_url" class="w-full h-full object-contain" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Review from employer to freelancer -->
+            <div v-if="jobReview" class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+              <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
+                <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+                <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Your Review</span>
+                <div class="ml-auto flex items-center gap-0.5">
+                  <span v-for="s in 5" :key="s" class="text-[13px]" :class="s <= jobReview.rating ? 'text-[#f9a825]' : 'text-[#e0e0e0]'">★</span>
+                </div>
+              </div>
+              <div class="px-4 py-4">
+                <div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium mb-1">To {{ jobReview.driver_name }}</div>
+                <p v-if="jobReview.comment" class="text-[13px] text-[#444] leading-relaxed">{{ jobReview.comment }}</p>
+                <p v-else class="text-[13px] text-[#bbb] italic">No comment</p>
+                <div class="text-[11px] text-[#bbb] mt-2">{{ formatDate(jobReview.reviewed_at) }}</div>
+              </div>
+            </div>
+
+            <!-- Review from freelancer to employer -->
+            <div v-if="emReview" class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+              <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
+                <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+                <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Freelancer Review</span>
+                <div class="ml-auto flex items-center gap-0.5">
+                  <span v-for="s in 5" :key="s" class="text-[13px]" :class="s <= emReview.rating ? 'text-[#f9a825]' : 'text-[#e0e0e0]'">★</span>
+                </div>
+              </div>
+              <div class="px-4 py-4">
+                <div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium mb-1">From {{ emReview.driver_name }}</div>
+                <p v-if="emReview.comment" class="text-[13px] text-[#444] leading-relaxed">{{ emReview.comment }}</p>
+                <p v-else class="text-[13px] text-[#bbb] italic">No comment</p>
+                <div class="text-[11px] text-[#bbb] mt-2">{{ formatDate(emReview.reviewed_at) }}</div>
+              </div>
+            </div>
 
           </div>
 
-          <!-- RIGHT column -->
-          <div class="flex-1 min-w-0 flex flex-col gap-4">
+          <!-- ── RIGHT ── -->
+          <div class="flex flex-col gap-3">
 
-            <!-- Itinerary -->
-            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
-              <h2 class="section-title">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                Itinerary
-              </h2>
-              <template v-if="!editing">
-                <div class="space-y-2">
-                  <div v-for="(item, idx) in job.job_itineraries" :key="idx" class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
-                    <div class="w-7 h-7 rounded-full bg-purple-100 text-purple-700 text-xs font-bold flex items-center justify-center shrink-0">{{ idx + 1 }}</div>
-                    <div class="flex-1 min-w-0">
-                      <p class="text-sm font-medium text-gray-800">{{ item.place_name }}</p>
-                      <p v-if="item.note" class="text-xs text-gray-400">{{ item.note }}</p>
-                    </div>
-                    <span v-if="item.start_time || item.end_time" class="text-xs font-semibold text-purple-600 bg-purple-50 px-2.5 py-1 rounded-lg shrink-0">
-                      {{ item.start_time }} – {{ item.end_time }}
-                    </span>
-                  </div>
-                  <p v-if="!job.job_itineraries?.length" class="text-sm text-gray-400 italic">No stops added</p>
-                </div>
-              </template>
-              <template v-else>
-                <div v-for="(item, idx) in form.job_itineraries" :key="idx" class="grid grid-cols-1 md:grid-cols-5 gap-2 mb-3 items-end">
-                  <div><label class="field-label">Start</label><input v-model="item.start_time" type="time" class="field-input" /></div>
-                  <div><label class="field-label">End</label><input v-model="item.end_time" type="time" class="field-input" /></div>
-                  <div class="md:col-span-2"><label class="field-label">Stop / Activity</label><input v-model="item.place_name" type="text" class="field-input" /></div>
-                  <button type="button" @click="form.job_itineraries.splice(idx, 1)" class="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 text-sm">✕</button>
-                </div>
-                <button type="button" @click="form.job_itineraries.push({ place_name: '', start_time: '', end_time: '', note: '' })" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200">+ Add Stop</button>
-              </template>
-            </div>
-
-            <!-- Passengers (pickup points) -->
-            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
-              <h2 class="section-title">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-4-4h-1M9 20H4v-2a4 4 0 014-4h1m4-4a4 4 0 100-8 4 4 0 000 8z"/></svg>
-                Passengers
-                <span class="ml-auto text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full normal-case tracking-normal">{{ job.job_pickups?.length ?? 0 }}</span>
-              </h2>
-              <template v-if="!editing">
-                <div class="space-y-2">
-                  <div v-for="(pickup, idx) in sortedPickups" :key="idx" class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
-                    <div class="w-7 h-7 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center shrink-0">{{ idx + 1 }}</div>
-                    <div class="flex-1 min-w-0">
-                      <p class="text-sm font-medium text-gray-800">{{ pickup.pickup_location || pickup.hotel_name || '—' }}</p>
-                      <p v-if="pickup.hotel_name && pickup.pickup_location" class="text-xs text-gray-400">{{ pickup.hotel_name }}</p>
-                    </div>
-                    <span v-if="pickup.pickup_time" class="text-xs font-semibold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg shrink-0">{{ pickup.pickup_time }}</span>
-                  </div>
-                  <p v-if="!job.job_pickups?.length" class="text-sm text-gray-400 italic">No passengers added</p>
-                </div>
-              </template>
-              <template v-else>
-                <div v-for="(pickup, idx) in form.job_pickups" :key="idx" class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-3 items-end">
-                  <div><label class="field-label">Hotel</label><input v-model="pickup.hotel_name" type="text" class="field-input" /></div>
-                  <div><label class="field-label">Name</label><input v-model="pickup.pickup_location" type="text" class="field-input" /></div>
-                  <div><label class="field-label">Pickup Time</label><input v-model="pickup.pickup_time" type="time" class="field-input" /></div>
-                  <button type="button" @click="form.job_pickups.splice(idx, 1)" class="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 text-sm">✕</button>
-                </div>
-                <button type="button" @click="form.job_pickups.push({ hotel_name: '', pickup_location: '', pickup_time: '' })" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200">+ Add Passenger</button>
-              </template>
-            </div>
-
-            <!-- Customer list -->
-            <div v-if="editing || job.job_customers?.length" class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
-              <h2 class="section-title">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                Customers
-              </h2>
-              <template v-if="!editing">
-                <div class="divide-y divide-gray-100">
-                  <div v-for="(c, idx) in job.job_customers" :key="idx" class="flex items-center justify-between py-2.5">
-                    <div class="flex items-center gap-2.5">
-                      <div class="w-7 h-7 rounded-full bg-gray-100 text-gray-500 text-xs font-bold flex items-center justify-center">{{ idx + 1 }}</div>
-                      <span class="text-sm text-gray-700">{{ c.customer_name || 'Unnamed' }}</span>
-                    </div>
-                    <span v-if="c.note" class="text-xs text-gray-400 italic">{{ c.note }}</span>
-                  </div>
-                </div>
-              </template>
-              <template v-else>
-                <div v-for="(c, idx) in form.job_customers" :key="idx" class="flex gap-2 mb-3 items-end">
-                  <div class="flex-1"><label class="field-label">Name</label><input v-model="c.customer_name" type="text" class="field-input" /></div>
-                  <div class="flex-1"><label class="field-label">Note</label><input v-model="c.note" type="text" class="field-input" /></div>
-                  <button type="button" @click="form.job_customers.splice(idx, 1)" class="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 text-sm">✕</button>
-                </div>
-                <button type="button" @click="form.job_customers.push({ customer_name: '', note: '' })" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200">+ Add Customer</button>
-              </template>
-            </div>
-
-            <!-- ── Applications ── -->
-            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
-              <h2 class="section-title">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
-                Applications
-                <span class="ml-auto text-xs font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full normal-case tracking-normal">{{ applications.length }}</span>
-              </h2>
-
-              <div v-if="appsLoading" class="text-center py-8 text-gray-400 text-sm">Loading applications…</div>
-
-              <div v-else-if="applications.length === 0" class="text-center py-8 text-gray-400 text-sm">
-                No applications yet.
+            <!-- Edit General Info (edit mode only) -->
+            <div v-if="editing" class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+              <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
+                <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Edit General Info</span>
               </div>
-
-              <div v-else class="space-y-3">
-                <div
-                  v-for="(app, idx) in applications"
-                  :key="app.application_id || idx"
-                  class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100"
-                >
-                  <!-- Avatar -->
-                  <div class="w-10 h-10 rounded-full bg-[#fef2f2] text-[#dc2626] text-sm font-bold flex items-center justify-center shrink-0">
-                    {{ (app.guide_name || '?').charAt(0).toUpperCase() }}
-                  </div>
-
-                  <!-- Info -->
-                  <div class="flex-1 min-w-0">
-                    <p class="font-semibold text-gray-800 text-sm">{{ app.guide_name || '—' }}</p>
-                    <div class="flex flex-wrap gap-2 mt-0.5 text-xs text-gray-400">
-                      <span v-if="app.guide_phone">{{ app.guide_phone }}</span>
-                      <span v-if="app.languages?.length">{{ app.languages.join(', ') }}</span>
-                      <span v-if="app.vehicle_type">{{ app.vehicle_type }}</span>
-                      <span v-if="app.applied_at">Applied {{ formatDate(app.applied_at) }}</span>
-                    </div>
-                  </div>
-
-                  <!-- Status badge -->
-                  <span
-                    class="px-2.5 py-1 rounded-full text-xs font-semibold shrink-0"
-                    :class="{
-                      'bg-blue-100 text-blue-700': app.status === 'APPLIED',
-                      'bg-yellow-100 text-yellow-700': app.status === 'PENDING',
-                      'bg-green-100 text-green-700': app.status === 'ACCEPTED',
-                      'bg-red-100 text-red-600': app.status === 'REJECTED',
-                    }"
-                  >{{ app.status }}</span>
-
-                  <!-- Accept / Reject -->
-                  <div class="flex items-center gap-1.5 shrink-0">
-                    <button
-                      @click="handleAccept(app)"
-                      :disabled="app.status === 'ACCEPTED' || app.status === 'REJECTED'"
-                      class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-green-50 hover:text-green-600 hover:border-green-200 transition disabled:opacity-30 disabled:cursor-not-allowed"
-                      title="Accept"
-                    >
-                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                    </button>
-                    <button
-                      @click="handleReject(app)"
-                      :disabled="app.status === 'ACCEPTED' || app.status === 'REJECTED'"
-                      class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition disabled:opacity-30 disabled:cursor-not-allowed"
-                      title="Reject"
-                    >
-                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Edit mode: general info fields -->
-            <div v-if="editing" class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
-              <h2 class="section-title">Edit General Info</h2>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="px-4 py-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="md:col-span-2"><label class="field-label">Tour Title *</label><input v-model="form.job_title" type="text" class="field-input" /></div>
                 <div><label class="field-label">Start Date *</label><input v-model="form.job_start_date" type="date" class="field-input" /></div>
                 <div><label class="field-label">End Date *</label><input v-model="form.job_end_date" type="date" class="field-input" /></div>
                 <div><label class="field-label">Seats *</label><input v-model.number="form.job_required_seat" type="number" min="1" max="13" class="field-input" /></div>
                 <div><label class="field-label">Rate (THB) *</label><input v-model.number="form.job_price" type="number" class="field-input" /></div>
                 <div><label class="field-label">Vehicle Type *</label>
-                  <select v-model="form.job_required_vehicle_type" class="field-input"><option value="VAN">Van</option><option value="CAR">Car</option></select>
+                  <select v-model="form.job_required_vehicle_type" class="field-input">
+                    <option value="VAN">Van</option>
+                    <option value="CAR">Car</option>
+                  </select>
                 </div>
                 <div class="md:col-span-2"><label class="field-label">Description</label><textarea v-model="form.job_description" rows="3" class="field-input"></textarea></div>
               </div>
             </div>
 
-            <!-- ── Action buttons ── -->
-            <div class="flex gap-3 mt-1">
-              <template v-if="!editing">
-                <button v-if="canEdit" @click="startEditing"
-                  class="flex-1 py-2.5 border-2 border-red-500 text-red-600 font-semibold rounded-xl hover:bg-red-50 transition text-sm">
-                  Edit Tour
-                </button>
-                <button v-if="canCancel" @click="confirmCancel" :disabled="cancelling"
-                  class="px-6 py-2.5 border border-gray-300 text-gray-500 font-medium rounded-xl hover:bg-gray-50 transition text-sm disabled:opacity-50">
-                  {{ cancelling ? 'Cancelling…' : 'Cancel Tour' }}
-                </button>
-              </template>
-              <template v-else>
-                <button @click="cancelEditing" class="px-6 py-2.5 border border-gray-300 text-gray-500 font-medium rounded-xl hover:bg-gray-50 transition text-sm">Discard</button>
-                <button @click="saveJob" :disabled="submitting"
-                  class="flex-1 py-2.5 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition text-sm disabled:opacity-50">
-                  {{ submitting ? 'Saving…' : 'Save Changes' }}
-                </button>
-              </template>
+            <!-- Itinerary -->
+            <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+              <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
+                <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Itinerary</span>
+              </div>
+              <div class="px-4 py-4 flex flex-col gap-2">
+                <template v-if="!editing">
+                  <div v-for="(item, i) in job.job_itineraries" :key="i"
+                    class="flex items-center gap-3 px-4 py-3 bg-[#f8f9fa] rounded-lg border border-[#e8e8e8] hover:border-[#ddd] hover:bg-[#f2f2f2] transition-colors">
+                    <div class="w-6 h-6 rounded-full bg-[#f3e5f5] text-[#7b1fa2] text-[11px] font-bold flex items-center justify-center shrink-0">{{ i + 1 }}</div>
+                    <div class="flex-1 min-w-0">
+                      <div class="text-[13px] font-medium text-[#222]">{{ item.place_name }}</div>
+                      <div v-if="item.note" class="text-[11px] text-[#999] mt-0.5">{{ item.note }}</div>
+                    </div>
+                    <span v-if="item.start_time || item.end_time" class="text-[12px] font-bold text-[#7b1fa2] bg-[#f3e5f5] px-2 py-0.5 rounded-md whitespace-nowrap shrink-0">{{ item.start_time }} – {{ item.end_time }}</span>
+                  </div>
+                  <p v-if="!job.job_itineraries?.length" class="text-[13px] text-[#bbb] px-1">No stops added</p>
+                </template>
+                <template v-else>
+                  <div v-for="(item, idx) in form.job_itineraries" :key="idx" class="grid grid-cols-1 md:grid-cols-5 gap-2 mb-3 items-end">
+                    <div><label class="field-label">Start</label><input v-model="item.start_time" type="time" class="field-input" /></div>
+                    <div><label class="field-label">End</label><input v-model="item.end_time" type="time" class="field-input" /></div>
+                    <div class="md:col-span-2"><label class="field-label">Stop / Activity</label><input v-model="item.place_name" type="text" class="field-input" /></div>
+                    <button type="button" @click="form.job_itineraries.splice(idx, 1)" class="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 text-sm">✕</button>
+                  </div>
+                  <button type="button" @click="form.job_itineraries.push({ place_name: '', start_time: '', end_time: '', note: '' })"
+                    class="px-4 py-2 bg-[#f5f5f5] text-[#555] rounded-lg text-sm hover:bg-[#ebebeb] transition">+ Add Stop</button>
+                </template>
+              </div>
+            </div>
+
+            <!-- Passengers -->
+            <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+              <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
+                <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path stroke-linecap="round" stroke-linejoin="round" d="M23 21v-2a4 4 0 00-3-3.87m-4-12a4 4 0 010 7.75"/></svg>
+                <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Passengers</span>
+                <span class="ml-auto inline-flex items-center justify-center bg-[#f0f4ff] text-[#3d5afe] rounded-full text-[11px] font-bold px-2 py-0.5">{{ job.job_passengers?.length ?? 0 }}</span>
+              </div>
+              <div class="px-4 py-4 flex flex-col gap-2">
+                <template v-if="!editing">
+                  <div v-for="(p, i) in job.job_passengers" :key="i"
+                    class="flex items-center gap-3 px-4 py-3 bg-[#f8f9fa] rounded-lg border border-[#e8e8e8] hover:border-[#ddd] hover:bg-[#f2f2f2] transition-colors">
+                    <div class="w-6 h-6 rounded-full bg-[#e8f5e9] text-[#2e7d32] text-[11px] font-bold flex items-center justify-center shrink-0">{{ i + 1 }}</div>
+                    <div class="flex-1 min-w-0">
+                      <div class="text-[13px] font-medium text-[#222]">{{ p.first_name }} {{ p.last_name }}</div>
+                      <div class="text-[11px] text-[#999] mt-0.5">
+                        <span v-if="p.hotel_name">{{ p.hotel_name }}</span>
+                        <span v-if="p.hotel_name && p.note" class="mx-1 text-[#ddd]">·</span>
+                        <span v-if="p.note">{{ p.note }}</span>
+                      </div>
+                    </div>
+                    <span v-if="p.pickup_time" class="text-[12px] font-bold text-[#1976d2] bg-[#e3f2fd] px-2 py-0.5 rounded-md whitespace-nowrap shrink-0">{{ formatPickupTime(p.pickup_time) }}</span>
+                  </div>
+                  <p v-if="!job.job_passengers?.length" class="text-[13px] text-[#bbb] px-1">No passengers added</p>
+                </template>
+                <template v-else>
+                  <div v-for="(p, idx) in form.job_passengers" :key="idx" class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-3 items-end">
+                    <div><label class="field-label">First Name</label><input v-model="p.first_name" type="text" class="field-input" /></div>
+                    <div><label class="field-label">Last Name</label><input v-model="p.last_name" type="text" class="field-input" /></div>
+                    <div><label class="field-label">Hotel</label><input v-model="p.hotel_name" type="text" class="field-input" /></div>
+                    <div><label class="field-label">Pickup Time</label><input v-model="p.pickup_time" type="time" class="field-input" /></div>
+                    <button type="button" @click="form.job_passengers.splice(idx, 1)" class="col-span-full text-xs text-red-500 hover:underline text-left">Remove</button>
+                  </div>
+                  <button type="button" @click="form.job_passengers.push({ first_name: '', last_name: '', hotel_name: '', pickup_time: '' })"
+                    class="px-4 py-2 bg-[#f5f5f5] text-[#555] rounded-lg text-sm hover:bg-[#ebebeb] transition">+ Add Passenger</button>
+                </template>
+              </div>
+            </div>
+
+            <!-- Applications -->
+            <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+              <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
+                <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Applications</span>
+                <span class="ml-auto inline-flex items-center justify-center bg-[#f0f4ff] text-[#3d5afe] rounded-full text-[11px] font-bold px-2 py-0.5">{{ applications.length }}</span>
+              </div>
+              <div class="px-4 py-4 flex flex-col gap-2">
+                <div v-if="!applications.length" class="text-center py-8 text-[#bbb] text-[13px]">No applications yet.</div>
+                <div v-else v-for="(app, idx) in applications" :key="app.job_application_id || idx"
+                  class="flex items-center gap-3 px-4 py-3 bg-[#f8f9fa] rounded-lg border border-[#e8e8e8] hover:border-[#ccc] hover:bg-[#f0f0f0] transition-all cursor-pointer"
+                  @click="miniModalFlId = app.fl_id">
+                  <div class="w-8 h-8 rounded-full bg-[#fef2f2] text-[#dc2626] text-sm font-bold flex items-center justify-center shrink-0">{{ (app.driver_name || '?').charAt(0).toUpperCase() }}</div>
+                  <div class="flex-1 min-w-0">
+                    <div class="text-[13px] font-medium text-[#222]">{{ app.driver_name || "–" }}</div>
+                    <div class="text-[11px] text-[#999] mt-0.5">Applied {{ formatDate(app.applied_at) }}</div>
+                  </div>
+                  <span class="application-badge shrink-0" :class="app.application_status?.toLowerCase()">{{ app.application_status }}</span>
+                  <div class="flex items-center gap-1.5 shrink-0" @click.stop>
+                    <button @click="handleAccept(app)" :disabled="app.application_status === 'ACCEPTED' || app.application_status === 'REJECTED'"
+                      class="w-8 h-8 flex items-center justify-center rounded-lg border border-[#e0e0e0] text-[#aaa] hover:bg-green-50 hover:text-green-600 hover:border-green-200 transition disabled:opacity-30 disabled:cursor-not-allowed" title="Accept">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    </button>
+                    <button @click="handleReject(app)" :disabled="app.application_status === 'ACCEPTED' || app.application_status === 'REJECTED'"
+                      class="w-8 h-8 flex items-center justify-center rounded-lg border border-[#e0e0e0] text-[#aaa] hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition disabled:opacity-30 disabled:cursor-not-allowed" title="Reject">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                  </div>
+                  <svg class="w-4 h-4 text-[#ccc] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                </div>
+              </div>
             </div>
 
           </div>
@@ -394,6 +500,27 @@
 
       </template>
     </div>
+
+    <!-- Slip Image Modal -->
+    <div v-if="slipModalUrl" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70" @click.self="slipModalUrl = null">
+      <div class="bg-white rounded-2xl shadow-2xl overflow-hidden max-w-xl w-full mx-4 flex flex-col" style="max-height:90vh" @click.stop>
+        <div class="flex items-center justify-between px-5 py-3.5 border-b border-[#eee] shrink-0">
+          <span class="text-[15px] font-semibold text-[#111]">Payment Slip</span>
+          <button class="text-[#999] hover:text-[#333] transition" @click="slipModalUrl = null">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="bg-[#111] flex items-center justify-center flex-1 overflow-auto">
+          <img :src="slipModalUrl" class="max-w-full object-contain" style="max-height:calc(90vh - 56px)" />
+        </div>
+      </div>
+    </div>
+    <FreelancerMiniModal
+      v-if="miniModalFlId"
+      :fl-id="miniModalFlId"
+      :job-id="job?.job_id"
+      @close="miniModalFlId = null"
+    />
   </AppLayout>
 </template>
 
@@ -401,6 +528,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import AppLayout from '@/components/AppLayout.vue'
+import FreelancerMiniModal from '@/components/FreelancerMiniModal.vue'
 
 const API_BASE = '/api'
 const router = useRouter()
@@ -416,7 +544,21 @@ const editing = ref(false)
 
 // Applications state
 const applications = ref([])
-const appsLoading = ref(false)
+const miniModalFlId = ref(null)
+// Pickup areas (from assigned freelancer)
+const pickups = ref([])
+const jobReview = ref(null)
+const emReview = ref(null)
+
+const payment = ref(null)
+const paymentHistory = ref([])
+const showPaymentHistory = ref(false)
+const paymentSubmitting = ref(false)
+const slipPreview = ref(null)
+const slipFile = ref(null)
+const reuploadPreview = ref(null)
+const reuploadFile = ref(null)
+const slipModalUrl = ref(null)
 
 const allLanguages = ['English', 'Thai', 'Mandarin', 'Korean', 'Japanese', 'French', 'German']
 
@@ -429,12 +571,8 @@ const form = reactive({
   job_required_seat: 9,
   job_price: null,
   job_required_languages: [],
-  driver_name: '',
-  driver_phone: '',
-  note: '',
   job_itineraries: [],
-  job_pickups: [],
-  job_customers: [],
+  job_passengers: [],
   job_expenses: [],
 })
 
@@ -442,13 +580,51 @@ const form = reactive({
 const fetchJob = async () => {
   loading.value = true
   error.value = ''
+  const id = route.params.id
   try {
-    const res = await fetch(`${API_BASE}/tours/${route.params.id}?em_id=${emId}`)
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}))
-      throw new Error(data.detail || data.message || 'Failed to load tour.')
+    const [jobRes, langRes, itinRes, passRes, expRes, appRes, payRes, histRes, revRes, emRevRes] = await Promise.all([
+      fetch(`${API_BASE}/tours/${id}?em_id=${emId}`),
+      fetch(`${API_BASE}/job-required-languages?job_id=${id}&limit=20`),
+      fetch(`${API_BASE}/job-itineraries?job_id=${id}&limit=50`),
+      fetch(`${API_BASE}/job-passengers?job_id=${id}&limit=50`),
+      fetch(`${API_BASE}/job-expenses?job_id=${id}&limit=20`),
+      fetch(`${API_BASE}/job-applications?job_id=${id}&limit=50`),
+      fetch(`${API_BASE}/job-payments?job_id=${id}&limit=10`),
+      fetch(`${API_BASE}/job-payments/${id}/history`),
+      fetch(`${API_BASE}/fl-reviews?job_id=${id}&limit=10`),
+      fetch(`${API_BASE}/em-reviews?job_id=${id}&limit=10`),
+    ])
+
+    const [jobData, langData, itinData, passData, expData, appData, payData, histData, revData, emRevData] = await Promise.all([
+      jobRes.json(), langRes.json(), itinRes.json(), passRes.json(),
+      expRes.json(), appRes.json(), payRes.json(), histRes.json(), revRes.json(), emRevRes.json(),
+    ])
+
+    if (!jobRes.ok) throw new Error(jobData.detail || jobData.message || 'Failed to load tour.')
+
+    job.value = jobData
+    job.value.job_required_languages = (langData.items || []).map(l => l.language_name)
+    job.value.job_itineraries = (itinData.items || []).sort((a, b) => (a.sequence ?? 0) - (b.sequence ?? 0))
+    job.value.job_passengers = passData.items || []
+    job.value.job_expenses = (expData.items || []).sort((a, b) => (a.sequence ?? 0) - (b.sequence ?? 0))
+
+    applications.value = (appData.items || []).sort((a, b) => new Date(b.applied_at) - new Date(a.applied_at))
+
+    payment.value = (payData.items || []).find(p => p.is_latest) || null
+    const allHistory = histData.history || []
+    paymentHistory.value = allHistory.filter(p => !p.is_latest)
+    jobReview.value = (revData.items || [])[0] || null
+    emReview.value = (emRevData.items || [])[0] || null
+
+    // Pickup areas from assigned freelancer
+    if (jobData.selected_fl_id) {
+      try {
+        const pickupRes = await fetch(`${API_BASE}/fl-pickup-areas?fl_id=${jobData.selected_fl_id}&limit=20`)
+        const pickupData = await pickupRes.json()
+        pickups.value = pickupData.items || []
+      } catch { pickups.value = [] }
     }
-    job.value = await res.json()
+
   } catch (e) {
     error.value = e.message
   } finally {
@@ -456,51 +632,135 @@ const fetchJob = async () => {
   }
 }
 
-// ── Fetch applications for this tour ──────────────────────────────────────
-const fetchApplications = async () => {
-  appsLoading.value = true
+onMounted(() => fetchJob())
+
+// ── Refresh payment only ───────────────────────────────────────────────────
+const fetchPayment = async () => {
+  const id = route.params.id
   try {
-    const res = await fetch(`${API_BASE}/tours/${route.params.id}/applications?em_id=${emId}`)
+    const [payRes, histRes] = await Promise.all([
+      fetch(`${API_BASE}/job-payments?job_id=${id}&limit=10`),
+      fetch(`${API_BASE}/job-payments/${id}/history`),
+    ])
+    const [payData, histData] = await Promise.all([payRes.json(), histRes.json()])
+    payment.value = (payData.items || []).find(p => p.is_latest) || null
+    paymentHistory.value = (histData.history || []).filter(p => !p.is_latest)
+  } catch { payment.value = null }
+}
+
+const uploadSlipToStorage = async (file) => {
+  const formData = new FormData()
+  formData.append('file', file)
+  const res = await fetch(`${API_BASE}/upload/payment-slip`, { method: 'POST', body: formData })
+  if (!res.ok) throw new Error('Upload failed')
+  const data = await res.json()
+  return data.url
+}
+
+const onSlipFileChange = (e) => {
+  const file = e.target.files[0]
+  if (!file) return
+  slipFile.value = file
+  slipPreview.value = URL.createObjectURL(file)
+}
+const onSlipDrop = (e) => {
+  const file = e.dataTransfer.files[0]
+  if (!file) return
+  slipFile.value = file
+  slipPreview.value = URL.createObjectURL(file)
+}
+const clearSlip = () => { slipFile.value = null; slipPreview.value = null }
+
+const onReuploadFileChange = (e) => {
+  const file = e.target.files[0]
+  if (!file) return
+  reuploadFile.value = file
+  reuploadPreview.value = URL.createObjectURL(file)
+}
+const onReuploadDrop = (e) => {
+  const file = e.dataTransfer.files[0]
+  if (!file) return
+  reuploadFile.value = file
+  reuploadPreview.value = URL.createObjectURL(file)
+}
+const clearReupload = () => { reuploadFile.value = null; reuploadPreview.value = null }
+
+const submitPayment = async () => {
+  if (!slipFile.value) return
+  if (!job.value?.selected_fl_id) {
+    alert('Cannot submit payment: no freelancer has been assigned to this tour yet.')
+    return
+  }
+  paymentSubmitting.value = true
+  try {
+    const slip_url = await uploadSlipToStorage(slipFile.value)
+    const res = await fetch(`${API_BASE}/job-payments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        job_id: route.params.id,
+        em_id: emId,
+        fl_id: job.value?.selected_fl_id || null,
+        slip_url,
+      }),
+    })
     const data = await res.json()
-    const list = Array.isArray(data) ? data : (data.applications || [])
-    applications.value = list.sort((a, b) => new Date(b.applied_at) - new Date(a.applied_at))
-  } catch {
-    applications.value = []
+    if (res.ok) {
+      clearSlip()
+      await fetchPayment()
+    } else {
+      alert(data.detail || data.error || 'Failed to submit payment.')
+    }
+  } catch (e) {
+    alert('Error: ' + e.message)
   } finally {
-    appsLoading.value = false
+    paymentSubmitting.value = false
   }
 }
 
-onMounted(async () => {
-  await fetchJob()
-  fetchApplications()
-})
+const submitReupload = async () => {
+  if (!reuploadFile.value) return
+  paymentSubmitting.value = true
+  try {
+    const slip_url = await uploadSlipToStorage(reuploadFile.value)
+    const res = await fetch(`${API_BASE}/job-payments/${route.params.id}/reupload`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slip_url }),
+    })
+    const data = await res.json()
+    if (res.ok) {
+      clearReupload()
+      await fetchPayment()
+    } else {
+      alert(data.detail || data.error || 'Failed to reupload.')
+    }
+  } catch (e) {
+    alert('Error: ' + e.message)
+  } finally {
+    paymentSubmitting.value = false
+  }
+}
 
 // ── Accept / Reject ────────────────────────────────────────────────────────
 const handleAccept = async (app) => {
   try {
-    const res = await fetch(`${API_BASE}/applications/${app.application_id}/accept`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' }
+    const res = await fetch(`${API_BASE}/applications/${app.job_application_id}/accept`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }
     })
-    if (res.ok) app.status = 'ACCEPTED'
+    if (res.ok) app.application_status = 'ACCEPTED'
     else alert('Failed to accept application.')
-  } catch {
-    alert('Failed to accept application.')
-  }
+  } catch { alert('Failed to accept application.') }
 }
 
 const handleReject = async (app) => {
   try {
-    const res = await fetch(`${API_BASE}/applications/${app.application_id}/reject`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' }
+    const res = await fetch(`${API_BASE}/applications/${app.job_application_id}/reject`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }
     })
-    if (res.ok) app.status = 'REJECTED'
+    if (res.ok) app.application_status = 'REJECTED'
     else alert('Failed to reject application.')
-  } catch {
-    alert('Failed to reject application.')
-  }
+  } catch { alert('Failed to reject application.') }
 }
 
 // ── Edit helpers ───────────────────────────────────────────────────────────
@@ -517,12 +777,8 @@ const startEditing = () => {
     job_required_seat: j.job_required_seat ?? 9,
     job_price: j.job_price ?? null,
     job_required_languages: [...(j.job_required_languages || [])],
-    driver_name: j.driver_name || '',
-    driver_phone: j.driver_phone || '',
-    note: j.note || '',
     job_itineraries: (j.job_itineraries || []).map(i => ({ ...i })),
-    job_pickups: (j.job_pickups || []).map(p => ({ ...p })),
-    job_customers: (j.job_customers || []).map(c => ({ ...c })),
+    job_passengers: (j.job_passengers || []).map(p => ({ ...p })),
     job_expenses: (j.job_expenses || []).map(e => ({ ...e })),
   })
   editing.value = true
@@ -562,35 +818,47 @@ const saveJob = async () => {
 }
 
 // ── Computed helpers ───────────────────────────────────────────────────────
-const sortedPickups = computed(() =>
-  [...(job.value?.job_pickups ?? [])].sort((a, b) => (a.sequence ?? 0) - (b.sequence ?? 0))
-)
 const sortedExpenses = computed(() =>
   [...(job.value?.job_expenses ?? [])].sort((a, b) => (a.sequence ?? 0) - (b.sequence ?? 0))
 )
-const canEdit = computed(() => ['OPEN', 'PENDING'].includes(job.value?.job_status))
+const canEdit = computed(() => !['IN_PROGRESS', 'COMPLETED', 'CANCELLED'].includes(job.value?.job_status))
 const canCancel = computed(() => ['OPEN', 'PENDING', 'MATCHED'].includes(job.value?.job_status))
 
 // ── Status display ─────────────────────────────────────────────────────────
 const STATUS_MAP = {
-  OPEN:        { label: 'Open',        cls: 'bg-green-100 text-green-700' },
-  PENDING:     { label: 'Pending',     cls: 'bg-yellow-100 text-yellow-700' },
-  MATCHED:     { label: 'Matched',     cls: 'bg-blue-100 text-blue-700' },
-  IN_PROGRESS: { label: 'In Progress', cls: 'bg-amber-100 text-amber-700' },
-  COMPLETED:   { label: 'Completed',   cls: 'bg-gray-100 text-gray-600' },
-  CANCELLED:   { label: 'Cancelled',   cls: 'bg-red-100 text-red-600' },
+  OPEN:        { label: 'Open'        },
+  PENDING:     { label: 'Pending'     },
+  MATCHED:     { label: 'Matched'     },
+  IN_PROGRESS: { label: 'In Progress' },
+  COMPLETED:   { label: 'Completed'   },
+  CANCELLED:   { label: 'Cancelled'   },
 }
 const statusLabel = (s) => STATUS_MAP[s]?.label ?? s
-const statusClass = (s) => STATUS_MAP[s]?.cls ?? 'bg-gray-100 text-gray-500'
 
 // ── Formatters ─────────────────────────────────────────────────────────────
+const formatPickupTime = (val) => {
+  if (!val) return '–'
+  if (typeof val === 'number' || /^\d+$/.test(String(val))) {
+    const secs = Number(val)
+    return `${String(Math.floor(secs / 3600)).padStart(2, '0')}:${String(Math.floor((secs % 3600) / 60)).padStart(2, '0')}`
+  }
+  return val
+}
+
+const TZ = 'Asia/Bangkok'
+const parseDate = (d) => {
+  if (!d) return null
+  return new Date(String(d).replace(' ', 'T'))
+}
 const formatDate = (d) => {
-  if (!d) return '—'
-  return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+  const dt = parseDate(d)
+  if (!dt) return '—'
+  return dt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', timeZone: TZ })
 }
 const formatDateTime = (d) => {
-  if (!d) return '—'
-  return new Date(d).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  const dt = parseDate(d)
+  if (!dt) return '—'
+  return dt.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: TZ })
 }
 
 // ── Cancel tour ────────────────────────────────────────────────────────────
@@ -615,17 +883,3 @@ const confirmCancel = async () => {
   }
 }
 </script>
-
-<style scoped>
-.section-title {
-  @apply text-sm font-semibold text-gray-500 uppercase tracking-wide border-b border-gray-100 pb-2 mb-4 flex items-center gap-2;
-}
-.count-badge {
-  @apply text-xs font-medium text-gray-400 normal-case tracking-normal;
-}
-.info-block { @apply flex flex-col gap-0.5; }
-.info-label { @apply text-xs text-gray-400 font-medium uppercase tracking-wide; }
-.info-value { @apply text-sm font-semibold text-gray-700; }
-.field-label { @apply block text-xs text-gray-500 font-medium mb-1; }
-.field-input { @apply w-full p-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-400; }
-</style>

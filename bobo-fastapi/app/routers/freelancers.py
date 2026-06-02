@@ -143,8 +143,11 @@ def get_freelancer(fl_id: str):
             SELECT fl_id, line_user_id, fl_username, fl_email, fl_name, fl_date_of_birth,
                    fl_phone, fl_address, fl_bio, fl_profile_image_url,
                    fl_verify_status, fl_is_active, fl_rating_avg,
-                   fl_created_at, fl_updated_at
-            FROM freelancers
+                   fl_created_at, fl_updated_at,
+                   (SELECT COUNT(*) FROM jobs WHERE selected_fl_id = f.fl_id) AS fl_total_jobs,
+                   (SELECT COUNT(*) FROM jobs WHERE selected_fl_id = f.fl_id AND job_status = 'COMPLETED') AS fl_completed_jobs,
+                   (SELECT COUNT(*) FROM fl_reviews WHERE fl_id = f.fl_id) AS fl_review_count
+            FROM freelancers f
             WHERE fl_id = %s
             """,
             (fl_id,)

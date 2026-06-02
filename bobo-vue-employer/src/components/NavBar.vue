@@ -1,7 +1,7 @@
 <template>
   <!-- Fixed top bar that shifts right with the sidebar -->
   <header
-    class="fixed top-0 right-0 z-30 flex items-center px-4 py-2 justify-between transition-all duration-300 font-['DM_Sans',sans-serif] bg-white border-b border-gray-200"
+    class="fixed top-0 right-0 z-30 flex items-center px-4 py-2 justify-between transition-all duration-300 bg-white border-b border-gray-200"
     style="left: 0;"
   >
     <!-- Left side: hamburger + logo + page title -->
