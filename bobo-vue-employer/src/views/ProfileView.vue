@@ -1,612 +1,566 @@
 <template>
   <AppLayout>
-    <div class="flex gap-8 px-8 pt-6 pb-10 min-h-screen items-start">
-
-      <!-- Left panel: back button -->
-      <aside class="hidden lg:flex flex-col w-52 shrink-0 sticky top-20">
-        <button
-          type="button"
-          @click="$router.back()"
-          class="flex items-center gap-1.5 text-sm font-medium text-gray-600 bg-white hover:bg-[#ffd8d8] hover:text-[#dc2626] px-4 py-2 rounded-full transition w-fit"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
-          </svg>
+    <div class="px-5 pb-10">
+      <div class="flex items-center py-3 mb-5">
+        <button @click="$router.back()"
+          class="flex items-center gap-1.5 text-sm font-medium text-gray-600 bg-white hover:bg-[#ffd8d8] hover:text-[#dc2626] px-4 py-2 rounded-full transition w-fit">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
           Back
         </button>
-      </aside>
+      </div>
 
-      <!-- Main content -->
-      <div class="flex-1 min-w-0 max-w-2xl pb-10">
-        <h1 class="text-2xl font-bold text-gray-800 mb-6 mt-4">My Profile</h1>
+      <div class="grid gap-4 grid-cols-1 lg:grid-cols-[260px_1fr] items-start">
 
-        <!-- Profile Card -->
-        <div class="bg-white rounded-2xl shadow-md p-6 mb-4">
-          <div class="flex items-center gap-4 mb-6">
-            <!-- Profile picture -->
-            <div class="w-16 h-16 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center shrink-0">
-              <img
-                v-if="form.em_profile_url"
-                :src="form.em_profile_url"
-                alt="Profile picture"
-                class="w-full h-full object-cover"
-                @error="form.em_profile_url = ''"
-              />
-              <svg
-                v-else
-                xmlns="http://www.w3.org/2000/svg"
-                class="w-8 h-8 text-gray-500"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
+        <!-- LEFT -->
+        <div class="flex flex-col gap-3">
+
+          <!-- Profile Hero -->
+          <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm p-5 flex flex-col items-center text-center hover:shadow-md transition-shadow">
+            <div class="w-20 h-20 rounded-full bg-[#fef2f2] overflow-hidden flex items-center justify-center mb-3 cursor-pointer group relative" @click="avatarModal = true">
+              <img v-if="form.em_profile_url" :src="form.em_profile_url" class="w-full h-full object-cover" @error="form.em_profile_url = ''" />
+              <svg v-else class="w-9 h-9 text-[#dc2626]" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
               </svg>
+              <div class="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              </div>
             </div>
-            <div>
-              <h2 class="text-xl font-semibold text-gray-800">
-                {{ form.em_name || "Your Name" }}
-              </h2>
-              <p class="text-sm text-gray-400">@{{ form.em_username }}</p>
-              <div class="flex items-center gap-2 mt-1">
-                <span
-                  class="text-xs font-semibold px-2 py-0.5 rounded-full"
-                  :class="form.em_verify_status === 'VERIFIED' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'"
-                >{{ form.em_verify_status || "PENDING" }}</span>
-                <span class="text-xs text-gray-500" v-if="form.em_rating_avg > 0">★ {{ form.em_rating_avg }}</span>
+            <div class="text-[15px] font-bold text-[#111] mb-1">{{ form.em_name || 'Your Name' }}</div>
+            <div class="text-[12px] text-[#999] mb-2">@{{ form.em_username }}</div>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wide mb-1"
+              :class="form.em_verify_status === 'VERIFIED' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'">
+              {{ form.em_verify_status || 'PENDING' }}
+            </span>
+            <div v-if="verifiedAt" class="text-[11px] text-[#bbb] mb-3">Verified {{ formatDateTime(verifiedAt) }}</div>
+            <div v-else class="mb-3"></div>
+            <p v-if="form.em_bio" class="text-[12px] text-[#777] leading-relaxed">{{ form.em_bio }}</p>
+            <p v-else class="text-[12px] text-[#bbb] italic">No bio provided</p>
+          </div>
+
+          <!-- Stats -->
+          <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+            <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
+              <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+              <span class="text-[12px] font-bold text-[#444] uppercase tracking-wide">Stats</span>
+            </div>
+            <div class="px-4 py-3 grid grid-cols-3 gap-3 text-center">
+              <div>
+                <div class="text-[18px] font-bold text-[#111] flex items-center justify-center gap-1">
+                  {{ Number(form.em_rating_avg || 0).toFixed(1) }}
+                  <svg class="w-4 h-4 text-[#f9a825]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                </div>
+                <div class="text-[11px] text-[#999] mt-0.5">Rating</div>
+              </div>
+              <div>
+                <div class="text-[18px] font-bold text-[#111]">{{ completedJobs }}</div>
+                <div class="text-[11px] text-[#999] mt-0.5">Completed</div>
+              </div>
+              <div>
+                <div class="text-[18px] font-bold text-[#111]">{{ totalJobs }}</div>
+                <div class="text-[11px] text-[#999] mt-0.5">Total Jobs</div>
               </div>
             </div>
           </div>
 
-          <div v-if="saveSuccess" class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-600 text-sm">
-            Profile updated successfully!
-          </div>
-          <div v-if="saveError" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
-            {{ saveError }}
-          </div>
-
-          <h3 class="text-sm font-semibold text-gray-500 border-b pb-2 mb-4 uppercase tracking-wide">
-            Account Information
-          </h3>
-
-          <!-- Timestamps -->
-          <div class="flex gap-6 mb-4 text-xs text-gray-400">
-            <span>Created: <span class="text-gray-500 font-medium">{{ formatDate(form.em_created_at) }}</span></span>
-            <span>Last Updated: <span class="text-gray-500 font-medium">{{ formatDate(form.em_updated_at) }}</span></span>
-          </div>
-
-          <form @submit.prevent="handleSubmit" class="space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-              <!-- Username -->
-              <div>
-                <div class="flex items-center gap-2 mb-1">
-                  <label class="block text-sm font-medium text-gray-700">Username</label>
-                  <span v-if="isEditing" class="text-xs text-red-500 font-medium">Username cannot be changed</span>
+          <!-- Change Password -->
+          <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+            <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
+              <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span class="text-[12px] font-bold text-[#444] uppercase tracking-wide">Information</span>
+            </div>
+            <div class="px-4 py-3 flex flex-col gap-3">
+              <div class="flex items-center gap-2.5">
+                <svg class="w-3.5 h-3.5 text-[#ccc] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <div>
+                  <div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium">Created</div>
+                  <div class="text-[13px] text-[#222] font-medium">{{ formatDateTime(form.em_created_at) }}</div>
                 </div>
-                <input
-                  v-model="form.em_username"
-                  type="text"
-                  disabled
-                  class="w-full p-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-400 cursor-not-allowed"
-                />
               </div>
-
-              <!-- Full Name -->
-              <div>
-                <div class="flex items-center gap-2 mb-1">
-                  <label class="block text-sm font-medium text-gray-700">Full Name</label>
-                  <span v-if="isEditing && touched.em_name && !form.em_name" class="text-xs text-red-500 font-medium">* Required</span>
+              <div class="flex items-center gap-2.5">
+                <svg class="w-3.5 h-3.5 text-[#ccc] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8 8 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8 8 0 01-15.357-2m15.357 2H15"/></svg>
+                <div>
+                  <div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium">Last Updated</div>
+                  <div class="text-[13px] text-[#222] font-medium">{{ formatDateTime(form.em_updated_at) }}</div>
                 </div>
-                <input
-                  v-model="form.em_name"
-                  type="text"
-                  :disabled="!isEditing"
-                  @input="touched.em_name = true"
-                  :class="isEditing ? 'border-gray-300 focus:ring-2 focus:ring-red-400 bg-white' : 'border-gray-200 bg-gray-50 text-gray-600 cursor-default'"
-                  class="w-full p-2 border rounded-lg focus:outline-none transition"
-                />
-              </div>
-
-              <!-- Phone -->
-              <div>
-                <div class="flex items-center gap-2 mb-1">
-                  <label class="block text-sm font-medium text-gray-700">Phone Number</label>
-                  <span v-if="isEditing && touched.em_phone && !form.em_phone" class="text-xs text-red-500 font-medium">* Required</span>
-                </div>
-                <input
-                  v-model="form.em_phone"
-                  type="tel"
-                  :disabled="!isEditing"
-                  placeholder="08x xxx xxxx"
-                  @input="touched.em_phone = true"
-                  :class="isEditing ? 'border-gray-300 focus:ring-2 focus:ring-red-400 bg-white' : 'border-gray-200 bg-gray-50 text-gray-600 cursor-default'"
-                  class="w-full p-2 border rounded-lg focus:outline-none transition"
-                />
-              </div>
-
-              <!-- Email -->
-              <div>
-                <div class="flex items-center gap-2 mb-1">
-                  <label class="block text-sm font-medium text-gray-700">Email</label>
-                  <span v-if="isEditing && touched.em_email && !form.em_email" class="text-xs text-red-500 font-medium">* Required</span>
-                </div>
-                <input
-                  v-model="form.em_email"
-                  type="email"
-                  :disabled="!isEditing"
-                  @input="touched.em_email = true"
-                  :class="isEditing ? 'border-gray-300 focus:ring-2 focus:ring-red-400 bg-white' : 'border-gray-200 bg-gray-50 text-gray-600 cursor-default'"
-                  class="w-full p-2 border rounded-lg focus:outline-none transition"
-                />
-              </div>
-
-              <!-- Address -->
-              <div class="md:col-span-2">
-                <div class="flex items-center gap-2 mb-1">
-                  <label class="block text-sm font-medium text-gray-700">Address</label>
-                  <span v-if="isEditing && touched.em_address && !form.em_address" class="text-xs text-red-500 font-medium">* Required</span>
-                </div>
-                <input
-                  v-model="form.em_address"
-                  type="text"
-                  :disabled="!isEditing"
-                  placeholder="e.g. Chiang Mai, Thailand"
-                  @input="touched.em_address = true"
-                  :class="isEditing ? 'border-gray-300 focus:ring-2 focus:ring-red-400 bg-white' : 'border-gray-200 bg-gray-50 text-gray-600 cursor-default'"
-                  class="w-full p-2 border rounded-lg focus:outline-none transition"
-                />
-              </div>
-
-              <!-- Bio -->
-              <div class="md:col-span-2">
-                <div class="flex items-center gap-2 mb-1">
-                  <label class="block text-sm font-medium text-gray-700">Bio</label>
-                  <span v-if="isEditing" class="text-gray-400 font-normal text-xs">(optional)</span>
-                </div>
-                <textarea
-                  v-model="form.em_bio"
-                  rows="3"
-                  :disabled="!isEditing"
-                  placeholder="Brief description of your tour company..."
-                  :class="isEditing ? 'border-gray-300 focus:ring-2 focus:ring-red-400 bg-white' : 'border-gray-200 bg-gray-50 text-gray-600 cursor-default'"
-                  class="w-full p-2 border rounded-lg focus:outline-none transition resize-none"
-                ></textarea>
               </div>
             </div>
+          </div>
 
-            <div class="flex justify-end gap-2 pt-2">
-              <!-- View mode: Edit button -->
-              <button
-                v-if="!isEditing"
-                type="button"
-                @click="startEditing"
-                class="px-6 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition"
-              >
-                Edit
-              </button>
-              <!-- Edit mode: Cancel + Save -->
-              <template v-else>
-                <button
-                  type="button"
-                  @click="cancelEditing"
-                  class="px-6 py-2 border border-gray-300 text-gray-600 font-medium rounded-lg hover:bg-gray-50 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  :disabled="saving"
-                  class="px-6 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition disabled:opacity-50"
-                >
-                  {{ saving ? "Saving..." : "Save Changes" }}
-                </button>
-              </template>
+          <!-- Change Password -->
+          <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+            <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
+              <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+              <span class="text-[12px] font-bold text-[#444] uppercase tracking-wide">Change Password</span>
             </div>
-          </form>
+            <div class="px-4 py-4">
+              <div v-if="!pwOpen">
+                <button @click="pwOpen = true" class="px-4 py-2 text-[13px] font-medium rounded-lg border border-[#e0e0e0] text-[#555] hover:bg-[#f5f5f5] transition">Change Password</button>
+              </div>
+              <div v-else class="flex flex-col gap-3">
+                <div v-if="pwSuccess" class="px-3 py-2 bg-green-50 border border-green-200 rounded-lg text-[13px] text-green-700">Password changed!</div>
+                <div v-if="pwError" class="px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-[13px] text-red-600">{{ pwError }}</div>
+                <div>
+                  <label class="field-label">Current Password</label>
+                  <input v-model="pwForm.current" type="password" class="field-input" placeholder="Enter current password" />
+                </div>
+                <div>
+                  <label class="field-label">New Password</label>
+                  <input v-model="pwForm.newPw" type="password" minlength="6" class="field-input" placeholder="At least 6 characters" />
+                </div>
+                <div>
+                  <label class="field-label">Confirm New Password</label>
+                  <input v-model="pwForm.confirm" type="password" class="field-input" placeholder="Re-enter new password" @keyup.enter="changePassword" />
+                </div>
+                <div class="flex items-center justify-between">
+                  <button @click="pwOpen = false; pwError = ''" class="text-[12px] text-[#bbb] hover:text-[#666]">Cancel</button>
+                  <button @click="changePassword" :disabled="changingPw || !pwForm.current || !pwForm.newPw || !pwForm.confirm"
+                    class="px-4 py-2 text-[13px] font-semibold rounded-lg bg-[#222] text-white hover:bg-[#444] transition disabled:opacity-50">
+                    {{ changingPw ? 'Updating…' : 'Update Password' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
 
-        <!-- Verification Documents -->
-        <div class="bg-white rounded-2xl shadow-md p-6 mb-4">
-          <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide border-b border-gray-100 pb-2 mb-4 flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-            </svg>
-            Verification Documents
-          </h2>
+        <!-- RIGHT -->
+        <div class="flex flex-col gap-3">
 
-          <div v-if="docsLoading" class="text-sm text-gray-400 py-4 text-center">Loading documents...</div>
-          <div v-else-if="documents.length === 0" class="text-sm text-gray-400 py-4 text-center italic">No documents uploaded.</div>
-
-          <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div
-              v-for="doc in documents"
-              :key="doc.em_doc_id"
-              class="border border-gray-200 rounded-xl overflow-hidden"
-            >
-              <div class="flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-100">
-                <p class="text-xs font-semibold text-gray-600">{{ formatDocType(doc.em_doc_type) }}</p>
-                <span
-                  class="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                  :class="{
-                    'bg-green-100 text-green-700': doc.em_doc_status === 'APPROVED',
-                    'bg-yellow-100 text-yellow-700': doc.em_doc_status === 'PENDING',
-                    'bg-red-100 text-red-600': doc.em_doc_status === 'REJECTED',
-                  }"
-                >{{ doc.em_doc_status }}</span>
+          <!-- Edit Profile -->
+          <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+            <div class="px-5 py-3 border-b border-[#f0f0f0] flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Edit Profile</span>
               </div>
-              <a :href="doc.file_url" target="_blank" class="block group">
-                <div class="h-40 bg-gray-100 flex items-center justify-center overflow-hidden">
-                  <img
-                    v-if="isImage(doc.file_url)"
-                    :src="doc.file_url"
-                    :alt="doc.em_doc_type"
-                    class="w-full h-full object-cover group-hover:opacity-90 transition"
-                    @error="e => e.target.style.display='none'"
-                  />
-                  <div v-else class="flex flex-col items-center gap-2 text-gray-400 group-hover:text-[#dc2626] transition">
-                    <svg class="w-10 h-10" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>
-                    </svg>
-                    <span class="text-xs font-medium">Tap to view</span>
+              <div class="flex items-center gap-2">
+                <button v-if="!isEditing" @click="startEditing" class="px-3.5 py-1.5 text-[13px] font-medium rounded-lg border border-[#e0e0e0] text-[#666] hover:bg-[#f5f5f5] transition">Edit</button>
+                <button v-if="isEditing" @click="cancelEditing" class="px-3.5 py-1.5 text-[13px] font-medium rounded-lg border border-[#e0e0e0] text-[#666] hover:bg-[#f5f5f5] transition">Cancel</button>
+                <button v-if="isEditing" @click="handleSubmit" :disabled="saving"
+                  class="px-4 py-1.5 text-[13px] font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700 transition disabled:opacity-50">
+                  {{ saving ? 'Saving…' : 'Save' }}
+                </button>
+              </div>
+            </div>
+            <div v-if="saveSuccess" class="mx-5 mt-4 px-4 py-2.5 bg-green-50 border border-green-200 rounded-lg text-[13px] text-green-700">Profile updated successfully!</div>
+            <div v-if="saveError" class="mx-5 mt-4 px-4 py-2.5 bg-red-50 border border-red-200 rounded-lg text-[13px] text-red-600">{{ saveError }}</div>
+            <div class="px-5 py-5 grid grid-cols-2 gap-4">
+              <div>
+                <label class="field-label">Username</label>
+                <div class="relative">
+                  <input v-model="form.em_username" type="text" disabled class="field-input bg-[#f8f9fa] text-[#aaa] cursor-not-allowed pr-14" />
+                  <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-[#bbb] uppercase tracking-wide">Fixed</span>
+                </div>
+              </div>
+              <div>
+                <label class="field-label">Full Name <span class="text-red-500">*</span></label>
+                <input v-model="form.em_name" type="text" :disabled="!isEditing" @input="touched.em_name = true"
+                  :class="isEditing ? 'bg-white' : 'bg-[#f8f9fa] text-[#666] cursor-default'" class="field-input" />
+                <p v-if="isEditing && touched.em_name && !form.em_name" class="text-[11px] text-red-500 mt-1">Required</p>
+              </div>
+              <div>
+                <label class="field-label">Phone <span class="text-red-500">*</span></label>
+                <input v-model="form.em_phone" type="tel" :disabled="!isEditing" placeholder="08x xxx xxxx" @input="touched.em_phone = true"
+                  :class="isEditing ? 'bg-white' : 'bg-[#f8f9fa] text-[#666] cursor-default'" class="field-input" />
+                <p v-if="isEditing && touched.em_phone && !form.em_phone" class="text-[11px] text-red-500 mt-1">Required</p>
+              </div>
+              <div>
+                <label class="field-label">Email <span class="text-red-500">*</span></label>
+                <input v-model="form.em_email" type="email" :disabled="!isEditing" @input="touched.em_email = true"
+                  :class="isEditing ? 'bg-white' : 'bg-[#f8f9fa] text-[#666] cursor-default'" class="field-input" />
+                <p v-if="isEditing && touched.em_email && !form.em_email" class="text-[11px] text-red-500 mt-1">Required</p>
+              </div>
+              <div class="col-span-2">
+                <label class="field-label">Address <span class="text-red-500">*</span></label>
+                <input v-model="form.em_address" type="text" :disabled="!isEditing" placeholder="e.g. Chiang Mai, Thailand" @input="touched.em_address = true"
+                  :class="isEditing ? 'bg-white' : 'bg-[#f8f9fa] text-[#666] cursor-default'" class="field-input" />
+                <p v-if="isEditing && touched.em_address && !form.em_address" class="text-[11px] text-red-500 mt-1">Required</p>
+              </div>
+              <div class="col-span-2">
+                <label class="field-label">Bio <span class="text-[#ccc] font-normal normal-case tracking-normal">(optional)</span></label>
+                <textarea v-model="form.em_bio" rows="3" :disabled="!isEditing" placeholder="Brief description of your tour company..."
+                  :class="isEditing ? 'bg-white' : 'bg-[#f8f9fa] text-[#666] cursor-default'" class="field-input resize-none"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Verification + Documents -->
+          <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+            <div class="px-5 py-3 border-b border-[#f0f0f0] flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Verification</span>
+              </div>
+              <button @click="docEditMode = !docEditMode"
+                class="flex items-center gap-1.5 px-3.5 py-1.5 text-[13px] font-medium rounded-lg border border-[#e0e0e0] text-[#666] hover:bg-[#f5f5f5] transition">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                {{ docEditMode ? 'Done' : 'Edit' }}
+              </button>
+            </div>
+            <div class="px-5 py-4 flex flex-col gap-4">
+
+              <!-- Verification status row -->
+              <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
+                <div class="flex items-center gap-2">
+                  <span class="text-[12px] text-[#999] font-medium">Status:</span>
+                  <span class="badge" :class="form.em_verify_status?.toLowerCase()">{{ form.em_verify_status || 'PENDING' }}</span>
+                  <span v-if="form.em_verify_status === 'VERIFIED' && verifiedAt" class="text-[12px] text-[#999]">· {{ formatDateTime(verifiedAt) }}</span>
+                  <span v-else-if="submittedAt" class="text-[12px] text-[#999]">· Submitted {{ formatDateTime(submittedAt) }}</span>
+                </div>
+              </div>
+
+              <!-- Documents -->
+              <div>
+                <div class="text-[12px] font-bold text-[#444] uppercase tracking-wide mb-3">Documents</div>
+                <div v-if="docsLoading" class="text-center py-4 text-[13px] text-[#bbb]">Loading…</div>
+                <div v-else-if="documents.length === 0" class="text-center py-4 text-[13px] text-[#bbb] italic">No documents.</div>
+                <div v-else class="grid grid-cols-5 gap-2">
+                  <div v-for="doc in documents" :key="doc.em_doc_id"
+                    class="rounded-xl border overflow-hidden bg-white flex flex-col transition-colors text-left"
+                    :class="doc.file_url ? 'border-[#eee] cursor-pointer hover:border-[#aaa]' : 'border-dashed border-[#ddd] cursor-default'"
+                    @click="docEditMode ? triggerDocUpload(doc) : (doc.file_url ? openDocModal(doc) : null)">
+                    <div class="aspect-square bg-[#f5f5f5] relative overflow-hidden w-full">
+                      <img v-if="doc.file_url" :src="doc.file_url" class="absolute inset-0 w-full h-full object-cover hover:opacity-90 transition-opacity"
+                        @error="e => e.target.style.display='none'" />
+                      <div v-if="!doc.file_url" class="absolute inset-0 flex items-center justify-center flex-col gap-1">
+                        <svg class="w-6 h-6 text-[#ddd]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                        <span class="text-[9px] text-[#ccc] font-medium">Not uploaded</span>
+                      </div>
+                      <div v-if="docEditMode" class="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                      </div>
+                      <div v-if="doc.uploading" class="absolute inset-0 bg-white/80 flex items-center justify-center">
+                        <span class="text-[10px] text-[#888]">Uploading…</span>
+                      </div>
+                      <span v-if="doc.em_doc_status" class="absolute top-1.5 left-1.5 doc-badge" :class="doc.em_doc_status?.toLowerCase()">{{ doc.em_doc_status }}</span>
+                    </div>
+                    <div class="p-2 flex flex-col gap-0.5">
+                      <span class="text-[11px] font-semibold text-[#222] leading-snug truncate">{{ formatDocType(doc.em_doc_type) }}</span>
+                      <span class="text-[10px] text-[#bbb]">{{ doc.em_uploaded_at ? 'Uploaded ' + formatDate(doc.em_uploaded_at) : '–' }}</span>
+                      <span v-if="doc.reviewed_at && doc.em_doc_status === 'APPROVED'" class="text-[10px] text-[#bbb]">Verified {{ formatDate(doc.reviewed_at) }}</span>
+                      <span v-if="doc.reviewed_by_name && doc.em_doc_status === 'APPROVED'" class="text-[10px] text-[#bbb]">By {{ doc.reviewed_by_name }}</span>
+                      <span v-if="doc.em_doc_status === 'REJECTED' && doc.reject_reason" class="text-[10px] text-red-400 leading-snug">Reason: {{ doc.reject_reason }}</span>
+                    </div>
+                    <input :id="'doc-input-' + doc.em_doc_id" type="file" accept="image/*,application/pdf" class="hidden"
+                      @change="e => uploadDocument(e, doc)" />
                   </div>
                 </div>
-              </a>
-              <div class="px-3 py-2 text-[10px] text-gray-400">
-                Uploaded {{ formatDate(doc.em_uploaded_at) }}
               </div>
+
             </div>
           </div>
-        </div>
 
-        <!-- Change Password Card -->
-        <div class="bg-white rounded-2xl shadow-md p-6 mb-4">
-          <h3 class="text-sm font-semibold text-gray-500 border-b pb-2 mb-4 uppercase tracking-wide">
-            Security
-          </h3>
-
-          <!-- Step 0: just a button -->
-          <div v-if="pwStep === 0">
-            <button
-              @click="pwStep = 1"
-              class="px-5 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition"
-            >
-              Change Password
+          <!-- Log Out -->
+          <div class="flex justify-end">
+            <button @click="logout" class="px-6 py-2 border-2 border-red-500 text-red-600 text-[13px] font-semibold rounded-lg hover:bg-red-50 transition">
+              Log Out
             </button>
           </div>
 
-          <!-- Step 1: verify current password -->
-          <div v-else-if="pwStep === 1" class="space-y-3">
-            <div v-if="pwError" class="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
-              {{ pwError }}
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
-              <input
-                v-model="pwForm.current"
-                type="password"
-                class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 transition"
-                placeholder="Enter your current password"
-                @keyup.enter="verifyCurrentPassword"
-              />
-            </div>
-            <div class="flex items-center justify-between pt-1">
-              <button type="button" @click="resetPw" class="text-xs text-gray-400 hover:text-gray-600">Cancel</button>
-              <div class="flex items-center gap-3">
-                <button type="button" @click="forgotPassword" class="text-xs text-red-500 hover:underline">Forgot password?</button>
-                <button
-                  type="button"
-                  @click="verifyCurrentPassword"
-                  :disabled="!pwForm.current || verifying"
-                  class="px-4 py-2 bg-gray-700 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition disabled:opacity-50"
-                >
-                  {{ verifying ? "Verifying..." : "Continue" }}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Step 2: set new password -->
-          <div v-else-if="pwStep === 2" class="space-y-3">
-            <div v-if="pwSuccess" class="p-3 bg-green-50 border border-green-200 rounded-lg text-green-600 text-sm">
-              Password changed successfully!
-            </div>
-            <div v-if="pwError" class="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
-              {{ pwError }}
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
-              <input
-                v-model="pwForm.newPw"
-                type="password"
-                minlength="6"
-                class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 transition"
-                placeholder="At least 6 characters"
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
-              <input
-                v-model="pwForm.confirm"
-                type="password"
-                class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 transition"
-                placeholder="Re-enter new password"
-              />
-            </div>
-            <div class="flex items-center justify-between pt-1">
-              <button type="button" @click="resetPw" class="text-xs text-gray-400 hover:text-gray-600">Cancel</button>
-              <button
-                type="button"
-                @click="changePassword"
-                :disabled="changingPw || !pwForm.newPw || !pwForm.confirm"
-                class="px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition disabled:opacity-50"
-              >
-                {{ changingPw ? "Updating..." : "Update Password" }}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Logout -->
-        <div class="bg-white rounded-2xl shadow-md p-6">
-          <h3 class="text-sm font-semibold text-gray-500 border-b pb-2 mb-4 uppercase tracking-wide">
-            Session
-          </h3>
-          <p class="text-sm text-gray-500 mb-4">
-            You are currently signed in. Logging out will end your session.
-          </p>
-          <button
-            @click="logout"
-            class="w-full py-2.5 border-2 border-red-500 text-red-600 font-semibold rounded-lg hover:bg-red-50 transition"
-          >
-            Log Out
-          </button>
         </div>
       </div>
+    </div>
 
-      <!-- Right spacer to balance aside -->
-      <div class="hidden lg:block w-52 shrink-0"></div>
+    <!-- Avatar Action Modal -->
+    <div v-if="avatarModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click.self="avatarModal = false">
+      <div class="bg-white rounded-2xl shadow-2xl w-72 overflow-hidden" @click.stop>
+        <div class="px-5 py-4 border-b border-[#eee] flex items-center justify-between">
+          <span class="text-[14px] font-semibold text-[#111]">Profile Photo</span>
+          <button @click="avatarModal = false" class="text-[#bbb] hover:text-[#333]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="py-2">
+          <button @click="viewAvatar" :disabled="!form.em_profile_url"
+            class="w-full flex items-center gap-3 px-5 py-3 text-[13px] text-[#222] hover:bg-[#f5f5f5] transition disabled:opacity-40 disabled:cursor-not-allowed">
+            <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            View Photo
+          </button>
+          <button @click="$refs.avatarInput.click()"
+            class="w-full flex items-center gap-3 px-5 py-3 text-[13px] text-[#222] hover:bg-[#f5f5f5] transition">
+            <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            Update Profile Photo
+            <span v-if="avatarUploading" class="text-[11px] text-[#bbb] ml-auto">Uploading…</span>
+          </button>
+          <input ref="avatarInput" type="file" accept="image/*" class="hidden" @change="uploadAvatar" />
+        </div>
+      </div>
+    </div>
 
+    <!-- Doc Lightbox — same format as admin -->
+    <div v-if="modalDoc" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60" @click.self="modalDoc = null">
+      <div class="relative max-w-3xl w-full mx-4">
+        <button class="absolute -top-10 right-0 text-white/80 hover:text-white transition border-none bg-transparent cursor-pointer" @click="modalDoc = null">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <div class="relative">
+          <img :src="modalDoc.file_url" :alt="formatDocType(modalDoc.em_doc_type)"
+            class="w-full max-h-[80vh] object-contain rounded-xl shadow-2xl" />
+          <span v-if="modalDoc.em_doc_status" class="absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase"
+            :class="{
+              'bg-green-100 text-green-700': modalDoc.em_doc_status === 'APPROVED',
+              'bg-amber-100 text-amber-700': modalDoc.em_doc_status === 'PENDING',
+              'bg-red-100 text-red-600':    modalDoc.em_doc_status === 'REJECTED',
+            }">{{ modalDoc.em_doc_status }}</span>
+        </div>
+        <div class="flex items-center justify-between mt-3 px-1">
+          <div class="flex-1"></div>
+          <div class="flex flex-col items-center gap-0.5 flex-1">
+            <span class="text-white/90 text-[13px] font-semibold text-center">{{ formatDocType(modalDoc.em_doc_type) }}</span>
+            <span v-if="modalDoc.em_doc_status === 'REJECTED' && modalDoc.reject_reason" class="text-red-400 text-[11px] text-center">Reason: {{ modalDoc.reject_reason }}</span>
+          </div>
+          <div class="flex flex-col items-end gap-0.5 flex-1">
+            <span v-if="modalDoc.em_uploaded_at" class="text-white/40 text-[11px]">Uploaded {{ formatDateTime(modalDoc.em_uploaded_at) }}</span>
+            <span v-if="modalDoc.reviewed_at && modalDoc.em_doc_status === 'APPROVED'" class="text-white/40 text-[11px]">Verified {{ formatDateTime(modalDoc.reviewed_at) }}</span>
+            <span v-if="modalDoc.reviewed_by_name && modalDoc.em_doc_status === 'APPROVED'" class="text-white/40 text-[11px]">By {{ modalDoc.reviewed_by_name }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Avatar View Modal -->
+    <div v-if="avatarViewModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70" @click.self="avatarViewModal = false">
+      <div class="relative max-w-sm w-full mx-4">
+        <button class="absolute -top-10 right-0 text-white/80 hover:text-white transition" @click="avatarViewModal = false">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <img :src="form.em_profile_url" class="w-full rounded-2xl shadow-2xl object-cover" />
+      </div>
     </div>
   </AppLayout>
 </template>
 
 <script setup>
+// @ts-nocheck
 import { reactive, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AppLayout from '../components/AppLayout.vue'
 
 const API_BASE = '/api'
-
 const documents = ref([])
 const docsLoading = ref(false)
+const docEditMode = ref(false)
+const modalDoc = ref(null)
+const avatarModal = ref(false)
+const avatarViewModal = ref(false)
+const avatarUploading = ref(false)
+const totalJobs = ref(0)
+const completedJobs = ref(0)
+const verifiedAt = ref('')
+const submittedAt = ref('')
 const router = useRouter()
 
-const formatDate = (dateStr) => {
-  if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleString('en-GB', {
-    day: '2-digit', month: 'short', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  })
+const parseTS = (d) => {
+  if (!d) return null
+  const s = String(d)
+  // MySQL returns "2026-06-01 07:00:00" without timezone — treat as UTC
+  return new Date(s.includes('T') ? s : s.replace(' ', 'T') + 'Z')
+}
+const formatDate = (d) => {
+  const dt = parseTS(d)
+  if (!dt) return '—'
+  return dt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Bangkok' })
+}
+const formatDateTime = (d) => {
+  const dt = parseTS(d)
+  if (!dt) return '—'
+  return dt.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' })
 }
 
 const form = reactive({
-  em_username: '',
-  em_name: '',
-  em_phone: '',
-  em_email: '',
-  em_address: '',
-  em_bio: '',
-  em_verify_status: '',
-  em_rating_avg: 0,
-  em_created_at: '',
-  em_updated_at: '',
-  em_profile_url: '',
+  em_username: '', em_name: '', em_phone: '', em_email: '',
+  em_address: '', em_bio: '', em_verify_status: '',
+  em_rating_avg: 0, em_created_at: '', em_updated_at: '', em_profile_url: '',
 })
 
-// Tracks whether the user has cleared a required field after entering edit mode
-const touched = reactive({
-  em_name: false,
-  em_phone: false,
-  em_email: false,
-  em_address: false,
-})
-
-const resetTouched = () => {
-  touched.em_name = false
-  touched.em_phone = false
-  touched.em_email = false
-  touched.em_address = false
-}
-
-const pwForm = reactive({ current: '', newPw: '', confirm: '' })
+const touched = reactive({ em_name: false, em_phone: false, em_email: false, em_address: false })
+const resetTouched = () => Object.keys(touched).forEach(k => touched[k] = false)
 const saving = ref(false)
 const saveSuccess = ref(false)
 const saveError = ref('')
 const isEditing = ref(false)
 let snapshot = {}
 
-const startEditing = () => {
-  snapshot = { ...form }
-  resetTouched()
-  isEditing.value = true
-}
-
-const cancelEditing = () => {
-  Object.assign(form, snapshot)
-  isEditing.value = false
-  saveError.value = ''
-  resetTouched()
-}
-
-// On submit: mark all required fields as touched so * Required appears if empty
+const startEditing = () => { snapshot = { ...form }; resetTouched(); isEditing.value = true }
+const cancelEditing = () => { Object.assign(form, snapshot); isEditing.value = false; saveError.value = ''; resetTouched() }
 const handleSubmit = () => {
-  touched.em_name = true
-  touched.em_phone = true
-  touched.em_email = true
-  touched.em_address = true
-
+  touched.em_name = true; touched.em_phone = true; touched.em_email = true; touched.em_address = true
   if (!form.em_name || !form.em_phone || !form.em_email || !form.em_address) return
-
   saveProfile()
 }
 
-const pwStep = ref(0)
-const verifying = ref(false)
+const pwOpen = ref(false)
 const changingPw = ref(false)
 const pwSuccess = ref(false)
 const pwError = ref('')
-
-const resetPw = () => {
-  pwStep.value = 0
-  pwError.value = ''
-  pwSuccess.value = false
-  pwForm.current = ''
-  pwForm.newPw = ''
-  pwForm.confirm = ''
-}
-
-const forgotPassword = () => {}
-
-const verifyCurrentPassword = async () => {
-  if (!pwForm.current) return
-  pwError.value = ''
-  verifying.value = true
-  try {
-    const em_id = localStorage.getItem('em_id')
-    const res = await fetch(`${API_BASE}/employers/${em_id}/verify-password`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ current_password: pwForm.current }),
-    })
-    if (res.ok) {
-      pwStep.value = 2
-    } else {
-      const data = await res.json()
-      pwError.value = data.message || 'Incorrect password. Please try again.'
-    }
-  } catch (e) {
-    pwError.value = 'Unable to connect. Please try again.'
-  } finally {
-    verifying.value = false
-  }
-}
+const pwForm = reactive({ current: '', newPw: '', confirm: '' })
 
 const changePassword = async () => {
   pwError.value = ''
-  if (pwForm.newPw !== pwForm.confirm) {
-    pwError.value = 'New passwords do not match.'
-    return
-  }
+  if (pwForm.newPw !== pwForm.confirm) { pwError.value = 'Passwords do not match.'; return }
   changingPw.value = true
   try {
     const em_id = localStorage.getItem('em_id')
     const res = await fetch(`${API_BASE}/employers/${em_id}/password`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ current_password: pwForm.current, new_password: pwForm.newPw }),
     })
     if (res.ok) {
-      pwSuccess.value = true
-      setTimeout(() => resetPw(), 2000)
-    } else {
-      const data = await res.json()
-      pwError.value = data.message || 'Failed to change password.'
-    }
-  } catch (e) {
-    pwError.value = 'Unable to connect.'
-  } finally {
-    changingPw.value = false
-  }
+      pwSuccess.value = true; pwOpen.value = false
+      pwForm.current = ''; pwForm.newPw = ''; pwForm.confirm = ''
+      setTimeout(() => (pwSuccess.value = false), 3000)
+    } else { const d = await res.json(); pwError.value = d.message || 'Failed to change password.' }
+  } catch { pwError.value = 'Unable to connect.' }
+  finally { changingPw.value = false }
 }
 
-onMounted(async () => {
-  const em_id = localStorage.getItem('em_id')
+const viewAvatar = () => { avatarModal.value = false; avatarViewModal.value = true }
 
-  // Fetch documents
-  docsLoading.value = true
+const uploadAvatar = async (e) => {
+  const file = e.target.files[0]
+  if (!file) return
+  avatarUploading.value = true
   try {
-    const docRes = await fetch(`${API_BASE}/em-documents?em_id=${em_id}`)
-    if (docRes.ok) {
-      const docData = await docRes.json()
-      documents.value = Array.isArray(docData) ? docData : (docData.items || docData.documents || [])
-    }
-  } catch (e) {
-    documents.value = []
-  } finally {
-    docsLoading.value = false
-  }
-
-  // Fetch profile
-  try {
-    const res = await fetch(`${API_BASE}/employers/${em_id}`)
-    const data = await res.json()
-    if (res.ok) {
-      form.em_username      = data.em_username      || ''
-      form.em_name          = data.em_name          || ''
-      form.em_phone         = data.em_phone         || ''
-      form.em_email         = data.em_email         || ''
-      form.em_address       = data.em_address       || ''
-      form.em_bio           = data.em_bio           || ''
-      form.em_verify_status = data.em_verify_status || ''
-      form.em_rating_avg    = data.em_rating_avg    || 0
-      form.em_created_at    = data.em_created_at    || ''
-      form.em_updated_at    = data.em_updated_at    || ''
-      form.em_profile_url   = data.em_profile_image_url || data.em_profile_url || ''
-    }
-  } catch (e) {
-    form.em_name     = localStorage.getItem('em_name')     || ''
-    form.em_email    = localStorage.getItem('em_email')    || ''
-    form.em_username = localStorage.getItem('em_username') || ''
-  }
-})
-
-const logout = () => {
-  localStorage.removeItem('em_id')
-  localStorage.removeItem('em_name')
-  localStorage.removeItem('em_email')
-  router.push('/login')
-}
-
-const saveProfile = async () => {
-  saving.value = true
-  saveError.value = ''
-  saveSuccess.value = false
-  try {
+    const formData = new FormData()
+    formData.append('file', file)
+    const uploadRes = await fetch(`${API_BASE}/upload/employer-profile`, { method: 'POST', body: formData })
+    if (!uploadRes.ok) throw new Error('Upload failed')
+    const { url } = await uploadRes.json()
     const em_id = localStorage.getItem('em_id')
     const res = await fetch(`${API_BASE}/employers/${em_id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        em_name: form.em_name,
+        em_email: form.em_email,
+        em_phone: form.em_phone,
+        em_address: form.em_address,
+        em_bio: form.em_bio,
+        em_profile_image_url: url,
+      }),
+    })
+    if (res.ok) { form.em_profile_url = url }
+    else {
+      const err = await res.json().catch(() => ({}))
+      alert('Failed to update profile photo: ' + (err.detail || err.message || res.status))
+    }
+  } catch { alert('Failed to upload photo.') }
+  finally { avatarUploading.value = false; avatarModal.value = false; e.target.value = '' }
+}
+
+const triggerDocUpload = (doc) => {
+  document.getElementById('doc-input-' + doc.em_doc_id)?.click()
+}
+
+const openDocModal = (doc) => { modalDoc.value = doc }
+
+const uploadDocument = async (e, doc) => {
+  const file = e.target.files[0]
+  if (!file) return
+  doc.uploading = true
+  try {
+    const em_id = localStorage.getItem('em_id')
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await fetch(`${API_BASE}/em-documents/${em_id}/upload?doc_type=${doc.em_doc_type}`, {
+      method: 'POST', body: formData,
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err.detail || err.error || 'Upload failed')
+    }
+    const data = await res.json()
+    doc.file_url = data.file_url
+    doc.em_doc_status = 'PENDING'
+    doc.em_uploaded_at = new Date().toISOString()
+    doc.reject_reason = null
+
+    // Reset verification status to PENDING
+    await fetch(`${API_BASE}/employers/${em_id}/resubmit-verification`, { method: 'POST' })
+    form.em_verify_status = 'PENDING'
+    verifiedAt.value = ''
+    submittedAt.value = new Date().toISOString()
+
+  } catch (e) { alert('Failed to upload document: ' + e.message) }
+  finally { doc.uploading = false; e.target.value = '' }
+}
+
+onMounted(async () => {
+  const em_id = localStorage.getItem('em_id')
+  docsLoading.value = true
+  try {
+    const [profileRes, docRes, jobsRes, verifyRes] = await Promise.all([
+      fetch(`${API_BASE}/employers/${em_id}`),
+      fetch(`${API_BASE}/em-documents?em_id=${em_id}`),
+      fetch(`${API_BASE}/tours?em_id=${em_id}&limit=200`),
+      fetch(`${API_BASE}/em-verification?em_id=${em_id}&is_latest=true&limit=1`),
+    ])
+    const [profileData, docData, jobsData, verifyData] = await Promise.all([profileRes.json(), docRes.json(), jobsRes.json(), verifyRes.json()])
+
+    if (profileRes.ok) {
+      form.em_username      = profileData.em_username      || ''
+      form.em_name          = profileData.em_name          || ''
+      form.em_phone         = profileData.em_phone         || ''
+      form.em_email         = profileData.em_email         || ''
+      form.em_address       = profileData.em_address       || ''
+      form.em_bio           = profileData.em_bio           || ''
+      form.em_verify_status = profileData.em_verify_status || ''
+      form.em_rating_avg    = profileData.em_rating_avg    || 0
+      form.em_created_at    = profileData.em_created_at    || ''
+      form.em_updated_at    = profileData.em_updated_at    || ''
+      form.em_profile_url   = profileData.em_profile_image_url || profileData.em_profile_url || ''
+    }
+
+    if (docRes.ok) {
+      documents.value = Array.isArray(docData) ? docData : (docData.items || docData.documents || [])
+    }
+
+    const jobs = Array.isArray(jobsData) ? jobsData : (jobsData.items || jobsData.jobs || [])
+    totalJobs.value = jobs.length
+    completedJobs.value = jobs.filter(j => j.job_status === 'COMPLETED').length
+
+    const verifyItems = verifyData.items || verifyData || []
+    const latest = Array.isArray(verifyItems) ? verifyItems[0] : null
+    if (latest?.em_verified_at) verifiedAt.value = latest.em_verified_at
+    if (latest?.em_submitted_at) submittedAt.value = latest.em_submitted_at
+
+  } catch {
+    form.em_name     = localStorage.getItem('em_name')     || ''
+    form.em_email    = localStorage.getItem('em_email')    || ''
+    form.em_username = localStorage.getItem('em_username') || ''
+  } finally {
+    docsLoading.value = false
+  }
+})
+
+const logout = () => {
+  localStorage.removeItem('em_id'); localStorage.removeItem('em_name'); localStorage.removeItem('em_email')
+  router.push('/login')
+}
+
+const saveProfile = async () => {
+  saving.value = true; saveError.value = ''; saveSuccess.value = false
+  try {
+    const em_id = localStorage.getItem('em_id')
+    const res = await fetch(`${API_BASE}/employers/${em_id}`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form),
     })
     if (res.ok) {
-      localStorage.setItem('em_name', form.em_name)
-      localStorage.setItem('em_email', form.em_email)
-      form.em_updated_at = new Date().toISOString().replace('T', ' ').substring(0, 19)
-      isEditing.value = false
-      resetTouched()
-      saveSuccess.value = true
+      localStorage.setItem('em_name', form.em_name); localStorage.setItem('em_email', form.em_email)
+      const updated = await res.json().catch(() => ({}))
+      form.em_updated_at = updated.em_updated_at || new Date().toISOString()
+      isEditing.value = false; resetTouched(); saveSuccess.value = true
       setTimeout(() => (saveSuccess.value = false), 3000)
-    } else {
-      const data = await res.json()
-      saveError.value = data.message || 'Failed to save.'
-    }
-  } catch (e) {
-    saveError.value = 'Unable to connect.'
-  } finally {
-    saving.value = false
-  }
+    } else { const d = await res.json(); saveError.value = d.message || 'Failed to save.' }
+  } catch { saveError.value = 'Unable to connect.' }
+  finally { saving.value = false }
 }
 
-const formatDocType = (type) => {
-  const map = {
-    COMPANY_REGISTRATION: 'Company Registration',
-    BUSINESS_LICENSE: 'Business License',
-    TOURISM_LICENSE: 'Tourism License',
-    TAX_ID_DOCUMENT: 'Tax ID Document',
-    AUTHORIZED_PERSON_ID: 'Authorized Person ID',
-  }
-  return map[type] || type
-}
-
-const isImage = (url) => /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(url || '')
+const formatDocType = (type) => ({
+  COMPANY_REGISTRATION: 'Company Registration', BUSINESS_LICENSE: 'Business License',
+  TOURISM_LICENSE: 'Tourism License', TAX_ID_DOCUMENT: 'Tax ID',
+  AUTHORIZED_PERSON_ID: 'Authorized ID',
+}[type] || type)
 </script>

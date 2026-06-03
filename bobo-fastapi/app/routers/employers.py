@@ -41,6 +41,7 @@ class ProfileUpdateRequest(BaseModel):
     em_phone: Optional[str] = None
     em_address: Optional[str] = None
     em_bio: Optional[str] = None
+    em_profile_image_url: Optional[str] = None
 
 
 _EMPLOYER_NOT_FOUND = "Employer not found"
@@ -116,10 +117,12 @@ def update_employer(em_id: str, body: ProfileUpdateRequest):
         cursor.execute(
             """
             UPDATE employers
-            SET em_name = %s, em_email = %s, em_phone = %s, em_address = %s, em_bio = %s
+            SET em_name = %s, em_email = %s, em_phone = %s, em_address = %s, em_bio = %s,
+                em_profile_image_url = COALESCE(%s, em_profile_image_url)
             WHERE em_id = %s
             """,
-            (body.em_name, body.em_email, body.em_phone, body.em_address, body.em_bio, em_id)
+            (body.em_name, body.em_email, body.em_phone, body.em_address, body.em_bio,
+             body.em_profile_image_url, em_id)
         )
         conn.commit()
         return {"status": "updated"}
@@ -224,6 +227,47 @@ def verify_employer_password(em_id: int, data: dict):
     except HTTPException:
         raise
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
+
+
+
+@router.post("/employers/{em_id}/resubmit-verification")
+def resubmit_verification(em_id: int):
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT em_id FROM employers WHERE em_id = %s", (em_id,))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail=_EMPLOYER_NOT_FOUND)
+        # Set old verification records to not latest
+        cursor.execute(
+            "UPDATE em_verification SET is_latest = FALSE WHERE em_id = %s",
+            (em_id,)
+        )
+        # Insert new PENDING verification record
+        cursor.execute(
+            """
+            INSERT INTO em_verification (em_id, em_verify_status, is_latest, em_submitted_at)
+            VALUES (%s, 'PENDING', TRUE, NOW())
+            """,
+            (em_id,)
+        )
+        # Reset employer status
+        cursor.execute(
+            "UPDATE employers SET em_verify_status = 'PENDING' WHERE em_id = %s",
+            (em_id,)
+        )
+        conn.commit()
+        return {"success": True, "em_verify_status": "PENDING"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         if conn:
@@ -348,7 +392,7 @@ def get_em_documents(limit: int = 10, offset: int = 0, status: str = "", em_id: 
 
 
 @router.get("/em-verification")
-def get_em_verification(limit: int = 10, offset: int = 0, status: str = "PENDING", em_id: Optional[int] = None):
+def get_em_verification(limit: int = 10, offset: int = 0, status: str = "", em_id: Optional[int] = None, is_latest: Optional[bool] = None):
     conn = None
     try:
         conn = get_connection()
@@ -361,6 +405,9 @@ def get_em_verification(limit: int = 10, offset: int = 0, status: str = "PENDING
         if status:
             where.append("ev.em_verify_status = %s")
             params.append(status)
+        if is_latest is not None:
+            where.append("ev.is_latest = %s")
+            params.append(is_latest)
         where_sql = ("WHERE " + " AND ".join(where)) if where else ""
         params += [limit, offset]
         cursor.execute(
@@ -373,7 +420,7 @@ def get_em_verification(limit: int = 10, offset: int = 0, status: str = "PENDING
             JOIN employers e ON ev.em_id = e.em_id
             LEFT JOIN admins a ON ev.reviewed_by = a.admin_id
             {where_sql}
-            ORDER BY ev.em_submitted_at ASC
+            ORDER BY ev.em_submitted_at DESC
             LIMIT %s OFFSET %s
             """,
             params
@@ -414,12 +461,17 @@ def review_em_document(doc_id: str, body: DocReviewRequest):
         if body.status == "APPROVED":
             cursor.execute(
                 """
-                SELECT COUNT(*) AS c FROM em_documents
-                WHERE em_id = %s AND em_doc_status != 'APPROVED' AND file_url IS NOT NULL
+                SELECT
+                  COUNT(*) AS total,
+                  SUM(CASE WHEN em_doc_status = 'APPROVED' THEN 1 ELSE 0 END) AS approved
+                FROM em_documents
+                WHERE em_id = %s AND file_url IS NOT NULL
                 """,
                 (doc["em_id"],)
             )
-            if cursor.fetchone()["c"] == 0:
+            counts = cursor.fetchone()
+            all_approved = counts["total"] == 5 and counts["approved"] == 5
+            if all_approved:
                 cursor.execute(
                     "UPDATE employers SET em_verify_status = 'VERIFIED' WHERE em_id = %s",
                     (doc["em_id"],)

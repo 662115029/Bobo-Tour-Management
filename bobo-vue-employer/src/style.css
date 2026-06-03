@@ -81,6 +81,8 @@ html {
   }
   .badge.open        { @apply bg-blue-100   text-blue-800;   }
   .badge.pending     { @apply bg-amber-100  text-amber-800;  }
+  .badge.verified    { @apply bg-green-100  text-green-800;  }
+  .badge.not_verified { @apply bg-red-100   text-red-800;    }
   .badge.matched     { @apply bg-violet-100 text-violet-800; }
   .badge.in_progress { @apply bg-orange-100 text-orange-800; }
   .badge.completed   { @apply bg-slate-100  text-slate-600;  }
@@ -109,5 +111,13 @@ html {
   .payment-badge.confirmed { @apply bg-green-100 text-green-800; }
   .payment-badge.pending   { @apply bg-amber-100 text-amber-800; }
   .payment-badge.rejected  { @apply bg-red-100   text-red-800;   }
+
+  /* ── Document Badge (status overlay on doc thumbnail) ── */
+  .doc-badge {
+    @apply inline-flex w-fit items-center rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide;
+  }
+  .doc-badge.approved { @apply bg-green-100 text-green-700; }
+  .doc-badge.pending  { @apply bg-amber-100 text-amber-700; }
+  .doc-badge.rejected { @apply bg-red-100   text-red-600;   }
 
 }
