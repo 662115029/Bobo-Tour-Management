@@ -609,6 +609,59 @@ def review_job_payment(job_id: int, data: dict):
             conn.close()
 
 
+@router.patch("/job-applications/{application_id}/accept")
+def accept_application(application_id: int):
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT * FROM job_applications WHERE job_application_id = %s", (application_id,))
+        app = cursor.fetchone()
+        if not app:
+            raise HTTPException(status_code=404, detail="Application not found")
+        cursor.execute(
+            "UPDATE job_applications SET application_status = 'ACCEPTED', updated_at = NOW() WHERE job_application_id = %s",
+            (application_id,)
+        )
+        cursor.execute(
+            "UPDATE jobs SET selected_fl_id = %s, job_status = 'MATCHED' WHERE job_id = %s",
+            (app["fl_id"], app["job_id"])
+        )
+        conn.commit()
+        return {"success": True}
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn: conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn: conn.close()
+
+
+@router.patch("/job-applications/{application_id}/reject")
+def reject_application(application_id: int):
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT job_application_id FROM job_applications WHERE job_application_id = %s", (application_id,))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Application not found")
+        cursor.execute(
+            "UPDATE job_applications SET application_status = 'REJECTED', updated_at = NOW() WHERE job_application_id = %s",
+            (application_id,)
+        )
+        conn.commit()
+        return {"success": True}
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn: conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn: conn.close()
+
+
 @router.delete("/jobs/{job_id}")
 def delete_job(job_id: str, x_admin_id: Optional[str] = Header(None, alias="X-Admin-ID")):
     admin_id = x_admin_id

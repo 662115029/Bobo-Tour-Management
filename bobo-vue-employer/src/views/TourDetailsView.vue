@@ -351,17 +351,20 @@
             <!-- Review from freelancer to employer -->
             <div v-if="emReview" class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
               <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
-                <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+                <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
                 <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Freelancer Review</span>
-                <div class="ml-auto flex items-center gap-0.5">
-                  <span v-for="s in 5" :key="s" class="text-[13px]" :class="s <= emReview.rating ? 'text-[#f9a825]' : 'text-[#e0e0e0]'">★</span>
-                </div>
               </div>
-              <div class="px-4 py-4">
-                <div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium mb-1">From {{ emReview.driver_name }}</div>
-                <p v-if="emReview.comment" class="text-[13px] text-[#444] leading-relaxed">{{ emReview.comment }}</p>
+              <div class="p-4">
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="text-[13px] font-semibold text-[#222]">{{ emReview.driver_name }}</span>
+                  <div class="flex items-center gap-0.5">
+                    <svg v-for="i in 5" :key="i" class="w-3.5 h-3.5" :class="i <= emReview.rating ? 'text-[#f9a825]' : 'text-[#ddd]'" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                    <span class="text-[12px] font-bold text-[#333] ml-1">{{ emReview.rating }}.0</span>
+                  </div>
+                </div>
+                <p v-if="emReview.comment" class="text-[13px] text-[#555] leading-relaxed">{{ emReview.comment }}</p>
                 <p v-else class="text-[13px] text-[#bbb] italic">No comment</p>
-                <div class="text-[11px] text-[#bbb] mt-2">{{ formatDate(emReview.reviewed_at) }}</div>
+                <div class="text-[12px] text-[#bbb] mt-1.5">{{ formatDateTime(emReview.reviewed_at) }}</div>
               </div>
             </div>
 
@@ -472,15 +475,18 @@
               <div class="px-4 py-4 flex flex-col gap-2">
                 <div v-if="!applications.length" class="text-center py-8 text-[#bbb] text-[13px]">No applications yet.</div>
                 <div v-else v-for="(app, idx) in applications" :key="app.job_application_id || idx"
-                  class="flex items-center gap-3 px-4 py-3 bg-[#f8f9fa] rounded-lg border border-[#e8e8e8] hover:border-[#ccc] hover:bg-[#f0f0f0] transition-all cursor-pointer"
-                  @click="miniModalFlId = app.fl_id">
+                  class="flex items-center gap-3 px-4 py-3 bg-[#f8f9fa] rounded-lg border border-[#e8e8e8] hover:border-[#ccc] transition-all">
                   <div class="w-8 h-8 rounded-full bg-[#fef2f2] text-[#dc2626] text-sm font-bold flex items-center justify-center shrink-0">{{ (app.driver_name || '?').charAt(0).toUpperCase() }}</div>
                   <div class="flex-1 min-w-0">
                     <div class="text-[13px] font-medium text-[#222]">{{ app.driver_name || "–" }}</div>
                     <div class="text-[11px] text-[#999] mt-0.5">Applied {{ formatDate(app.applied_at) }}</div>
                   </div>
                   <span class="application-badge shrink-0" :class="app.application_status?.toLowerCase()">{{ app.application_status }}</span>
-                  <div class="flex items-center gap-1.5 shrink-0" @click.stop>
+                  <div class="flex items-center gap-1.5 shrink-0">
+                    <button @click="miniModalFlId = app.fl_id"
+                      class="px-2.5 py-1.5 text-[11px] font-medium rounded-lg border border-[#e0e0e0] text-[#666] hover:bg-white hover:border-[#bbb] transition">
+                      View
+                    </button>
                     <button @click="handleAccept(app)" :disabled="app.application_status === 'ACCEPTED' || app.application_status === 'REJECTED'"
                       class="w-8 h-8 flex items-center justify-center rounded-lg border border-[#e0e0e0] text-[#aaa] hover:bg-green-50 hover:text-green-600 hover:border-green-200 transition disabled:opacity-30 disabled:cursor-not-allowed" title="Accept">
                       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
@@ -490,7 +496,6 @@
                       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                   </div>
-                  <svg class="w-4 h-4 text-[#ccc] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
                 </div>
               </div>
             </div>
@@ -582,7 +587,7 @@ const fetchJob = async () => {
   error.value = ''
   const id = route.params.id
   try {
-    const [jobRes, langRes, itinRes, passRes, expRes, appRes, payRes, histRes, revRes, emRevRes] = await Promise.all([
+    const [jobRes, langRes, itinRes, passRes, expRes, appRes, payRes, histRes, revRes] = await Promise.all([
       fetch(`${API_BASE}/tours/${id}?em_id=${emId}`),
       fetch(`${API_BASE}/job-required-languages?job_id=${id}&limit=20`),
       fetch(`${API_BASE}/job-itineraries?job_id=${id}&limit=50`),
@@ -592,12 +597,11 @@ const fetchJob = async () => {
       fetch(`${API_BASE}/job-payments?job_id=${id}&limit=10`),
       fetch(`${API_BASE}/job-payments/${id}/history`),
       fetch(`${API_BASE}/fl-reviews?job_id=${id}&limit=10`),
-      fetch(`${API_BASE}/em-reviews?job_id=${id}&limit=10`),
     ])
 
-    const [jobData, langData, itinData, passData, expData, appData, payData, histData, revData, emRevData] = await Promise.all([
+    const [jobData, langData, itinData, passData, expData, appData, payData, histData, revData] = await Promise.all([
       jobRes.json(), langRes.json(), itinRes.json(), passRes.json(),
-      expRes.json(), appRes.json(), payRes.json(), histRes.json(), revRes.json(), emRevRes.json(),
+      expRes.json(), appRes.json(), payRes.json(), histRes.json(), revRes.json(),
     ])
 
     if (!jobRes.ok) throw new Error(jobData.detail || jobData.message || 'Failed to load tour.')
@@ -614,10 +618,14 @@ const fetchJob = async () => {
     const allHistory = histData.history || []
     paymentHistory.value = allHistory.filter(p => !p.is_latest)
     jobReview.value = (revData.items || [])[0] || null
-    emReview.value = (emRevData.items || [])[0] || null
 
-    // Pickup areas from assigned freelancer
+    // Pickup areas + em-reviews filtered by assigned freelancer
     if (jobData.selected_fl_id) {
+      try {
+        const emRevRes = await fetch(`${API_BASE}/em-reviews?job_id=${id}&limit=10`)
+        const emRevData = await emRevRes.json()
+        emReview.value = (emRevData.items || [])[0] || null
+      } catch { emReview.value = null }
       try {
         const pickupRes = await fetch(`${API_BASE}/fl-pickup-areas?fl_id=${jobData.selected_fl_id}&limit=20`)
         const pickupData = await pickupRes.json()
@@ -745,21 +753,48 @@ const submitReupload = async () => {
 // ── Accept / Reject ────────────────────────────────────────────────────────
 const handleAccept = async (app) => {
   try {
-    const res = await fetch(`${API_BASE}/applications/${app.job_application_id}/accept`, {
-      method: 'PUT', headers: { 'Content-Type': 'application/json' }
+    const res = await fetch(`${API_BASE}/job-applications/${app.job_application_id}/accept`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }
     })
-    if (res.ok) app.application_status = 'ACCEPTED'
-    else alert('Failed to accept application.')
+    if (res.ok) {
+      app.application_status = 'ACCEPTED'
+      job.value.job_status = 'MATCHED'
+      job.value.selected_fl_id = app.fl_id
+      job.value.driver_name = app.driver_name
+
+      // get driver_phone from freelancer
+      try {
+        const flRes = await fetch(`${API_BASE}/freelancers/${app.fl_id}`)
+        const flData = await flRes.json()
+        if (flRes.ok) job.value.driver_phone = flData.fl_phone
+      } catch {}
+
+      // reject ALL other applications regardless of status
+      const others = applications.value.filter(a => a.job_application_id !== app.job_application_id)
+      await Promise.allSettled(
+        others.map(a =>
+          fetch(`${API_BASE}/job-applications/${a.job_application_id}/reject`, {
+            method: 'PATCH', headers: { 'Content-Type': 'application/json' }
+          }).then(r => { if (r.ok) a.application_status = 'REJECTED' })
+        )
+      )
+    } else {
+      const d = await res.json().catch(() => ({}))
+      alert('Failed to accept: ' + (d.detail || res.status))
+    }
   } catch { alert('Failed to accept application.') }
 }
 
 const handleReject = async (app) => {
   try {
-    const res = await fetch(`${API_BASE}/applications/${app.job_application_id}/reject`, {
-      method: 'PUT', headers: { 'Content-Type': 'application/json' }
+    const res = await fetch(`${API_BASE}/job-applications/${app.job_application_id}/reject`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }
     })
     if (res.ok) app.application_status = 'REJECTED'
-    else alert('Failed to reject application.')
+    else {
+      const d = await res.json().catch(() => ({}))
+      alert('Failed to reject: ' + (d.detail || res.status))
+    }
   } catch { alert('Failed to reject application.') }
 }
 
