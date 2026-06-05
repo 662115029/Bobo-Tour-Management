@@ -43,7 +43,7 @@
               <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
               <span class="text-[12px] font-bold text-[#444] uppercase tracking-wide">Stats</span>
             </div>
-            <div class="px-4 py-3 grid grid-cols-3 gap-3 text-center">
+            <div class="px-4 py-3 grid grid-cols-3 gap-2 text-center">
               <div>
                 <div class="text-[18px] font-bold text-[#111] flex items-center justify-center gap-1">
                   {{ Number(form.em_rating_avg || 0).toFixed(1) }}
@@ -145,7 +145,7 @@
             </div>
             <div v-if="saveSuccess" class="mx-5 mt-4 px-4 py-2.5 bg-green-50 border border-green-200 rounded-lg text-[13px] text-green-700">Profile updated successfully!</div>
             <div v-if="saveError" class="mx-5 mt-4 px-4 py-2.5 bg-red-50 border border-red-200 rounded-lg text-[13px] text-red-600">{{ saveError }}</div>
-            <div class="px-5 py-5 grid grid-cols-2 gap-4">
+            <div class="px-5 py-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label class="field-label">Username</label>
                 <div class="relative">
@@ -171,13 +171,13 @@
                   :class="isEditing ? 'bg-white' : 'bg-[#f8f9fa] text-[#666] cursor-default'" class="field-input" />
                 <p v-if="isEditing && touched.em_email && !form.em_email" class="text-[11px] text-red-500 mt-1">Required</p>
               </div>
-              <div class="col-span-2">
+              <div class="col-span-1 sm:col-span-2">
                 <label class="field-label">Address <span class="text-red-500">*</span></label>
                 <input v-model="form.em_address" type="text" :disabled="!isEditing" placeholder="e.g. Chiang Mai, Thailand" @input="touched.em_address = true"
                   :class="isEditing ? 'bg-white' : 'bg-[#f8f9fa] text-[#666] cursor-default'" class="field-input" />
                 <p v-if="isEditing && touched.em_address && !form.em_address" class="text-[11px] text-red-500 mt-1">Required</p>
               </div>
-              <div class="col-span-2">
+              <div class="col-span-1 sm:col-span-2">
                 <label class="field-label">Bio <span class="text-[#ccc] font-normal normal-case tracking-normal">(optional)</span></label>
                 <textarea v-model="form.em_bio" rows="3" :disabled="!isEditing" placeholder="Brief description of your tour company..."
                   :class="isEditing ? 'bg-white' : 'bg-[#f8f9fa] text-[#666] cursor-default'" class="field-input resize-none"></textarea>
@@ -215,7 +215,7 @@
                 <div class="text-[12px] font-bold text-[#444] uppercase tracking-wide mb-3">Documents</div>
                 <div v-if="docsLoading" class="text-center py-4 text-[13px] text-[#bbb]">Loading…</div>
                 <div v-else-if="documents.length === 0" class="text-center py-4 text-[13px] text-[#bbb] italic">No documents.</div>
-                <div v-else class="grid grid-cols-5 gap-2">
+                <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
                   <div v-for="doc in documents" :key="doc.em_doc_id"
                     class="rounded-xl border overflow-hidden bg-white flex flex-col transition-colors text-left"
                     :class="doc.file_url ? 'border-[#eee] cursor-pointer hover:border-[#aaa]' : 'border-dashed border-[#ddd] cursor-default'"
