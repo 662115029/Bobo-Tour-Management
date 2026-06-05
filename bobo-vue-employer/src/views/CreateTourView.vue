@@ -604,8 +604,12 @@ onBeforeRouteLeave((_to, _from, next) => {
   openModal('unsaved'); pendingNavResolve = next
 })
 const cancelAndLeave = () => {
-  isDirty.value = false
-  router.push('/my-tours')
+  if (isDirty.value) {
+    openModal('unsaved')
+    pendingNavResolve = () => router.push('/my-tours')
+  } else {
+    router.push('/my-tours')
+  }
 }
 
 const dismissModalAndLeave = () => {
