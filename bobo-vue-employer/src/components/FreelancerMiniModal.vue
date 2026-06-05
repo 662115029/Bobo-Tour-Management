@@ -39,12 +39,12 @@
       </div>
 
       <div class="relative overflow-hidden">
-        <div class="absolute inset-0 opacity-[0.06]" :style="{ background: avatarBg(fl.fl_id) }"></div>
+        <div class="absolute inset-0 opacity-[0.06]" :style="{ background: avatarStyle(fl.fl_id, fl.fl_name).backgroundColor }"></div>
         <div class="relative px-5 pt-5 pb-4">
           <div class="flex items-start gap-3.5">
             <div class="shrink-0 relative">
               <img v-if="fl.fl_profile_image_url" :src="fl.fl_profile_image_url" class="w-12 h-12 rounded-2xl object-cover ring-2 ring-white shadow-sm" />
-              <div v-else class="w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-bold ring-2 ring-white shadow-sm text-white" :style="{ background: avatarBg(fl.fl_id) }">{{ initials(fl.fl_name) }}</div>
+              <div v-else class="w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-bold ring-2 ring-white shadow-sm text-white" :style="avatarStyle(fl.fl_id, fl.fl_name)">{{ initials2(fl.fl_name) }}</div>
               <span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white" :class="fl.fl_is_active ? 'bg-[#4caf50]' : 'bg-[#bbb]'"></span>
             </div>
             <div class="flex-1 min-w-0 pt-0.5">
@@ -155,6 +155,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useAvatar } from '@/composables/useAvatar'
 
 const props = defineProps({
   flId:  { type: [String, Number], required: true },
@@ -162,17 +163,12 @@ const props = defineProps({
 })
 defineEmits(['close'])
 
+const { avatarStyle, initials2 } = useAvatar()
 const API_BASE = '/api'
 const fl = ref(null)
 const loading = ref(true)
 const error = ref('')
 
-const AVATAR_COLORS = [
-  '#1565c0','#6a1b9a','#2e7d32','#c62828','#e65100',
-  '#00695c','#ad1457','#4527a0','#0277bd','#558b2f',
-]
-const avatarBg = (id) => AVATAR_COLORS[(Number(id) || 0) % AVATAR_COLORS.length]
-const initials = (name) => (name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
 const verifyClass = (status) => ({
   verified:  'bg-green-100 text-green-800',
   pending:   'bg-amber-100 text-amber-800',

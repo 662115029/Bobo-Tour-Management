@@ -155,7 +155,7 @@
               </div>
               <div class="px-4 py-4">
                 <div v-if="job.driver_name" class="flex items-center gap-2.5">
-                  <div class="w-8 h-8 rounded-full bg-[#fef2f2] text-[#dc2626] text-sm font-bold flex items-center justify-center shrink-0">{{ job.driver_name.charAt(0).toUpperCase() }}</div>
+                  <div class="w-8 h-8 rounded-full text-sm font-bold flex items-center justify-center shrink-0" :style="avatarStyle(job.selected_fl_id, job.driver_name)">{{ initials2(job.driver_name) }}</div>
                   <div>
                     <div class="text-[14px] font-medium text-[#222]">{{ job.driver_name }}</div>
                     <div v-if="job.driver_phone" class="text-[12px] text-[#999]">{{ job.driver_phone }}</div>
@@ -233,7 +233,7 @@
                   <div class="rounded-xl border border-[#e8e8e8] bg-[#f8f9fa] hover:border-[#ddd] hover:bg-[#f5f5f5] transition-colors overflow-hidden">
                     <div class="px-4 py-3 flex items-center justify-between">
                       <div class="flex items-center gap-2">
-                        <div class="w-7 h-7 rounded-full bg-[#fef2f2] text-[#dc2626] text-xs font-bold flex items-center justify-center shrink-0">{{ (payment.driver_name || '?').charAt(0).toUpperCase() }}</div>
+                        <div class="w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center shrink-0" :style="avatarStyle(payment.fl_id, payment.driver_name)">{{ initials2(payment.driver_name || '?') }}</div>
                         <span class="text-[13px] font-medium text-[#222]">{{ payment.driver_name || '—' }}</span>
                       </div>
                       <span class="payment-badge" :class="payment.payment_status?.toLowerCase()">{{ payment.payment_status }}</span>
@@ -309,7 +309,7 @@
                       class="rounded-xl border border-[#f0e0e0] bg-[#fff8f8] overflow-hidden opacity-70">
                       <div class="px-4 py-2.5 flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                          <div class="w-6 h-6 rounded-full bg-[#fef2f2] text-[#dc2626] text-xs font-bold flex items-center justify-center shrink-0">{{ (pay.driver_name || '?').charAt(0).toUpperCase() }}</div>
+                          <div class="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center shrink-0" :style="avatarStyle(pay.fl_id, pay.driver_name)">{{ initials2(pay.driver_name || '?') }}</div>
                           <span class="text-[12px] text-[#666]">{{ pay.driver_name }}</span>
                         </div>
                         <span class="payment-badge" :class="pay.payment_status?.toLowerCase()">{{ pay.payment_status }}</span>
@@ -476,7 +476,7 @@
                 <div v-if="!applications.length" class="text-center py-8 text-[#bbb] text-[13px]">No applications yet.</div>
                 <div v-else v-for="(app, idx) in applications" :key="app.job_application_id || idx"
                   class="flex items-center gap-3 px-4 py-3 bg-[#f8f9fa] rounded-lg border border-[#e8e8e8] hover:border-[#ccc] transition-all">
-                  <div class="w-8 h-8 rounded-full bg-[#fef2f2] text-[#dc2626] text-sm font-bold flex items-center justify-center shrink-0">{{ (app.driver_name || '?').charAt(0).toUpperCase() }}</div>
+                  <div class="w-8 h-8 rounded-full text-sm font-bold flex items-center justify-center shrink-0" :style="avatarStyle(app.fl_id, app.driver_name)">{{ initials2(app.driver_name || '?') }}</div>
                   <div class="flex-1 min-w-0">
                     <div class="text-[13px] font-medium text-[#222]">{{ app.driver_name || "–" }}</div>
                     <div class="text-[11px] text-[#999] mt-0.5">Applied {{ formatDate(app.applied_at) }}</div>
@@ -534,6 +534,9 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import AppLayout from '@/components/AppLayout.vue'
 import FreelancerMiniModal from '@/components/FreelancerMiniModal.vue'
+import { useAvatar } from '@/composables/useAvatar'
+
+const { avatarStyle, initials2 } = useAvatar()
 
 const API_BASE = '/api'
 const router = useRouter()

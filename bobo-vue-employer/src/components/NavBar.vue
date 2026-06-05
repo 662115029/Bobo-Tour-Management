@@ -47,7 +47,7 @@
         <!-- Avatar: profile image if available, else initial -->
         <span
           class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 overflow-hidden"
-          :class="route.path === '/profile' ? 'bg-[#fef2f2] text-[#dc2626]' : 'bg-gray-100 text-gray-600'"
+          :style="!profileImageUrl ? avatarStyle(emId, userName) : {}"
         >
           <img
             v-if="profileImageUrl"
@@ -56,10 +56,24 @@
             class="w-full h-full object-cover rounded-full"
             @error="profileImageUrl = ''"
           />
-          <template v-else>{{ userInitial }}</template>
+          <template v-else>{{ initials2(userName) }}</template>
         </span>
         <span class="hidden sm:block">{{ userName }}</span>
       </router-link>
+
+      <!-- Divider -->
+      <div class="w-px h-5 bg-gray-200 mx-1"></div>
+
+      <!-- Logout -->
+      <button
+        @click="logout"
+        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-[#fef2f2] hover:text-[#dc2626] transition-colors"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+        </svg>
+        Logout
+      </button>
     </div>
   </header>
 </template>
@@ -68,14 +82,16 @@
 import { computed, ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useSidebar } from '@/components/useSidebar.js'
+import { useAvatar } from '@/composables/useAvatar'
 
+const { avatarStyle, initials2 } = useAvatar()
 const API_BASE = '/api'
 const router = useRouter()
 const route = useRoute()
 const { isOpen, toggle } = useSidebar()
 
+const emId = computed(() => localStorage.getItem('em_id') || '')
 const userName = computed(() => localStorage.getItem('em_name') || '')
-const userInitial = computed(() => userName.value.charAt(0).toUpperCase() || '?')
 const profileImageUrl = ref('')
 
 onMounted(async () => {
