@@ -42,6 +42,7 @@ class ProfileUpdateRequest(BaseModel):
     em_address: Optional[str] = None
     em_bio: Optional[str] = None
     em_profile_image_url: Optional[str] = None
+    job_templates: Optional[str] = None
 
 
 _EMPLOYER_NOT_FOUND = "Employer not found"
@@ -118,11 +119,12 @@ def update_employer(em_id: str, body: ProfileUpdateRequest):
             """
             UPDATE employers
             SET em_name = %s, em_email = %s, em_phone = %s, em_address = %s, em_bio = %s,
-                em_profile_image_url = COALESCE(%s, em_profile_image_url)
+                em_profile_image_url = COALESCE(%s, em_profile_image_url),
+                job_templates = COALESCE(%s, job_templates)
             WHERE em_id = %s
             """,
             (body.em_name, body.em_email, body.em_phone, body.em_address, body.em_bio,
-             body.em_profile_image_url, em_id)
+             body.em_profile_image_url, body.job_templates, em_id)
         )
         conn.commit()
         return {"status": "updated"}
@@ -158,7 +160,7 @@ def get_employers(limit: int = 10, offset: int = 0, search: str = "", status: st
         cursor.execute(
             f"""
             SELECT em_id, em_username, em_email, em_name, em_phone, em_address, em_bio,
-                   em_profile_image_url, em_verify_status, em_is_active,
+                   em_profile_image_url, em_verify_status, em_is_active, job_templates,
                    em_rating_avg, em_created_at, em_updated_at
             FROM employers
             {where_sql}
@@ -185,7 +187,7 @@ def get_employer(em_id: str):
         cursor.execute(
             """
             SELECT em_id, em_username, em_email, em_name, em_phone, em_address, em_bio,
-                   em_profile_image_url, em_verify_status, em_is_active,
+                   em_profile_image_url, em_verify_status, em_is_active, job_templates,
                    em_rating_avg, em_created_at, em_updated_at
             FROM employers
             WHERE em_id = %s

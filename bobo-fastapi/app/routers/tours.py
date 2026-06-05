@@ -23,7 +23,7 @@ def get_employer_tours(em_id: str, limit: int = 50, offset: int = 0):
                    j.job_start_date, j.job_end_date,
                    j.job_required_vehicle_type, j.job_required_seat,
                    j.job_price, j.job_status,
-                   j.selected_fl_id, f.fl_name AS driver_name,
+                   j.selected_fl_id, f.fl_name AS selected_driver,
                    j.job_created_at, j.job_updated_at
             FROM jobs j
             JOIN employers em ON j.em_id = em.em_id
@@ -56,8 +56,7 @@ def get_tour(job_id: str, em_id: str):
                    j.job_start_date, j.job_end_date,
                    j.job_required_vehicle_type, j.job_required_seat,
                    j.job_price, j.job_status,
-                   j.selected_fl_id, f.fl_name AS driver_name,
-                   f.fl_phone AS driver_phone,
+                   j.selected_fl_id, f.fl_name AS selected_driver,
                    j.job_created_at, j.job_updated_at
             FROM jobs j
             JOIN employers em ON j.em_id = em.em_id
@@ -176,24 +175,25 @@ def create_tour(data: dict):
                     INSERT INTO job_itineraries (job_id, itinerary_date, place_name, start_time, end_time, note, sequence)
                     VALUES (%s, %s, %s, %s, %s, %s, %s)
                     """,
-                    (job_id, job_start_date, it.get("place_name"),
-                     it.get("start_time", "00:00"), it.get("end_time", "00:00"),
-                     it.get("note"), idx + 1),
+                    (job_id,
+                     it.get("itinerary_date") or job_start_date,
+                     it.get("place_name"),
+                     it.get("start_time") or "00:00",
+                     it.get("end_time") or "00:00",
+                     it.get("note") or None,
+                     idx + 1),
                 )
 
-        for p in data.get("job_pickups", []):
-            if p.get("hotel_name") or p.get("pickup_location"):
+        for idx, p in enumerate(data.get("job_passengers", [])):
+            if p.get("first_name"):
                 cursor.execute(
-                    "INSERT INTO job_passengers (job_id, first_name, hotel_name, pickup_time) VALUES (%s, %s, %s, %s)",
-                    (job_id, p.get("pickup_location", ""), p.get("hotel_name"), p.get("pickup_time")),
-                )
-
-        for c in data.get("job_customers", []):
-            if c.get("customer_name"):
-                parts = (c.get("customer_name") or "").split(" ", 1)
-                cursor.execute(
-                    "INSERT INTO job_passengers (job_id, first_name, last_name, note) VALUES (%s, %s, %s, %s)",
-                    (job_id, parts[0], parts[1] if len(parts) > 1 else None, c.get("note")),
+                    """
+                    INSERT INTO job_passengers (job_id, first_name, last_name, hotel_name, pickup_time, note)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    """,
+                    (job_id, p.get("first_name"), p.get("last_name") or None,
+                     p.get("hotel_name") or None, p.get("pickup_time") or None,
+                     p.get("note") or None),
                 )
 
         # Fixed: read job_expenses (not job_entrance_fees), use item_name and amount
@@ -247,7 +247,7 @@ def update_tour(job_id: str, data: dict):
                 data.get("job_start_date"), data.get("job_end_date"),
                 data.get("job_required_vehicle_type", "VAN"),
                 data.get("job_required_seat", 9),
-                data.get("job_price") or 0,
+                data.get("job_price") or 0,  # Fixed: treat None as 0
                 job_id,
             ),
         )
@@ -275,13 +275,18 @@ def update_tour(job_id: str, data: dict):
                 )
 
         cursor.execute("DELETE FROM job_passengers WHERE job_id = %s", (job_id,))
-        for p in data.get("job_passengers", []):
-            if p.get("first_name"):
+        for p in data.get("job_pickups", []):
+            if p.get("hotel_name") or p.get("pickup_location"):
                 cursor.execute(
-                    """INSERT INTO job_passengers (job_id, first_name, last_name, hotel_name, pickup_time, note)
-                       VALUES (%s, %s, %s, %s, %s, %s)""",
-                    (job_id, p.get("first_name", ""), p.get("last_name") or None,
-                     p.get("hotel_name") or None, p.get("pickup_time") or None, p.get("note") or None),
+                    "INSERT INTO job_passengers (job_id, first_name, hotel_name, pickup_time) VALUES (%s, %s, %s, %s)",
+                    (job_id, p.get("pickup_location", ""), p.get("hotel_name"), p.get("pickup_time")),
+                )
+        for c in data.get("job_customers", []):
+            if c.get("customer_name"):
+                parts = (c.get("customer_name") or "").split(" ", 1)
+                cursor.execute(
+                    "INSERT INTO job_passengers (job_id, first_name, last_name, note) VALUES (%s, %s, %s, %s)",
+                    (job_id, parts[0], parts[1] if len(parts) > 1 else None, c.get("note")),
                 )
 
         # Fixed: read job_expenses (not job_entrance_fees), use item_name and amount

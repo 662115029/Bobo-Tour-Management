@@ -143,11 +143,8 @@ def get_freelancer(fl_id: str):
             SELECT fl_id, line_user_id, fl_username, fl_email, fl_name, fl_date_of_birth,
                    fl_phone, fl_address, fl_bio, fl_profile_image_url,
                    fl_verify_status, fl_is_active, fl_rating_avg,
-                   fl_created_at, fl_updated_at,
-                   (SELECT COUNT(*) FROM jobs WHERE selected_fl_id = f.fl_id) AS fl_total_jobs,
-                   (SELECT COUNT(*) FROM jobs WHERE selected_fl_id = f.fl_id AND job_status = 'COMPLETED') AS fl_completed_jobs,
-                   (SELECT COUNT(*) FROM fl_reviews WHERE fl_id = f.fl_id) AS fl_review_count
-            FROM freelancers f
+                   fl_created_at, fl_updated_at
+            FROM freelancers
             WHERE fl_id = %s
             """,
             (fl_id,)
@@ -625,6 +622,52 @@ def ban_freelancer(fl_id: str, body: BanRequest):
         raise
     except Exception as e:
         return {"error": str(e)}
+    finally:
+        if conn:
+            conn.close()
+
+@router.get("/languages")
+def get_languages():
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT language_id, language_name FROM languages ORDER BY language_name ASC")
+        return cursor.fetchall()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
+
+
+@router.post("/languages")
+def create_or_get_language(data: dict):
+    conn = None
+    try:
+        name = (data.get("language_name") or "").strip()
+        if not name:
+            raise HTTPException(status_code=400, detail="language_name is required")
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        # check if exists (case-insensitive)
+        cursor.execute(
+            "SELECT language_id, language_name FROM languages WHERE LOWER(language_name) = LOWER(%s)",
+            (name,)
+        )
+        existing = cursor.fetchone()
+        if existing:
+            return existing
+        # insert new
+        cursor.execute("INSERT INTO languages (language_name) VALUES (%s)", (name,))
+        conn.commit()
+        return {"language_id": cursor.lastrowid, "language_name": name}
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
     finally:
         if conn:
             conn.close()

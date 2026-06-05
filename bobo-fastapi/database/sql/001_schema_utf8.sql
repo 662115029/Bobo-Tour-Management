@@ -67,6 +67,7 @@ CREATE TABLE employers (
     em_address           TEXT,
     em_bio               TEXT,
     em_profile_image_url VARCHAR(500),
+    job_templates        JSON,
     em_verify_status     VARCHAR(20)   NOT NULL DEFAULT 'PENDING'
                              CHECK (em_verify_status IN ('PENDING','VERIFIED','NOT_VERIFIED')),
     em_is_active         BOOLEAN       NOT NULL DEFAULT TRUE,
