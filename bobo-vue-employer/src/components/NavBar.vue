@@ -60,20 +60,6 @@
         </span>
         <span class="hidden sm:block">{{ userName }}</span>
       </router-link>
-
-      <!-- Divider -->
-      <div class="w-px h-5 bg-gray-200 mx-1"></div>
-
-      <!-- Logout -->
-      <button
-        @click="logout"
-        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-[#fef2f2] hover:text-[#dc2626] transition-colors"
-      >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-        </svg>
-        Logout
-      </button>
     </div>
   </header>
 </template>
@@ -108,13 +94,6 @@ onMounted(async () => {
   }
 })
 
-const logout = () => {
-  localStorage.removeItem('em_id')
-  localStorage.removeItem('em_name')
-  localStorage.removeItem('em_email')
-  router.push('/login')
-}
-
 const staticLabels = {
   '/my-tours': 'My Tours',
   '/matching': 'Matching',
@@ -136,10 +115,10 @@ const breadcrumbs = computed(() => {
   }
 
   // Create tour: My Tours > Create Tour
-  if (path === '/create-job') {
+  if (path === '/create-tour') {
     return [
       { label: 'My Tours', path: '/my-tours' },
-      { label: 'Create Tour', path: '/create-job' },
+      { label: 'Create Tour', path: '/create-tour' },
     ]
   }
 
