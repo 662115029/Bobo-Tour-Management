@@ -3,7 +3,7 @@
     <div class="px-5 pb-8">
 
       <!-- Top bar: Back + Action buttons -->
-      <div class="flex items-center justify-between py-3 mb-5">
+      <div class="flex items-center justify-between flex-wrap gap-2 py-3 mb-5">
         <button
           @click="$router.back()"
           class="flex items-center gap-1.5 text-sm font-medium text-gray-600 bg-white hover:bg-[#ffd8d8] hover:text-[#dc2626] px-4 py-2 rounded-full transition w-fit"
@@ -54,7 +54,7 @@
               <div class="animate-pulse bg-[#ebebeb] h-9 w-32 rounded"></div>
             </div>
           </div>
-          <div class="grid grid-cols-4 gap-3 pt-4 border-t border-[#f0f0f0]">
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-[#f0f0f0]">
             <div v-for="i in 4" :key="i" class="bg-[#f8f9fa] rounded-lg border border-[#eee] px-3 py-2.5 flex flex-col gap-1.5">
               <div class="animate-pulse bg-[#ebebeb] h-2 w-14 rounded"></div>
               <div class="animate-pulse bg-[#ebebeb] h-4 w-20 rounded"></div>
@@ -209,10 +209,10 @@
                   </div>
                 </template>
                 <template v-else>
-                  <div v-for="(exp, idx) in form.job_expenses" :key="idx" class="grid grid-cols-2 gap-2 mb-2 items-end">
+                  <div v-for="(exp, idx) in form.job_expenses" :key="idx" class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2 items-end">
                     <div><label class="field-label">Item Name</label><input v-model="exp.item_name" type="text" class="field-input" /></div>
                     <div><label class="field-label">Amount (THB)</label><input v-model.number="exp.amount" type="number" class="field-input" /></div>
-                    <button type="button" @click="form.job_expenses.splice(idx, 1)" class="col-span-2 text-xs text-red-500 hover:underline text-left">Remove</button>
+                    <button type="button" @click="form.job_expenses.splice(idx, 1)" class="col-span-full text-xs text-red-500 hover:underline text-left">Remove</button>
                   </div>
                   <button type="button" @click="form.job_expenses.push({ item_name: '', amount: 0 })"
                     class="px-3 py-1.5 bg-[#f5f5f5] text-[#555] rounded-lg text-xs hover:bg-[#ebebeb] transition">+ Add Expense</button>
@@ -475,13 +475,15 @@
               <div class="px-4 py-4 flex flex-col gap-2">
                 <div v-if="!applications.length" class="text-center py-8 text-[#bbb] text-[13px]">No applications yet.</div>
                 <div v-else v-for="(app, idx) in applications" :key="app.job_application_id || idx"
-                  class="flex items-center gap-3 px-4 py-3 bg-[#f8f9fa] rounded-lg border border-[#e8e8e8] hover:border-[#ccc] transition-all">
-                  <div class="w-8 h-8 rounded-full text-sm font-bold flex items-center justify-center shrink-0" :style="avatarStyle(app.fl_id, app.driver_name)">{{ initials2(app.driver_name || '?') }}</div>
-                  <div class="flex-1 min-w-0">
-                    <div class="text-[13px] font-medium text-[#222]">{{ app.driver_name || "–" }}</div>
-                    <div class="text-[11px] text-[#999] mt-0.5">Applied {{ formatDate(app.applied_at) }}</div>
+                  class="flex flex-col sm:flex-row sm:items-center gap-2 px-4 py-3 bg-[#f8f9fa] rounded-lg border border-[#e8e8e8] hover:border-[#ccc] transition-all">
+                  <div class="flex items-center gap-3 flex-1 min-w-0">
+                    <div class="w-8 h-8 rounded-full text-sm font-bold flex items-center justify-center shrink-0" :style="avatarStyle(app.fl_id, app.driver_name)">{{ initials2(app.driver_name || '?') }}</div>
+                    <div class="min-w-0">
+                      <div class="text-[13px] font-medium text-[#222]">{{ app.driver_name || "–" }}</div>
+                      <div class="text-[11px] text-[#999] mt-0.5">Applied {{ formatDate(app.applied_at) }}</div>
+                    </div>
+                    <span class="application-badge shrink-0 ml-auto sm:ml-0" :class="app.application_status?.toLowerCase()">{{ app.application_status }}</span>
                   </div>
-                  <span class="application-badge shrink-0" :class="app.application_status?.toLowerCase()">{{ app.application_status }}</span>
                   <div class="flex items-center gap-1.5 shrink-0">
                     <button @click="miniModalFlId = app.fl_id"
                       class="px-2.5 py-1.5 text-[11px] font-medium rounded-lg border border-[#e0e0e0] text-[#666] hover:bg-white hover:border-[#bbb] transition">
@@ -816,7 +818,10 @@ const startEditing = () => {
     job_price: j.job_price ?? null,
     job_required_languages: [...(j.job_required_languages || [])],
     job_itineraries: (j.job_itineraries || []).map(i => ({ ...i })),
-    job_passengers: (j.job_passengers || []).map(p => ({ ...p })),
+    job_passengers: (j.job_passengers || []).map(p => ({
+      ...p,
+      pickup_time: formatPickupTime(p.pickup_time) === '–' ? '' : formatPickupTime(p.pickup_time),
+    })),
     job_expenses: (j.job_expenses || []).map(e => ({ ...e })),
   })
   editing.value = true
@@ -844,7 +849,20 @@ const saveJob = async () => {
     if (text) { try { data = JSON.parse(text) } catch (_) {} }
     if (res.ok) {
       editing.value = false
-      await fetchJob()
+      // update local job state without full refetch
+      Object.assign(job.value, {
+        job_title: form.job_title,
+        job_description: form.job_description,
+        job_start_date: form.job_start_date,
+        job_end_date: form.job_end_date,
+        job_required_vehicle_type: form.job_required_vehicle_type,
+        job_required_seat: form.job_required_seat,
+        job_price: form.job_price,
+        job_required_languages: [...form.job_required_languages],
+        job_itineraries: form.job_itineraries.map(i => ({ ...i })),
+        job_passengers: form.job_passengers.map(p => ({ ...p })),
+        job_expenses: form.job_expenses.map(e => ({ ...e })),
+      })
     } else {
       alert('Failed to save: ' + (data.error || data.message || data.detail || 'Unknown error'))
     }
@@ -859,7 +877,7 @@ const saveJob = async () => {
 const sortedExpenses = computed(() =>
   [...(job.value?.job_expenses ?? [])].sort((a, b) => (a.sequence ?? 0) - (b.sequence ?? 0))
 )
-const canEdit = computed(() => !['IN_PROGRESS', 'COMPLETED', 'CANCELLED'].includes(job.value?.job_status))
+const canEdit = computed(() => job.value?.job_status === 'OPEN')
 const canCancel = computed(() => ['OPEN', 'PENDING', 'MATCHED'].includes(job.value?.job_status))
 
 // ── Status display ─────────────────────────────────────────────────────────

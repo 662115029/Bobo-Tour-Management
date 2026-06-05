@@ -108,9 +108,10 @@ const breadcrumbs = computed(() => {
   // Tour detail: My Tours > [Tour Title]
   if (path.startsWith('/tours/')) {
     const tourTitle = history.state?.jobTitle || route.params.id
+    const shortTitle = tourTitle?.length > 20 ? tourTitle.slice(0, 20) + '…' : tourTitle
     return [
       { label: 'My Tours', path: '/my-tours' },
-      { label: tourTitle, path },
+      { label: shortTitle, path },
     ]
   }
 
