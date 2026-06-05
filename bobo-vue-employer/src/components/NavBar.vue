@@ -1,7 +1,7 @@
 <template>
   <!-- Fixed top bar that shifts right with the sidebar -->
   <header
-    class="fixed top-0 right-0 z-30 flex items-center px-4 py-2 justify-between transition-all duration-300 bg-white border-b border-gray-200"
+    class="fixed top-0 right-0 z-30 flex items-center px-4 py-2 justify-between transition-all duration-300 font-['DM_Sans',sans-serif] bg-white border-b border-gray-200"
     style="left: 0;"
   >
     <!-- Left side: hamburger + logo + page title -->
@@ -60,20 +60,6 @@
         </span>
         <span class="hidden sm:block">{{ userName }}</span>
       </router-link>
-
-      <!-- Divider -->
-      <div class="w-px h-5 bg-gray-200 mx-1"></div>
-
-      <!-- Logout -->
-      <button
-        @click="logout"
-        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-[#fef2f2] hover:text-[#dc2626] transition-colors"
-      >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-        </svg>
-        Logout
-      </button>
     </div>
   </header>
 </template>
