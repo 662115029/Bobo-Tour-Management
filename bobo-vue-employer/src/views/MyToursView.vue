@@ -4,11 +4,13 @@
 
       <div class="py-4">
         <h1 class="text-[24px] font-bold text-[#dc2626] text-center mb-4">My Tours</h1>
-        <div class="flex items-center justify-between gap-2 flex-wrap">
-          <div class="flex items-center gap-2 flex-wrap">
+
+        <!-- Filter bar -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div class="flex flex-wrap items-center gap-2">
             <input v-model="search" type="text" placeholder="Search tours…"
-              class="px-3 py-2 border border-[#e0e0e0] rounded-lg text-[13px] focus:outline-none focus:border-[#bbb] w-44" />
-            <select v-model="statusFilter" class="px-3 py-2 border border-[#e0e0e0] rounded-lg text-[13px] focus:outline-none focus:border-[#bbb]">
+              class="px-3 py-2 border border-[#e0e0e0] rounded-lg text-[13px] focus:outline-none focus:border-[#bbb] w-full sm:w-44" />
+            <select v-model="statusFilter" class="px-3 py-2 border border-[#e0e0e0] rounded-lg text-[13px] focus:outline-none focus:border-[#bbb] flex-1 sm:flex-none">
               <option value="ALL">All Status</option>
               <option value="OPEN">Open</option>
               <option value="PENDING">Pending</option>
@@ -17,11 +19,11 @@
               <option value="COMPLETED">Completed</option>
               <option value="CANCELLED">Cancelled</option>
             </select>
-            <select v-model="yearFilter" class="px-3 py-2 border border-[#e0e0e0] rounded-lg text-[13px] focus:outline-none focus:border-[#bbb]">
+            <select v-model="yearFilter" class="px-3 py-2 border border-[#e0e0e0] rounded-lg text-[13px] focus:outline-none focus:border-[#bbb] flex-1 sm:flex-none">
               <option value="">All Years</option>
               <option v-for="y in availableYears" :key="y" :value="y">{{ y }}</option>
             </select>
-            <select v-model="monthFilter" class="px-3 py-2 border border-[#e0e0e0] rounded-lg text-[13px] focus:outline-none focus:border-[#bbb]">
+            <select v-model="monthFilter" class="px-3 py-2 border border-[#e0e0e0] rounded-lg text-[13px] focus:outline-none focus:border-[#bbb] flex-1 sm:flex-none">
               <option value="">All Months</option>
               <option v-for="(m, i) in months" :key="i" :value="i + 1">{{ m }}</option>
             </select>
@@ -31,13 +33,11 @@
               Reset
             </button>
           </div>
-          <div class="flex items-center gap-2 shrink-0">
-            <button type="button" @click="sortField = sortField === 'start' ? 'created' : 'start'"
-              class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#e0e0e0] text-[12px] text-[#888] hover:bg-[#f5f5f5] hover:text-[#444] transition select-none">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4h13M3 8h9M3 12h5m10 4l-4-4 4-4"/></svg>
-              Sort by {{ sortField === 'start' ? 'Start Date' : 'Created Date' }}
-            </button>
-          </div>
+          <button type="button" @click="sortField = sortField === 'start' ? 'created' : 'start'"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#e0e0e0] text-[12px] text-[#888] hover:bg-[#f5f5f5] hover:text-[#444] transition select-none self-start sm:self-auto shrink-0">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4h13M3 8h9M3 12h5m10 4l-4-4 4-4"/></svg>
+            Sort by {{ sortField === 'start' ? 'Start Date' : 'Created Date' }}
+          </button>
         </div>
       </div>
 
