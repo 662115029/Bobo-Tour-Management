@@ -462,7 +462,7 @@ const toggleStatus = async () => {
   togglingStatus.value = true
   const newStatus = isActive.value ? 'inactive' : 'active'
   try {
-    const res = await fetch(`${API_BASE}/admin/admins/${admin.value.admin_id}`, {
+    const res = await fetch(`${API_BASE}/admin/${admin.value.admin_id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: newStatus }),
