@@ -134,43 +134,31 @@
             </div>
           </div>
 
-          <!-- STEP 3: Schedule (table style) -->
+          <!-- STEP 3: Tour Schedule -->
           <div v-if="currentStep === 3" class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm p-5 flex flex-col gap-3">
             <h2 class="text-[14px] font-bold text-[#333] border-b border-[#f0f0f0] pb-2.5">Tour Schedule</h2>
-
-            <div class="flex flex-col gap-3">
+            <div class="flex flex-col gap-2">
               <div v-for="(itin, idx) in form.job_itineraries" :key="idx"
-                class="bg-[#f8f9fa] rounded-xl border border-[#e8e8e8] p-3.5 flex flex-col gap-3">
-                <div class="flex items-center justify-between">
-                  <span class="text-[11px] font-bold text-[#bbb] uppercase tracking-wide">Stop {{ idx + 1 }}</span>
-                  <button type="button" @click="removeItinerary(idx)" class="text-[#ccc] hover:text-red-500 transition">
+                class="bg-[#f8f9fa] rounded-xl border border-[#e8e8e8] px-3 py-2.5 flex flex-col gap-2">
+                <div class="flex items-center gap-2">
+                  <span class="text-[10px] font-bold text-[#bbb] uppercase w-10 shrink-0">{{ idx + 1 }}</span>
+                  <input v-model="itin.place_name" type="text" placeholder="Place name *"
+                    class="flex-1 min-w-0 px-2.5 py-1.5 border border-[#e0e0e0] rounded-lg text-[13px] focus:outline-none focus:border-red-400 bg-white" />
+                  <input v-model="itin.itinerary_date" type="date"
+                    class="w-32 shrink-0 px-2 py-1.5 border border-[#e0e0e0] rounded-lg text-[12px] focus:outline-none focus:border-red-400 bg-white" />
+                  <input v-model="itin.start_time" type="time" required
+                    class="w-24 shrink-0 px-2 py-1.5 border border-[#e0e0e0] rounded-lg text-[12px] focus:outline-none focus:border-red-400 bg-white" />
+                  <span class="text-[#bbb] text-[11px] shrink-0">–</span>
+                  <input v-model="itin.end_time" type="time" required
+                    class="w-24 shrink-0 px-2 py-1.5 border border-[#e0e0e0] rounded-lg text-[12px] focus:outline-none focus:border-red-400 bg-white" />
+                  <button type="button" @click="removeItinerary(idx)" class="text-[#ccc] hover:text-red-500 transition shrink-0">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                   </button>
                 </div>
-                <input v-model="itin.place_name" type="text" placeholder="Place name *"
-                  class="w-full px-3 py-2 border border-[#e0e0e0] rounded-lg text-[13px] focus:outline-none focus:border-red-400 bg-white" />
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  <div>
-                    <label class="text-[10px] text-[#bbb] uppercase tracking-wide font-medium">Date</label>
-                    <input v-model="itin.itinerary_date" type="date"
-                      class="w-full mt-0.5 px-3 py-2 border border-[#e0e0e0] rounded-lg text-[13px] focus:outline-none focus:border-red-400 bg-white" />
-                  </div>
-                  <div>
-                    <label class="text-[10px] text-[#bbb] uppercase tracking-wide font-medium">Start <span class="text-red-500">*</span></label>
-                    <input v-model="itin.start_time" type="time" required
-                      class="w-full mt-0.5 px-3 py-2 border border-[#e0e0e0] rounded-lg text-[13px] focus:outline-none focus:border-red-400 bg-white" />
-                  </div>
-                  <div>
-                    <label class="text-[10px] text-[#bbb] uppercase tracking-wide font-medium">End <span class="text-red-500">*</span></label>
-                    <input v-model="itin.end_time" type="time" required
-                      class="w-full mt-0.5 px-3 py-2 border border-[#e0e0e0] rounded-lg text-[13px] focus:outline-none focus:border-red-400 bg-white" />
-                  </div>
-                </div>
                 <input v-model="itin.note" type="text" placeholder="Note (optional)"
-                  class="w-full px-3 py-2 border border-[#e0e0e0] rounded-lg text-[13px] focus:outline-none focus:border-red-400 bg-white" />
+                  class="w-full px-2.5 py-1.5 border border-dashed border-[#e0e0e0] rounded-lg text-[12px] text-[#999] focus:outline-none focus:border-red-300 bg-white" />
               </div>
             </div>
-
             <button type="button" @click="addItinerary"
               class="w-full py-2 border-2 border-dashed border-[#e0e0e0] rounded-xl text-[13px] text-[#999] hover:border-red-300 hover:text-red-400 transition">
               + Add Stop
@@ -180,52 +168,33 @@
           <!-- STEP 4: Passengers + Expenses -->
           <div v-if="currentStep === 4" class="flex flex-col gap-4">
 
-            <!-- Passengers table -->
+            <!-- Pick Up Points table -->
             <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm p-5 flex flex-col gap-3">
-              <h2 class="text-[14px] font-bold text-[#333] border-b border-[#f0f0f0] pb-2.5">Passengers</h2>
-              <div class="flex flex-col gap-3">
+              <h2 class="text-[14px] font-bold text-[#333] border-b border-[#f0f0f0] pb-2.5">Pick Up Points</h2>
+              <div class="flex flex-col gap-2">
                 <div v-for="(p, idx) in form.job_passengers" :key="idx"
-                  class="bg-[#f8f9fa] rounded-xl border border-[#e8e8e8] p-3.5 flex flex-col gap-3">
-                  <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-bold text-[#bbb] uppercase tracking-wide">Passenger {{ idx + 1 }}</span>
-                    <button type="button" @click="removePassenger(idx)" class="text-[#ccc] hover:text-red-500 transition">
+                  class="bg-[#f8f9fa] rounded-xl border border-[#e8e8e8] px-3 py-2.5 flex flex-col gap-2">
+                  <div class="flex items-center gap-2">
+                    <span class="text-[10px] font-bold text-[#bbb] uppercase w-10 shrink-0">{{ idx + 1 }}</span>
+                    <input v-model="p.first_name" type="text" placeholder="First name *"
+                      class="flex-1 min-w-0 px-2.5 py-1.5 border border-[#e0e0e0] rounded-lg text-[13px] focus:outline-none focus:border-red-400 bg-white" />
+                    <input v-model="p.last_name" type="text" placeholder="Last name"
+                      class="flex-1 min-w-0 px-2.5 py-1.5 border border-[#e0e0e0] rounded-lg text-[13px] focus:outline-none focus:border-red-400 bg-white" />
+                    <input v-model="p.hotel_name" type="text" placeholder="Hotel"
+                      class="flex-1 min-w-0 px-2.5 py-1.5 border border-[#e0e0e0] rounded-lg text-[13px] focus:outline-none focus:border-red-400 bg-white" />
+                    <input v-model="p.pickup_time" type="time"
+                      class="w-24 shrink-0 px-2 py-1.5 border border-[#e0e0e0] rounded-lg text-[12px] focus:outline-none focus:border-red-400 bg-white" />
+                    <button type="button" @click="removePassenger(idx)" class="text-[#ccc] hover:text-red-500 transition shrink-0">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     </button>
                   </div>
-                  <div class="grid grid-cols-2 gap-2">
-                    <div>
-                      <label class="text-[10px] text-[#bbb] uppercase tracking-wide font-medium">First Name *</label>
-                      <input v-model="p.first_name" type="text" placeholder="First name"
-                        class="w-full mt-0.5 px-3 py-2 border border-[#e0e0e0] rounded-lg text-[13px] focus:outline-none focus:border-red-400 bg-white" />
-                    </div>
-                    <div>
-                      <label class="text-[10px] text-[#bbb] uppercase tracking-wide font-medium">Last Name</label>
-                      <input v-model="p.last_name" type="text" placeholder="Last name"
-                        class="w-full mt-0.5 px-3 py-2 border border-[#e0e0e0] rounded-lg text-[13px] focus:outline-none focus:border-red-400 bg-white" />
-                    </div>
-                  </div>
-                  <div class="grid grid-cols-2 gap-2">
-                    <div>
-                      <label class="text-[10px] text-[#bbb] uppercase tracking-wide font-medium">Hotel</label>
-                      <input v-model="p.hotel_name" type="text" placeholder="Hotel name"
-                        class="w-full mt-0.5 px-3 py-2 border border-[#e0e0e0] rounded-lg text-[13px] focus:outline-none focus:border-red-400 bg-white" />
-                    </div>
-                    <div>
-                      <label class="text-[10px] text-[#bbb] uppercase tracking-wide font-medium">Pickup Time</label>
-                      <input v-model="p.pickup_time" type="time"
-                        class="w-full mt-0.5 px-3 py-2 border border-[#e0e0e0] rounded-lg text-[13px] focus:outline-none focus:border-red-400 bg-white" />
-                    </div>
-                  </div>
-                  <div>
-                    <label class="text-[10px] text-[#bbb] uppercase tracking-wide font-medium">Note</label>
-                    <input v-model="p.note" type="text" placeholder="e.g. Wheelchair"
-                      class="w-full mt-0.5 px-3 py-2 border border-[#e0e0e0] rounded-lg text-[13px] focus:outline-none focus:border-red-400 bg-white" />
-                  </div>
+                  <input v-model="p.note" type="text" placeholder="Note (optional)"
+                    class="w-full px-2.5 py-1.5 border border-dashed border-[#e0e0e0] rounded-lg text-[12px] text-[#999] focus:outline-none focus:border-red-300 bg-white" />
                 </div>
               </div>
               <button type="button" @click="addPassenger"
                 class="w-full py-2 border-2 border-dashed border-[#e0e0e0] rounded-xl text-[13px] text-[#999] hover:border-red-300 hover:text-red-400 transition">
-                + Add Passenger
+                + Add Pick Up Point
               </button>
             </div>
 
@@ -359,7 +328,7 @@
 
               <div class="h-px bg-[#f0f0f0]"></div>
               <div class="flex justify-between gap-2">
-                <span class="text-[#999]">Passengers</span>
+                <span class="text-[#999]">Pick Up Points</span>
                 <span class="text-[#222] font-medium">{{ form.job_passengers.length }}</span>
               </div>
               <div class="flex justify-between gap-2">
@@ -423,7 +392,7 @@ const API_BASE = '/api'
 const router = useRouter()
 const DRAFT_KEY = 'create_job_draft'
 
-const steps = ['General Info', 'Vehicle', 'Schedule', 'Passengers & Expenses']
+const steps = ['General Info', 'Vehicle', 'Tour Schedule', 'Pick Up & Expenses']
 const currentStep = ref(1)
 const submitting = ref(false)
 const isVerified = ref(true)

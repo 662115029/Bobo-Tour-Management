@@ -116,23 +116,15 @@
           <!-- ── LEFT ── -->
           <div class="flex flex-col gap-3">
 
-            <!-- Languages -->
+            <!-- Languages Required -->
             <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
               <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
                 <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
-                <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Languages</span>
+                <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Languages Required</span>
               </div>
               <div class="px-4 py-4 flex flex-wrap gap-1.5">
-                <template v-if="!editing">
-                  <span v-for="lang in job.job_required_languages" :key="lang" class="info-tag language">{{ lang }}</span>
-                  <span v-if="!job.job_required_languages?.length" class="text-[13px] text-[#bbb]">None specified</span>
-                </template>
-                <div v-else class="flex flex-wrap gap-1.5">
-                  <button v-for="lang in allLanguages" :key="lang" type="button" @click="toggleLanguage(lang)"
-                    :class="['px-3 py-1 rounded-full text-xs font-medium border transition-colors', form.job_required_languages.includes(lang) ? 'bg-red-600 text-white border-red-600' : 'bg-white text-[#555] border-[#ddd] hover:border-red-400']">
-                    {{ lang }}
-                  </button>
-                </div>
+                <span v-for="lang in (editing ? form.job_required_languages : job.job_required_languages)" :key="lang" class="info-tag language">{{ lang }}</span>
+                <span v-if="!(editing ? form.job_required_languages : job.job_required_languages)?.length" class="text-[13px] text-[#bbb]">None specified</span>
               </div>
             </div>
 
@@ -392,6 +384,43 @@
                   </select>
                 </div>
                 <div class="md:col-span-2"><label class="field-label">Description</label><textarea v-model="form.job_description" rows="3" class="field-input"></textarea></div>
+                <div class="md:col-span-2">
+                  <label class="field-label">Languages Required</label>
+                  <div class="flex flex-wrap gap-2 mt-1">
+                    <button v-for="lang in languages.slice(0, 5)" :key="lang.language_id" type="button"
+                      @click="toggleLanguage(lang.language_name)"
+                      :class="['px-3 py-1 rounded-full text-[12px] font-medium border transition-colors',
+                        form.job_required_languages.includes(lang.language_name)
+                          ? 'bg-red-600 text-white border-red-600'
+                          : 'bg-white text-gray-600 border-gray-300 hover:border-red-400']">
+                      {{ lang.language_name }}
+                    </button>
+                    <div class="relative">
+                      <input v-model="otherLanguage" type="text" placeholder="Other…"
+                        class="px-2.5 py-1 rounded-full text-[12px] border border-dashed border-gray-300 focus:outline-none focus:border-red-400 w-24"
+                        @input="onLangInput" @keyup.enter="addTopSuggestion" @blur="hideSuggestions" @focus="onLangInput" />
+                      <div v-if="showSuggestions && (langSuggestions.length || otherLanguage.trim())"
+                        class="absolute left-0 top-full mt-1 z-20 bg-white border border-[#e0e0e0] rounded-xl shadow-lg overflow-hidden min-w-[160px]">
+                        <button v-for="s in langSuggestions" :key="s.language_id" type="button"
+                          @mousedown.prevent="selectSuggestion(s.language_name)"
+                          class="w-full text-left px-3 py-2 text-[13px] text-[#222] hover:bg-[#f5f5f5] transition">
+                          {{ s.language_name }}
+                        </button>
+                        <button v-if="otherLanguage.trim() && !exactMatch" type="button"
+                          @mousedown.prevent="addOtherLanguage"
+                          class="w-full text-left px-3 py-2 text-[13px] text-red-600 hover:bg-red-50 transition border-t border-[#f0f0f0]">
+                          + Add "{{ otherLanguage.trim() }}"
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div v-if="form.job_required_languages.some(l => !languages.slice(0,5).find(db => db.language_name === l))" class="flex flex-wrap gap-1.5 mt-2">
+                    <span v-for="lang in form.job_required_languages.filter(l => !languages.slice(0,5).find(db => db.language_name === l))" :key="lang"
+                      class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[12px] bg-red-600 text-white">
+                      {{ lang }}<button type="button" @click="toggleLanguage(lang)" class="hover:opacity-70 ml-0.5">✕</button>
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -570,7 +599,60 @@ const reuploadPreview = ref(null)
 const reuploadFile = ref(null)
 const slipModalUrl = ref(null)
 
-const allLanguages = ['English', 'Thai', 'Mandarin', 'Korean', 'Japanese', 'French', 'German']
+// Language DB fetch + search
+const languages = ref([])
+const otherLanguage = ref('')
+const showSuggestions = ref(false)
+const langSuggestions = ref([])
+const exactMatch = ref(false)
+
+const fetchLanguages = async () => {
+  try {
+    const res = await fetch(`${API_BASE}/languages`)
+    if (res.ok) languages.value = await res.json()
+  } catch {}
+}
+
+const onLangInput = () => {
+  const q = otherLanguage.value.trim().toLowerCase()
+  showSuggestions.value = true
+  if (!q) { langSuggestions.value = []; exactMatch.value = false; return }
+  langSuggestions.value = languages.value.filter(l => l.language_name.toLowerCase().includes(q)).slice(0, 6)
+  exactMatch.value = languages.value.some(l => l.language_name.toLowerCase() === q)
+}
+
+const hideSuggestions = () => setTimeout(() => { showSuggestions.value = false }, 150)
+
+const selectSuggestion = (langName) => {
+  if (!form.job_required_languages.includes(langName)) form.job_required_languages.push(langName)
+  otherLanguage.value = ''
+  showSuggestions.value = false
+}
+
+const addTopSuggestion = () => {
+  if (langSuggestions.value.length) selectSuggestion(langSuggestions.value[0].language_name)
+  else addOtherLanguage()
+}
+
+const addOtherLanguage = async () => {
+  const name = otherLanguage.value.trim()
+  if (!name || form.job_required_languages.includes(name)) { otherLanguage.value = ''; return }
+  try {
+    const res = await fetch(`${API_BASE}/languages`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ language_name: name }),
+    })
+    if (res.ok) {
+      const lang = await res.json()
+      if (!languages.value.find(l => l.language_id === lang.language_id)) {
+        languages.value.push(lang)
+        languages.value.sort((a, b) => a.language_name.localeCompare(b.language_name))
+      }
+      form.job_required_languages.push(lang.language_name)
+    }
+  } catch {}
+  otherLanguage.value = ''
+}
 
 const form = reactive({
   job_title: '',
@@ -645,7 +727,10 @@ const fetchJob = async () => {
   }
 }
 
-onMounted(() => fetchJob())
+onMounted(() => {
+  fetchJob()
+  fetchLanguages()
+})
 
 // ── Refresh payment only ───────────────────────────────────────────────────
 const fetchPayment = async () => {

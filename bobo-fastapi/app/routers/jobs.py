@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Header
+from fastapi import APIRouter, HTTPException, Header, Body
 from typing import Optional
 from app.db.connection import get_connection, get_cursor
 
@@ -218,13 +218,23 @@ def create_job(data: dict):
 
 
 @router.get("/job-required-languages")
-def get_job_required_languages(limit: int = 50, offset: int = 0, job_id: str = None):
+def get_job_required_languages(limit: int = 50, offset: int = 0, job_id: str = None, em_id: str = None):
     conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
+        where_parts = []
+        params = []
+        if job_id:
+            where_parts.append("jrl.job_id = %s")
+            params.append(job_id)
+        if em_id:
+            where_parts.append("j.em_id = %s")
+            params.append(em_id)
+        where = ("WHERE " + " AND ".join(where_parts)) if where_parts else ""
+        params += [limit, offset]
         cursor.execute(
-            """
+            f"""
             SELECT jrl.job_id, j.job_title,
                    l.language_id, l.language_name
             FROM job_required_languages jrl
@@ -233,8 +243,8 @@ def get_job_required_languages(limit: int = 50, offset: int = 0, job_id: str = N
             {where}
             ORDER BY l.language_name
             LIMIT %s OFFSET %s
-            """.format(where="WHERE jrl.job_id = %s" if job_id else ""),
-            ([job_id] if job_id else []) + [limit, offset],
+            """,
+            params,
         )
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
@@ -274,13 +284,23 @@ def get_job_pickups(limit: int = 50, offset: int = 0, job_id: str = None):
 
 
 @router.get("/job-itineraries")
-def get_job_itineraries(limit: int = 50, offset: int = 0, job_id: str = None):
+def get_job_itineraries(limit: int = 50, offset: int = 0, job_id: str = None, em_id: str = None):
     conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
+        where_parts = []
+        params = []
+        if job_id:
+            where_parts.append("ji.job_id = %s")
+            params.append(job_id)
+        if em_id:
+            where_parts.append("j.em_id = %s")
+            params.append(em_id)
+        where = ("WHERE " + " AND ".join(where_parts)) if where_parts else ""
+        params += [limit, offset]
         cursor.execute(
-            """
+            f"""
             SELECT ji.job_itinerary_id, ji.job_id, j.job_title,
                    ji.place_name, ji.start_time, ji.end_time,
                    ji.note, ji.sequence, ji.created_at
@@ -289,8 +309,8 @@ def get_job_itineraries(limit: int = 50, offset: int = 0, job_id: str = None):
             {where}
             ORDER BY ji.job_id, ji.sequence
             LIMIT %s OFFSET %s
-            """.format(where="WHERE ji.job_id = %s" if job_id else ""),
-            ([job_id] if job_id else []) + [limit, offset],
+            """,
+            params,
         )
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
@@ -302,13 +322,23 @@ def get_job_itineraries(limit: int = 50, offset: int = 0, job_id: str = None):
 
 
 @router.get("/job-passengers")
-def get_job_passengers(limit: int = 50, offset: int = 0, job_id: str = None):
+def get_job_passengers(limit: int = 50, offset: int = 0, job_id: str = None, em_id: str = None):
     conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
+        where_parts = []
+        params = []
+        if job_id:
+            where_parts.append("jp.job_id = %s")
+            params.append(job_id)
+        if em_id:
+            where_parts.append("j.em_id = %s")
+            params.append(em_id)
+        where = ("WHERE " + " AND ".join(where_parts)) if where_parts else ""
+        params += [limit, offset]
         cursor.execute(
-            """
+            f"""
             SELECT jp.job_passenger_id, jp.job_id, j.job_title,
                    jp.first_name, jp.last_name,
                    jp.hotel_name, jp.pickup_time,
@@ -318,8 +348,8 @@ def get_job_passengers(limit: int = 50, offset: int = 0, job_id: str = None):
             {where}
             ORDER BY jp.job_id, jp.pickup_time
             LIMIT %s OFFSET %s
-            """.format(where="WHERE jp.job_id = %s" if job_id else ""),
-            ([job_id] if job_id else []) + [limit, offset],
+            """,
+            params,
         )
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
@@ -331,13 +361,23 @@ def get_job_passengers(limit: int = 50, offset: int = 0, job_id: str = None):
 
 
 @router.get("/job-expenses")
-def get_job_expenses(limit: int = 50, offset: int = 0, job_id: str = None):
+def get_job_expenses(limit: int = 50, offset: int = 0, job_id: str = None, em_id: str = None):
     conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
+        where_parts = []
+        params = []
+        if job_id:
+            where_parts.append("je.job_id = %s")
+            params.append(job_id)
+        if em_id:
+            where_parts.append("j.em_id = %s")
+            params.append(em_id)
+        where = ("WHERE " + " AND ".join(where_parts)) if where_parts else ""
+        params += [limit, offset]
         cursor.execute(
-            """
+            f"""
             SELECT je.job_expense_id, je.job_id, j.job_title,
                    je.item_name, je.amount, je.sequence, je.created_at
             FROM job_expenses je
@@ -345,8 +385,8 @@ def get_job_expenses(limit: int = 50, offset: int = 0, job_id: str = None):
             {where}
             ORDER BY je.job_id, je.sequence
             LIMIT %s OFFSET %s
-            """.format(where="WHERE je.job_id = %s" if job_id else ""),
-            ([job_id] if job_id else []) + [limit, offset],
+            """,
+            params,
         )
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
@@ -358,13 +398,23 @@ def get_job_expenses(limit: int = 50, offset: int = 0, job_id: str = None):
 
 
 @router.get("/job-applications")
-def get_job_applications(limit: int = 50, offset: int = 0, job_id: str = None):
+def get_job_applications(limit: int = 50, offset: int = 0, job_id: str = None, em_id: str = None):
     conn = None
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
+        where_parts = []
+        params = []
+        if job_id:
+            where_parts.append("ja.job_id = %s")
+            params.append(job_id)
+        if em_id:
+            where_parts.append("j.em_id = %s")
+            params.append(em_id)
+        where = ("WHERE " + " AND ".join(where_parts)) if where_parts else ""
+        params += [limit, offset]
         cursor.execute(
-            """
+            f"""
             SELECT ja.job_application_id, ja.job_id, j.job_title,
                    ja.fl_id, f.fl_name AS driver_name,
                    ja.application_status, ja.applied_at, ja.updated_at
@@ -374,8 +424,8 @@ def get_job_applications(limit: int = 50, offset: int = 0, job_id: str = None):
             {where}
             ORDER BY ja.applied_at DESC
             LIMIT %s OFFSET %s
-            """.format(where="WHERE ja.job_id = %s" if job_id else ""),
-            ([job_id] if job_id else []) + [limit, offset],
+            """,
+            params,
         )
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
@@ -556,6 +606,7 @@ def review_job_payment(job_id: int, data: dict):
     try:
         status = data.get("status")
         reject_reason = data.get("reject_reason")
+        em_id = data.get("em_id")
 
         if status not in ("CONFIRMED", "REJECTED"):
             raise HTTPException(status_code=400, detail="status must be CONFIRMED or REJECTED.")
@@ -564,6 +615,14 @@ def review_job_payment(job_id: int, data: dict):
 
         conn = get_connection()
         cursor = get_cursor(conn)
+
+        if em_id:
+            cursor.execute(
+                "SELECT j.job_id FROM jobs j WHERE j.job_id = %s AND j.em_id = %s",
+                (job_id, em_id),
+            )
+            if not cursor.fetchone():
+                raise HTTPException(status_code=403, detail="Access denied.")
 
         cursor.execute(
             "SELECT payment_id FROM job_payments WHERE job_id = %s AND is_latest = TRUE",
@@ -610,15 +669,20 @@ def review_job_payment(job_id: int, data: dict):
 
 
 @router.patch("/job-applications/{application_id}/accept")
-def accept_application(application_id: int):
+def accept_application(application_id: int, data: Optional[dict] = Body(default={})):
     conn = None
     try:
+        em_id = data.get("em_id")
         conn = get_connection()
         cursor = get_cursor(conn)
         cursor.execute("SELECT * FROM job_applications WHERE job_application_id = %s", (application_id,))
         app = cursor.fetchone()
         if not app:
             raise HTTPException(status_code=404, detail="Application not found")
+        if em_id:
+            cursor.execute("SELECT job_id FROM jobs WHERE job_id = %s AND em_id = %s", (app["job_id"], em_id))
+            if not cursor.fetchone():
+                raise HTTPException(status_code=403, detail="Access denied.")
         cursor.execute(
             "UPDATE job_applications SET application_status = 'ACCEPTED', updated_at = NOW() WHERE job_application_id = %s",
             (application_id,)
@@ -639,14 +703,20 @@ def accept_application(application_id: int):
 
 
 @router.patch("/job-applications/{application_id}/reject")
-def reject_application(application_id: int):
+def reject_application(application_id: int, data: Optional[dict] = Body(default={})):
     conn = None
     try:
+        em_id = data.get("em_id")
         conn = get_connection()
         cursor = get_cursor(conn)
-        cursor.execute("SELECT job_application_id FROM job_applications WHERE job_application_id = %s", (application_id,))
-        if not cursor.fetchone():
+        cursor.execute("SELECT * FROM job_applications WHERE job_application_id = %s", (application_id,))
+        app = cursor.fetchone()
+        if not app:
             raise HTTPException(status_code=404, detail="Application not found")
+        if em_id:
+            cursor.execute("SELECT job_id FROM jobs WHERE job_id = %s AND em_id = %s", (app["job_id"], em_id))
+            if not cursor.fetchone():
+                raise HTTPException(status_code=403, detail="Access denied.")
         cursor.execute(
             "UPDATE job_applications SET application_status = 'REJECTED', updated_at = NOW() WHERE job_application_id = %s",
             (application_id,)

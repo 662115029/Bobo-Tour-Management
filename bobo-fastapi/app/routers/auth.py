@@ -30,6 +30,22 @@ class RegisterRequest(BaseModel):
     em_bio: Optional[str] = None
 
 
+@router.get("/check-username")
+def check_username(username: str):
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT em_id FROM employers WHERE em_username = %s", (username,))
+        taken = cursor.fetchone() is not None
+        return {"taken": taken}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
+
+
 @router.post("/login")
 def employer_login(body: LoginRequest):
     conn = None

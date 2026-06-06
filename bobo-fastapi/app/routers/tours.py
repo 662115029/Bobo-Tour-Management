@@ -10,6 +10,18 @@ def _upsert_language(cursor, name: str) -> int:
     return cursor.fetchone()["language_id"]
 
 
+def _format_time(val):
+    """Convert seconds int or HH:MM string to HH:MM, return None if empty."""
+    if val is None or val == '':
+        return None
+    try:
+        secs = int(val)
+        h, m = divmod(secs // 60, 60)
+        return f"{h:02d}:{m:02d}"
+    except (ValueError, TypeError):
+        return str(val)[:5] or None
+
+
 @router.get("/tours")
 def get_employer_tours(em_id: str, limit: int = 50, offset: int = 0):
     conn = None
@@ -56,7 +68,10 @@ def get_tour(job_id: str, em_id: str):
                    j.job_start_date, j.job_end_date,
                    j.job_required_vehicle_type, j.job_required_seat,
                    j.job_price, j.job_status,
-                   j.selected_fl_id, f.fl_name AS selected_driver,
+                   j.selected_fl_id,
+                   f.fl_name AS driver_name,
+                   f.fl_phone AS driver_phone,
+                   f.fl_profile_image_url AS driver_profile_image_url,
                    j.job_created_at, j.job_updated_at
             FROM jobs j
             JOIN employers em ON j.em_id = em.em_id
@@ -97,21 +112,15 @@ def get_tour(job_id: str, em_id: str):
 
         try:
             cursor.execute(
-                "SELECT first_name AS pickup_location, hotel_name, pickup_time FROM job_passengers WHERE job_id = %s AND last_name IS NULL ORDER BY job_passenger_id",
+                """
+                SELECT job_passenger_id, first_name, last_name, hotel_name, pickup_time, note
+                FROM job_passengers WHERE job_id = %s ORDER BY job_passenger_id
+                """,
                 (job_id,)
             )
-            job["job_pickups"] = [dict(r) for r in cursor.fetchall()]
+            job["job_passengers"] = [dict(r) for r in cursor.fetchall()]
         except Exception:
-            job["job_pickups"] = []
-
-        try:
-            cursor.execute(
-                "SELECT CONCAT(first_name, IFNULL(CONCAT(' ', last_name), '')) AS customer_name, note FROM job_passengers WHERE job_id = %s AND last_name IS NOT NULL ORDER BY job_passenger_id",
-                (job_id,)
-            )
-            job["job_customers"] = [dict(r) for r in cursor.fetchall()]
-        except Exception:
-            job["job_customers"] = []
+            job["job_passengers"] = []
 
         try:
             # Fixed: return as job_expenses with item_name and amount to match frontend
@@ -192,7 +201,7 @@ def create_tour(data: dict):
                     VALUES (%s, %s, %s, %s, %s, %s)
                     """,
                     (job_id, p.get("first_name"), p.get("last_name") or None,
-                     p.get("hotel_name") or None, p.get("pickup_time") or None,
+                     p.get("hotel_name") or None, _format_time(p.get("pickup_time")),
                      p.get("note") or None),
                 )
 
@@ -224,12 +233,14 @@ def update_tour(job_id: str, data: dict):
 
         em_id = data.get("em_id")
         cursor.execute(
-            "SELECT job_id, job_start_date FROM jobs WHERE job_id = %s AND em_id = %s",
+            "SELECT job_id, job_start_date, job_status FROM jobs WHERE job_id = %s AND em_id = %s",
             (job_id, em_id)
         )
         job = cursor.fetchone()
         if not job:
             raise HTTPException(status_code=404, detail="Tour not found")
+        if job["job_status"] != "OPEN":
+            raise HTTPException(status_code=400, detail="Only OPEN tours can be edited")
 
         job_start_date = data.get("job_start_date") or job["job_start_date"]
 
@@ -269,24 +280,26 @@ def update_tour(job_id: str, data: dict):
                     INSERT INTO job_itineraries (job_id, itinerary_date, place_name, start_time, end_time, note, sequence)
                     VALUES (%s, %s, %s, %s, %s, %s, %s)
                     """,
-                    (job_id, job_start_date, it.get("place_name"),
-                     it.get("start_time", "00:00"), it.get("end_time", "00:00"),
-                     it.get("note"), idx + 1),
+                    (job_id,
+                     it.get("itinerary_date") or job_start_date,
+                     it.get("place_name"),
+                     it.get("start_time") or "00:00",
+                     it.get("end_time") or "00:00",
+                     it.get("note") or None,
+                     idx + 1),
                 )
 
         cursor.execute("DELETE FROM job_passengers WHERE job_id = %s", (job_id,))
-        for p in data.get("job_pickups", []):
-            if p.get("hotel_name") or p.get("pickup_location"):
+        for idx, p in enumerate(data.get("job_passengers", [])):
+            if p.get("first_name"):
                 cursor.execute(
-                    "INSERT INTO job_passengers (job_id, first_name, hotel_name, pickup_time) VALUES (%s, %s, %s, %s)",
-                    (job_id, p.get("pickup_location", ""), p.get("hotel_name"), p.get("pickup_time")),
-                )
-        for c in data.get("job_customers", []):
-            if c.get("customer_name"):
-                parts = (c.get("customer_name") or "").split(" ", 1)
-                cursor.execute(
-                    "INSERT INTO job_passengers (job_id, first_name, last_name, note) VALUES (%s, %s, %s, %s)",
-                    (job_id, parts[0], parts[1] if len(parts) > 1 else None, c.get("note")),
+                    """
+                    INSERT INTO job_passengers (job_id, first_name, last_name, hotel_name, pickup_time, note)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    """,
+                    (job_id, p.get("first_name"), p.get("last_name") or None,
+                     p.get("hotel_name") or None, _format_time(p.get("pickup_time")),
+                     p.get("note") or None),
                 )
 
         # Fixed: read job_expenses (not job_entrance_fees), use item_name and amount
