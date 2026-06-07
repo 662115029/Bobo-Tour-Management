@@ -80,32 +80,56 @@
                 <span class="badge" :class="job.job_status?.toLowerCase()">{{ statusLabel(job.job_status) }}</span>
                 <span v-if="editing" class="badge" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a">Editing</span>
               </div>
-              <h1 class="text-[20px] font-bold text-[#111] leading-tight mb-1.5">
-                {{ editing ? form.job_title || 'Edit Tour' : job.job_title }}
-              </h1>
-              <p v-if="job.job_description" class="text-[13px] text-[#888] leading-relaxed mt-2 max-w-2xl">{{ job.job_description }}</p>
+              <template v-if="editing">
+                <input v-model="form.job_title" type="text" class="field-input text-[18px] font-bold w-full mb-1.5" placeholder="Tour Title *" />
+              </template>
+              <template v-else>
+                <h1 class="text-[20px] font-bold text-[#111] leading-tight mb-1.5">{{ job.job_title }}</h1>
+              </template>
+              <p v-if="!editing && job.job_description" class="text-[13px] text-[#888] leading-relaxed mt-2 max-w-2xl">{{ job.job_description }}</p>
+              <textarea v-if="editing" v-model="form.job_description" rows="2" class="field-input w-full mt-2 text-[13px]" placeholder="Description"></textarea>
             </div>
             <div class="text-right shrink-0">
-              <div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium mb-1">Price</div>
-              <div class="text-[26px] font-bold text-[#111]">{{ job.job_price ? "฿" + Number(job.job_price).toLocaleString() : "–" }}</div>
+              <div class="text-[11px] text-[#bbb] tracking-wide font-medium mb-1">Price (THB)</div>
+              <template v-if="editing">
+                <input v-model.number="form.job_price" type="number" class="field-input text-right text-[18px] font-bold w-32" placeholder="0" />
+              </template>
+              <template v-else>
+                <div class="text-[26px] font-bold text-[#111]">{{ job.job_price ? "฿" + Number(job.job_price).toLocaleString() : "–" }}</div>
+              </template>
             </div>
           </div>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-[#f0f0f0]">
-            <div class="bg-[#f8f9fa] rounded-lg border border-[#eee] px-3 py-2.5 hover:border-[#ddd] hover:bg-[#f0f0f0] transition-colors">
+            <div class="bg-[#f8f9fa] rounded-lg border border-[#eee] px-3 py-2.5 transition-colors">
               <div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium mb-0.5">Start Date</div>
-              <div class="text-[14px] font-semibold text-[#222]">{{ formatDate(job.job_start_date) }}</div>
+              <template v-if="editing">
+                <input v-model="form.job_start_date" type="date" class="field-input text-[13px] font-semibold w-full" />
+              </template>
+              <div v-else class="text-[14px] font-semibold text-[#222]">{{ formatDate(job.job_start_date) }}</div>
             </div>
-            <div class="bg-[#f8f9fa] rounded-lg border border-[#eee] px-3 py-2.5 hover:border-[#ddd] hover:bg-[#f0f0f0] transition-colors">
+            <div class="bg-[#f8f9fa] rounded-lg border border-[#eee] px-3 py-2.5 transition-colors">
               <div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium mb-0.5">End Date</div>
-              <div class="text-[14px] font-semibold text-[#222]">{{ formatDate(job.job_end_date) }}</div>
+              <template v-if="editing">
+                <input v-model="form.job_end_date" type="date" class="field-input text-[13px] font-semibold w-full" />
+              </template>
+              <div v-else class="text-[14px] font-semibold text-[#222]">{{ formatDate(job.job_end_date) }}</div>
             </div>
-            <div class="bg-[#f8f9fa] rounded-lg border border-[#eee] px-3 py-2.5 hover:border-[#ddd] hover:bg-[#f0f0f0] transition-colors">
+            <div class="bg-[#f8f9fa] rounded-lg border border-[#eee] px-3 py-2.5 transition-colors">
               <div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium mb-0.5">Vehicle</div>
-              <div class="text-[14px] font-semibold text-[#222]">{{ job.job_required_vehicle_type || "–" }}</div>
+              <template v-if="editing">
+                <select v-model="form.job_required_vehicle_type" class="field-input text-[13px] font-semibold w-full">
+                  <option value="VAN">Van</option>
+                  <option value="CAR">Car</option>
+                </select>
+              </template>
+              <div v-else class="text-[14px] font-semibold text-[#222]">{{ job.job_required_vehicle_type || "–" }}</div>
             </div>
-            <div class="bg-[#f8f9fa] rounded-lg border border-[#eee] px-3 py-2.5 hover:border-[#ddd] hover:bg-[#f0f0f0] transition-colors">
+            <div class="bg-[#f8f9fa] rounded-lg border border-[#eee] px-3 py-2.5 transition-colors">
               <div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium mb-0.5">Seats Required</div>
-              <div class="text-[14px] font-semibold text-[#222]">{{ job.job_required_seat || "–" }}</div>
+              <template v-if="editing">
+                <input v-model.number="form.job_required_seat" type="number" min="1" max="13" class="field-input text-[13px] font-semibold w-full" />
+              </template>
+              <div v-else class="text-[14px] font-semibold text-[#222]">{{ job.job_required_seat || "–" }}</div>
             </div>
           </div>
         </div>
@@ -117,14 +141,55 @@
           <div class="flex flex-col gap-3">
 
             <!-- Languages Required -->
-            <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+            <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm hover:shadow-md transition-shadow">
               <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
                 <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
-                <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Languages Required</span>
+                <span class="text-[13px] font-bold text-[#444] tracking-wide">Languages Required</span>
               </div>
-              <div class="px-4 py-4 flex flex-wrap gap-1.5">
-                <span v-for="lang in (editing ? form.job_required_languages : job.job_required_languages)" :key="lang" class="info-tag language">{{ lang }}</span>
-                <span v-if="!(editing ? form.job_required_languages : job.job_required_languages)?.length" class="text-[13px] text-[#bbb]">None specified</span>
+
+              <!-- View mode -->
+              <div v-if="!editing" class="px-4 py-4 flex flex-wrap gap-1.5">
+                <span v-for="lang in job.job_required_languages" :key="lang" class="info-tag language">{{ lang }}</span>
+                <span v-if="!job.job_required_languages?.length" class="text-[13px] text-[#bbb]">None specified</span>
+              </div>
+
+              <!-- Edit mode -->
+              <div v-else class="px-4 py-4">
+                <div class="flex flex-wrap gap-2">
+                  <button v-for="lang in languages.slice(0, 5)" :key="lang.language_id" type="button"
+                    @click="toggleLanguage(lang.language_name)"
+                    :class="['px-3 py-1 rounded-full text-[12px] font-medium border transition-colors',
+                      form.job_required_languages.includes(lang.language_name)
+                        ? 'bg-red-600 text-white border-red-600'
+                        : 'bg-white text-gray-600 border-gray-300 hover:border-red-400']">
+                    {{ lang.language_name }}
+                  </button>
+                  <div class="relative">
+                    <input v-model="otherLanguage" type="text" placeholder="Other…"
+                      class="px-2.5 py-1 rounded-full text-[12px] border border-dashed border-gray-300 focus:outline-none focus:border-red-400 w-24"
+                      @input="onLangInput" @keyup.enter="addTopSuggestion" @blur="hideSuggestions" @focus="onLangInput" />
+                    <div v-if="showSuggestions && (langSuggestions.length || otherLanguage.trim())"
+                      class="absolute left-0 top-full mt-1 z-20 bg-white border border-[#e0e0e0] rounded-xl shadow-lg overflow-hidden min-w-[160px]">
+                      <button v-for="s in langSuggestions" :key="s.language_id" type="button"
+                        @mousedown.prevent="selectSuggestion(s.language_name)"
+                        class="w-full text-left px-3 py-2 text-[13px] text-[#222] hover:bg-[#f5f5f5] transition">
+                        {{ s.language_name }}
+                      </button>
+                      <button v-if="otherLanguage.trim() && !exactMatch" type="button"
+                        @mousedown.prevent="addOtherLanguage"
+                        class="w-full text-left px-3 py-2 text-[13px] text-red-600 hover:bg-red-50 transition border-t border-[#f0f0f0]">
+                        + Add "{{ otherLanguage.trim() }}"
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <!-- Custom (non-preset) language tags -->
+                <div v-if="form.job_required_languages.some(l => !languages.slice(0,5).find(db => db.language_name === l))" class="flex flex-wrap gap-1.5 mt-2">
+                  <span v-for="lang in form.job_required_languages.filter(l => !languages.slice(0,5).find(db => db.language_name === l))" :key="lang"
+                    class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[12px] bg-red-600 text-white">
+                    {{ lang }}<button type="button" @click="toggleLanguage(lang)" class="hover:opacity-70 ml-0.5">✕</button>
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -132,7 +197,7 @@
             <div v-if="pickups.length" class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
               <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
                 <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Pickup Areas</span>
+                <span class="text-[13px] font-bold text-[#444] tracking-wide">Pickup Areas</span>
               </div>
               <div class="px-4 py-4 flex flex-wrap gap-1.5">
                 <span v-for="p in pickups" :key="p.area_id" class="info-tag area">{{ p.area_name }}</span>
@@ -143,7 +208,7 @@
             <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
               <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
                 <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Assigned Driver</span>
+                <span class="text-[13px] font-bold text-[#444] tracking-wide">Assigned Driver</span>
               </div>
               <div class="px-4 py-4">
                 <div v-if="job.driver_name" class="flex items-center gap-2.5">
@@ -161,7 +226,7 @@
             <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
               <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
                 <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Timeline</span>
+                <span class="text-[13px] font-bold text-[#444] tracking-wide">Timeline</span>
               </div>
               <div class="px-4 py-3 flex flex-col gap-3">
                 <div class="flex items-center gap-2.5">
@@ -185,12 +250,12 @@
             <div v-if="editing || job.job_expenses?.length" class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
               <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
                 <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path stroke-linecap="round" stroke-linejoin="round" d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-                <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Expenses</span>
+                <span class="text-[13px] font-bold text-[#444] tracking-wide">Expenses</span>
               </div>
               <div class="px-4 py-4">
                 <template v-if="!editing">
                   <div class="flex flex-col divide-y divide-[#f0f0f0]">
-                    <div v-for="(exp, idx) in sortedExpenses" :key="idx" class="flex items-center justify-between py-2 hover:bg-[#fafafa] transition-colors px-1 rounded">
+                    <div v-for="(exp, idx) in sortedExpenses" :key="idx" class="flex items-center justify-between py-2 transition-colors px-1 rounded">
                       <span class="text-[13px] text-[#444]">{{ exp.item_name }}</span>
                       <span class="text-[13px] font-semibold text-[#222]">{{ exp.amount ? "฿" + Number(exp.amount).toLocaleString() : "–" }}</span>
                     </div>
@@ -216,7 +281,7 @@
             <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
               <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
                 <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Payment</span>
+                <span class="text-[13px] font-bold text-[#444] tracking-wide">Payment</span>
               </div>
               <div class="px-4 py-4 flex flex-col gap-3">
 
@@ -327,7 +392,7 @@
             <div v-if="jobReview" class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
               <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
                 <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
-                <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Your Review</span>
+                <span class="text-[13px] font-bold text-[#444] tracking-wide">Your Review</span>
                 <div class="ml-auto flex items-center gap-0.5">
                   <span v-for="s in 5" :key="s" class="text-[13px]" :class="s <= jobReview.rating ? 'text-[#f9a825]' : 'text-[#e0e0e0]'">★</span>
                 </div>
@@ -344,7 +409,7 @@
             <div v-if="emReview" class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
               <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
                 <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
-                <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Freelancer Review</span>
+                <span class="text-[13px] font-bold text-[#444] tracking-wide">Freelancer Review</span>
               </div>
               <div class="p-4">
                 <div class="flex items-center justify-between mb-1.5">
@@ -365,108 +430,57 @@
           <!-- ── RIGHT ── -->
           <div class="flex flex-col gap-3">
 
-            <!-- Edit General Info (edit mode only) -->
-            <div v-if="editing" class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-              <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
-                <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Edit General Info</span>
-              </div>
-              <div class="px-4 py-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="md:col-span-2"><label class="field-label">Tour Title *</label><input v-model="form.job_title" type="text" class="field-input" /></div>
-                <div><label class="field-label">Start Date *</label><input v-model="form.job_start_date" type="date" class="field-input" /></div>
-                <div><label class="field-label">End Date *</label><input v-model="form.job_end_date" type="date" class="field-input" /></div>
-                <div><label class="field-label">Seats *</label><input v-model.number="form.job_required_seat" type="number" min="1" max="13" class="field-input" /></div>
-                <div><label class="field-label">Rate (THB) *</label><input v-model.number="form.job_price" type="number" class="field-input" /></div>
-                <div><label class="field-label">Vehicle Type *</label>
-                  <select v-model="form.job_required_vehicle_type" class="field-input">
-                    <option value="VAN">Van</option>
-                    <option value="CAR">Car</option>
-                  </select>
-                </div>
-                <div class="md:col-span-2"><label class="field-label">Description</label><textarea v-model="form.job_description" rows="3" class="field-input"></textarea></div>
-                <div class="md:col-span-2">
-                  <label class="field-label">Languages Required</label>
-                  <div class="flex flex-wrap gap-2 mt-1">
-                    <button v-for="lang in languages.slice(0, 5)" :key="lang.language_id" type="button"
-                      @click="toggleLanguage(lang.language_name)"
-                      :class="['px-3 py-1 rounded-full text-[12px] font-medium border transition-colors',
-                        form.job_required_languages.includes(lang.language_name)
-                          ? 'bg-red-600 text-white border-red-600'
-                          : 'bg-white text-gray-600 border-gray-300 hover:border-red-400']">
-                      {{ lang.language_name }}
-                    </button>
-                    <div class="relative">
-                      <input v-model="otherLanguage" type="text" placeholder="Other…"
-                        class="px-2.5 py-1 rounded-full text-[12px] border border-dashed border-gray-300 focus:outline-none focus:border-red-400 w-24"
-                        @input="onLangInput" @keyup.enter="addTopSuggestion" @blur="hideSuggestions" @focus="onLangInput" />
-                      <div v-if="showSuggestions && (langSuggestions.length || otherLanguage.trim())"
-                        class="absolute left-0 top-full mt-1 z-20 bg-white border border-[#e0e0e0] rounded-xl shadow-lg overflow-hidden min-w-[160px]">
-                        <button v-for="s in langSuggestions" :key="s.language_id" type="button"
-                          @mousedown.prevent="selectSuggestion(s.language_name)"
-                          class="w-full text-left px-3 py-2 text-[13px] text-[#222] hover:bg-[#f5f5f5] transition">
-                          {{ s.language_name }}
-                        </button>
-                        <button v-if="otherLanguage.trim() && !exactMatch" type="button"
-                          @mousedown.prevent="addOtherLanguage"
-                          class="w-full text-left px-3 py-2 text-[13px] text-red-600 hover:bg-red-50 transition border-t border-[#f0f0f0]">
-                          + Add "{{ otherLanguage.trim() }}"
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  <div v-if="form.job_required_languages.some(l => !languages.slice(0,5).find(db => db.language_name === l))" class="flex flex-wrap gap-1.5 mt-2">
-                    <span v-for="lang in form.job_required_languages.filter(l => !languages.slice(0,5).find(db => db.language_name === l))" :key="lang"
-                      class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[12px] bg-red-600 text-white">
-                      {{ lang }}<button type="button" @click="toggleLanguage(lang)" class="hover:opacity-70 ml-0.5">✕</button>
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Itinerary -->
+            <!-- Tour Schedule -->
             <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
               <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
                 <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Itinerary</span>
+                <span class="text-[13px] font-bold text-[#444] tracking-wide">Tour Schedule</span>
               </div>
               <div class="px-4 py-4 flex flex-col gap-2">
                 <template v-if="!editing">
                   <div v-for="(item, i) in job.job_itineraries" :key="i"
-                    class="flex items-center gap-3 px-4 py-3 bg-[#f8f9fa] rounded-lg border border-[#e8e8e8] hover:border-[#ddd] hover:bg-[#f2f2f2] transition-colors">
-                    <div class="w-6 h-6 rounded-full bg-[#f3e5f5] text-[#7b1fa2] text-[11px] font-bold flex items-center justify-center shrink-0">{{ i + 1 }}</div>
-                    <div class="flex-1 min-w-0">
+                    class="flex items-center px-4 py-3 bg-[#f8f9fa] rounded-lg border border-[#e8e8e8] transition-colors">
+                    <div class="w-6 h-6 rounded-full bg-[#f3e5f5] text-[#7b1fa2] text-[11px] font-bold flex items-center justify-center shrink-0 mr-3">{{ i + 1 }}</div>
+                    <div class="min-w-0" style="flex: 3">
                       <div class="text-[13px] font-medium text-[#222]">{{ item.place_name }}</div>
                       <div v-if="item.note" class="text-[11px] text-[#999] mt-0.5">{{ item.note }}</div>
                     </div>
-                    <span v-if="item.start_time || item.end_time" class="text-[12px] font-bold text-[#7b1fa2] bg-[#f3e5f5] px-2 py-0.5 rounded-md whitespace-nowrap shrink-0">{{ item.start_time }} – {{ item.end_time }}</span>
+                    <div class="flex justify-center" style="flex: 2">
+                      <span v-if="item.start_time || item.end_time" class="text-[12px] font-bold text-[#7b1fa2] bg-[#f3e5f5] px-2 py-0.5 rounded-md whitespace-nowrap">{{ item.start_time }} – {{ item.end_time }}</span>
+                    </div>
+                    <span v-if="item.itinerary_date" class="text-[12px] text-[#aaa] whitespace-nowrap shrink-0 w-20 text-left">{{ formatDate(item.itinerary_date) }}</span>
                   </div>
                   <p v-if="!job.job_itineraries?.length" class="text-[13px] text-[#bbb] px-1">No stops added</p>
                 </template>
                 <template v-else>
-                  <div v-for="(item, idx) in form.job_itineraries" :key="idx" class="grid grid-cols-1 md:grid-cols-5 gap-2 mb-3 items-end">
+                  <div v-for="(item, idx) in form.job_itineraries" :key="idx"
+                    class="grid items-end gap-2 mb-2"
+                    style="grid-template-columns: 2fr 1fr 1fr 1fr auto">
+                    <div><label class="field-label">Stop / Activity</label><input v-model="item.place_name" type="text" class="field-input" /></div>
                     <div><label class="field-label">Start</label><input v-model="item.start_time" type="time" class="field-input" /></div>
                     <div><label class="field-label">End</label><input v-model="item.end_time" type="time" class="field-input" /></div>
-                    <div class="md:col-span-2"><label class="field-label">Stop / Activity</label><input v-model="item.place_name" type="text" class="field-input" /></div>
-                    <button type="button" @click="form.job_itineraries.splice(idx, 1)" class="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 text-sm">✕</button>
+                    <div><label class="field-label">Date</label><input v-model="item.itinerary_date" type="date" class="field-input" /></div>
+                    <button type="button" @click="form.job_itineraries.splice(idx, 1)"
+                      class="mb-0.5 p-2 bg-red-50 text-red-400 rounded-lg hover:bg-red-100 transition">✕</button>
+                    <div class="col-span-full"><label class="field-label">Note</label><input v-model="item.note" type="text" class="field-input" placeholder="Optional note" /></div>
                   </div>
-                  <button type="button" @click="form.job_itineraries.push({ place_name: '', start_time: '', end_time: '', note: '' })"
-                    class="px-4 py-2 bg-[#f5f5f5] text-[#555] rounded-lg text-sm hover:bg-[#ebebeb] transition">+ Add Stop</button>
+                  <button type="button" @click="form.job_itineraries.push({ place_name: '', itinerary_date: '', start_time: '', end_time: '', note: '' })"
+                    class="w-full px-4 py-2 bg-[#f5f5f5] text-[#555] rounded-lg text-sm hover:bg-[#ebebeb] transition mt-1">+ Add Stop</button>
                 </template>
               </div>
             </div>
 
-            <!-- Passengers -->
+            <!-- Pick Up Points -->
             <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
               <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
                 <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path stroke-linecap="round" stroke-linejoin="round" d="M23 21v-2a4 4 0 00-3-3.87m-4-12a4 4 0 010 7.75"/></svg>
-                <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Passengers</span>
+                <span class="text-[13px] font-bold text-[#444] tracking-wide">Pick Up Points</span>
                 <span class="ml-auto inline-flex items-center justify-center bg-[#f0f4ff] text-[#3d5afe] rounded-full text-[11px] font-bold px-2 py-0.5">{{ job.job_passengers?.length ?? 0 }}</span>
               </div>
               <div class="px-4 py-4 flex flex-col gap-2">
                 <template v-if="!editing">
                   <div v-for="(p, i) in job.job_passengers" :key="i"
-                    class="flex items-center gap-3 px-4 py-3 bg-[#f8f9fa] rounded-lg border border-[#e8e8e8] hover:border-[#ddd] hover:bg-[#f2f2f2] transition-colors">
+                    class="flex items-center gap-3 px-4 py-3 bg-[#f8f9fa] rounded-lg border border-[#e8e8e8] transition-colors">
                     <div class="w-6 h-6 rounded-full bg-[#e8f5e9] text-[#2e7d32] text-[11px] font-bold flex items-center justify-center shrink-0">{{ i + 1 }}</div>
                     <div class="flex-1 min-w-0">
                       <div class="text-[13px] font-medium text-[#222]">{{ p.first_name }} {{ p.last_name }}</div>
@@ -486,9 +500,10 @@
                     <div><label class="field-label">Last Name</label><input v-model="p.last_name" type="text" class="field-input" /></div>
                     <div><label class="field-label">Hotel</label><input v-model="p.hotel_name" type="text" class="field-input" /></div>
                     <div><label class="field-label">Pickup Time</label><input v-model="p.pickup_time" type="time" class="field-input" /></div>
-                    <button type="button" @click="form.job_passengers.splice(idx, 1)" class="col-span-full text-xs text-red-500 hover:underline text-left">Remove</button>
+                    <div class="md:col-span-3"><label class="field-label">Note</label><input v-model="p.note" type="text" class="field-input" placeholder="Optional note" /></div>
+                    <button type="button" @click="form.job_passengers.splice(idx, 1)" class="text-xs text-red-500 hover:underline text-left self-end pb-2">Remove</button>
                   </div>
-                  <button type="button" @click="form.job_passengers.push({ first_name: '', last_name: '', hotel_name: '', pickup_time: '' })"
+                  <button type="button" @click="form.job_passengers.push({ first_name: '', last_name: '', hotel_name: '', pickup_time: '', note: '' })"
                     class="px-4 py-2 bg-[#f5f5f5] text-[#555] rounded-lg text-sm hover:bg-[#ebebeb] transition">+ Add Passenger</button>
                 </template>
               </div>
@@ -498,13 +513,13 @@
             <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
               <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
                 <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Applications</span>
+                <span class="text-[13px] font-bold text-[#444] tracking-wide">Applications</span>
                 <span class="ml-auto inline-flex items-center justify-center bg-[#f0f4ff] text-[#3d5afe] rounded-full text-[11px] font-bold px-2 py-0.5">{{ applications.length }}</span>
               </div>
               <div class="px-4 py-4 flex flex-col gap-2">
                 <div v-if="!applications.length" class="text-center py-8 text-[#bbb] text-[13px]">No applications yet.</div>
                 <div v-else v-for="(app, idx) in applications" :key="app.job_application_id || idx"
-                  class="flex flex-col sm:flex-row sm:items-center gap-2 px-4 py-3 bg-[#f8f9fa] rounded-lg border border-[#e8e8e8] hover:border-[#ccc] transition-all">
+                  class="flex flex-col sm:flex-row sm:items-center gap-2 px-4 py-3 bg-[#f8f9fa] rounded-lg border border-[#e8e8e8] hover:border-[#ddd] hover:bg-[#f2f2f2] transition-all">
                   <div class="flex items-center gap-3 flex-1 min-w-0">
                     <div class="w-8 h-8 rounded-full text-sm font-bold flex items-center justify-center shrink-0" :style="avatarStyle(app.fl_id, app.driver_name)">{{ initials2(app.driver_name || '?') }}</div>
                     <div class="min-w-0">
@@ -947,6 +962,7 @@ const saveJob = async () => {
         job_itineraries: form.job_itineraries.map(i => ({ ...i })),
         job_passengers: form.job_passengers.map(p => ({ ...p })),
         job_expenses: form.job_expenses.map(e => ({ ...e })),
+        job_updated_at: new Date().toISOString(),
       })
     } else {
       alert('Failed to save: ' + (data.error || data.message || data.detail || 'Unknown error'))
