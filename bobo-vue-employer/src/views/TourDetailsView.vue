@@ -116,18 +116,18 @@
             </div>
             <div class="bg-[#f8f9fa] rounded-lg border border-[#eee] px-3 py-2.5 transition-colors">
               <div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium mb-0.5">Vehicle</div>
-              <template v-if="editing">
-                <select v-model="form.job_required_vehicle_type" class="field-input text-[13px] font-semibold w-full">
-                  <option value="VAN">Van</option>
-                  <option value="CAR">Car</option>
-                </select>
-              </template>
-              <div v-else class="text-[14px] font-semibold text-[#222]">{{ job.job_required_vehicle_type || "–" }}</div>
+              <div class="text-[14px] font-semibold text-[#222]">VAN</div>
             </div>
             <div class="bg-[#f8f9fa] rounded-lg border border-[#eee] px-3 py-2.5 transition-colors">
               <div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium mb-0.5">Seats Required</div>
               <template v-if="editing">
-                <input v-model.number="form.job_required_seat" type="number" min="1" max="13" class="field-input text-[13px] font-semibold w-full" />
+                <div class="flex items-center gap-2 mt-0.5">
+                  <button type="button" @click="form.job_required_seat = Math.max(1, form.job_required_seat - 1)"
+                    class="w-7 h-7 rounded-md border border-[#e0e0e0] text-[#666] hover:bg-[#ebebeb] transition text-base font-medium flex items-center justify-center shrink-0">−</button>
+                  <span class="text-[15px] font-bold text-[#222] w-6 text-center">{{ form.job_required_seat }}</span>
+                  <button type="button" @click="form.job_required_seat = Math.min(13, form.job_required_seat + 1)"
+                    class="w-7 h-7 rounded-md border border-[#e0e0e0] text-[#666] hover:bg-[#ebebeb] transition text-base font-medium flex items-center justify-center shrink-0">+</button>
+                </div>
               </template>
               <div v-else class="text-[14px] font-semibold text-[#222]">{{ job.job_required_seat || "–" }}</div>
             </div>
@@ -266,10 +266,11 @@
                   </div>
                 </template>
                 <template v-else>
-                  <div v-for="(exp, idx) in form.job_expenses" :key="idx" class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2 items-end">
+                  <div v-for="(exp, idx) in form.job_expenses" :key="idx" class="grid gap-2 mb-2 items-end" style="grid-template-columns: 1fr 1fr auto">
                     <div><label class="field-label">Item Name</label><input v-model="exp.item_name" type="text" class="field-input" /></div>
                     <div><label class="field-label">Amount (THB)</label><input v-model.number="exp.amount" type="number" class="field-input" /></div>
-                    <button type="button" @click="form.job_expenses.splice(idx, 1)" class="col-span-full text-xs text-red-500 hover:underline text-left">Remove</button>
+                    <button type="button" @click="form.job_expenses.splice(idx, 1)"
+                      class="mb-0.5 p-2 bg-red-50 text-red-400 rounded-lg hover:bg-red-100 transition">✕</button>
                   </div>
                   <button type="button" @click="form.job_expenses.push({ item_name: '', amount: 0 })"
                     class="px-3 py-1.5 bg-[#f5f5f5] text-[#555] rounded-lg text-xs hover:bg-[#ebebeb] transition">+ Add Expense</button>
@@ -495,13 +496,14 @@
                   <p v-if="!job.job_passengers?.length" class="text-[13px] text-[#bbb] px-1">No passengers added</p>
                 </template>
                 <template v-else>
-                  <div v-for="(p, idx) in form.job_passengers" :key="idx" class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-3 items-end">
+                  <div v-for="(p, idx) in form.job_passengers" :key="idx" class="grid gap-2 mb-3 items-end" style="grid-template-columns: 1fr 1fr 1fr 1fr auto">
                     <div><label class="field-label">First Name</label><input v-model="p.first_name" type="text" class="field-input" /></div>
                     <div><label class="field-label">Last Name</label><input v-model="p.last_name" type="text" class="field-input" /></div>
                     <div><label class="field-label">Hotel</label><input v-model="p.hotel_name" type="text" class="field-input" /></div>
                     <div><label class="field-label">Pickup Time</label><input v-model="p.pickup_time" type="time" class="field-input" /></div>
-                    <div class="md:col-span-3"><label class="field-label">Note</label><input v-model="p.note" type="text" class="field-input" placeholder="Optional note" /></div>
-                    <button type="button" @click="form.job_passengers.splice(idx, 1)" class="text-xs text-red-500 hover:underline text-left self-end pb-2">Remove</button>
+                    <button type="button" @click="form.job_passengers.splice(idx, 1)"
+                      class="mb-0.5 p-2 bg-red-50 text-red-400 rounded-lg hover:bg-red-100 transition">✕</button>
+                    <div class="col-span-full"><label class="field-label">Note</label><input v-model="p.note" type="text" class="field-input" placeholder="Optional note" /></div>
                   </div>
                   <button type="button" @click="form.job_passengers.push({ first_name: '', last_name: '', hotel_name: '', pickup_time: '', note: '' })"
                     class="px-4 py-2 bg-[#f5f5f5] text-[#555] rounded-lg text-sm hover:bg-[#ebebeb] transition">+ Add Passenger</button>

@@ -124,12 +124,12 @@
             <div>
               <label class="field-label">Number of Seats <span class="text-red-500">*</span></label>
               <div class="flex items-center gap-3 mt-1">
-                <button type="button" @click="form.job_required_seat = Math.max(9, form.job_required_seat - 1)"
+                <button type="button" @click="form.job_required_seat = Math.max(1, form.job_required_seat - 1)"
                   class="w-9 h-9 rounded-lg border border-[#e0e0e0] text-[#666] hover:bg-[#f5f5f5] transition text-lg font-medium flex items-center justify-center">−</button>
                 <span class="text-[20px] font-bold text-[#222] w-8 text-center">{{ form.job_required_seat }}</span>
                 <button type="button" @click="form.job_required_seat = Math.min(13, form.job_required_seat + 1)"
                   class="w-9 h-9 rounded-lg border border-[#e0e0e0] text-[#666] hover:bg-[#f5f5f5] transition text-lg font-medium flex items-center justify-center">+</button>
-                <span class="text-[12px] text-[#bbb]">9 – 13 seats</span>
+                <span class="text-[12px] text-[#bbb]">1 – 13 seats</span>
               </div>
             </div>
           </div>
