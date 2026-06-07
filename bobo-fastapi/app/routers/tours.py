@@ -103,7 +103,7 @@ def get_tour(job_id: str, em_id: str):
 
         try:
             cursor.execute(
-                "SELECT place_name, start_time, end_time, note FROM job_itineraries WHERE job_id = %s ORDER BY sequence, start_time",
+                "SELECT itinerary_date, place_name, start_time, end_time, note, sequence FROM job_itineraries WHERE job_id = %s ORDER BY sequence, start_time",
                 (job_id,)
             )
             job["job_itineraries"] = [dict(r) for r in cursor.fetchall()]
@@ -250,7 +250,8 @@ def update_tour(job_id: str, data: dict):
                 job_title = %s, job_description = %s,
                 job_start_date = %s, job_end_date = %s,
                 job_required_vehicle_type = %s, job_required_seat = %s,
-                job_price = %s
+                job_price = %s,
+                job_updated_at = NOW()
             WHERE job_id = %s
             """,
             (
