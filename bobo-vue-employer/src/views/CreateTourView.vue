@@ -71,7 +71,7 @@
             <div>
               <label class="field-label">Languages Required</label>
               <div class="flex flex-wrap gap-2 mt-1">
-                <button v-for="lang in languages" :key="lang.language_id" type="button"
+                <button v-for="lang in displayLanguages" :key="lang.language_id" type="button"
                   @click="toggleLanguage(lang.language_name)"
                   :class="['px-3 py-1 rounded-full text-[12px] font-medium border transition-colors',
                     form.job_required_languages.includes(lang.language_name)
@@ -101,9 +101,9 @@
                 </div>
               </div>
 
-              <!-- Custom language badges -->
-              <div v-if="form.job_required_languages.some(l => !languages.find(db => db.language_name === l))" class="flex flex-wrap gap-1.5 mt-2">
-                <span v-for="lang in form.job_required_languages.filter(l => !languages.find(db => db.language_name === l))" :key="lang"
+              <!-- Custom (non-preset) language badges -->
+              <div v-if="form.job_required_languages.some(l => !languages.slice(0,5).find(db => db.language_name === l))" class="flex flex-wrap gap-1.5 mt-2">
+                <span v-for="lang in form.job_required_languages.filter(l => !languages.slice(0,5).find(db => db.language_name === l))" :key="lang"
                   class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[12px] bg-red-600 text-white">
                   {{ lang }}<button type="button" @click="toggleLanguage(lang)" class="hover:opacity-70 ml-0.5">✕</button>
                 </span>
@@ -384,7 +384,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, watch, onMounted } from 'vue'
+import { reactive, ref, computed, watch, onMounted } from 'vue'
 import { useRouter, onBeforeRouteLeave } from 'vue-router'
 import AppLayout from '../components/AppLayout.vue'
 
@@ -402,6 +402,23 @@ const otherLanguage = ref('')
 const showSuggestions = ref(false)
 const langSuggestions = ref([])
 const exactMatch = ref(false)
+
+// Show 5 preset slots: selected custom langs replace unselected presets to keep total = 5
+const displayLanguages = computed(() => {
+  const presets = languages.value.slice(0, 5)
+  const customSelected = form.job_required_languages.filter(
+    l => !languages.value.slice(0, 5).find(db => db.language_name === l)
+  )
+  if (!customSelected.length) return presets
+  // Remove unselected presets from the end to make room for custom ones
+  const unselectedPresets = presets.filter(p => !form.job_required_languages.includes(p.language_name))
+  const slotsToRemove = Math.min(customSelected.length, unselectedPresets.length)
+  const trimmedPresets = presets.filter(p =>
+    form.job_required_languages.includes(p.language_name) ||
+    !unselectedPresets.slice(-slotsToRemove).find(u => u.language_id === p.language_id)
+  )
+  return trimmedPresets
+})
 
 const onLangInput = () => {
   const q = otherLanguage.value.trim().toLowerCase()
