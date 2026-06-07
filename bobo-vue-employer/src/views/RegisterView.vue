@@ -45,7 +45,7 @@
               <div>
                 <label class="block text-sm font-medium text-gray-600 mb-1">
                   Username <span class="text-red-500">*</span>
-                  <span class="text-gray-400 font-normal ml-1">(cannot be changed)</span>
+                  <span class="text-gray-400 font-normal ml-1">(Cannot be changed)</span>
                 </label>
                 <div class="relative">
                   <input
@@ -166,8 +166,16 @@
                       </svg>
                     </button>
                   </div>
+                  <!-- Password hint -->
+                  <div class="mt-1 text-[13px] text-gray-400 leading-relaxed grid grid-cols-2 gap-x-16">
+                    <span class="whitespace-nowrap">Min 8 characters</span>
+                    <span class="whitespace-nowrap">At least 1 uppercase</span>
+                    <span class="whitespace-nowrap">At least 1 number</span>
+                    <span class="whitespace-nowrap">At least 1 special character</span>
+                  </div>
+
                   <!-- Password strength bar -->
-                  <div v-if="form.password" class="mt-1.5">
+                  <div v-if="form.password" class="mt-1">
                     <div class="flex gap-1 mb-0.5">
                       <div v-for="i in 4" :key="i"
                         class="h-1 flex-1 rounded-full transition-all duration-300"
