@@ -302,8 +302,8 @@ def get_job_itineraries(limit: int = 50, offset: int = 0, job_id: str = None, em
         cursor.execute(
             f"""
             SELECT ji.job_itinerary_id, ji.job_id, j.job_title,
-                   ji.place_name, ji.start_time, ji.end_time,
-                   ji.note, ji.sequence, ji.created_at
+                ji.itinerary_date, ji.place_name, ji.start_time, ji.end_time,
+                ji.note, ji.sequence, ji.created_at
             FROM job_itineraries ji
             JOIN jobs j ON ji.job_id = j.job_id
             {where}
