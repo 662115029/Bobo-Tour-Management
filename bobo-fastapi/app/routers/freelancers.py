@@ -947,3 +947,32 @@ def create_fl_vehicle(body: VehicleCreateRequest, fl_id: int):
     finally:
         if conn:
             conn.close()
+
+
+@router.delete("/fl-vehicle/{vehicle_id}/images/{image_id}")
+def delete_fl_vehicle_image(vehicle_id: str, image_id: str):
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute(
+            "SELECT fl_vehicle_image_id FROM fl_vehicle_images WHERE fl_vehicle_image_id = %s AND fl_vehicle_id = %s",
+            (image_id, vehicle_id)
+        )
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Image not found.")
+        cursor.execute(
+            "DELETE FROM fl_vehicle_images WHERE fl_vehicle_image_id = %s",
+            (image_id,)
+        )
+        conn.commit()
+        return {"success": True}
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()

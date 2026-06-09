@@ -239,10 +239,17 @@
               <div v-if="vehicleImages.length" class="px-4 pb-3">
                 <p class="text-xs font-medium text-gray-500 mb-2">Vehicle Photos</p>
                 <div class="flex gap-2 overflow-x-auto pb-1">
-                  <img v-for="img in vehicleImages" :key="img.fl_vehicle_image_id"
-                    :src="img.fl_vehicle_image_url"
-                    class="w-24 h-24 object-cover rounded-xl flex-shrink-0 cursor-pointer active:opacity-80"
-                    @click="modalImage = img.fl_vehicle_image_url" />
+                  <div v-for="img in vehicleImages" :key="img.fl_vehicle_image_id"
+                    class="relative flex-shrink-0">
+                    <img :src="img.fl_vehicle_image_url"
+                      class="w-24 h-24 object-cover rounded-xl cursor-pointer active:opacity-80"
+                      @click="!isEditingVehicle && (modalImage = img.fl_vehicle_image_url)" />
+                    <button v-if="isEditingVehicle"
+                      class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-600 rounded-full flex items-center justify-center shadow-md active:scale-90 transition-transform"
+                      @click="deleteVehicleImage(img)">
+                      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    </button>
+                  </div>
                 </div>
               </div>
               <div class="px-4 pb-4">
@@ -644,6 +651,16 @@ async function createVehicle() {
     vehicle.value = data
   } catch { newVehicleError.value = 'Cannot connect to server.' }
   finally { creatingVehicle.value = false }
+}
+
+async function deleteVehicleImage(img) {
+  try {
+    const res = await fetch(`${API_BASE}/fl-vehicle/${vehicle.value.fl_vehicle_id}/images/${img.fl_vehicle_image_id}`, {
+      method: 'DELETE', headers: HEADERS
+    })
+    if (!res.ok) throw new Error('Failed to delete')
+    vehicleImages.value = vehicleImages.value.filter(i => i.fl_vehicle_image_id !== img.fl_vehicle_image_id)
+  } catch { vehicleSaveError.value = 'Failed to delete image.' }
 }
 
 function formatDate(dateStr) {
