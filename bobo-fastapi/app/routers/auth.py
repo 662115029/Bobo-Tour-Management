@@ -133,3 +133,52 @@ def employer_register(body: RegisterRequest):
     finally:
         if conn:
             conn.close()
+
+class FreelancerLoginRequest(BaseModel):
+    identifier: str
+    pin: str
+
+
+@router.post("/freelancer-login")
+def freelancer_login(body: FreelancerLoginRequest):
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute(
+            """
+            SELECT fl_id, fl_username, fl_name, fl_email, fl_phone,
+                   fl_pin_hash, fl_profile_image_url, fl_verify_status, fl_is_active
+            FROM freelancers
+            WHERE fl_username = %s OR fl_email = %s
+            """,
+            (body.identifier, body.identifier)
+        )
+        fl = cursor.fetchone()
+        if not fl:
+            raise HTTPException(status_code=401, detail="Invalid username or PIN.")
+        if not fl["fl_is_active"]:
+            raise HTTPException(status_code=403, detail="Account is disabled.")
+        if not bcrypt.checkpw(body.pin.encode(), fl["fl_pin_hash"].encode()):
+            raise HTTPException(status_code=401, detail="Invalid username or PIN.")
+        return {
+            "fl_id": fl["fl_id"],
+            "fl_username": fl["fl_username"],
+            "fl_name": fl["fl_name"],
+            "fl_email": fl["fl_email"],
+            "fl_phone": fl["fl_phone"],
+            "fl_profile_image_url": fl["fl_profile_image_url"],
+            "fl_verify_status": fl["fl_verify_status"],
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
+
+
+@router.get("/gen-hash")
+def gen_hash(pin: str):
+    return {"hash": bcrypt.hashpw(pin.encode(), bcrypt.gensalt()).decode()}
