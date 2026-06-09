@@ -1,31 +1,28 @@
-import liff from '@line/liff'
+import liffSdk from '@line/liff'
 
-const LIFF_ID = '2009771168-w9BjE7bI'
+const LIFF_ID = import.meta.env.VITE_LIFF_ID || ''
 
 export async function initLiff() {
-  try {
-    await liff.init({
-      liffId: LIFF_ID,
-      mock: false
-    })
+  // --- Dev fallback: no LIFF_ID or not inside LINE ---
+  if (!LIFF_ID) {
+    const stored = sessionStorage.getItem('dev_user')
+    if (stored) return JSON.parse(stored)
+    return null   // triggers login screen in App.vue
+  }
 
-    if (!liff.isLoggedIn()) {
-      liff.login({ redirectUri: window.location.href })
-      return
-    }
+  await liffSdk.init({ liffId: LIFF_ID })
 
-    const profile = await liff.getProfile()
+  if (!liffSdk.isLoggedIn()) {
+    liffSdk.login()
+    return null
+  }
 
-    return {
-      lineUserId: profile.userId,
-      displayName: profile.displayName,
-      pictureUrl: profile.pictureUrl
-    }
-
-  } catch (error) {
-    console.error('LIFF init failed:', error)
-    throw error
+  const profile = await liffSdk.getProfile()
+  return {
+    lineUserId: profile.userId,
+    displayName: profile.displayName,
+    pictureUrl: profile.pictureUrl,
   }
 }
 
-export { liff }
+export { liffSdk as liff }
