@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException
+import bcrypt
 from pydantic import BaseModel
 from typing import Optional
 from app.db.connection import get_connection, get_cursor
@@ -662,6 +663,281 @@ def create_or_get_language(data: dict):
         cursor.execute("INSERT INTO languages (language_name) VALUES (%s)", (name,))
         conn.commit()
         return {"language_id": cursor.lastrowid, "language_name": name}
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
+
+class FreelancerProfileUpdateRequest(BaseModel):
+    fl_name: Optional[str] = None
+    fl_email: Optional[str] = None
+    fl_phone: Optional[str] = None
+    fl_address: Optional[str] = None
+    fl_bio: Optional[str] = None
+    fl_date_of_birth: Optional[str] = None
+    fl_profile_image_url: Optional[str] = None
+
+
+@router.put("/freelancers/{fl_id}")
+def update_freelancer(fl_id: str, body: FreelancerProfileUpdateRequest):
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT fl_id FROM freelancers WHERE fl_id = %s", (fl_id,))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Freelancer not found")
+        cursor.execute(
+            """
+            UPDATE freelancers
+            SET fl_name = COALESCE(%s, fl_name),
+                fl_email = COALESCE(%s, fl_email),
+                fl_phone = COALESCE(%s, fl_phone),
+                fl_address = COALESCE(%s, fl_address),
+                fl_bio = COALESCE(%s, fl_bio),
+                fl_date_of_birth = COALESCE(%s, fl_date_of_birth),
+                fl_profile_image_url = COALESCE(%s, fl_profile_image_url)
+            WHERE fl_id = %s
+            """,
+            (body.fl_name, body.fl_email, body.fl_phone, body.fl_address,
+             body.fl_bio, body.fl_date_of_birth, body.fl_profile_image_url, fl_id)
+        )
+        conn.commit()
+        return {"success": True}
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
+
+
+@router.patch("/freelancers/{fl_id}/pin")
+def change_freelancer_pin(fl_id: str, data: dict):
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT fl_pin_hash FROM freelancers WHERE fl_id = %s", (fl_id,))
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Freelancer not found")
+        current_pin = data.get("current_pin", "")
+        if not bcrypt.checkpw(current_pin.encode(), row["fl_pin_hash"].encode()):
+            raise HTTPException(status_code=401, detail="Incorrect current PIN.")
+        new_pin = data.get("new_pin", "")
+        if not new_pin or len(new_pin) != 6 or not new_pin.isdigit():
+            raise HTTPException(status_code=400, detail="New PIN must be 6 digits.")
+        new_hash = bcrypt.hashpw(new_pin.encode(), bcrypt.gensalt()).decode()
+        cursor.execute("UPDATE freelancers SET fl_pin_hash = %s WHERE fl_id = %s", (new_hash, fl_id))
+        conn.commit()
+        return {"success": True}
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
+
+
+class VehicleUpdateRequest(BaseModel):
+    fl_vehicle_brand: Optional[str] = None
+    fl_vehicle_model: Optional[str] = None
+    fl_vehicle_year: Optional[int] = None
+    fl_vehicle_seat_capa: Optional[int] = None
+    fl_vehicle_license_plate: Optional[str] = None
+
+
+@router.put("/fl-vehicle/{vehicle_id}")
+def update_fl_vehicle(vehicle_id: str, body: VehicleUpdateRequest):
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT fl_vehicle_id FROM fl_vehicle WHERE fl_vehicle_id = %s", (vehicle_id,))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Vehicle not found")
+        if body.fl_vehicle_seat_capa and not (9 <= body.fl_vehicle_seat_capa <= 13):
+            raise HTTPException(status_code=400, detail="Seat capacity must be between 9 and 13.")
+        cursor.execute(
+            """
+            UPDATE fl_vehicle
+            SET fl_vehicle_brand         = COALESCE(%s, fl_vehicle_brand),
+                fl_vehicle_model         = COALESCE(%s, fl_vehicle_model),
+                fl_vehicle_year          = COALESCE(%s, fl_vehicle_year),
+                fl_vehicle_seat_capa     = COALESCE(%s, fl_vehicle_seat_capa),
+                fl_vehicle_license_plate = COALESCE(%s, fl_vehicle_license_plate)
+            WHERE fl_vehicle_id = %s
+            """,
+            (body.fl_vehicle_brand, body.fl_vehicle_model, body.fl_vehicle_year,
+             body.fl_vehicle_seat_capa, body.fl_vehicle_license_plate, vehicle_id)
+        )
+        conn.commit()
+        return {"success": True}
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
+
+
+@router.post("/fl-languages")
+def add_fl_language(data: dict):
+    conn = None
+    try:
+        fl_id = data.get("fl_id")
+        language_name = (data.get("language_name") or "").strip()
+        if not fl_id or not language_name:
+            raise HTTPException(status_code=400, detail="fl_id and language_name are required.")
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT language_id, language_name FROM languages WHERE LOWER(language_name) = LOWER(%s)", (language_name,))
+        lang = cursor.fetchone()
+        if not lang:
+            cursor.execute("INSERT INTO languages (language_name) VALUES (%s)", (language_name,))
+            language_id = cursor.lastrowid
+            language_name_out = language_name
+        else:
+            language_id = lang["language_id"]
+            language_name_out = lang["language_name"]
+        cursor.execute("SELECT 1 FROM fl_languages WHERE fl_id = %s AND language_id = %s", (fl_id, language_id))
+        if cursor.fetchone():
+            raise HTTPException(status_code=409, detail="Language already added.")
+        cursor.execute("INSERT INTO fl_languages (fl_id, language_id) VALUES (%s, %s)", (fl_id, language_id))
+        conn.commit()
+        return {"fl_id": fl_id, "language_id": language_id, "language_name": language_name_out}
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn: conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn: conn.close()
+
+
+@router.delete("/fl-languages/{fl_id}/{language_id}")
+def remove_fl_language(fl_id: int, language_id: int):
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("DELETE FROM fl_languages WHERE fl_id = %s AND language_id = %s", (fl_id, language_id))
+        conn.commit()
+        return {"success": True}
+    except Exception as e:
+        if conn: conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn: conn.close()
+
+
+@router.post("/fl-pickup-areas")
+def add_fl_pickup_area(data: dict):
+    conn = None
+    try:
+        fl_id = data.get("fl_id")
+        area_name = (data.get("area_name") or "").strip()
+        if not fl_id or not area_name:
+            raise HTTPException(status_code=400, detail="fl_id and area_name are required.")
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT area_id, area_name FROM areas WHERE LOWER(area_name) = LOWER(%s)", (area_name,))
+        area = cursor.fetchone()
+        if not area:
+            cursor.execute("INSERT INTO areas (area_name) VALUES (%s)", (area_name,))
+            area_id = cursor.lastrowid
+            area_name_out = area_name
+        else:
+            area_id = area["area_id"]
+            area_name_out = area["area_name"]
+        cursor.execute("SELECT 1 FROM fl_pickup_areas WHERE fl_id = %s AND area_id = %s", (fl_id, area_id))
+        if cursor.fetchone():
+            raise HTTPException(status_code=409, detail="Area already added.")
+        cursor.execute("INSERT INTO fl_pickup_areas (fl_id, area_id) VALUES (%s, %s)", (fl_id, area_id))
+        conn.commit()
+        return {"fl_id": fl_id, "area_id": area_id, "area_name": area_name_out}
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn: conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn: conn.close()
+
+
+@router.delete("/fl-pickup-areas/{fl_id}/{area_id}")
+def remove_fl_pickup_area(fl_id: int, area_id: int):
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("DELETE FROM fl_pickup_areas WHERE fl_id = %s AND area_id = %s", (fl_id, area_id))
+        conn.commit()
+        return {"success": True}
+    except Exception as e:
+        if conn: conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn: conn.close()
+
+
+class VehicleCreateRequest(BaseModel):
+    fl_vehicle_brand: str
+    fl_vehicle_model: str
+    fl_vehicle_year: int
+    fl_vehicle_seat_capa: int
+    fl_vehicle_license_plate: str
+
+
+@router.post("/fl-vehicle")
+def create_fl_vehicle(body: VehicleCreateRequest, fl_id: int):
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        # check already has vehicle
+        cursor.execute("SELECT fl_vehicle_id FROM fl_vehicle WHERE fl_id = %s", (fl_id,))
+        if cursor.fetchone():
+            raise HTTPException(status_code=409, detail="Vehicle already exists. Use PUT to update.")
+        if not (9 <= body.fl_vehicle_seat_capa <= 13):
+            raise HTTPException(status_code=400, detail="Seat capacity must be between 9 and 13.")
+        cursor.execute(
+            """
+            INSERT INTO fl_vehicle
+                (fl_id, fl_vehicle_type, fl_vehicle_brand, fl_vehicle_model,
+                 fl_vehicle_year, fl_vehicle_seat_capa, fl_vehicle_license_plate)
+            VALUES (%s, 'VAN', %s, %s, %s, %s, %s)
+            """,
+            (fl_id, body.fl_vehicle_brand, body.fl_vehicle_model,
+             body.fl_vehicle_year, body.fl_vehicle_seat_capa, body.fl_vehicle_license_plate)
+        )
+        vehicle_id = cursor.lastrowid
+        conn.commit()
+        return {
+            "fl_vehicle_id": vehicle_id,
+            "fl_id": fl_id,
+            "fl_vehicle_type": "VAN",
+            "fl_vehicle_brand": body.fl_vehicle_brand,
+            "fl_vehicle_model": body.fl_vehicle_model,
+            "fl_vehicle_year": body.fl_vehicle_year,
+            "fl_vehicle_seat_capa": body.fl_vehicle_seat_capa,
+            "fl_vehicle_license_plate": body.fl_vehicle_license_plate,
+        }
     except HTTPException:
         raise
     except Exception as e:
