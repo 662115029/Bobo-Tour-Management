@@ -790,3 +790,41 @@ def delete_job(job_id: str, x_admin_id: Optional[str] = Header(None, alias="X-Ad
     finally:
         if conn:
             conn.close()
+
+@router.post("/job-applications")
+def apply_for_job(data: dict):
+    conn = None
+    try:
+        job_id = data.get("job_id")
+        fl_id = data.get("fl_id")
+        if not job_id or not fl_id:
+            raise HTTPException(status_code=400, detail="job_id and fl_id are required.")
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT job_status FROM jobs WHERE job_id = %s", (job_id,))
+        job = cursor.fetchone()
+        if not job:
+            raise HTTPException(status_code=404, detail="Job not found.")
+        if job["job_status"] != "OPEN":
+            raise HTTPException(status_code=400, detail="This job is no longer open for applications.")
+        cursor.execute(
+            "SELECT job_application_id FROM job_applications WHERE job_id = %s AND fl_id = %s",
+            (job_id, fl_id)
+        )
+        if cursor.fetchone():
+            raise HTTPException(status_code=409, detail="You have already applied for this job.")
+        cursor.execute(
+            "INSERT INTO job_applications (job_id, fl_id, application_status) VALUES (%s, %s, 'APPLIED')",
+            (job_id, fl_id)
+        )
+        conn.commit()
+        return {"success": True, "job_application_id": cursor.lastrowid}
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
