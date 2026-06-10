@@ -54,30 +54,7 @@
           </div>
 
           <!-- Jobs banner -->
-          <div v-if="user && openJobCount !== null"
-            class="bg-white rounded-tr-2xl rounded-br-2xl rounded-bl-2xl overflow-hidden shadow-sm cursor-pointer active:opacity-80"
-            @click="$router.push('/jobs')">
-            <div class="bg-gradient-to-r from-[#003087] to-[#0057b8] px-4 py-3 flex items-center justify-between">
-              <div>
-                <p class="text-blue-200 text-xs font-semibold uppercase tracking-wider">Available Now</p>
-                <p class="text-white font-black text-2xl leading-tight">Jobs</p>
-                <p class="text-yellow-300 font-bold text-lg leading-tight">{{ openJobCount }} Open</p>
-              </div>
-              <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" opacity="0.85">
-                <rect x="1" y="8" width="15" height="10" rx="1.5"/>
-                <path d="M16 10l4 2v6h-4V10z"/>
-                <circle cx="5.5" cy="19.5" r="1.5" fill="white" stroke="none"/>
-                <circle cx="13.5" cy="19.5" r="1.5" fill="white" stroke="none"/>
-                <circle cx="19.5" cy="19.5" r="1.5" fill="white" stroke="none"/>
-              </svg>
-            </div>
-            <div class="px-4 py-2 flex items-center gap-1">
-              <span class="text-xs text-blue-600 font-semibold">Tap to browse jobs</span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5">
-                <path d="M9 18l6-6-6-6"/>
-              </svg>
-            </div>
-          </div>
+          <!-- end chat messages -->
         </div>
       </div>
     </div>
@@ -204,27 +181,9 @@ const emit = defineEmits(['logout'])
 
 const menuOpen = ref(true)
 const chatInput = ref('')
-const openJobCount = ref(null)
 const toast = ref('')
 
-const API_BASE = import.meta.env.VITE_FASTAPI_URL || 'http://localhost:8000'
-const HEADERS = { 'ngrok-skip-browser-warning': 'true' }
-
-onMounted(() => {
-  if (props.user?.fl_id) fetchOpenJobCount()
-})
-
-async function fetchOpenJobCount() {
-  try {
-    const res = await fetch(`${API_BASE}/jobs?job_status=OPEN&limit=1`, { headers: HEADERS })
-    if (res.ok) {
-      const data = await res.json()
-      openJobCount.value = data.total ?? data.items?.length ?? 0
-    }
-  } catch {
-    openJobCount.value = 0
-  }
-}
+onMounted(() => {})
 
 function guardedNav(path) {
   if (!props.user) {
