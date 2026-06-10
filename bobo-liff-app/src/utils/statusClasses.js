@@ -29,9 +29,9 @@ export function getJobStatusClass(status) {
 }
 
 const VERIFY_STATUS_LABEL_MAP = {
-  PENDING:      'Pending',
-  VERIFIED:     'Verified',
-  NOT_VERIFIED: 'Not Verified',
+  PENDING:      'PENDING',
+  VERIFIED:     'VERIFIED',
+  NOT_VERIFIED: 'NOT VERIFIED',
 }
 
 export function formatVerifyStatus(status) {
