@@ -83,12 +83,7 @@
     </div>
 
     <!-- Loading overlay -->
-    <div v-if="loading" class="absolute inset-0 bg-white/70 flex items-center justify-center z-50">
-      <div class="flex flex-col items-center gap-3">
-        <div class="w-10 h-10 border-2 border-red-600 border-t-transparent rounded-full animate-spin"/>
-        <p class="text-sm text-gray-500">Updating PIN...</p>
-      </div>
-    </div>
+    <LoadingView v-if="loading" message="Updating PIN..." />
 
   </div>
 </template>
@@ -96,6 +91,7 @@
 <script setup>
 import { ref, computed, nextTick } from 'vue'
 import PinPad from './PinPad.vue'
+import LoadingView from './LoadingView.vue'
 
 const props = defineProps({ user: Object })
 const step = ref('current') // current | new | confirm | done
