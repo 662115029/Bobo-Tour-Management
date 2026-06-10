@@ -1,1 +1,10 @@
 @import "tailwindcss";
+
+@layer components {
+  /* ── Info Tag (matches employer app) ── */
+  .info-tag {
+    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide;
+  }
+  .info-tag.language { @apply bg-indigo-50 text-indigo-700; }
+  .info-tag.area     { @apply bg-cyan-50   text-cyan-700;   }
+}
