@@ -216,8 +216,12 @@
 
       <template v-if="tab === 'job-offer'">
         <p v-if="actionError" class="text-xs text-red-500 text-center">{{ actionError }}</p>
-        <button class="w-full bg-red-600 text-white text-[14px] font-semibold py-3 rounded-xl disabled:opacity-60 flex items-center justify-center gap-2 hover:bg-red-700 transition"
-          :disabled="acting" @click="handleAccept">
+        <div v-if="!isVerified" class="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 flex items-start gap-2 mb-1">
+          <svg class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+          <p class="text-[12px] text-amber-700 leading-snug">Your account must be verified before accepting a job. Please complete your documents in Profile.</p>
+        </div>
+        <button class="w-full bg-red-600 text-white text-[14px] font-semibold py-3 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 hover:bg-red-700 transition"
+          :disabled="acting || !isVerified" @click="handleAccept">
           <svg class="w-4 h-4" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
           {{ acting ? 'Processing...' : 'Accept' }}
         </button>
@@ -241,11 +245,17 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
           Already applied for this job
         </div>
-        <button v-else class="w-full bg-red-600 text-white text-[14px] font-semibold py-3 rounded-xl disabled:opacity-60 flex items-center justify-center gap-2 hover:bg-red-700 transition"
-          :disabled="acting" @click="handleApply">
-          <svg class="w-4 h-4" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-          {{ acting ? 'Applying...' : 'Apply' }}
-        </button>
+        <template v-else>
+          <div v-if="!isVerified" class="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 flex items-start gap-2 mb-1">
+            <svg class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+            <p class="text-[12px] text-amber-700 leading-snug">Your account must be verified before applying for jobs. Please complete your documents in Profile.</p>
+          </div>
+          <button class="w-full bg-red-600 text-white text-[14px] font-semibold py-3 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 hover:bg-red-700 transition"
+            :disabled="acting || !isVerified" @click="handleApply">
+            <svg class="w-4 h-4" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            {{ acting ? 'Applying...' : 'Apply' }}
+          </button>
+        </template>
       </template>
 
     </div>
@@ -299,6 +309,7 @@ const loadingDetail = ref(false)
 const acting = ref(false)
 const actionError = ref('')
 const alreadyApplied = ref(false)
+const isVerified = ref(true)
 
 const API_BASE = import.meta.env.VITE_FASTAPI_URL || 'http://localhost:8000'
 const HEADERS = { 'ngrok-skip-browser-warning': 'true' }
@@ -341,6 +352,15 @@ onMounted(async () => {
       if (areaRes.ok) {
         const areaData = await areaRes.json()
         pickupAreas.value = areaData.items || []
+      }
+    }
+
+    // Fresh verify status for apply/accept gating
+    if ((props.tab === 'job-opening' || props.tab === 'job-offer') && props.user?.fl_id) {
+      const flRes = await fetch(`${API_BASE}/freelancers/${props.user.fl_id}`, { headers: HEADERS })
+      if (flRes.ok) {
+        const flData = await flRes.json()
+        isVerified.value = flData.fl_verify_status === 'VERIFIED'
       }
     }
   } catch (e) { console.error(e) }
