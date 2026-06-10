@@ -42,9 +42,8 @@
               <h3 class="text-base font-bold text-gray-900">{{ form.fl_name }}</h3>
               <p class="text-sm text-gray-400">@{{ profile.fl_username }}</p>
             </div>
-            <span class="px-3 py-1 rounded-full text-xs font-semibold uppercase"
-              :class="profile.fl_verify_status === 'VERIFIED' ? 'bg-green-100 text-green-700' : profile.fl_verify_status === 'NOT_VERIFIED' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'">
-              {{ profile.fl_verify_status || 'PENDING' }}
+            <span :class="[BADGE_BASE, getVerifyStatusClass(profile.fl_verify_status)]">
+              {{ formatVerifyStatus(profile.fl_verify_status) || 'Pending' }}
             </span>
             <div class="grid grid-cols-2 gap-4 w-full pt-2 border-t border-gray-100">
               <div class="text-center">
@@ -240,15 +239,15 @@
                 <p class="text-xs font-medium text-gray-500 mb-2">Vehicle Photos</p>
                 <div class="flex gap-2 overflow-x-auto pb-1">
                   <div v-for="img in vehicleImages" :key="img.fl_vehicle_image_id"
-                    class="relative flex-shrink-0">
+                    class="relative flex-shrink-0 w-24 h-24">
                     <img :src="img.fl_vehicle_image_url"
                       class="w-24 h-24 object-cover rounded-xl cursor-pointer active:opacity-80"
                       @click="!isEditingVehicle && (modalImage = img.fl_vehicle_image_url)" />
-                    <button v-if="isEditingVehicle"
-                      class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-600 rounded-full flex items-center justify-center shadow-md active:scale-90 transition-transform"
+                    <div v-if="isEditingVehicle"
+                      class="absolute inset-0 rounded-xl bg-black/40 flex items-center justify-center cursor-pointer"
                       @click="deleteVehicleImage(img)">
-                      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                    </button>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -295,8 +294,8 @@
             <div class="px-4 py-3 border-b border-gray-50 flex flex-wrap items-center gap-x-3 gap-y-1">
               <span class="text-xs font-medium text-gray-500">Status</span>
               <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full uppercase"
-                :class="verifyInfo.fl_verify_status === 'VERIFIED' ? 'bg-green-100 text-green-700' : verifyInfo.fl_verify_status === 'NOT_VERIFIED' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'">
-                {{ verifyInfo.fl_verify_status || 'PENDING' }}
+                :class="[BADGE_BASE, getVerifyStatusClass(verifyInfo.fl_verify_status)]">
+                {{ formatVerifyStatus(verifyInfo.fl_verify_status) || 'Pending' }}
               </span>
               <span v-if="verifyInfo.fl_verify_status === 'VERIFIED' && verifyInfo.fl_verified_at" class="text-xs text-gray-400">Verified {{ formatDate(verifyInfo.fl_verified_at) }}</span>
               <span v-else-if="verifyInfo.fl_submitted_at" class="text-xs text-gray-400">Submitted {{ formatDate(verifyInfo.fl_submitted_at) }}</span>
@@ -398,6 +397,7 @@
 <script setup>
 import LoadingView from './LoadingView.vue'
 import { ref, reactive, onMounted } from 'vue'
+import { getVerifyStatusClass, formatVerifyStatus, getDocStatusClass, BADGE_BASE } from '@/utils/statusClasses.js'
 
 const props = defineProps({ user: Object })
 
@@ -669,9 +669,6 @@ function formatDate(dateStr) {
 }
 
 function docStatusStyle(status) {
-  if (status === 'APPROVED') return { badge: 'bg-green-100 text-green-700' }
-  if (status === 'REJECTED') return { badge: 'bg-red-100 text-red-700' }
-  if (!status)               return { badge: 'bg-gray-100 text-gray-400' }
-  return                            { badge: 'bg-amber-100 text-amber-700' }
+  return { badge: getDocStatusClass(status) }
 }
 </script>
