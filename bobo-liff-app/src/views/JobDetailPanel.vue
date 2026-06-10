@@ -31,7 +31,7 @@
               <p class="text-[12px] text-[#bbb] mt-1">{{ job.company || job.em_name || '—' }}</p>
             </div>
             <div v-if="job.job_price" class="text-right shrink-0">
-              <div class="text-[11px] text-[#bbb] tracking-wide font-medium mb-1">Price (THB)</div>
+              <div class="text-[11px] text-[#bbb] tracking-wide font-medium mb-1">Rate (THB)</div>
               <div class="text-[22px] font-bold text-[#111]">฿{{ Number(job.job_price).toLocaleString() }}</div>
             </div>
           </div>
@@ -56,17 +56,6 @@
             </div>
           </div>
 
-          <!-- Languages required -->
-          <div v-if="languages.length" class="mt-3 pt-3 border-t border-[#f0f0f0]">
-            <div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium mb-1.5">Languages Required</div>
-            <div class="flex flex-wrap gap-1.5">
-              <span v-for="lang in languages" :key="lang.language_id || lang.language_name"
-                class="text-[12px] font-semibold text-[#444] bg-[#f0f4ff] border border-[#dde3ff] px-2.5 py-0.5 rounded-full">
-                {{ lang.language_name }}
-              </span>
-            </div>
-          </div>
-
           <!-- Tab-specific timestamp -->
           <div v-if="tab === 'my-request' && job.applied_at" class="mt-3 pt-3 border-t border-[#f0f0f0] text-[12px] text-[#aaa]">
             Applied on {{ formatDate(job.applied_at) }}
@@ -76,6 +65,32 @@
           </div>
           <div v-if="tab === 'my-job' && job.job_updated_at" class="mt-3 pt-3 border-t border-[#f0f0f0] text-[12px] text-[#aaa]">
             Matched on {{ formatDate(job.job_updated_at) }}
+          </div>
+        </div>
+
+        <!-- Languages Required -->
+        <div v-if="languages.length" class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden">
+          <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
+            <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
+            <span class="text-[13px] font-bold text-[#444] tracking-wide">Languages Required</span>
+          </div>
+          <div class="px-4 py-4 flex flex-wrap gap-1.5">
+            <span v-for="lang in languages" :key="lang.language_id || lang.language_name" class="info-tag language">
+              {{ lang.language_name }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Pickup Areas (my-job only) -->
+        <div v-if="tab === 'my-job' && pickupAreas.length" class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden">
+          <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
+            <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            <span class="text-[13px] font-bold text-[#444] tracking-wide">Pickup Areas</span>
+          </div>
+          <div class="px-4 py-4 flex flex-wrap gap-1.5">
+            <span v-for="area in pickupAreas" :key="area.area_id" class="info-tag area">
+              {{ area.area_name }}
+            </span>
           </div>
         </div>
 
@@ -91,10 +106,14 @@
               <div class="w-6 h-6 rounded-full bg-[#f3e5f5] text-[#7b1fa2] text-[11px] font-bold flex items-center justify-center shrink-0 mr-3">{{ i + 1 }}</div>
               <div class="flex-1 min-w-0">
                 <div class="text-[13px] font-medium text-[#222]">{{ it.place_name }}</div>
+                <div v-if="it.note" class="text-[11px] text-[#999] mt-0.5">{{ it.note }}</div>
               </div>
-              <span v-if="it.start_time" class="text-[12px] font-bold text-[#7b1fa2] bg-[#f3e5f5] px-2 py-0.5 rounded-md whitespace-nowrap ml-2">
-                {{ formatTime(it.start_time) }}{{ it.end_time ? ' – ' + formatTime(it.end_time) : '' }}
-              </span>
+              <div class="flex flex-col items-end gap-0.5 ml-2 shrink-0">
+                <span v-if="it.start_time" class="text-[12px] font-bold text-[#7b1fa2] bg-[#f3e5f5] px-2 py-0.5 rounded-md whitespace-nowrap">
+                  {{ formatTime(it.start_time) }}{{ it.end_time ? ' – ' + formatTime(it.end_time) : '' }}
+                </span>
+                <span v-if="it.itinerary_date" class="text-[11px] text-[#aaa] whitespace-nowrap">{{ formatDate(it.itinerary_date) }}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -111,17 +130,18 @@
               <div class="w-6 h-6 rounded-full bg-[#e8f5e9] text-[#2e7d32] text-[11px] font-bold flex items-center justify-center shrink-0">{{ i + 1 }}</div>
               <div class="flex-1 min-w-0">
                 <div class="text-[13px] font-medium text-[#222]">{{ p.hotel_name || p.pickup_location }}</div>
+                <div v-if="p.note" class="text-[11px] text-[#999] mt-0.5">{{ p.note }}</div>
               </div>
               <span v-if="p.pickup_time" class="text-[12px] font-bold text-[#1976d2] bg-[#e3f2fd] px-2 py-0.5 rounded-md whitespace-nowrap shrink-0">{{ formatTime(p.pickup_time) }}</span>
             </div>
           </div>
         </div>
 
-        <!-- Passengers: only visible after matched -->
+        <!-- Pick Up Points (passengers): only visible after matched -->
         <div v-if="passengers.length && tab === 'my-job'" class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden">
           <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
             <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path stroke-linecap="round" stroke-linejoin="round" d="M23 21v-2a4 4 0 00-3-3.87m-4-12a4 4 0 010 7.75"/></svg>
-            <span class="text-[13px] font-bold text-[#444] tracking-wide">Passengers</span>
+            <span class="text-[13px] font-bold text-[#444] tracking-wide">Pick Up Points</span>
             <span class="ml-auto inline-flex items-center justify-center bg-[#f0f4ff] text-[#3d5afe] rounded-full text-[11px] font-bold px-2 py-0.5">{{ passengers.length }}</span>
           </div>
           <div class="px-4 py-3 flex flex-col gap-2">
@@ -130,9 +150,10 @@
               <div class="w-6 h-6 rounded-full bg-[#e8f5e9] text-[#2e7d32] text-[11px] font-bold flex items-center justify-center shrink-0">{{ i + 1 }}</div>
               <div class="flex-1 min-w-0">
                 <div class="text-[13px] font-medium text-[#222]">{{ p.first_name }} {{ p.last_name }}</div>
-                <div class="text-[11px] text-[#999] mt-0.5 flex flex-wrap gap-x-2">
+                <div class="text-[11px] text-[#999] mt-0.5">
                   <span v-if="p.hotel_name">{{ p.hotel_name }}</span>
-                  <span v-if="p.note" class="italic">{{ p.note }}</span>
+                  <span v-if="p.hotel_name && p.note" class="mx-1 text-[#ddd]">·</span>
+                  <span v-if="p.note">{{ p.note }}</span>
                 </div>
               </div>
               <span v-if="p.pickup_time" class="text-[12px] font-bold text-[#1976d2] bg-[#e3f2fd] px-2 py-0.5 rounded-md whitespace-nowrap shrink-0">{{ formatTime(p.pickup_time) }}</span>
@@ -164,7 +185,7 @@
             <!-- Total only: other tabs -->
             <template v-else>
               <div class="flex items-center justify-between px-1">
-                <span class="text-[13px] text-[#888]">Included in price</span>
+                <span class="text-[13px] text-[#888]">Included in rate</span>
                 <span class="text-[14px] font-bold text-[#111]">฿{{ expenseTotal.toLocaleString() }}</span>
               </div>
             </template>
@@ -208,9 +229,9 @@
 
       <template v-if="tab === 'my-request'">
         <p v-if="actionError" class="text-xs text-red-500 text-center">{{ actionError }}</p>
-        <button class="w-full border border-[#e0e0e0] text-[#666] text-[14px] font-medium py-2.5 rounded-xl disabled:opacity-60 hover:bg-[#f5f5f5] transition"
+        <button class="w-full border border-red-500 text-red-600 text-[14px] font-medium py-2.5 rounded-xl disabled:opacity-60 hover:bg-red-50 transition"
           :disabled="acting" @click="handleCancel">
-          {{ acting ? 'Cancelling...' : 'Withdraw Application' }}
+          {{ acting ? 'Cancelling...' : 'Cancel Application' }}
         </button>
       </template>
 
@@ -273,6 +294,7 @@ const itineraries = ref([])
 const passengers = ref([])
 const expenses = ref([])
 const languages = ref([])
+const pickupAreas = ref([])
 const loadingDetail = ref(false)
 const acting = ref(false)
 const actionError = ref('')
@@ -311,6 +333,14 @@ onMounted(async () => {
       if (appRes.ok) {
         const appData = await appRes.json()
         alreadyApplied.value = (appData.items || []).length > 0
+      }
+    }
+
+    if (props.tab === 'my-job' && props.user?.fl_id) {
+      const areaRes = await fetch(`${API_BASE}/fl-pickup-areas?fl_id=${props.user.fl_id}`, { headers: HEADERS })
+      if (areaRes.ok) {
+        const areaData = await areaRes.json()
+        pickupAreas.value = areaData.items || []
       }
     }
   } catch (e) { console.error(e) }
@@ -355,7 +385,7 @@ async function handleCancel() {
       method: 'DELETE', headers: HEADERS
     })
     if (!res.ok) { const d = await res.json(); actionError.value = d.detail || 'Failed.'; return }
-    emit('show-toast', { message: 'Application withdrawn', type: 'info' })
+    emit('show-toast', { message: 'Application cancelled', type: 'info' })
     emit('action-done')
   } catch { actionError.value = 'Cannot connect.' }
   finally { acting.value = false }
