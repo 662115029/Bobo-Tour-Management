@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Body, Body
+from fastapi import APIRouter, HTTPException, Body
 import bcrypt
 from pydantic import BaseModel
 from typing import Optional
