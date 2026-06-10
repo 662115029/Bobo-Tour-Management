@@ -22,7 +22,10 @@
 
     <!-- List -->
     <div v-else class="flex-1 overflow-y-auto">
-      <div v-if="loading" class="flex items-center justify-center h-40 text-[13px] text-[#aaa]">Loading...</div>
+      <div v-if="loading" class="flex flex-col items-center justify-center h-40 gap-3">
+        <img src="@/assets/logo.png" alt="Loading" class="w-16 h-16 object-contain animate-pulse" />
+        <p class="text-[13px] text-[#aaa]">Loading...</p>
+      </div>
 
       <div v-else-if="!items.length" class="flex flex-col items-center justify-center h-40 gap-2 text-center px-6">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
