@@ -102,6 +102,18 @@ async def upload_fl_document(fl_id: str, doc_type: str, file: UploadFile = File(
             """,
             (image_url, fl_id, doc_type)
         )
+        # Reset freelancer verify status to PENDING when any document is re-uploaded
+        cursor.execute(
+            "UPDATE freelancers SET fl_verify_status = 'PENDING' WHERE fl_id = %s",
+            (fl_id,)
+        )
+        cursor.execute(
+            """
+            UPDATE fl_verification SET fl_verify_status = 'PENDING'
+            WHERE fl_id = %s AND is_latest = 1
+            """,
+            (fl_id,)
+        )
         conn.commit()
         return {"fl_id": fl_id, "fl_doc_type": doc_type, "file_url": image_url, "fl_doc_status": "PENDING"}
     except HTTPException:
