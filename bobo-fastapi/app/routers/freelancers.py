@@ -50,15 +50,17 @@ def register_freelancer(body: FreelancerRegisterRequest):
         if cursor.fetchone():
             raise HTTPException(status_code=409, detail="Email or username already taken.")
 
+        pin_hash = bcrypt.hashpw(body.fl_password.encode(), bcrypt.gensalt()).decode()
+
         cursor.execute(
             """
             INSERT INTO freelancers
                 (line_user_id, fl_username, fl_email, fl_name, fl_phone,
-                 fl_verify_status, fl_is_active)
-            VALUES (%s, %s, %s, %s, %s, 'PENDING', 1)
+                 fl_pin_hash, fl_verify_status, fl_is_active)
+            VALUES (%s, %s, %s, %s, %s, %s, 'PENDING', 1)
             """,
             (body.line_user_id, body.fl_username,
-             body.fl_email, body.fl_name, body.fl_phone)
+             body.fl_email, body.fl_name, body.fl_phone, pin_hash)
         )
         fl_id = cursor.lastrowid
 
