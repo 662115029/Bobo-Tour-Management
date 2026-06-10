@@ -96,12 +96,7 @@
     </div>
 
     <!-- Loading overlay -->
-    <div v-if="loading" class="absolute inset-0 bg-white/70 flex items-center justify-center z-50">
-      <div class="flex flex-col items-center gap-3">
-        <div class="w-10 h-10 border-3 border-red-600 border-t-transparent rounded-full animate-spin"/>
-        <p class="text-sm text-gray-500">Logging in...</p>
-      </div>
-    </div>
+    <LoadingView v-if="loading" message="Logging in..." />
 
   </div>
 </template>
@@ -110,6 +105,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import PinPad from './PinPad.vue'
+import LoadingView from './LoadingView.vue'
 
 defineProps({ user: Object })
 const emit = defineEmits(['login'])
