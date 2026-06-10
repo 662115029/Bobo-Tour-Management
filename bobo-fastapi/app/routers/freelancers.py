@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Body, Body
 import bcrypt
 from pydantic import BaseModel
 from typing import Optional
@@ -976,3 +976,69 @@ def delete_fl_vehicle_image(vehicle_id: str, image_id: str):
     finally:
         if conn:
             conn.close()
+
+@router.post("/fl-availability")
+def create_fl_availability(body: dict = Body(...)):
+    conn = None
+    try:
+        fl_id = body.get("fl_id")
+        start = body.get("fl_available_start_date")
+        end = body.get("fl_available_end_date")
+        if not fl_id or not start or not end:
+            raise HTTPException(status_code=400, detail="fl_id, start_date, end_date required.")
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT fl_available_id FROM fl_availability WHERE fl_id = %s", (fl_id,))
+        existing = cursor.fetchone()
+        if existing:
+            cursor.execute(
+                """UPDATE fl_availability
+                   SET fl_available_start_date=%s, fl_available_end_date=%s, is_active=TRUE, updated_at=NOW()
+                   WHERE fl_id=%s""",
+                (start, end, fl_id)
+            )
+        else:
+            cursor.execute(
+                """INSERT INTO fl_availability (fl_id, fl_available_start_date, fl_available_end_date, is_active)
+                   VALUES (%s, %s, %s, TRUE)""",
+                (fl_id, start, end)
+            )
+        conn.commit()
+        cursor.execute(
+            """SELECT fl_available_id, fl_id, fl_available_start_date, fl_available_end_date, is_active, updated_at
+               FROM fl_availability WHERE fl_id=%s""", (fl_id,)
+        )
+        return cursor.fetchone()
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn: conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn: conn.close()
+
+
+@router.patch("/fl-availability/{fl_id}/toggle")
+def toggle_fl_availability(fl_id: int):
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT fl_available_id, is_active FROM fl_availability WHERE fl_id=%s", (fl_id,))
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="No availability record found.")
+        new_status = not row["is_active"]
+        cursor.execute(
+            "UPDATE fl_availability SET is_active=%s, updated_at=NOW() WHERE fl_id=%s",
+            (new_status, fl_id)
+        )
+        conn.commit()
+        return {"fl_id": fl_id, "is_active": new_status}
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn: conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn: conn.close()
