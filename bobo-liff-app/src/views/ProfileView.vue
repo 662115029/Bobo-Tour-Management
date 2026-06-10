@@ -60,31 +60,39 @@
             </div>
           </div>
 
-          <!-- Edit Profile -->
-          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+          <!-- Basic Information (accordion) -->
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
+            <div class="w-full flex items-center justify-between px-4 py-3 border-b border-gray-100 active:bg-gray-50 transition cursor-pointer select-none"
+              @click="toggleSection('basic')">
               <div class="flex items-center gap-2">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
                 <span class="text-sm font-semibold text-gray-700">Basic Information</span>
               </div>
               <div class="flex items-center gap-2">
-                <button v-if="!isEditing"
-                  class="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
-                  @click="isEditing = true">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  Edit
-                </button>
-                <button v-if="isEditing" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-500" @click="cancelEdit">Cancel</button>
-                <button v-if="isEditing"
-                  class="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-600 text-white disabled:opacity-60"
-                  :disabled="saving" @click="saveProfile">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
-                  {{ saving ? 'Saving...' : 'Save' }}
-                </button>
+                <div v-if="openSection === 'basic'" class="flex items-center gap-2">
+                  <button v-if="!isEditing"
+                    class="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                    @click.stop="isEditing = true">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Edit
+                  </button>
+                  <button v-if="isEditing" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-500" @click.stop="cancelEdit">Cancel</button>
+                  <button v-if="isEditing"
+                    class="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-600 text-white disabled:opacity-60"
+                    :disabled="saving" @click.stop="saveProfile">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                    {{ saving ? 'Saving...' : 'Save' }}
+                  </button>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"
+                  class="transition-transform duration-200" :class="openSection === 'basic' ? 'rotate-90' : ''">
+                  <path d="M9 18l6-6-6-6"/>
+                </svg>
               </div>
             </div>
-            <div v-if="saveSuccess" class="mx-4 mt-3 px-3 py-2 bg-green-50 border border-green-200 rounded-lg text-xs text-green-700">Profile updated!</div>
-            <div v-if="saveError" class="mx-4 mt-3 px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-600">{{ saveError }}</div>
+            <div v-show="openSection === 'basic'">
+              <div v-if="saveSuccess" class="mx-4 mt-3 px-3 py-2 bg-green-50 border border-green-200 rounded-lg text-xs text-green-700">Profile updated!</div>
+              <div v-if="saveError" class="mx-4 mt-3 px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-600">{{ saveError }}</div>
             <div class="px-4 py-4 space-y-3">
               <div>
                 <label class="block text-xs font-medium text-gray-500 mb-1">Username</label>
@@ -132,20 +140,29 @@
                   :class="isEditing ? 'border-gray-200 bg-white focus:outline-none focus:border-red-400' : 'border-gray-100 bg-gray-50 text-gray-700 cursor-default'"></textarea>
               </div>
             </div>
+            </div><!-- end v-show basic -->
           </div>
 
-          <!-- Languages & Areas -->
-          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+          <!-- Languages & Areas (accordion) -->
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
+            <div class="w-full flex items-center justify-between px-4 py-3 border-b border-gray-100 active:bg-gray-50 transition cursor-pointer select-none"
+              @click="toggleSection('tags')">
               <div class="flex items-center gap-2">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
                 <span class="text-sm font-semibold text-gray-700">Languages & Areas</span>
               </div>
-              <button class="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition" @click="isEditingTags = !isEditingTags">
-                <svg v-if="!isEditingTags" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                {{ isEditingTags ? 'Done' : 'Edit' }}
-              </button>
+              <div class="flex items-center gap-2">
+                <button v-if="openSection === 'tags'" class="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition" @click.stop="isEditingTags = !isEditingTags">
+                  <svg v-if="!isEditingTags" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  {{ isEditingTags ? 'Done' : 'Edit' }}
+                </button>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"
+                  class="transition-transform duration-200" :class="openSection === 'tags' ? 'rotate-90' : ''">
+                  <path d="M9 18l6-6-6-6"/>
+                </svg>
+              </div>
             </div>
+            <div v-show="openSection === 'tags'">
             <div class="px-4 py-4 space-y-4">
               <div>
                 <p class="text-xs font-medium text-gray-500 mb-2">Languages</p>
@@ -184,6 +201,7 @@
                 <p v-if="areaError" class="text-xs text-red-500 mt-1">{{ areaError }}</p>
               </div>
             </div>
+            </div><!-- end v-show tags -->
           </div>
 
           <!-- Change PIN -->
@@ -196,31 +214,38 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
           </button>
 
-          <!-- Vehicle -->
-          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+          <!-- Vehicle (accordion) -->
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
+            <div class="w-full flex items-center justify-between px-4 py-3 border-b border-gray-100 active:bg-gray-50 transition cursor-pointer select-none"
+              @click="toggleSection('vehicle')">
               <div class="flex items-center gap-2">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><rect x="1" y="8" width="15" height="10" rx="1.5"/><path d="M16 10l4 2v6h-4V10z"/><circle cx="5.5" cy="19.5" r="1.5"/><circle cx="13.5" cy="19.5" r="1.5"/><circle cx="19.5" cy="19.5" r="1.5"/></svg>
                 <span class="text-sm font-semibold text-gray-700">Vehicle</span>
               </div>
-              <div v-if="vehicle" class="flex items-center gap-2">
-                <button v-if="!isEditingVehicle"
-                  class="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
-                  @click="startEditVehicle">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  Edit
-                </button>
-                <button v-if="isEditingVehicle" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-500" @click="cancelEditVehicle">Cancel</button>
-                <button v-if="isEditingVehicle"
-                  class="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-600 text-white disabled:opacity-60"
-                  :disabled="savingVehicle" @click="saveVehicle">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
-                  {{ savingVehicle ? 'Saving...' : 'Save' }}
-                </button>
+              <div class="flex items-center gap-2">
+                <div v-if="vehicle && openSection === 'vehicle'" class="flex items-center gap-2">
+                  <button v-if="!isEditingVehicle"
+                    class="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                    @click.stop="startEditVehicle">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Edit
+                  </button>
+                  <button v-if="isEditingVehicle" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-500" @click.stop="cancelEditVehicle">Cancel</button>
+                  <button v-if="isEditingVehicle"
+                    class="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-600 text-white disabled:opacity-60"
+                    :disabled="savingVehicle" @click.stop="saveVehicle">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                    {{ savingVehicle ? 'Saving...' : 'Save' }}
+                  </button>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"
+                  class="transition-transform duration-200" :class="openSection === 'vehicle' ? 'rotate-90' : ''">
+                  <path d="M9 18l6-6-6-6"/>
+                </svg>
               </div>
             </div>
+            <div v-show="openSection === 'vehicle'">
             <div v-if="vehicle">
-              <div v-if="vehicleSaveSuccess" class="mx-4 mt-3 px-3 py-2 bg-green-50 border border-green-200 rounded-lg text-xs text-green-700">Saved!</div>
               <div v-if="vehicleSaveSuccess" class="mx-4 mt-3 px-3 py-2 bg-green-50 border border-green-200 rounded-lg text-xs text-green-700">Saved!</div>
               <div v-if="vehicleSaveError" class="mx-4 mt-3 px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-600">{{ vehicleSaveError }}</div>
               <div class="px-4 py-4 space-y-3">
@@ -275,20 +300,29 @@
                 {{ creatingVehicle ? 'Adding...' : 'Add Vehicle' }}
               </button>
             </div>
+            </div><!-- end v-show vehicle -->
           </div>
 
-          <!-- Verification + Documents -->
-          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+          <!-- Verification + Documents (accordion) -->
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
+            <div class="w-full flex items-center justify-between px-4 py-3 border-b border-gray-100 active:bg-gray-50 transition cursor-pointer select-none"
+              @click="toggleSection('docs')">
               <div class="flex items-center gap-2">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0 1 12 2.944a11.955 11.955 0 0 1-8.618 3.04A12.02 12.02 0 0 0 3 9c0 5.591 3.824 10.29 9 11.622C17.176 19.29 21 14.591 21 9c0-1.847-.396-3.6-1.118-5.142z"/></svg>
-                <span class="text-sm font-semibold text-gray-700">Verification</span>
+                <span class="text-sm font-semibold text-gray-700">Verification & Documents</span>
               </div>
-              <button class="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition" @click="docEditMode = !docEditMode">
-                <svg v-if="!docEditMode" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                {{ docEditMode ? 'Done' : 'Edit' }}
-              </button>
+              <div class="flex items-center gap-2">
+                <button v-if="openSection === 'docs'" class="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition" @click.stop="docEditMode = !docEditMode">
+                  <svg v-if="!docEditMode" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  {{ docEditMode ? 'Done' : 'Edit' }}
+                </button>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"
+                  class="transition-transform duration-200" :class="openSection === 'docs' ? 'rotate-90' : ''">
+                  <path d="M9 18l6-6-6-6"/>
+                </svg>
+              </div>
             </div>
+            <div v-show="openSection === 'docs'">
 
             <!-- Verify status -->
             <div class="px-4 py-3 border-b border-gray-50 flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -353,6 +387,7 @@
                 <input :id="'doc-input-' + doc.fl_doc_type" type="file" accept="image/*,application/pdf" class="hidden" @change="(e) => uploadDocument(e, doc)" />
               </div>
             </div>
+            </div><!-- end v-show docs -->
           </div>
 
         </div>
@@ -420,6 +455,12 @@ const areaError = ref('')
 const completedJobs = ref(0)
 const modalImage = ref(null)
 const docEditMode = ref(false)
+
+// Accordion: which sections are open (null = all collapsed by default)
+const openSection = ref(null)
+function toggleSection(name) {
+  openSection.value = openSection.value === name ? null : name
+}
 
 const isEditing = ref(false)
 const saving = ref(false)
@@ -596,6 +637,18 @@ async function uploadDocument(e, doc) {
     if (!res.ok) { const err = await res.json(); throw new Error(err.detail || 'Upload failed') }
     const data = await res.json()
     documents.value[idx] = { ...documents.value[idx], file_url: data.file_url, fl_doc_status: 'PENDING', fl_uploaded_at: new Date().toISOString(), uploading: false }
+    // Refetch profile to update verify status badge
+    const profileRes = await fetch(`${API_BASE}/freelancers/${props.user.fl_id}`, { headers: HEADERS })
+    if (profileRes.ok) {
+      const profileData = await profileRes.json()
+      profile.value = { ...profile.value, fl_verify_status: profileData.fl_verify_status }
+    }
+    // Refetch verification log
+    const verifyRes = await fetch(`${API_BASE}/fl-verification?fl_id=${props.user.fl_id}&is_latest=true&status=&limit=1`, { headers: HEADERS })
+    if (verifyRes.ok) {
+      const verifyData = await verifyRes.json()
+      verifyInfo.value = verifyData.items?.[0] || {}
+    }
   } catch (err) {
     console.error('Failed to upload:', err.message)
     documents.value[idx] = { ...documents.value[idx], uploading: false }
