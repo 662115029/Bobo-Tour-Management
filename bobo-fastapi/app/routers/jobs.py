@@ -398,7 +398,14 @@ def get_job_expenses(limit: int = 50, offset: int = 0, job_id: str = None, em_id
 
 
 @router.get("/job-applications")
-def get_job_applications(limit: int = 50, offset: int = 0, job_id: str = None, em_id: str = None):
+def get_job_applications(
+    limit: int = 50,
+    offset: int = 0,
+    job_id: str = None,
+    em_id: str = None,
+    fl_id: Optional[int] = None,
+    application_status: str = None,
+):
     conn = None
     try:
         conn = get_connection()
@@ -411,16 +418,26 @@ def get_job_applications(limit: int = 50, offset: int = 0, job_id: str = None, e
         if em_id:
             where_parts.append("j.em_id = %s")
             params.append(em_id)
+        if fl_id:
+            where_parts.append("ja.fl_id = %s")
+            params.append(fl_id)
+        if application_status:
+            where_parts.append("ja.application_status = %s")
+            params.append(application_status)
         where = ("WHERE " + " AND ".join(where_parts)) if where_parts else ""
         params += [limit, offset]
         cursor.execute(
             f"""
             SELECT ja.job_application_id, ja.job_id, j.job_title,
+                   j.job_start_date, j.job_end_date, j.job_price,
+                   j.job_status, j.job_required_seat, j.job_required_vehicle_type,
+                   j.em_id, e.em_name AS company,
                    ja.fl_id, f.fl_name AS driver_name,
                    ja.application_status, ja.applied_at, ja.updated_at
             FROM job_applications ja
             JOIN jobs j ON ja.job_id = j.job_id
             JOIN freelancers f ON ja.fl_id = f.fl_id
+            LEFT JOIN employers e ON j.em_id = e.em_id
             {where}
             ORDER BY ja.applied_at DESC
             LIMIT %s OFFSET %s
@@ -431,6 +448,45 @@ def get_job_applications(limit: int = 50, offset: int = 0, job_id: str = None, e
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
         return {"error": str(e), "items": []}
+    finally:
+        if conn:
+            conn.close()
+
+
+@router.post("/job-applications")
+def apply_for_job(data: dict):
+    conn = None
+    try:
+        job_id = data.get("job_id")
+        fl_id = data.get("fl_id")
+        if not job_id or not fl_id:
+            raise HTTPException(status_code=400, detail="job_id and fl_id are required.")
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT job_status FROM jobs WHERE job_id = %s", (job_id,))
+        job = cursor.fetchone()
+        if not job:
+            raise HTTPException(status_code=404, detail="Job not found.")
+        if job["job_status"] != "OPEN":
+            raise HTTPException(status_code=400, detail="This job is no longer open.")
+        cursor.execute(
+            "SELECT job_application_id FROM job_applications WHERE job_id = %s AND fl_id = %s",
+            (job_id, fl_id)
+        )
+        if cursor.fetchone():
+            raise HTTPException(status_code=409, detail="You have already applied for this job.")
+        cursor.execute(
+            "INSERT INTO job_applications (job_id, fl_id, application_status) VALUES (%s, %s, 'APPLIED')",
+            (job_id, fl_id)
+        )
+        conn.commit()
+        return {"success": True, "job_application_id": cursor.lastrowid}
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
     finally:
         if conn:
             conn.close()
@@ -791,34 +847,29 @@ def delete_job(job_id: str, x_admin_id: Optional[str] = Header(None, alias="X-Ad
         if conn:
             conn.close()
 
-@router.post("/job-applications")
-def apply_for_job(data: dict):
+@router.delete("/job-applications/{application_id}")
+def cancel_job_application(application_id: int, fl_id: int):
     conn = None
     try:
-        job_id = data.get("job_id")
-        fl_id = data.get("fl_id")
-        if not job_id or not fl_id:
-            raise HTTPException(status_code=400, detail="job_id and fl_id are required.")
         conn = get_connection()
         cursor = get_cursor(conn)
-        cursor.execute("SELECT job_status FROM jobs WHERE job_id = %s", (job_id,))
-        job = cursor.fetchone()
-        if not job:
-            raise HTTPException(status_code=404, detail="Job not found.")
-        if job["job_status"] != "OPEN":
-            raise HTTPException(status_code=400, detail="This job is no longer open for applications.")
         cursor.execute(
-            "SELECT job_application_id FROM job_applications WHERE job_id = %s AND fl_id = %s",
-            (job_id, fl_id)
+            "SELECT application_status, fl_id FROM job_applications WHERE job_application_id = %s",
+            (application_id,)
         )
-        if cursor.fetchone():
-            raise HTTPException(status_code=409, detail="You have already applied for this job.")
+        app = cursor.fetchone()
+        if not app:
+            raise HTTPException(status_code=404, detail="Application not found.")
+        if app["fl_id"] != fl_id:
+            raise HTTPException(status_code=403, detail="Not authorized.")
+        if app["application_status"] not in ("APPLIED",):
+            raise HTTPException(status_code=400, detail="Cannot cancel this application.")
         cursor.execute(
-            "INSERT INTO job_applications (job_id, fl_id, application_status) VALUES (%s, %s, 'APPLIED')",
-            (job_id, fl_id)
+            "DELETE FROM job_applications WHERE job_application_id = %s",
+            (application_id,)
         )
         conn.commit()
-        return {"success": True, "job_application_id": cursor.lastrowid}
+        return {"success": True}
     except HTTPException:
         raise
     except Exception as e:
