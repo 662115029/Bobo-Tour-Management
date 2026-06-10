@@ -463,6 +463,12 @@ def apply_for_job(data: dict):
             raise HTTPException(status_code=400, detail="job_id and fl_id are required.")
         conn = get_connection()
         cursor = get_cursor(conn)
+        cursor.execute("SELECT fl_verify_status FROM freelancers WHERE fl_id = %s", (fl_id,))
+        fl = cursor.fetchone()
+        if not fl:
+            raise HTTPException(status_code=404, detail="Freelancer not found.")
+        if fl["fl_verify_status"] != "VERIFIED":
+            raise HTTPException(status_code=403, detail="Your account must be verified before applying for jobs.")
         cursor.execute("SELECT job_status FROM jobs WHERE job_id = %s", (job_id,))
         job = cursor.fetchone()
         if not job:
@@ -735,6 +741,10 @@ def accept_application(application_id: int, data: Optional[dict] = Body(default=
         app = cursor.fetchone()
         if not app:
             raise HTTPException(status_code=404, detail="Application not found")
+        cursor.execute("SELECT fl_verify_status FROM freelancers WHERE fl_id = %s", (app["fl_id"],))
+        fl = cursor.fetchone()
+        if not fl or fl["fl_verify_status"] != "VERIFIED":
+            raise HTTPException(status_code=403, detail="Your account must be verified before accepting a job.")
         if em_id:
             cursor.execute("SELECT job_id FROM jobs WHERE job_id = %s AND em_id = %s", (app["job_id"], em_id))
             if not cursor.fetchone():
