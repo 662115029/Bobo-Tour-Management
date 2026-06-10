@@ -84,8 +84,8 @@
 
         </div>
 
-        <!-- Selected range summary -->
-        <div v-if="displayStart || displayEnd" class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm px-4 py-3">
+        <!-- Selected range summary (always visible) -->
+        <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm px-4 py-3">
           <div class="grid grid-cols-2 gap-3">
             <div>
               <p class="text-[11px] font-bold text-[#bbb] uppercase tracking-widest mb-0.5">Start</p>
@@ -97,6 +97,7 @@
             </div>
           </div>
           <p v-if="selectedDays > 0" class="text-[12px] text-[#888] mt-2">{{ selectedDays }} day{{ selectedDays > 1 ? 's' : '' }} selected</p>
+          <p v-else-if="!displayStart && !displayEnd" class="text-[12px] text-[#bbb] mt-2">No availability set yet.</p>
           <p v-if="selectedDays > 30" class="text-[12px] text-red-500 mt-1">Maximum 30 days allowed.</p>
         </div>
 
