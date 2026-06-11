@@ -20,7 +20,7 @@
     <div v-if="step === 'info'" class="flex-1 overflow-y-auto p-4 space-y-4">
 
       <div class="bg-blue-50 border-l-4 border-blue-400 rounded-lg px-3 py-2.5 text-xs text-blue-700">
-        Fill in basic information — vehicle details and documents can be added later in Profile
+        Fill in basic information - vehicle details and documents can be added later in Profile
       </div>
 
       <div class="space-y-1">

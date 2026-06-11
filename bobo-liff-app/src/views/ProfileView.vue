@@ -253,7 +253,7 @@
                   <label class="block text-xs font-medium text-gray-500 mb-1">{{ vf.label }}</label>
                   <input v-if="isEditingVehicle" v-model="vehicleForm[vf.key]" :type="vf.type || 'text'" :placeholder="vf.placeholder"
                     class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-red-400" />
-                  <p v-else class="text-sm text-gray-800 px-3 py-2.5 border border-gray-100 rounded-xl bg-gray-50">{{ vehicle[vf.key] || '—' }}</p>
+                  <p v-else class="text-sm text-gray-800 px-3 py-2.5 border border-gray-100 rounded-xl bg-gray-50">{{ vehicle[vf.key] || '-' }}</p>
                 </div>
                 <div>
                   <label class="block text-xs font-medium text-gray-500 mb-1">Type</label>
@@ -717,7 +717,7 @@ async function deleteVehicleImage(img) {
 }
 
 function formatDate(dateStr) {
-  if (!dateStr) return '—'
+  if (!dateStr) return '-'
   return new Date(dateStr).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 

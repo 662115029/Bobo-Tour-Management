@@ -89,11 +89,11 @@
           <div class="grid grid-cols-2 gap-3">
             <div>
               <p class="text-[11px] font-bold text-[#bbb] uppercase tracking-widest mb-0.5">Start</p>
-              <p class="text-[13px] font-semibold text-[#222]">{{ displayStart || '—' }}</p>
+              <p class="text-[13px] font-semibold text-[#222]">{{ displayStart || '-' }}</p>
             </div>
             <div>
               <p class="text-[11px] font-bold text-[#bbb] uppercase tracking-widest mb-0.5">End</p>
-              <p class="text-[13px] font-semibold text-[#222]">{{ displayEnd || '—' }}</p>
+              <p class="text-[13px] font-semibold text-[#222]">{{ displayEnd || '-' }}</p>
             </div>
           </div>
           <p v-if="selectedDays > 0" class="text-[12px] text-[#888] mt-2">{{ selectedDays }} day{{ selectedDays > 1 ? 's' : '' }} selected</p>
@@ -282,7 +282,7 @@ async function handleSave() {
 }
 
 function formatDate(dateStr) {
-  if (!dateStr) return '—'
+  if (!dateStr) return '-'
   return new Date(String(dateStr).replace(' ', 'T'))
     .toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
 }

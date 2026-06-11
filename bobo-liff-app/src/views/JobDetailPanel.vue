@@ -28,7 +28,7 @@
               </div>
               <h1 class="text-[17px] font-bold text-[#111] leading-tight mb-1">{{ job.job_title }}</h1>
               <p v-if="job.job_description" class="text-[13px] text-[#888] leading-relaxed mt-1.5 max-w-sm">{{ job.job_description }}</p>
-              <p class="text-[12px] text-[#bbb] mt-1">{{ job.company || job.em_name || '—' }}</p>
+              <p class="text-[12px] text-[#bbb] mt-1">{{ job.company || job.em_name || '-' }}</p>
             </div>
             <div v-if="job.job_price" class="text-right shrink-0">
               <div class="text-[11px] text-[#bbb] tracking-wide font-medium mb-1">Rate (THB)</div>
@@ -44,7 +44,7 @@
             </div>
             <div class="bg-[#f8f9fa] rounded-lg border border-[#eee] px-3 py-2.5">
               <div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium mb-0.5">End Date</div>
-              <div class="text-[13px] font-semibold text-[#222]">{{ formatDate(job.job_end_date) || '—' }}</div>
+              <div class="text-[13px] font-semibold text-[#222]">{{ formatDate(job.job_end_date) || '-' }}</div>
             </div>
             <div class="bg-[#f8f9fa] rounded-lg border border-[#eee] px-3 py-2.5">
               <div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium mb-0.5">Vehicle</div>
@@ -52,7 +52,7 @@
             </div>
             <div class="bg-[#f8f9fa] rounded-lg border border-[#eee] px-3 py-2.5">
               <div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium mb-0.5">Seats Required</div>
-              <div class="text-[13px] font-semibold text-[#222]">{{ job.job_required_seat || '—' }}</div>
+              <div class="text-[13px] font-semibold text-[#222]">{{ job.job_required_seat || '-' }}</div>
             </div>
           </div>
 
@@ -429,7 +429,7 @@ async function handleApply() {
 }
 
 function formatDate(dateStr) {
-  if (!dateStr) return '—'
+  if (!dateStr) return '-'
   return new Date(String(dateStr).replace(' ', 'T'))
     .toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
 }
@@ -443,7 +443,7 @@ function formatTime(val) {
     const m = Math.floor((secs % 3600) / 60)
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
   }
-  // Already HH:MM:SS string — trim to HH:MM
+  // Already HH:MM:SS string - trim to HH:MM
   return String(val).slice(0, 5)
 }
 </script>

@@ -40,8 +40,7 @@
         <!-- Number -->
         <button
           v-else
-          class="h-16 w-16 mx-auto rounded-full flex items-center justify-center text-2xl font-light text-gray-800 bg-white shadow-sm active:bg-gray-100 transition-colors duration-100 select-none"
-          style="box-shadow: 0 2px 8px rgba(0,0,0,0.10);"
+          class="h-16 w-16 mx-auto rounded-full flex items-center justify-center text-2xl font-light text-gray-800 bg-white shadow-md active:bg-gray-100 transition-colors duration-100 select-none"
           @click="pressKey(key)"
         >
           {{ key }}

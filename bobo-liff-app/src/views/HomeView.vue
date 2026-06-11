@@ -55,7 +55,7 @@
 
       <!-- Rich menu -->
       <transition name="slide-up">
-        <div v-if="menuOpen" class="grid grid-rows-2 border-b border-gray-100" style="grid-template-columns: 1fr 1fr 1fr;">
+        <div v-if="menuOpen" class="grid grid-rows-2 grid-cols-3 border-b border-gray-100">
 
           <!-- Login/Register -->
           <button

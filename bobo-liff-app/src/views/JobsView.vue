@@ -47,7 +47,7 @@
               </p>
               <p class="text-[13px] text-[#888] flex items-center gap-1.5">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                {{ item.company || item.em_name || '—' }}
+                {{ item.company || item.em_name || '-' }}
               </p>
               <div class="flex items-center gap-3 pt-0.5">
                 <p v-if="item.job_price" class="text-[14px] font-bold text-[#111]">฿{{ Number(item.job_price).toLocaleString() }}</p>
@@ -138,7 +138,7 @@ function statusBadge(item) {
   return { label: formatJobStatus(s) || s, class: getJobStatusClass(s) }
 }
 function formatDate(dateStr) {
-  if (!dateStr) return '—'
+  if (!dateStr) return '-'
   return new Date(dateStr).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 function daysAgo(dateStr) {
