@@ -131,16 +131,6 @@
             {{ loading ? 'Signing in...' : 'Sign in' }}
           </button>
         </form>
-
-        <p class="mt-6 text-center text-[12px] text-[#888]">
-          Don't have an account?
-          <button type="button"
-            class="text-[#1a1a2e] font-semibold hover:underline border-none bg-transparent cursor-pointer p-0 ml-0.5 transition-colors hover:text-[#06c755]"
-            @click="router.push({ name: 'Register' })"
-          >
-            Register
-          </button>
-        </p>
       </div>
 
     </div>
