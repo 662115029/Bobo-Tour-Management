@@ -1,7 +1,12 @@
 from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
-from typing import Optional, Tuple
+from typing import Optional
 from app.db.connection import get_connection, get_cursor
+from .utils import (
+    validate_password,
+    normalize_admin_login_identifier,
+    validate_profile_update_fields,
+)
 import bcrypt
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -37,26 +42,6 @@ class AdminRegisterRequest(BaseModel):
 class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str
-
-
-_RETRY = " Please verify your details and try again."
-
-
-def _normalize_admin_login_identifier(raw: str) -> Tuple[Optional[str], Optional[str]]:
-    """Strip input; if it looks like an email, require domain admin.com."""
-    s = (raw or "").strip()
-    if not s:
-        return (None, "Username or email is missing." + _RETRY)
-    if "@" in s:
-        local, _, domain = s.rpartition("@")
-        domain_clean = domain.strip()
-        if not local or not domain_clean or "@" in local:
-            return (None, "That email address is not valid (check the part before and after @)." + _RETRY)
-        dom_lower = domain_clean.lower()
-        if dom_lower != "admin.com":
-            return (None, f"Admin email must use the domain @admin.com only (you entered: {domain_clean})." + _RETRY)
-        return s.lower(), None
-    return s, None
 
 
 @router.get("/db/ping")
@@ -172,7 +157,7 @@ def admin_login(request: LoginRequest):
         if not pwd_str:
             return {"success": False, "error": "Password is missing." + _RETRY}
 
-        lookup_key, ident_err = _normalize_admin_login_identifier(request.username)
+        lookup_key, ident_err = normalize_admin_login_identifier(request.username)
         if ident_err:
             return {"success": False, "error": ident_err}
 
@@ -277,7 +262,7 @@ def update_admin(admin_id: str, body: AdminUpdateRequest):
         if body.status is not None and body.status in ("active", "inactive"):
             fields["status"] = body.status
         if not fields:
-            return {"error": "No fields to update"}
+            return {"error": validate_profile_update_fields(fields)}
 
         set_clause = ", ".join(f"{k} = %s" for k in fields)
         values = list(fields.values()) + [admin_id]
@@ -298,66 +283,6 @@ def update_admin(admin_id: str, body: AdminUpdateRequest):
         if conn:
             conn.close()
 
-
-@router.post("/register")
-def admin_register(body: AdminRegisterRequest):
-    conn = None
-    try:
-        username = body.username.strip()
-        email = body.email.strip()
-        name = body.name.strip()
-        password = body.password
-
-        if not username or not email or not name or not password:
-            return {"success": False, "error": "All fields are required."}
-        if not email.lower().endswith("@admin.com"):
-            return {"success": False, "error": "Email must use the @admin.com domain."}
-        if len(password) < 6:
-            return {"success": False, "error": "Password must be at least 6 characters."}
-
-        conn = get_connection()
-        cursor = get_cursor(conn)
-
-        cursor.execute("SELECT admin_id FROM admins WHERE username = %s", (username,))
-        if cursor.fetchone():
-            return {"success": False, "error": "Username already taken."}
-
-        cursor.execute("SELECT admin_id FROM admins WHERE email = %s", (email,))
-        if cursor.fetchone():
-            return {"success": False, "error": "Email already registered."}
-
-        password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
-        cursor.execute(
-            """
-            INSERT INTO admins (admin_id, username, email, name, password_hash, status)
-            VALUES (UUID(), %s, %s, %s, %s, 'active')
-            """,
-            (username, email, name, password_hash)
-        )
-        conn.commit()
-        cursor.execute(
-            "SELECT admin_id, username, email, name, status, created_at FROM admins WHERE username = %s",
-            (username,)
-        )
-        row = cursor.fetchone()
-        return {
-            "success": True,
-            "admin": {
-                "admin_id": row["admin_id"],
-                "username": row["username"],
-                "email": row["email"],
-                "name": row["name"],
-                "status": row["status"],
-                "created_at": row["created_at"],
-            },
-        }
-    except Exception as e:
-        return {"success": False, "error": str(e)}
-    finally:
-        if conn:
-            conn.close()
-
-
 @router.post("/{admin_id}/change-password")
 def change_admin_password(admin_id: str, body: ChangePasswordRequest):
     conn = None
@@ -367,8 +292,9 @@ def change_admin_password(admin_id: str, body: ChangePasswordRequest):
 
         if not current_password or not new_password:
             return {"success": False, "error": "Both current and new passwords are required."}
-        if len(new_password) < 6:
-            return {"success": False, "error": "New password must be at least 6 characters."}
+        pwd_err = validate_password(new_password, min_length=8)
+        if pwd_err:
+            return {"success": False, "error": f"New password: {pwd_err}"}
 
         conn = get_connection()
         cursor = get_cursor(conn)

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from app.db.connection import get_connection, get_cursor
+from .utils import format_time, is_tour_cancellable
 
 router = APIRouter(tags=["tours"])
 
@@ -8,18 +9,6 @@ def _upsert_language(cursor, name: str) -> int:
     cursor.execute("INSERT IGNORE INTO languages (language_name) VALUES (%s)", (name,))
     cursor.execute("SELECT language_id FROM languages WHERE language_name = %s", (name,))
     return cursor.fetchone()["language_id"]
-
-
-def _format_time(val):
-    """Convert seconds int or HH:MM string to HH:MM, return None if empty."""
-    if val is None or val == '':
-        return None
-    try:
-        secs = int(val)
-        h, m = divmod(secs // 60, 60)
-        return f"{h:02d}:{m:02d}"
-    except (ValueError, TypeError):
-        return str(val)[:5] or None
 
 
 @router.get("/tours")
@@ -201,7 +190,7 @@ def create_tour(data: dict):
                     VALUES (%s, %s, %s, %s, %s, %s)
                     """,
                     (job_id, p.get("first_name"), p.get("last_name") or None,
-                     p.get("hotel_name") or None, _format_time(p.get("pickup_time")),
+                     p.get("hotel_name") or None, format_time(p.get("pickup_time")),
                      p.get("note") or None),
                 )
 
@@ -299,7 +288,7 @@ def update_tour(job_id: str, data: dict):
                     VALUES (%s, %s, %s, %s, %s, %s)
                     """,
                     (job_id, p.get("first_name"), p.get("last_name") or None,
-                     p.get("hotel_name") or None, _format_time(p.get("pickup_time")),
+                     p.get("hotel_name") or None, format_time(p.get("pickup_time")),
                      p.get("note") or None),
                 )
 
@@ -340,7 +329,7 @@ def cancel_tour(job_id: str, em_id: str):
         if not job:
             raise HTTPException(status_code=404, detail="Tour not found")
 
-        if job["job_status"] not in ("OPEN", "MATCHING", "MATCHED"):
+        if not is_tour_cancellable(job["job_status"]):
             raise HTTPException(
                 status_code=400,
                 detail=f"Cannot cancel a tour with status '{job['job_status']}'.",

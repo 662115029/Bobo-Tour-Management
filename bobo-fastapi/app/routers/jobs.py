@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Header, Body
 from typing import Optional
 from app.db.connection import get_connection, get_cursor
+from .utils import validate_job_payment_review, sanitize_sort_params
 
 router = APIRouter(tags=["jobs"])
 
@@ -53,7 +54,7 @@ def get_jobs(
             "em_name": "em.em_name",
         }
         sort_col = allowed_sort.get(sort_by, "j.job_updated_at")
-        order = "ASC" if sort_order == "asc" else "DESC"
+        _, order = sanitize_sort_params(sort_by or "", sort_order or "desc", set(allowed_sort.keys()), "job_updated_at")
 
         params += [limit, offset]
         cursor.execute(
@@ -173,39 +174,6 @@ def create_job(data: dict):
                     """,
                     (f"PK{job_id[-6:]}{idx}", job_id, p.get("hotel_name"),
                      p.get("pickup_location"), p.get("pickup_time"), idx + 1),
-                )
-
-        for idx, c in enumerate(data.get("job_customers", [])):
-            if c.get("customer_name"):
-                cursor.execute(
-                    """
-                    INSERT INTO job_customers (job_customer_id, job_id, customer_name, pax_count, note)
-                    VALUES (%s, %s, %s, %s, %s)
-                    """,
-                    (f"CUS{job_id[-6:]}{idx}", job_id, c.get("customer_name"),
-                     c.get("pax_count"), c.get("note")),
-                )
-
-        for idx, inc in enumerate(data.get("job_inclusions", [])):
-            if inc.get("description"):
-                cursor.execute(
-                    """
-                    INSERT INTO job_inclusions (job_inclusion_id, job_id, inclusion_type, description, sequence)
-                    VALUES (%s, %s, %s, %s, %s)
-                    """,
-                    (f"INC{job_id[-6:]}{idx}", job_id, inc.get("inclusion_type"),
-                     inc.get("description"), idx + 1),
-                )
-
-        for idx, fee in enumerate(data.get("job_entrance_fees", [])):
-            if fee.get("place_name"):
-                cursor.execute(
-                    """
-                    INSERT INTO job_entrance_fees (job_entrance_fee_id, job_id, place_name, thai_price, foreigner_price, sequence)
-                    VALUES (%s, %s, %s, %s, %s, %s)
-                    """,
-                    (f"EF{job_id[-6:]}{idx}", job_id, fee.get("place_name"),
-                     fee.get("thai_price"), fee.get("foreigner_price"), idx + 1),
                 )
 
         conn.commit()
@@ -398,14 +366,8 @@ def get_job_expenses(limit: int = 50, offset: int = 0, job_id: str = None, em_id
 
 
 @router.get("/job-applications")
-def get_job_applications(
-    limit: int = 50,
-    offset: int = 0,
-    job_id: str = None,
-    em_id: str = None,
-    fl_id: Optional[int] = None,
-    application_status: str = None,
-):
+def get_job_applications(limit: int = 50, offset: int = 0, job_id: str = None, em_id: str = None,
+                          fl_id: str = None, application_status: str = None):
     conn = None
     try:
         conn = get_connection()
@@ -429,15 +391,11 @@ def get_job_applications(
         cursor.execute(
             f"""
             SELECT ja.job_application_id, ja.job_id, j.job_title,
-                   j.job_start_date, j.job_end_date, j.job_price,
-                   j.job_status, j.job_required_seat, j.job_required_vehicle_type,
-                   j.em_id, e.em_name AS company,
                    ja.fl_id, f.fl_name AS driver_name,
                    ja.application_status, ja.applied_at, ja.updated_at
             FROM job_applications ja
             JOIN jobs j ON ja.job_id = j.job_id
             JOIN freelancers f ON ja.fl_id = f.fl_id
-            LEFT JOIN employers e ON j.em_id = e.em_id
             {where}
             ORDER BY ja.applied_at DESC
             LIMIT %s OFFSET %s
@@ -454,35 +412,41 @@ def get_job_applications(
 
 
 @router.post("/job-applications")
-def apply_for_job(data: dict):
+def create_job_application(body: dict):
     conn = None
     try:
-        job_id = data.get("job_id")
-        fl_id = data.get("fl_id")
+        job_id = body.get("job_id")
+        fl_id = body.get("fl_id")
         if not job_id or not fl_id:
             raise HTTPException(status_code=400, detail="job_id and fl_id are required.")
+
         conn = get_connection()
         cursor = get_cursor(conn)
-        cursor.execute("SELECT fl_verify_status FROM freelancers WHERE fl_id = %s", (fl_id,))
-        fl = cursor.fetchone()
-        if not fl:
-            raise HTTPException(status_code=404, detail="Freelancer not found.")
-        if fl["fl_verify_status"] != "VERIFIED":
-            raise HTTPException(status_code=403, detail="Your account must be verified before applying for jobs.")
-        cursor.execute("SELECT job_status FROM jobs WHERE job_id = %s", (job_id,))
+
+        cursor.execute("SELECT job_id, job_status FROM jobs WHERE job_id = %s", (job_id,))
         job = cursor.fetchone()
         if not job:
             raise HTTPException(status_code=404, detail="Job not found.")
-        if job["job_status"] != "OPEN":
-            raise HTTPException(status_code=400, detail="This job is no longer open.")
+
+        cursor.execute("SELECT fl_verify_status FROM freelancers WHERE fl_id = %s", (fl_id,))
+        freelancer = cursor.fetchone()
+        if not freelancer:
+            raise HTTPException(status_code=404, detail="Freelancer not found.")
+        if freelancer["fl_verify_status"] != "VERIFIED":
+            raise HTTPException(status_code=403, detail="Your account must be verified before applying for jobs.")
+
         cursor.execute(
             "SELECT job_application_id FROM job_applications WHERE job_id = %s AND fl_id = %s",
             (job_id, fl_id)
         )
         if cursor.fetchone():
             raise HTTPException(status_code=409, detail="You have already applied for this job.")
+
         cursor.execute(
-            "INSERT INTO job_applications (job_id, fl_id, application_status) VALUES (%s, %s, 'APPLIED')",
+            """
+            INSERT INTO job_applications (job_id, fl_id, application_status)
+            VALUES (%s, %s, 'APPLIED')
+            """,
             (job_id, fl_id)
         )
         conn.commit()
@@ -497,6 +461,46 @@ def apply_for_job(data: dict):
         if conn:
             conn.close()
 
+
+@router.delete("/job-applications/{application_id}")
+def cancel_job_application(application_id: int, fl_id: Optional[int] = None):
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute(
+            "SELECT job_application_id, fl_id, application_status FROM job_applications WHERE job_application_id = %s",
+            (application_id,)
+        )
+        app = cursor.fetchone()
+        if not app:
+            raise HTTPException(status_code=404, detail="Application not found.")
+        if fl_id and str(app["fl_id"]) != str(fl_id):
+            raise HTTPException(status_code=403, detail="Access denied.")
+        if app["application_status"] != "APPLIED":
+            raise HTTPException(
+                status_code=400,
+                detail=f"Cannot cancel an application with status '{app['application_status']}'.",
+            )
+
+        cursor.execute("DELETE FROM job_applications WHERE job_application_id = %s", (application_id,))
+        conn.commit()
+        return {"success": True}
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
+
+# kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+# kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+# kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+# kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+# kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
 
 @router.get("/job-payments")
 def get_job_payments(limit: int = 50, offset: int = 0, job_id: int = None):
@@ -670,10 +674,9 @@ def review_job_payment(job_id: int, data: dict):
         reject_reason = data.get("reject_reason")
         em_id = data.get("em_id")
 
-        if status not in ("CONFIRMED", "REJECTED"):
-            raise HTTPException(status_code=400, detail="status must be CONFIRMED or REJECTED.")
-        if status == "REJECTED" and not reject_reason:
-            raise HTTPException(status_code=400, detail="reject_reason is required when rejecting.")
+        review_err = validate_job_payment_review(status, reject_reason)
+        if review_err:
+            raise HTTPException(status_code=400, detail=review_err)
 
         conn = get_connection()
         cursor = get_cursor(conn)
@@ -729,6 +732,11 @@ def review_job_payment(job_id: int, data: dict):
         if conn:
             conn.close()
 
+# kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+# kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+# kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+# kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+# kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
 
 @router.patch("/job-applications/{application_id}/accept")
 def accept_application(application_id: int, data: Optional[dict] = Body(default={})):
@@ -741,10 +749,6 @@ def accept_application(application_id: int, data: Optional[dict] = Body(default=
         app = cursor.fetchone()
         if not app:
             raise HTTPException(status_code=404, detail="Application not found")
-        cursor.execute("SELECT fl_verify_status FROM freelancers WHERE fl_id = %s", (app["fl_id"],))
-        fl = cursor.fetchone()
-        if not fl or fl["fl_verify_status"] != "VERIFIED":
-            raise HTTPException(status_code=403, detail="Your account must be verified before accepting a job.")
         if em_id:
             cursor.execute("SELECT job_id FROM jobs WHERE job_id = %s AND em_id = %s", (app["job_id"], em_id))
             if not cursor.fetchone():
@@ -853,39 +857,6 @@ def delete_job(job_id: str, x_admin_id: Optional[str] = Header(None, alias="X-Ad
         if conn:
             conn.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to delete job: {str(e)}")
-    finally:
-        if conn:
-            conn.close()
-
-@router.delete("/job-applications/{application_id}")
-def cancel_job_application(application_id: int, fl_id: int):
-    conn = None
-    try:
-        conn = get_connection()
-        cursor = get_cursor(conn)
-        cursor.execute(
-            "SELECT application_status, fl_id FROM job_applications WHERE job_application_id = %s",
-            (application_id,)
-        )
-        app = cursor.fetchone()
-        if not app:
-            raise HTTPException(status_code=404, detail="Application not found.")
-        if app["fl_id"] != fl_id:
-            raise HTTPException(status_code=403, detail="Not authorized.")
-        if app["application_status"] not in ("APPLIED",):
-            raise HTTPException(status_code=400, detail="Cannot cancel this application.")
-        cursor.execute(
-            "DELETE FROM job_applications WHERE job_application_id = %s",
-            (application_id,)
-        )
-        conn.commit()
-        return {"success": True}
-    except HTTPException:
-        raise
-    except Exception as e:
-        if conn:
-            conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
     finally:
         if conn:
             conn.close()

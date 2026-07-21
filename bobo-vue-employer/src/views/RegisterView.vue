@@ -114,6 +114,7 @@
                   <input
                     v-model="form.em_phone"
                     type="tel"
+                    required
                     placeholder="08x xxx xxxx"
                     autocomplete="tel"
                     class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent transition"
@@ -124,6 +125,7 @@
                   <input
                     v-model="form.em_address"
                     type="text"
+                    required
                     placeholder="City, Country"
                     class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent transition"
                   />
@@ -317,6 +319,8 @@ function validateForm() {
   if (usernameState.value === 'taken') return 'Username is already taken.'
   if (!form.em_name.trim())      return 'Full name is required.'
   if (!form.em_email.trim())     return 'Email is required.'
+  if (!form.em_phone.trim())     return 'Phone is required.'
+  if (!form.em_address.trim())   return 'Address is required.'
   if (!form.password)            return 'Password is required.'
   if (form.password.length < 8)  return 'Password must be at least 8 characters.'
   if (passwordStrength.value.score < 2) return 'Password is too weak. Add uppercase letters or numbers.'
@@ -342,8 +346,6 @@ const handleRegister = async () => {
   loading.value = true
   try {
     const { confirmPassword, ...payload } = form
-    if (!payload.em_phone)   delete payload.em_phone
-    if (!payload.em_address) delete payload.em_address
     if (!payload.em_bio)     delete payload.em_bio
 
     const res = await fetch(`${API_BASE}/auth/register`, {

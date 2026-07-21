@@ -2,6 +2,13 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 from app.db.connection import get_connection, get_cursor
+from .utils import (
+    validate_password,
+    validate_doc_review_status,
+    determine_verify_status,
+    sanitize_sort_params,
+    validate_profile_update_fields,
+)
 import bcrypt
 
 router = APIRouter(tags=["employers"])
@@ -47,69 +54,22 @@ class ProfileUpdateRequest(BaseModel):
 
 _EMPLOYER_NOT_FOUND = "Employer not found"
 
-
-@router.post("/employers/register")
-def register_employer(body: EmployerRegisterRequest):
-    conn = None
-    try:
-        conn = get_connection()
-        cursor = get_cursor(conn)
-
-        cursor.execute(
-            "SELECT em_id FROM employers WHERE em_email = %s OR em_username = %s",
-            (body.em_email, body.em_username)
-        )
-        if cursor.fetchone():
-            raise HTTPException(status_code=409, detail="Email or username already taken.")
-
-        cursor.execute(
-            """
-            INSERT INTO employers
-                (em_username, em_email, em_name, em_phone,
-                 em_verify_status, em_is_active)
-            VALUES (%s, %s, %s, %s, 'PENDING', 1)
-            """,
-            (body.em_username, body.em_email, body.em_name, body.em_phone)
-        )
-        em_id = cursor.lastrowid
-
-        cursor.execute(
-            """
-            INSERT INTO em_verification
-                (em_id, em_verify_status, is_latest)
-            VALUES (%s, 'PENDING', 1)
-            """,
-            (em_id,)
-        )
-
-        for doc_type in EM_DOC_TYPES:
-            cursor.execute(
-                """
-                INSERT INTO em_documents
-                    (em_id, em_doc_type, file_url, em_doc_status)
-                VALUES (%s, %s, NULL, 'PENDING')
-                """,
-                (em_id, doc_type)
-            )
-
-        conn.commit()
-        return {"success": True, "em_id": em_id}
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        if conn:
-            conn.rollback()
-        return {"success": False, "error": str(e)}
-    finally:
-        if conn:
-            conn.close()
-
-
 @router.put("/employers/{em_id}")
 def update_employer(em_id: str, body: ProfileUpdateRequest):
     conn = None
     try:
+        fields = {k: v for k, v in {
+            "em_name": body.em_name,
+            "em_email": body.em_email,
+            "em_phone": body.em_phone,
+            "em_address": body.em_address,
+            "em_bio": body.em_bio,
+        }.items() if v is not None}
+
+        fields_err = validate_profile_update_fields(fields)
+        if fields_err:
+            raise HTTPException(status_code=400, detail=fields_err)
+
         conn = get_connection()
         cursor = get_cursor(conn)
         cursor.execute("SELECT em_id FROM employers WHERE em_id = %s", (em_id,))
@@ -154,9 +114,8 @@ def get_employers(limit: int = 10, offset: int = 0, search: str = "", status: st
             params.append(status)
         where_sql = "WHERE " + " AND ".join(where) if where else ""
         params += [limit, offset]
-        allowed_sort = {"em_name","em_rating_avg","em_updated_at","em_created_at"}
-        safe_sort_by = sort_by if sort_by in allowed_sort else "em_updated_at"
-        safe_order = "ASC" if sort_order.lower() == "asc" else "DESC"
+        allowed_sort = {"em_name", "em_rating_avg", "em_updated_at", "em_created_at"}
+        safe_sort_by, safe_order = sanitize_sort_params(sort_by, sort_order, allowed_sort, "em_updated_at")
         cursor.execute(
             f"""
             SELECT em_id, em_username, em_email, em_name, em_phone, em_address, em_bio,
@@ -295,8 +254,9 @@ def change_employer_password(em_id: int, data: dict):
             raise HTTPException(status_code=401, detail="Incorrect current password.")
 
         new_password = data.get("new_password", "")
-        if not new_password or len(new_password) < 6:
-            raise HTTPException(status_code=400, detail="New password must be at least 6 characters.")
+        pwd_err = validate_password(new_password, min_length=8)
+        if pwd_err:
+            raise HTTPException(status_code=400, detail=f"New password: {pwd_err}")
 
         new_hash = bcrypt.hashpw(new_password.encode(), bcrypt.gensalt()).decode()
         cursor.execute(
@@ -438,8 +398,9 @@ def get_em_verification(limit: int = 10, offset: int = 0, status: str = "", em_i
 
 @router.patch("/em-documents/{doc_id}")
 def review_em_document(doc_id: str, body: DocReviewRequest):
-    if body.status not in ("APPROVED", "REJECTED"):
-        raise HTTPException(status_code=400, detail="status must be APPROVED, REJECTED, or PENDING")
+    status_err = validate_doc_review_status(body.status)
+    if status_err:
+        raise HTTPException(status_code=400, detail=status_err)
     conn = None
     try:
         conn = get_connection()
@@ -465,19 +426,24 @@ def review_em_document(doc_id: str, body: DocReviewRequest):
                 """
                 SELECT
                   COUNT(*) AS total,
-                  SUM(CASE WHEN em_doc_status = 'APPROVED' THEN 1 ELSE 0 END) AS approved
+                  SUM(CASE WHEN em_doc_status = 'APPROVED' THEN 1 ELSE 0 END) AS approved,
+                  SUM(CASE WHEN em_doc_status = 'PENDING'  THEN 1 ELSE 0 END) AS pending
                 FROM em_documents
                 WHERE em_id = %s AND file_url IS NOT NULL
                 """,
                 (doc["em_id"],)
             )
             counts = cursor.fetchone()
-            all_approved = counts["total"] == 5 and counts["approved"] == 5
-            if all_approved:
-                cursor.execute(
-                    "UPDATE employers SET em_verify_status = 'VERIFIED' WHERE em_id = %s",
-                    (doc["em_id"],)
-                )
+            new_status = determine_verify_status(
+                counts["total"] or 0,
+                counts["approved"] or 0,
+                counts["pending"] or 0,
+            )
+            cursor.execute(
+                "UPDATE employers SET em_verify_status = %s WHERE em_id = %s",
+                (new_status, doc["em_id"])
+            )
+            if new_status == "VERIFIED":
                 cursor.execute(
                     """
                     UPDATE em_verification SET em_verify_status = 'VERIFIED',
@@ -486,17 +452,12 @@ def review_em_document(doc_id: str, body: DocReviewRequest):
                     """,
                     (body.reviewed_by, doc["em_id"])
                 )
-            else:
-                cursor.execute(
-                    "UPDATE employers SET em_verify_status = 'PENDING' WHERE em_id = %s",
-                    (doc["em_id"],)
-                )
         elif body.status == "REJECTED":
             cursor.execute(
                 """
                 SELECT
                   SUM(CASE WHEN em_doc_status = 'REJECTED' THEN 1 ELSE 0 END) AS rejected,
-                  SUM(CASE WHEN em_doc_status = 'PENDING' THEN 1 ELSE 0 END) AS pending,
+                  SUM(CASE WHEN em_doc_status = 'PENDING'  THEN 1 ELSE 0 END) AS pending,
                   SUM(CASE WHEN em_doc_status = 'APPROVED' THEN 1 ELSE 0 END) AS approved,
                   COUNT(*) AS total
                 FROM em_documents
@@ -505,12 +466,17 @@ def review_em_document(doc_id: str, body: DocReviewRequest):
                 (doc["em_id"],)
             )
             counts = cursor.fetchone()
-            all_rejected = counts["total"] > 0 and counts["pending"] == 0 and counts["approved"] == 0
+            new_status = determine_verify_status(
+                counts["total"] or 0,
+                counts["approved"] or 0,
+                counts["pending"] or 0,
+            )
+            all_rejected = new_status == "NOT_VERIFIED"
+            cursor.execute(
+                "UPDATE employers SET em_verify_status = %s WHERE em_id = %s",
+                (new_status, doc["em_id"])
+            )
             if all_rejected:
-                cursor.execute(
-                    "UPDATE employers SET em_verify_status = 'NOT_VERIFIED' WHERE em_id = %s",
-                    (doc["em_id"],)
-                )
                 cursor.execute(
                     """
                     UPDATE em_verification SET em_verify_status = 'NOT_VERIFIED'
@@ -519,10 +485,6 @@ def review_em_document(doc_id: str, body: DocReviewRequest):
                     (doc["em_id"],)
                 )
             else:
-                cursor.execute(
-                    "UPDATE employers SET em_verify_status = 'PENDING' WHERE em_id = %s",
-                    (doc["em_id"],)
-                )
                 cursor.execute(
                     """
                     UPDATE em_verification SET em_verify_status = 'PENDING'

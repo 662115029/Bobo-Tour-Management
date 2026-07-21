@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 from app.db.connection import get_connection, get_cursor
+from .utils import validate_register_fields
 import bcrypt
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -24,7 +25,7 @@ class RegisterRequest(BaseModel):
     em_username: str
     em_name: str
     password: str
-    em_email: Optional[str] = None
+    em_email: str  # CHANGE: now required (was Optional) to support [A3 - email field is empty]
     em_phone: Optional[str] = None
     em_address: Optional[str] = None
     em_bio: Optional[str] = None
@@ -77,13 +78,38 @@ def employer_login(body: LoginRequest):
             conn.close()
 
 
+@router.post("/logout")
+def logout():
+    """
+    Logout endpoint — Logout (Employer / All roles) use case, Normal Flow step 2.
+
+    Since the system does not use JWT or server-side sessions, there is no
+    token to invalidate here. The endpoint exists as the correct REST contract:
+    the frontend calls this first, then clears its local session state (Pinia /
+    localStorage) and redirects to the Login page.
+
+    If server-side sessions or JWT blacklisting are added in the future, the
+    invalidation logic goes here without any frontend changes needed.
+    """
+    return {"message": "Logged out successfully."}
+
+
 @router.post("/register", status_code=201)
 def employer_register(body: RegisterRequest):
     conn = None
     try:
+        # [A1]-[A5]: required-field, email-required, and password-length checks
+        # (Register (Employer) use case, Normal Flow step 4).
+        field_err = validate_register_fields(body.em_username, body.em_name, body.password, body.em_email)
+        if field_err:
+            raise HTTPException(status_code=400, detail=field_err)
+
         conn = get_connection()
         cursor = get_cursor(conn)
 
+        # [A8]: username uniqueness — authoritative check at submission
+        # (the /auth/check-username endpoint only provides live UI feedback
+        # and does not gate this step).
         cursor.execute(
             "SELECT em_id FROM employers WHERE em_username = %s",
             (body.em_username,)
@@ -91,13 +117,15 @@ def employer_register(body: RegisterRequest):
         if cursor.fetchone():
             raise HTTPException(status_code=409, detail="Username already taken.")
 
-        if body.em_email:
-            cursor.execute(
-                "SELECT em_id FROM employers WHERE em_email = %s",
-                (body.em_email,)
-            )
-            if cursor.fetchone():
-                raise HTTPException(status_code=409, detail="Email already taken.")
+        # [A9]: email uniqueness — authoritative check at submission.
+        # CHANGE: `if body.em_email:` guard removed — em_email is now a
+        # required field (validated in [A3] above), so it is always present.
+        cursor.execute(
+            "SELECT em_id FROM employers WHERE em_email = %s",
+            (body.em_email,)
+        )
+        if cursor.fetchone():
+            raise HTTPException(status_code=409, detail="Email already taken.")
 
         password_hash = bcrypt.hashpw(body.password.encode(), bcrypt.gensalt()).decode()
 
@@ -133,52 +161,3 @@ def employer_register(body: RegisterRequest):
     finally:
         if conn:
             conn.close()
-
-class FreelancerLoginRequest(BaseModel):
-    identifier: str
-    pin: str
-
-
-@router.post("/freelancer-login")
-def freelancer_login(body: FreelancerLoginRequest):
-    conn = None
-    try:
-        conn = get_connection()
-        cursor = get_cursor(conn)
-        cursor.execute(
-            """
-            SELECT fl_id, fl_username, fl_name, fl_email, fl_phone,
-                   fl_pin_hash, fl_profile_image_url, fl_verify_status, fl_is_active
-            FROM freelancers
-            WHERE fl_username = %s OR fl_email = %s
-            """,
-            (body.identifier, body.identifier)
-        )
-        fl = cursor.fetchone()
-        if not fl:
-            raise HTTPException(status_code=401, detail="Invalid username or PIN.")
-        if not fl["fl_is_active"]:
-            raise HTTPException(status_code=403, detail="Account is disabled.")
-        if not bcrypt.checkpw(body.pin.encode(), fl["fl_pin_hash"].encode()):
-            raise HTTPException(status_code=401, detail="Invalid username or PIN.")
-        return {
-            "fl_id": fl["fl_id"],
-            "fl_username": fl["fl_username"],
-            "fl_name": fl["fl_name"],
-            "fl_email": fl["fl_email"],
-            "fl_phone": fl["fl_phone"],
-            "fl_profile_image_url": fl["fl_profile_image_url"],
-            "fl_verify_status": fl["fl_verify_status"],
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        if conn:
-            conn.close()
-
-
-@router.get("/gen-hash")
-def gen_hash(pin: str):
-    return {"hash": bcrypt.hashpw(pin.encode(), bcrypt.gensalt()).decode()}

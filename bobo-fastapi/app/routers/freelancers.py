@@ -1,8 +1,17 @@
-from fastapi import APIRouter, HTTPException, Body
-import bcrypt
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 from app.db.connection import get_connection, get_cursor
+from .utils import (
+    validate_doc_review_status,
+    determine_verify_status,
+    sanitize_sort_params,
+    validate_language_name,
+    validate_freelancer_register_fields,
+    validate_profile_update_fields,
+    validate_pin,
+)
+import bcrypt
 
 router = APIRouter(tags=["freelancers"])
 
@@ -20,8 +29,13 @@ class FreelancerRegisterRequest(BaseModel):
     fl_email: str
     fl_name: str
     fl_phone: str
-    fl_password: str
+    fl_pin: str
     line_user_id: Optional[str] = None
+
+
+class FreelancerLoginRequest(BaseModel):
+    identifier: str
+    pin: str
 
 
 class DocReviewRequest(BaseModel):
@@ -36,10 +50,50 @@ class BanRequest(BaseModel):
     admin_id: str
 
 
+class FreelancerProfileUpdateRequest(BaseModel):
+    fl_name: Optional[str] = None
+    fl_email: Optional[str] = None
+    fl_phone: Optional[str] = None
+    fl_address: Optional[str] = None
+    fl_bio: Optional[str] = None
+    fl_date_of_birth: Optional[str] = None
+    fl_profile_image_url: Optional[str] = None
+
+
+class ChangePinRequest(BaseModel):
+    current_pin: str
+    new_pin: str
+
+
+class VehicleRequest(BaseModel):
+    fl_vehicle_brand: str
+    fl_vehicle_model: str
+    fl_vehicle_year: int
+    fl_vehicle_seat_capa: int
+    fl_vehicle_license_plate: str
+
+
+class AvailabilityRequest(BaseModel):
+    fl_id: int
+    fl_available_start_date: str
+    fl_available_end_date: str
+
+
+class JobApplicationRequest(BaseModel):
+    job_id: int
+    fl_id: int
+
+
 @router.post("/freelancers/register")
 def register_freelancer(body: FreelancerRegisterRequest):
     conn = None
     try:
+        field_err = validate_freelancer_register_fields(
+            body.fl_username, body.fl_name, body.fl_email, body.fl_pin
+        )
+        if field_err:
+            raise HTTPException(status_code=400, detail=field_err)
+
         conn = get_connection()
         cursor = get_cursor(conn)
 
@@ -50,13 +104,13 @@ def register_freelancer(body: FreelancerRegisterRequest):
         if cursor.fetchone():
             raise HTTPException(status_code=409, detail="Email or username already taken.")
 
-        pin_hash = bcrypt.hashpw(body.fl_password.encode(), bcrypt.gensalt()).decode()
+        pin_hash = bcrypt.hashpw(body.fl_pin.encode(), bcrypt.gensalt()).decode()
 
         cursor.execute(
             """
             INSERT INTO freelancers
-                (line_user_id, fl_username, fl_email, fl_name, fl_phone,
-                 fl_pin_hash, fl_verify_status, fl_is_active)
+                (line_user_id, fl_username, fl_email, fl_name, fl_phone, fl_pin_hash,
+                 fl_verify_status, fl_is_active)
             VALUES (%s, %s, %s, %s, %s, %s, 'PENDING', 1)
             """,
             (body.line_user_id, body.fl_username,
@@ -95,6 +149,42 @@ def register_freelancer(body: FreelancerRegisterRequest):
     finally:
         if conn:
             conn.close()
+
+
+@router.post("/freelancers/login")
+def freelancer_login(body: FreelancerLoginRequest):
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute(
+            """
+            SELECT fl_id, fl_username, fl_name, fl_email, fl_pin_hash, fl_profile_image_url
+            FROM freelancers WHERE fl_username = %s OR fl_email = %s
+            """,
+            (body.identifier, body.identifier)
+        )
+        freelancer = cursor.fetchone()
+        if not freelancer:
+            raise HTTPException(status_code=401, detail="Invalid username/email or PIN.")
+        if not bcrypt.checkpw(body.pin.encode(), freelancer["fl_pin_hash"].encode()):
+            raise HTTPException(status_code=401, detail="Invalid username/email or PIN.")
+        return {
+            "fl_id": freelancer["fl_id"],
+            "fl_username": freelancer["fl_username"],
+            "fl_name": freelancer["fl_name"],
+            "fl_email": freelancer["fl_email"],
+            "fl_profile_image_url": freelancer["fl_profile_image_url"],
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
+
+
 @router.get("/freelancers")
 @router.get("/admin/freelancers")
 def get_freelancers(limit: int = 10, offset: int = 0, search: str = "", status: str = "", sort_by: str = "fl_updated_at", sort_order: str = "desc"):
@@ -112,9 +202,8 @@ def get_freelancers(limit: int = 10, offset: int = 0, search: str = "", status: 
             params.append(status)
         where_sql = "WHERE " + " AND ".join(where) if where else ""
         params += [limit, offset]
-        allowed_sort = {"fl_name","fl_rating_avg","fl_updated_at","fl_created_at"}
-        safe_sort_by = sort_by if sort_by in allowed_sort else "fl_updated_at"
-        safe_order = "ASC" if sort_order.lower() == "asc" else "DESC"
+        allowed_sort = {"fl_name", "fl_rating_avg", "fl_updated_at", "fl_created_at"}
+        safe_sort_by, safe_order = sanitize_sort_params(sort_by, sort_order, allowed_sort, "fl_updated_at")
         cursor.execute(
             f"""
             SELECT fl_id, line_user_id, fl_username, fl_email, fl_name, fl_date_of_birth,
@@ -163,6 +252,95 @@ def get_freelancer(fl_id: str):
     finally:
         if conn:
             conn.close()
+
+
+@router.put("/freelancers/{fl_id}")
+def update_freelancer(fl_id: str, body: FreelancerProfileUpdateRequest):
+    conn = None
+    try:
+        fields = {k: v for k, v in {
+            "fl_name": body.fl_name,
+            "fl_email": body.fl_email,
+            "fl_phone": body.fl_phone,
+            "fl_address": body.fl_address,
+            "fl_bio": body.fl_bio,
+            "fl_date_of_birth": body.fl_date_of_birth,
+        }.items() if v is not None}
+
+        fields_err = validate_profile_update_fields(fields)
+        if fields_err and body.fl_profile_image_url is None:
+            raise HTTPException(status_code=400, detail=fields_err)
+
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT fl_id FROM freelancers WHERE fl_id = %s", (fl_id,))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Freelancer not found")
+
+        cursor.execute(
+            """
+            UPDATE freelancers
+            SET fl_name = COALESCE(%s, fl_name),
+                fl_email = COALESCE(%s, fl_email),
+                fl_phone = COALESCE(%s, fl_phone),
+                fl_address = COALESCE(%s, fl_address),
+                fl_bio = COALESCE(%s, fl_bio),
+                fl_date_of_birth = COALESCE(%s, fl_date_of_birth),
+                fl_profile_image_url = COALESCE(%s, fl_profile_image_url)
+            WHERE fl_id = %s
+            """,
+            (body.fl_name, body.fl_email, body.fl_phone, body.fl_address,
+             body.fl_bio, body.fl_date_of_birth, body.fl_profile_image_url, fl_id)
+        )
+        conn.commit()
+        return {"status": "updated"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
+
+
+@router.patch("/freelancers/{fl_id}/pin")
+def change_freelancer_pin(fl_id: str, body: ChangePinRequest):
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT fl_pin_hash FROM freelancers WHERE fl_id = %s", (fl_id,))
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Freelancer not found")
+
+        if not bcrypt.checkpw(body.current_pin.encode(), row["fl_pin_hash"].encode()):
+            raise HTTPException(status_code=401, detail="Current PIN is incorrect.")
+
+        pin_err = validate_pin(body.new_pin)
+        if pin_err:
+            raise HTTPException(status_code=400, detail=f"New PIN: {pin_err}")
+
+        new_hash = bcrypt.hashpw(body.new_pin.encode(), bcrypt.gensalt()).decode()
+        cursor.execute(
+            "UPDATE freelancers SET fl_pin_hash = %s WHERE fl_id = %s",
+            (new_hash, fl_id)
+        )
+        conn.commit()
+        return {"success": True, "message": "PIN updated successfully."}
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
+
+
 @router.get("/fl-bank-accounts")
 def get_fl_bank_accounts(limit: int = 10, offset: int = 0, fl_id: Optional[int] = None):
     conn = None
@@ -221,6 +399,105 @@ def get_fl_vehicle(limit: int = 10, offset: int = 0, fl_id: Optional[int] = None
     finally:
         if conn:
             conn.close()
+
+
+@router.post("/fl-vehicle")
+def create_fl_vehicle(fl_id: int, body: VehicleRequest):
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT fl_id FROM freelancers WHERE fl_id = %s", (fl_id,))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Freelancer not found")
+
+        cursor.execute("SELECT fl_vehicle_id FROM fl_vehicle WHERE fl_id = %s", (fl_id,))
+        if cursor.fetchone():
+            raise HTTPException(status_code=409, detail="Vehicle already exists for this freelancer. Use PUT to update.")
+
+        cursor.execute(
+            """
+            INSERT INTO fl_vehicle
+                (fl_id, fl_vehicle_brand, fl_vehicle_model, fl_vehicle_year,
+                 fl_vehicle_seat_capa, fl_vehicle_license_plate)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            """,
+            (fl_id, body.fl_vehicle_brand, body.fl_vehicle_model, body.fl_vehicle_year,
+             body.fl_vehicle_seat_capa, body.fl_vehicle_license_plate)
+        )
+        conn.commit()
+        return {"success": True, "fl_vehicle_id": cursor.lastrowid}
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
+
+
+@router.put("/fl-vehicle/{vehicle_id}")
+def update_fl_vehicle(vehicle_id: str, body: VehicleRequest):
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT fl_vehicle_id FROM fl_vehicle WHERE fl_vehicle_id = %s", (vehicle_id,))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Vehicle not found")
+
+        cursor.execute(
+            """
+            UPDATE fl_vehicle
+            SET fl_vehicle_brand = %s, fl_vehicle_model = %s, fl_vehicle_year = %s,
+                fl_vehicle_seat_capa = %s, fl_vehicle_license_plate = %s,
+                fl_vehicle_updated_at = NOW()
+            WHERE fl_vehicle_id = %s
+            """,
+            (body.fl_vehicle_brand, body.fl_vehicle_model, body.fl_vehicle_year,
+             body.fl_vehicle_seat_capa, body.fl_vehicle_license_plate, vehicle_id)
+        )
+        conn.commit()
+        return {"success": True}
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
+
+
+@router.delete("/fl-vehicle/{vehicle_id}/images/{image_id}")
+def delete_fl_vehicle_image(vehicle_id: str, image_id: str):
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute(
+            "SELECT fl_vehicle_image_id FROM fl_vehicle_images WHERE fl_vehicle_image_id = %s AND fl_vehicle_id = %s",
+            (image_id, vehicle_id)
+        )
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Vehicle image not found")
+        cursor.execute("DELETE FROM fl_vehicle_images WHERE fl_vehicle_image_id = %s", (image_id,))
+        conn.commit()
+        return {"success": True}
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
+
+
 @router.get("/fl-vehicle-images")
 def get_fl_vehicle_images(limit: int = 10, offset: int = 0, fl_id: Optional[int] = None):
     conn = None
@@ -279,6 +556,73 @@ def get_fl_languages(limit: int = 10, offset: int = 0, fl_id: Optional[int] = No
     finally:
         if conn:
             conn.close()
+
+
+@router.post("/fl-languages")
+def add_fl_language(data: dict):
+    conn = None
+    try:
+        fl_id = data.get("fl_id")
+        name, name_err = validate_language_name(data.get("language_name"))
+        if name_err:
+            raise HTTPException(status_code=400, detail=name_err)
+        if not fl_id:
+            raise HTTPException(status_code=400, detail="fl_id is required.")
+
+        conn = get_connection()
+        cursor = get_cursor(conn)
+
+        cursor.execute(
+            "SELECT language_id, language_name FROM languages WHERE LOWER(language_name) = LOWER(%s)",
+            (name,)
+        )
+        lang = cursor.fetchone()
+        if not lang:
+            cursor.execute("INSERT INTO languages (language_name) VALUES (%s)", (name,))
+            language_id = cursor.lastrowid
+            language_name = name
+        else:
+            language_id = lang["language_id"]
+            language_name = lang["language_name"]
+
+        cursor.execute(
+            "INSERT IGNORE INTO fl_languages (fl_id, language_id) VALUES (%s, %s)",
+            (fl_id, language_id)
+        )
+        conn.commit()
+        return {"fl_id": fl_id, "language_id": language_id, "language_name": language_name}
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
+
+
+@router.delete("/fl-languages/{fl_id}/{language_id}")
+def remove_fl_language(fl_id: str, language_id: str):
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute(
+            "DELETE FROM fl_languages WHERE fl_id = %s AND language_id = %s",
+            (fl_id, language_id)
+        )
+        conn.commit()
+        return {"success": True}
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
+
+
 @router.get("/fl-pickup-areas")
 def get_fl_pickup_areas(limit: int = 10, offset: int = 0, fl_id: Optional[int] = None):
     conn = None
@@ -307,6 +651,73 @@ def get_fl_pickup_areas(limit: int = 10, offset: int = 0, fl_id: Optional[int] =
     finally:
         if conn:
             conn.close()
+
+
+@router.post("/fl-pickup-areas")
+def add_fl_pickup_area(data: dict):
+    conn = None
+    try:
+        fl_id = data.get("fl_id")
+        area_name = (data.get("area_name") or "").strip()
+        if not area_name:
+            raise HTTPException(status_code=400, detail="area_name is required.")
+        if not fl_id:
+            raise HTTPException(status_code=400, detail="fl_id is required.")
+
+        conn = get_connection()
+        cursor = get_cursor(conn)
+
+        cursor.execute(
+            "SELECT area_id, area_name FROM areas WHERE LOWER(area_name) = LOWER(%s)",
+            (area_name,)
+        )
+        area = cursor.fetchone()
+        if not area:
+            cursor.execute("INSERT INTO areas (area_name) VALUES (%s)", (area_name,))
+            area_id = cursor.lastrowid
+            result_area_name = area_name
+        else:
+            area_id = area["area_id"]
+            result_area_name = area["area_name"]
+
+        cursor.execute(
+            "INSERT IGNORE INTO fl_pickup_areas (fl_id, area_id) VALUES (%s, %s)",
+            (fl_id, area_id)
+        )
+        conn.commit()
+        return {"fl_id": fl_id, "area_id": area_id, "area_name": result_area_name}
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
+
+
+@router.delete("/fl-pickup-areas/{fl_id}/{area_id}")
+def remove_fl_pickup_area(fl_id: str, area_id: str):
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute(
+            "DELETE FROM fl_pickup_areas WHERE fl_id = %s AND area_id = %s",
+            (fl_id, area_id)
+        )
+        conn.commit()
+        return {"success": True}
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
+
+
 @router.get("/fl-availability")
 def get_fl_availability(limit: int = 10, offset: int = 0, fl_id: Optional[int] = None):
     conn = None
@@ -335,6 +746,70 @@ def get_fl_availability(limit: int = 10, offset: int = 0, fl_id: Optional[int] =
     finally:
         if conn:
             conn.close()
+
+
+@router.post("/fl-availability")
+def save_fl_availability(body: AvailabilityRequest):
+    conn = None
+    try:
+        if body.fl_available_end_date < body.fl_available_start_date:
+            raise HTTPException(status_code=400, detail="End date must be on or after the start date.")
+
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT fl_id FROM freelancers WHERE fl_id = %s", (body.fl_id,))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Freelancer not found")
+
+        cursor.execute("SELECT fl_available_id FROM fl_availability WHERE fl_id = %s", (body.fl_id,))
+        existing = cursor.fetchone()
+
+        try:
+            if existing:
+                cursor.execute(
+                    """
+                    UPDATE fl_availability
+                    SET fl_available_start_date = %s, fl_available_end_date = %s,
+                        is_active = TRUE, updated_at = NOW()
+                    WHERE fl_id = %s
+                    """,
+                    (body.fl_available_start_date, body.fl_available_end_date, body.fl_id)
+                )
+            else:
+                cursor.execute(
+                    """
+                    INSERT INTO fl_availability (fl_id, fl_available_start_date, fl_available_end_date)
+                    VALUES (%s, %s, %s)
+                    """,
+                    (body.fl_id, body.fl_available_start_date, body.fl_available_end_date)
+                )
+        except Exception as db_err:
+            if conn:
+                conn.rollback()
+            if "chk_availability" in str(db_err).lower() or "constraint" in str(db_err).lower():
+                raise HTTPException(
+                    status_code=400,
+                    detail="Date range must be at most 30 days, with the end date on or after the start date.",
+                )
+            raise
+
+        conn.commit()
+        return {
+            "fl_id": body.fl_id,
+            "fl_available_start_date": body.fl_available_start_date,
+            "fl_available_end_date": body.fl_available_end_date,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
+
+
 @router.get("/fl-documents")
 def get_fl_documents(limit: int = 10, offset: int = 0, status: str = "", fl_id: Optional[int] = None, fl_ids: str = ""):
     conn = None
@@ -420,8 +895,9 @@ def get_fl_verification(limit: int = 10, offset: int = 0, status: str = "PENDING
             conn.close()
 @router.patch("/fl-documents/{doc_id}")
 def review_fl_document(doc_id: str, body: DocReviewRequest):
-    if body.status not in ("APPROVED", "REJECTED", "PENDING"):
-        raise HTTPException(status_code=400, detail="status must be APPROVED, REJECTED, or PENDING")
+    status_err = validate_doc_review_status(body.status)
+    if status_err:
+        raise HTTPException(status_code=400, detail=status_err)
     conn = None
     try:
         conn = get_connection()
@@ -445,16 +921,25 @@ def review_fl_document(doc_id: str, body: DocReviewRequest):
         if body.status == "APPROVED":
             cursor.execute(
                 """
-                SELECT COUNT(*) AS c FROM fl_documents
-                WHERE fl_id = %s AND fl_doc_status != 'APPROVED' AND file_url IS NOT NULL
+                SELECT COUNT(*) AS total,
+                  SUM(CASE WHEN fl_doc_status = 'APPROVED' THEN 1 ELSE 0 END) AS approved,
+                  SUM(CASE WHEN fl_doc_status = 'PENDING'  THEN 1 ELSE 0 END) AS pending
+                FROM fl_documents
+                WHERE fl_id = %s AND file_url IS NOT NULL
                 """,
                 (doc["fl_id"],)
             )
-            if cursor.fetchone()["c"] == 0:
-                cursor.execute(
-                    "UPDATE freelancers SET fl_verify_status = 'VERIFIED' WHERE fl_id = %s",
-                    (doc["fl_id"],)
-                )
+            counts = cursor.fetchone()
+            new_status = determine_verify_status(
+                counts["total"] or 0,
+                counts["approved"] or 0,
+                counts["pending"] or 0,
+            )
+            cursor.execute(
+                "UPDATE freelancers SET fl_verify_status = %s WHERE fl_id = %s",
+                (new_status, doc["fl_id"])
+            )
+            if new_status == "VERIFIED":
                 cursor.execute(
                     """
                     UPDATE fl_verification SET fl_verify_status = 'VERIFIED',
@@ -465,7 +950,10 @@ def review_fl_document(doc_id: str, body: DocReviewRequest):
                 )
             else:
                 cursor.execute(
-                    "UPDATE freelancers SET fl_verify_status = 'PENDING' WHERE fl_id = %s",
+                    """
+                    UPDATE fl_verification SET fl_verify_status = 'PENDING'
+                    WHERE fl_id = %s AND is_latest = 1
+                    """,
                     (doc["fl_id"],)
                 )
         elif body.status == "REJECTED":
@@ -473,7 +961,7 @@ def review_fl_document(doc_id: str, body: DocReviewRequest):
                 """
                 SELECT
                   SUM(CASE WHEN fl_doc_status = 'REJECTED' THEN 1 ELSE 0 END) AS rejected,
-                  SUM(CASE WHEN fl_doc_status = 'PENDING' THEN 1 ELSE 0 END) AS pending,
+                  SUM(CASE WHEN fl_doc_status = 'PENDING'  THEN 1 ELSE 0 END) AS pending,
                   SUM(CASE WHEN fl_doc_status = 'APPROVED' THEN 1 ELSE 0 END) AS approved,
                   COUNT(*) AS total
                 FROM fl_documents
@@ -482,12 +970,17 @@ def review_fl_document(doc_id: str, body: DocReviewRequest):
                 (doc["fl_id"],)
             )
             counts = cursor.fetchone()
-            all_rejected = counts["total"] > 0 and counts["pending"] == 0 and counts["approved"] == 0
+            new_status = determine_verify_status(
+                counts["total"] or 0,
+                counts["approved"] or 0,
+                counts["pending"] or 0,
+            )
+            all_rejected = new_status == "NOT_VERIFIED"
+            cursor.execute(
+                "UPDATE freelancers SET fl_verify_status = %s WHERE fl_id = %s",
+                (new_status, doc["fl_id"])
+            )
             if all_rejected:
-                cursor.execute(
-                    "UPDATE freelancers SET fl_verify_status = 'NOT_VERIFIED' WHERE fl_id = %s",
-                    (doc["fl_id"],)
-                )
                 cursor.execute(
                     """
                     UPDATE fl_verification SET fl_verify_status = 'NOT_VERIFIED'
@@ -495,12 +988,7 @@ def review_fl_document(doc_id: str, body: DocReviewRequest):
                     """,
                     (doc["fl_id"],)
                 )
-
             else:
-                cursor.execute(
-                    "UPDATE freelancers SET fl_verify_status = 'PENDING' WHERE fl_id = %s",
-                    (doc["fl_id"],)
-                )
                 cursor.execute(
                     """
                     UPDATE fl_verification SET fl_verify_status = 'PENDING'
@@ -648,9 +1136,9 @@ def get_languages():
 def create_or_get_language(data: dict):
     conn = None
     try:
-        name = (data.get("language_name") or "").strip()
-        if not name:
-            raise HTTPException(status_code=400, detail="language_name is required")
+        name, name_err = validate_language_name(data.get("language_name"))
+        if name_err:
+            raise HTTPException(status_code=400, detail=name_err)
         conn = get_connection()
         cursor = get_cursor(conn)
         # check if exists (case-insensitive)
@@ -674,373 +1162,3 @@ def create_or_get_language(data: dict):
     finally:
         if conn:
             conn.close()
-
-class FreelancerProfileUpdateRequest(BaseModel):
-    fl_name: Optional[str] = None
-    fl_email: Optional[str] = None
-    fl_phone: Optional[str] = None
-    fl_address: Optional[str] = None
-    fl_bio: Optional[str] = None
-    fl_date_of_birth: Optional[str] = None
-    fl_profile_image_url: Optional[str] = None
-
-
-@router.put("/freelancers/{fl_id}")
-def update_freelancer(fl_id: str, body: FreelancerProfileUpdateRequest):
-    conn = None
-    try:
-        conn = get_connection()
-        cursor = get_cursor(conn)
-        cursor.execute("SELECT fl_id FROM freelancers WHERE fl_id = %s", (fl_id,))
-        if not cursor.fetchone():
-            raise HTTPException(status_code=404, detail="Freelancer not found")
-        cursor.execute(
-            """
-            UPDATE freelancers
-            SET fl_name = COALESCE(%s, fl_name),
-                fl_email = COALESCE(%s, fl_email),
-                fl_phone = COALESCE(%s, fl_phone),
-                fl_address = COALESCE(%s, fl_address),
-                fl_bio = COALESCE(%s, fl_bio),
-                fl_date_of_birth = COALESCE(%s, fl_date_of_birth),
-                fl_profile_image_url = COALESCE(%s, fl_profile_image_url)
-            WHERE fl_id = %s
-            """,
-            (body.fl_name, body.fl_email, body.fl_phone, body.fl_address,
-             body.fl_bio, body.fl_date_of_birth, body.fl_profile_image_url, fl_id)
-        )
-        conn.commit()
-        return {"success": True}
-    except HTTPException:
-        raise
-    except Exception as e:
-        if conn:
-            conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        if conn:
-            conn.close()
-
-
-@router.patch("/freelancers/{fl_id}/pin")
-def change_freelancer_pin(fl_id: str, data: dict):
-    conn = None
-    try:
-        conn = get_connection()
-        cursor = get_cursor(conn)
-        cursor.execute("SELECT fl_pin_hash FROM freelancers WHERE fl_id = %s", (fl_id,))
-        row = cursor.fetchone()
-        if not row:
-            raise HTTPException(status_code=404, detail="Freelancer not found")
-        current_pin = data.get("current_pin", "")
-        if not bcrypt.checkpw(current_pin.encode(), row["fl_pin_hash"].encode()):
-            raise HTTPException(status_code=401, detail="Incorrect current PIN.")
-        new_pin = data.get("new_pin", "")
-        if not new_pin or len(new_pin) != 6 or not new_pin.isdigit():
-            raise HTTPException(status_code=400, detail="New PIN must be 6 digits.")
-        new_hash = bcrypt.hashpw(new_pin.encode(), bcrypt.gensalt()).decode()
-        cursor.execute("UPDATE freelancers SET fl_pin_hash = %s WHERE fl_id = %s", (new_hash, fl_id))
-        conn.commit()
-        return {"success": True}
-    except HTTPException:
-        raise
-    except Exception as e:
-        if conn:
-            conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        if conn:
-            conn.close()
-
-
-class VehicleUpdateRequest(BaseModel):
-    fl_vehicle_brand: Optional[str] = None
-    fl_vehicle_model: Optional[str] = None
-    fl_vehicle_year: Optional[int] = None
-    fl_vehicle_seat_capa: Optional[int] = None
-    fl_vehicle_license_plate: Optional[str] = None
-
-
-@router.put("/fl-vehicle/{vehicle_id}")
-def update_fl_vehicle(vehicle_id: str, body: VehicleUpdateRequest):
-    conn = None
-    try:
-        conn = get_connection()
-        cursor = get_cursor(conn)
-        cursor.execute("SELECT fl_vehicle_id FROM fl_vehicle WHERE fl_vehicle_id = %s", (vehicle_id,))
-        if not cursor.fetchone():
-            raise HTTPException(status_code=404, detail="Vehicle not found")
-        if body.fl_vehicle_seat_capa and not (9 <= body.fl_vehicle_seat_capa <= 13):
-            raise HTTPException(status_code=400, detail="Seat capacity must be between 9 and 13.")
-        cursor.execute(
-            """
-            UPDATE fl_vehicle
-            SET fl_vehicle_brand         = COALESCE(%s, fl_vehicle_brand),
-                fl_vehicle_model         = COALESCE(%s, fl_vehicle_model),
-                fl_vehicle_year          = COALESCE(%s, fl_vehicle_year),
-                fl_vehicle_seat_capa     = COALESCE(%s, fl_vehicle_seat_capa),
-                fl_vehicle_license_plate = COALESCE(%s, fl_vehicle_license_plate)
-            WHERE fl_vehicle_id = %s
-            """,
-            (body.fl_vehicle_brand, body.fl_vehicle_model, body.fl_vehicle_year,
-             body.fl_vehicle_seat_capa, body.fl_vehicle_license_plate, vehicle_id)
-        )
-        conn.commit()
-        return {"success": True}
-    except HTTPException:
-        raise
-    except Exception as e:
-        if conn:
-            conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        if conn:
-            conn.close()
-
-
-@router.post("/fl-languages")
-def add_fl_language(data: dict):
-    conn = None
-    try:
-        fl_id = data.get("fl_id")
-        language_name = (data.get("language_name") or "").strip()
-        if not fl_id or not language_name:
-            raise HTTPException(status_code=400, detail="fl_id and language_name are required.")
-        conn = get_connection()
-        cursor = get_cursor(conn)
-        cursor.execute("SELECT language_id, language_name FROM languages WHERE LOWER(language_name) = LOWER(%s)", (language_name,))
-        lang = cursor.fetchone()
-        if not lang:
-            cursor.execute("INSERT INTO languages (language_name) VALUES (%s)", (language_name,))
-            language_id = cursor.lastrowid
-            language_name_out = language_name
-        else:
-            language_id = lang["language_id"]
-            language_name_out = lang["language_name"]
-        cursor.execute("SELECT 1 FROM fl_languages WHERE fl_id = %s AND language_id = %s", (fl_id, language_id))
-        if cursor.fetchone():
-            raise HTTPException(status_code=409, detail="Language already added.")
-        cursor.execute("INSERT INTO fl_languages (fl_id, language_id) VALUES (%s, %s)", (fl_id, language_id))
-        conn.commit()
-        return {"fl_id": fl_id, "language_id": language_id, "language_name": language_name_out}
-    except HTTPException:
-        raise
-    except Exception as e:
-        if conn: conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        if conn: conn.close()
-
-
-@router.delete("/fl-languages/{fl_id}/{language_id}")
-def remove_fl_language(fl_id: int, language_id: int):
-    conn = None
-    try:
-        conn = get_connection()
-        cursor = get_cursor(conn)
-        cursor.execute("DELETE FROM fl_languages WHERE fl_id = %s AND language_id = %s", (fl_id, language_id))
-        conn.commit()
-        return {"success": True}
-    except Exception as e:
-        if conn: conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        if conn: conn.close()
-
-
-@router.post("/fl-pickup-areas")
-def add_fl_pickup_area(data: dict):
-    conn = None
-    try:
-        fl_id = data.get("fl_id")
-        area_name = (data.get("area_name") or "").strip()
-        if not fl_id or not area_name:
-            raise HTTPException(status_code=400, detail="fl_id and area_name are required.")
-        conn = get_connection()
-        cursor = get_cursor(conn)
-        cursor.execute("SELECT area_id, area_name FROM areas WHERE LOWER(area_name) = LOWER(%s)", (area_name,))
-        area = cursor.fetchone()
-        if not area:
-            cursor.execute("INSERT INTO areas (area_name) VALUES (%s)", (area_name,))
-            area_id = cursor.lastrowid
-            area_name_out = area_name
-        else:
-            area_id = area["area_id"]
-            area_name_out = area["area_name"]
-        cursor.execute("SELECT 1 FROM fl_pickup_areas WHERE fl_id = %s AND area_id = %s", (fl_id, area_id))
-        if cursor.fetchone():
-            raise HTTPException(status_code=409, detail="Area already added.")
-        cursor.execute("INSERT INTO fl_pickup_areas (fl_id, area_id) VALUES (%s, %s)", (fl_id, area_id))
-        conn.commit()
-        return {"fl_id": fl_id, "area_id": area_id, "area_name": area_name_out}
-    except HTTPException:
-        raise
-    except Exception as e:
-        if conn: conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        if conn: conn.close()
-
-
-@router.delete("/fl-pickup-areas/{fl_id}/{area_id}")
-def remove_fl_pickup_area(fl_id: int, area_id: int):
-    conn = None
-    try:
-        conn = get_connection()
-        cursor = get_cursor(conn)
-        cursor.execute("DELETE FROM fl_pickup_areas WHERE fl_id = %s AND area_id = %s", (fl_id, area_id))
-        conn.commit()
-        return {"success": True}
-    except Exception as e:
-        if conn: conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        if conn: conn.close()
-
-
-class VehicleCreateRequest(BaseModel):
-    fl_vehicle_brand: str
-    fl_vehicle_model: str
-    fl_vehicle_year: int
-    fl_vehicle_seat_capa: int
-    fl_vehicle_license_plate: str
-
-
-@router.post("/fl-vehicle")
-def create_fl_vehicle(body: VehicleCreateRequest, fl_id: int):
-    conn = None
-    try:
-        conn = get_connection()
-        cursor = get_cursor(conn)
-        # check already has vehicle
-        cursor.execute("SELECT fl_vehicle_id FROM fl_vehicle WHERE fl_id = %s", (fl_id,))
-        if cursor.fetchone():
-            raise HTTPException(status_code=409, detail="Vehicle already exists. Use PUT to update.")
-        if not (9 <= body.fl_vehicle_seat_capa <= 13):
-            raise HTTPException(status_code=400, detail="Seat capacity must be between 9 and 13.")
-        cursor.execute(
-            """
-            INSERT INTO fl_vehicle
-                (fl_id, fl_vehicle_type, fl_vehicle_brand, fl_vehicle_model,
-                 fl_vehicle_year, fl_vehicle_seat_capa, fl_vehicle_license_plate)
-            VALUES (%s, 'VAN', %s, %s, %s, %s, %s)
-            """,
-            (fl_id, body.fl_vehicle_brand, body.fl_vehicle_model,
-             body.fl_vehicle_year, body.fl_vehicle_seat_capa, body.fl_vehicle_license_plate)
-        )
-        vehicle_id = cursor.lastrowid
-        conn.commit()
-        return {
-            "fl_vehicle_id": vehicle_id,
-            "fl_id": fl_id,
-            "fl_vehicle_type": "VAN",
-            "fl_vehicle_brand": body.fl_vehicle_brand,
-            "fl_vehicle_model": body.fl_vehicle_model,
-            "fl_vehicle_year": body.fl_vehicle_year,
-            "fl_vehicle_seat_capa": body.fl_vehicle_seat_capa,
-            "fl_vehicle_license_plate": body.fl_vehicle_license_plate,
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        if conn:
-            conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        if conn:
-            conn.close()
-
-
-@router.delete("/fl-vehicle/{vehicle_id}/images/{image_id}")
-def delete_fl_vehicle_image(vehicle_id: str, image_id: str):
-    conn = None
-    try:
-        conn = get_connection()
-        cursor = get_cursor(conn)
-        cursor.execute(
-            "SELECT fl_vehicle_image_id FROM fl_vehicle_images WHERE fl_vehicle_image_id = %s AND fl_vehicle_id = %s",
-            (image_id, vehicle_id)
-        )
-        if not cursor.fetchone():
-            raise HTTPException(status_code=404, detail="Image not found.")
-        cursor.execute(
-            "DELETE FROM fl_vehicle_images WHERE fl_vehicle_image_id = %s",
-            (image_id,)
-        )
-        conn.commit()
-        return {"success": True}
-    except HTTPException:
-        raise
-    except Exception as e:
-        if conn:
-            conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        if conn:
-            conn.close()
-
-@router.post("/fl-availability")
-def create_fl_availability(body: dict = Body(...)):
-    conn = None
-    try:
-        fl_id = body.get("fl_id")
-        start = body.get("fl_available_start_date")
-        end = body.get("fl_available_end_date")
-        if not fl_id or not start or not end:
-            raise HTTPException(status_code=400, detail="fl_id, start_date, end_date required.")
-        conn = get_connection()
-        cursor = get_cursor(conn)
-        cursor.execute("SELECT fl_available_id FROM fl_availability WHERE fl_id = %s", (fl_id,))
-        existing = cursor.fetchone()
-        if existing:
-            cursor.execute(
-                """UPDATE fl_availability
-                   SET fl_available_start_date=%s, fl_available_end_date=%s, is_active=TRUE, updated_at=NOW()
-                   WHERE fl_id=%s""",
-                (start, end, fl_id)
-            )
-        else:
-            cursor.execute(
-                """INSERT INTO fl_availability (fl_id, fl_available_start_date, fl_available_end_date, is_active)
-                   VALUES (%s, %s, %s, TRUE)""",
-                (fl_id, start, end)
-            )
-        conn.commit()
-        cursor.execute(
-            """SELECT fl_available_id, fl_id, fl_available_start_date, fl_available_end_date, is_active, updated_at
-               FROM fl_availability WHERE fl_id=%s""", (fl_id,)
-        )
-        return cursor.fetchone()
-    except HTTPException:
-        raise
-    except Exception as e:
-        if conn: conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        if conn: conn.close()
-
-
-@router.patch("/fl-availability/{fl_id}/toggle")
-def toggle_fl_availability(fl_id: int):
-    conn = None
-    try:
-        conn = get_connection()
-        cursor = get_cursor(conn)
-        cursor.execute("SELECT fl_available_id, is_active FROM fl_availability WHERE fl_id=%s", (fl_id,))
-        row = cursor.fetchone()
-        if not row:
-            raise HTTPException(status_code=404, detail="No availability record found.")
-        new_status = not row["is_active"]
-        cursor.execute(
-            "UPDATE fl_availability SET is_active=%s, updated_at=NOW() WHERE fl_id=%s",
-            (new_status, fl_id)
-        )
-        conn.commit()
-        return {"fl_id": fl_id, "is_active": new_status}
-    except HTTPException:
-        raise
-    except Exception as e:
-        if conn: conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        if conn: conn.close()
