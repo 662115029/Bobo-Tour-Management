@@ -200,7 +200,7 @@ async function submitRegister() {
         fl_email: form.email,
         fl_name: `${form.firstName} ${form.lastName}`.trim(),
         fl_phone: form.phone,
-        fl_password: form.pin,
+        fl_pin: form.pin,
         line_user_id: props.user?.lineUserId || null,
       })
     })
