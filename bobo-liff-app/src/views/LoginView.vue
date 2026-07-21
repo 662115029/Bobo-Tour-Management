@@ -134,7 +134,7 @@ async function handlePinComplete(pin) {
   loading.value = true
   pinError.value = ''
   try {
-    const res = await fetch(`${API_BASE}/auth/freelancer-login`, {
+    const res = await fetch(`${API_BASE}/freelancers/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...HEADERS },
       body: JSON.stringify({ identifier: identifier.value, pin }),
