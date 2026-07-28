@@ -55,22 +55,15 @@ def validate_doc_review_status(status: str) -> Optional[str]:
 # UTC-03  determine_verify_status
 # ---------------------------------------------------------------------------
 
+REQUIRED_DOC_COUNT = 5
+
 def determine_verify_status(total: int, approved: int, pending: int) -> str:
     """
-    Decide the overall verification status for a freelancer or employer based
-    on their document counts.
-
-    Rules (matching the logic in review_fl_document / review_em_document):
-      - If all uploaded docs are approved (approved == total > 0)  → 'VERIFIED'
-      - If no docs are pending and none are approved (all rejected) → 'NOT_VERIFIED'
-      - Otherwise                                                   → 'PENDING'
-
-    Used by: freelancers.py (review_fl_document),
-             employers.py  (review_em_document)
+    ...
     """
-    if total == 0:
+    if total < REQUIRED_DOC_COUNT:
         return "PENDING"
-    if approved == total:
+    if approved == REQUIRED_DOC_COUNT:
         return "VERIFIED"
     if pending == 0 and approved == 0:
         return "NOT_VERIFIED"
