@@ -83,6 +83,10 @@ async def upload_vehicle_image(vehicle_id: str, file: UploadFile = File(...)):
 async def upload_fl_document(fl_id: str, doc_type: str, file: UploadFile = File(...)):
     if file.content_type not in ALLOWED_TYPES_WITH_PDF:
         raise HTTPException(status_code=400, detail="Invalid file type.")
+    contents = await file.read()
+    if len(contents) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="File size must not exceed 5 MB.")
+    await file.seek(0)
     valid_doc_types = {"PERSONAL_ID", "DRIVER_LICENSE", "PUBLIC_DRIVER_LICENSE", "VEHICLE_REGISTRATION", "VEHICLE_INSPECTION"}
     if doc_type not in valid_doc_types:
         raise HTTPException(status_code=400, detail=f"Invalid doc_type.")
@@ -117,6 +121,10 @@ async def upload_fl_document(fl_id: str, doc_type: str, file: UploadFile = File(
 async def upload_em_document(em_id: str, doc_type: str, file: UploadFile = File(...)):
     if file.content_type not in ALLOWED_TYPES_WITH_PDF:
         raise HTTPException(status_code=400, detail="Invalid file type.")
+    contents = await file.read()
+    if len(contents) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="File must not exceed 5 MB size.")
+    await file.seek(0)
     valid_doc_types = {"COMPANY_REGISTRATION", "BUSINESS_LICENSE", "TOURISM_LICENSE", "TAX_ID_DOCUMENT", "AUTHORIZED_PERSON_ID"}
     if doc_type not in valid_doc_types:
         raise HTTPException(status_code=400, detail=f"Invalid doc_type.")
