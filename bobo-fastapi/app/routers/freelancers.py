@@ -936,6 +936,8 @@ def review_fl_document(doc_id: str, body: DocReviewRequest):
     status_err = validate_doc_review_status(body.status)
     if status_err:
         raise HTTPException(status_code=400, detail=status_err)
+    if body.status == "REJECTED" and not (body.reason or "").strip():
+       raise HTTPException(status_code=400, detail="Rejection reason is required.")
     conn = None
     try:
         conn = get_connection()
