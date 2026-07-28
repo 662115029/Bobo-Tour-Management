@@ -211,8 +211,10 @@
               </div>
 
               <!-- Documents -->
+              <!-- Documents -->
               <div>
-                <div class="text-[12px] font-bold text-[#444] uppercase tracking-wide mb-3">Documents</div>
+                <div class="text-[12px] font-bold text-[#444] uppercase tracking-wide mb-1">Documents</div>
+                <p class="text-[12px] text-[#999] mb-3">All 5 documents are required to complete verification.</p>
                 <div v-if="docsLoading" class="text-center py-4 text-[13px] text-[#bbb]">Loading…</div>
                 <div v-else-if="documents.length === 0" class="text-center py-4 text-[13px] text-[#bbb] italic">No documents.</div>
                 <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
@@ -223,9 +225,13 @@
                     <div class="aspect-square bg-[#f5f5f5] relative overflow-hidden w-full">
                       <img v-if="doc.file_url" :src="doc.file_url" class="absolute inset-0 w-full h-full object-cover hover:opacity-90 transition-opacity"
                         @error="e => e.target.style.display='none'" />
-                      <div v-if="!doc.file_url" class="absolute inset-0 flex items-center justify-center flex-col gap-1">
+                      <div v-if="!doc.file_url && docEditMode" class="absolute inset-0 flex items-center justify-center flex-col gap-1 px-1 text-center">
+                        <svg class="w-6 h-6 text-[#ddd]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v12"/></svg>
+                        <span class="text-[9px] text-[#ccc] font-medium leading-tight">Click to upload from device</span>
+                      </div>
+                      <div v-else-if="!doc.file_url" class="absolute inset-0 flex items-center justify-center flex-col gap-1">
                         <svg class="w-6 h-6 text-[#ddd]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                        <span class="text-[9px] text-[#ccc] font-medium">Not uploaded</span>
+                        <span class="text-[9px] text-[#ccc] font-medium">Not uploaded yet</span>
                       </div>
                       <div v-if="docEditMode" class="absolute inset-0 bg-black/40 flex items-center justify-center">
                         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
