@@ -670,7 +670,7 @@ onMounted(async () => {
       const parsed = typeof data.job_templates === 'string' ? JSON.parse(data.job_templates) : data.job_templates
       templates.value = Array.isArray(parsed) ? parsed : [...DEFAULT_TEMPLATES]
     } else { templates.value = [...DEFAULT_TEMPLATES] }
-  } catch { isVerified.value = true; templates.value = [...DEFAULT_TEMPLATES] }
+  } catch { isVerified.value = false; templates.value = [...DEFAULT_TEMPLATES] }
 
   await fetchLanguages()
 })
