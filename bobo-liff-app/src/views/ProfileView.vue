@@ -637,6 +637,8 @@ async function uploadDocument(e, doc) {
     if (!res.ok) { const err = await res.json(); throw new Error(err.detail || 'Upload failed') }
     const data = await res.json()
     documents.value[idx] = { ...documents.value[idx], file_url: data.file_url, fl_doc_status: 'PENDING', fl_uploaded_at: new Date().toISOString(), uploading: false }
+    // Reset verification status to PENDING
+    await fetch(`${API_BASE}/freelancers/${props.user.fl_id}/resubmit-verification`, { method: 'POST', headers: HEADERS })
     // Refetch profile to update verify status badge
     const profileRes = await fetch(`${API_BASE}/freelancers/${props.user.fl_id}`, { headers: HEADERS })
     if (profileRes.ok) {
@@ -653,7 +655,6 @@ async function uploadDocument(e, doc) {
     console.error('Failed to upload:', err.message)
     documents.value[idx] = { ...documents.value[idx], uploading: false }
   } finally { e.target.value = '' }
-}
 
 async function addLang() {
   if (!newLang.value.trim()) return
