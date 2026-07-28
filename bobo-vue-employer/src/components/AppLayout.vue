@@ -10,8 +10,8 @@
 
     <!-- Main content: shifts right when sidebar is open, shifts down past the fixed top bar -->
     <main
-      class="pt-[72px] min-h-screen transition-all duration-300"
-      :class="isOpen ? 'ml-56' : 'ml-16'"
+      class="min-h-screen transition-all duration-300"
+      :class="[isOpen ? 'ml-56' : 'ml-16', showBanner ? 'pt-[104px]' : 'pt-[72px]']"
     >
       <slot />
     </main>
@@ -25,9 +25,12 @@ import { useRoute } from 'vue-router'
 import SideBar from '@/components/SideBar.vue'
 import NavBar from '@/components/NavBar.vue'
 import { useSidebar } from '@/components/useSidebar.js'
+import { useVerifyBanner } from '@/components/useVerifyBanner.js'
 
 const route = useRoute()
 const { isOpen } = useSidebar()
+const { verifyStatus } = useVerifyBanner()
+const showBanner = computed(() => !!verifyStatus.value && verifyStatus.value !== 'VERIFIED')
 
 const titles = {
   '/my-tours': 'My Tours',

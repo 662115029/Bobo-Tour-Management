@@ -62,6 +62,11 @@
       </router-link>
     </div>
   </header>
+  <!-- Not-verified banner -->
+  <div v-if="verifyStatus && verifyStatus !== 'VERIFIED'"
+    class="fixed top-[72px] right-0 left-0 z-20 bg-amber-50 border-b border-amber-200 text-amber-800 text-[13px] px-4 py-2 text-center">
+    Your account is not yet verified. Please complete the verification to access all features.
+  </div>
 </template>
 
 <script setup>
@@ -69,8 +74,10 @@ import { computed, ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useSidebar } from '@/components/useSidebar.js'
 import { useAvatar } from '@/composables/useAvatar'
+import { useVerifyBanner } from '@/components/useVerifyBanner.js'
 
 const { avatarStyle, initials2 } = useAvatar()
+const { verifyStatus } = useVerifyBanner()
 const API_BASE = '/api'
 const router = useRouter()
 const route = useRoute()
@@ -88,9 +95,13 @@ onMounted(async () => {
     if (res.ok) {
       const data = await res.json()
       profileImageUrl.value = data.em_profile_image_url || data.em_profile_url || ''
+      verifyStatus.value = data.em_verify_status || ''
+    } else {
+      verifyStatus.value = 'PENDING'
     }
   } catch {
-    // silently fall back to initial
+    // fail-safe: assume not verified rather than silently pass
+    verifyStatus.value = 'PENDING'
   }
 })
 
