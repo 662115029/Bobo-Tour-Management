@@ -6,6 +6,8 @@ router = APIRouter(tags=["uploads"])
 
 ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp"}
 ALLOWED_TYPES_WITH_PDF = {"image/jpeg", "image/png", "image/webp", "application/pdf"}
+ALLOWED_DOC_TYPES = {"image/jpeg", "image/png", "application/pdf"}
+DOC_TYPE_ERROR = "File must be in .jpg, .png, or .pdf format only."
 
 
 @router.post("/upload/image")
@@ -81,8 +83,8 @@ async def upload_vehicle_image(vehicle_id: str, file: UploadFile = File(...)):
 
 @router.post("/fl-documents/{fl_id}/upload")
 async def upload_fl_document(fl_id: str, doc_type: str, file: UploadFile = File(...)):
-    if file.content_type not in ALLOWED_TYPES_WITH_PDF:
-        raise HTTPException(status_code=400, detail="Invalid file type.")
+    if file.content_type not in ALLOWED_DOC_TYPES:
+       raise HTTPException(status_code=400, detail=DOC_TYPE_ERROR)
     contents = await file.read()
     if len(contents) > 5 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="File size must not exceed 5 MB.")
@@ -119,8 +121,8 @@ async def upload_fl_document(fl_id: str, doc_type: str, file: UploadFile = File(
 
 @router.post("/em-documents/{em_id}/upload")
 async def upload_em_document(em_id: str, doc_type: str, file: UploadFile = File(...)):
-    if file.content_type not in ALLOWED_TYPES_WITH_PDF:
-        raise HTTPException(status_code=400, detail="Invalid file type.")
+    if file.content_type not in ALLOWED_DOC_TYPES:
+       raise HTTPException(status_code=400, detail=DOC_TYPE_ERROR)
     contents = await file.read()
     if len(contents) > 5 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="File must not exceed 5 MB size.")
