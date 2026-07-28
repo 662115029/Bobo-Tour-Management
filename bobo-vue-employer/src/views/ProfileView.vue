@@ -199,6 +199,13 @@
               </button>
             </div>
             <div class="px-5 py-4 flex flex-col gap-4">
+              <!-- Required-docs / progress message -->
+              <div v-if="!documents.some(d => d.file_url)" class="text-[12px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                Please upload your documents to complete verification.
+              </div>
+              <div v-else-if="documents.filter(d => d.file_url).length < 5" class="text-[12px] text-[#666]">
+                {{ documents.filter(d => d.file_url).length }} of 5 documents submitted
+              </div>
 
               <!-- Verification status row -->
               <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
@@ -210,7 +217,6 @@
                 </div>
               </div>
 
-              <!-- Documents -->
               <!-- Documents -->
               <div>
                 <div class="text-[12px] font-bold text-[#444] uppercase tracking-wide mb-1">Documents</div>
