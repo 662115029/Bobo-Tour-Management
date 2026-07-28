@@ -855,6 +855,7 @@ def get_fl_documents(limit: int = 10, offset: int = 0, status: str = "", fl_id: 
     finally:
         if conn:
             conn.close()
+
 @router.get("/fl-verification")
 def get_fl_verification(limit: int = 10, offset: int = 0, status: str = "PENDING", fl_id: Optional[int] = None):
     conn = None
@@ -893,6 +894,43 @@ def get_fl_verification(limit: int = 10, offset: int = 0, status: str = "PENDING
     finally:
         if conn:
             conn.close()
+
+@router.post("/freelancers/{fl_id}/resubmit-verification")
+def resubmit_verification(fl_id: int):
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT fl_id FROM freelancers WHERE fl_id = %s", (fl_id,))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Freelancer not found")
+        cursor.execute(
+            "UPDATE fl_verification SET is_latest = FALSE WHERE fl_id = %s",
+            (fl_id,)
+        )
+        cursor.execute(
+            """
+            INSERT INTO fl_verification (fl_id, fl_verify_status, is_latest, fl_submitted_at)
+            VALUES (%s, 'PENDING', TRUE, NOW())
+            """,
+            (fl_id,)
+        )
+        cursor.execute(
+            "UPDATE freelancers SET fl_verify_status = 'PENDING' WHERE fl_id = %s",
+            (fl_id,)
+        )
+        conn.commit()
+        return {"success": True, "fl_verify_status": "PENDING"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
+
 @router.patch("/fl-documents/{doc_id}")
 def review_fl_document(doc_id: str, body: DocReviewRequest):
     status_err = validate_doc_review_status(body.status)
