@@ -482,7 +482,8 @@ const uploadDocument = async (e, doc) => {
     verifiedAt.value = ''
     submittedAt.value = new Date().toISOString()
 
-  } catch (e) { alert('Failed to upload document: ' + e.message) }
+  alert('Document uploaded successfully.')
+  } catch (e) { alert('Failed to upload document. Please try again.') }
   finally { doc.uploading = false; e.target.value = '' }
 }
 
