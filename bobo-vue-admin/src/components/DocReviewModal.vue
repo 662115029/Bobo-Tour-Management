@@ -62,18 +62,20 @@
                 <input
                   v-model="rejectReason"
                   type="text"
-                  maxlength="255"
+                  maxlength="500"
                   placeholder="Reason for rejection..."
                   class="w-full rounded-lg border border-[#eee] bg-[#f8f8f8] px-2.5 py-1.5 pr-12 text-[11px] outline-none focus:border-red-300 focus:ring-1 focus:ring-red-100"
                   @keydown.esc="rejectingDoc = null; rejectReason = ''"
                 />
                 <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] pointer-events-none"
-                  :class="rejectReason.length >= 230 ? 'text-red-400 font-semibold' : 'text-[#bbb]'">
-                  {{ 255 - rejectReason.length }}
+                  :class="rejectReason.length >= 480 ? 'text-red-400 font-semibold' : 'text-[#bbb]'">
+                  {{ 500 - rejectReason.length }}
                 </span>
               </div>
               <div class="flex justify-end gap-1">
                 <button class="btn-reject-row !flex !justify-center !text-[11px] !px-2 !py-1"
+                  :disabled="!rejectReason.trim()"
+                  :class="{ 'opacity-40 cursor-not-allowed': !rejectReason.trim() }"
                   @click="confirmReject(doc)">Confirm</button>
                 <button class="btn-cancel-sm !flex !text-[11px] !px-2 !py-1"
                   @click="rejectingDoc = null; rejectReason = ''">Cancel</button>
@@ -176,6 +178,7 @@ function openLightbox(doc) {
 
 function confirmReject(doc) {
   const reason = rejectReason.value.trim()
+  if (!reason) return
   rejectingDoc.value = null
   rejectReason.value = ''
   emit('reject', { id: doc.id, _type: doc._type, reason })

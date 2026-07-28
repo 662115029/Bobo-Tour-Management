@@ -655,6 +655,7 @@ async function uploadDocument(e, doc) {
     console.error('Failed to upload:', err.message)
     documents.value[idx] = { ...documents.value[idx], uploading: false }
   } finally { e.target.value = '' }
+}
 
 async function addLang() {
   if (!newLang.value.trim()) return
@@ -725,4 +726,5 @@ function formatDate(dateStr) {
 function docStatusStyle(status) {
   return { badge: getDocStatusClass(status) }
 }
+
 </script>
