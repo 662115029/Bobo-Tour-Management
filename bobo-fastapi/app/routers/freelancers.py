@@ -937,7 +937,7 @@ def review_fl_document(doc_id: str, body: DocReviewRequest):
     if status_err:
         raise HTTPException(status_code=400, detail=status_err)
     if body.status == "REJECTED" and not (body.reason or "").strip():
-       raise HTTPException(status_code=400, detail="Rejection reason is required.")
+        raise HTTPException(status_code=400, detail="Rejection reason is required.")
     conn = None
     try:
         conn = get_connection()
@@ -1110,6 +1110,15 @@ def review_fl_document(doc_id: str, body: DocReviewRequest):
                         """,
                         (body.reviewed_by, doc["fl_id"], fl_info["fl_name"] if fl_info else doc["fl_id"])
                     )
+            elif body.status == "PENDING":
+                cursor.execute(
+                    """
+                    INSERT INTO admin_logs
+                        (admin_id, action_type, target_type, target_id, target_name, note)
+                    VALUES (%s, 'RESET_DOCUMENT', 'DOCUMENT', %s, %s, %s)
+                    """,
+                    (body.reviewed_by, doc_id, doc_info["fl_name"], doc_label)
+                )
 
         conn.commit()
         return {"status": "updated", "doc_id": doc_id, "new_status": body.status}
@@ -1123,6 +1132,7 @@ def review_fl_document(doc_id: str, body: DocReviewRequest):
     finally:
         if conn:
             conn.close()
+            
 @router.patch("/freelancers/{fl_id}/ban")
 def ban_freelancer(fl_id: str, body: BanRequest):
     conn = None

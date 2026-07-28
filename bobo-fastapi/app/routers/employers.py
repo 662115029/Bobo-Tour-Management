@@ -397,12 +397,13 @@ def get_em_verification(limit: int = 10, offset: int = 0, status: str = "", em_i
 
 
 @router.patch("/em-documents/{doc_id}")
+@router.patch("/em-documents/{doc_id}")
 def review_em_document(doc_id: str, body: DocReviewRequest):
     status_err = validate_doc_review_status(body.status)
     if status_err:
         raise HTTPException(status_code=400, detail=status_err)
     if body.status == "REJECTED" and not (body.reason or "").strip():
-       raise HTTPException(status_code=400, detail="Rejection reason is required.")
+        raise HTTPException(status_code=400, detail="Rejection reason is required.")
     conn = None
     try:
         conn = get_connection()
@@ -565,6 +566,15 @@ def review_em_document(doc_id: str, body: DocReviewRequest):
                         """,
                         (body.reviewed_by, doc["em_id"], em_info["em_name"] if em_info else doc["em_id"])
                     )
+            elif body.status == "PENDING":
+                cursor.execute(
+                    """
+                    INSERT INTO admin_logs
+                        (admin_id, action_type, target_type, target_id, target_name, note)
+                    VALUES (%s, 'RESET_DOCUMENT', 'DOCUMENT', %s, %s, %s)
+                    """,
+                    (body.reviewed_by, doc_id, doc_info["em_name"], doc_label)
+                )
 
         conn.commit()
         return {"status": "updated", "doc_id": doc_id, "new_status": body.status}
@@ -578,7 +588,6 @@ def review_em_document(doc_id: str, body: DocReviewRequest):
     finally:
         if conn:
             conn.close()
-
 
 @router.patch("/employers/{em_id}/ban")
 def ban_employer(em_id: str, body: BanRequest):
