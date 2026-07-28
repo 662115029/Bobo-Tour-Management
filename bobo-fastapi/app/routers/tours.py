@@ -138,6 +138,21 @@ def create_tour(data: dict):
         conn = get_connection()
         cursor = get_cursor(conn)
 
+        em_id = data.get("em_id")
+        cursor.execute(
+            """
+            SELECT em_verify_status FROM em_verification
+            WHERE em_id = %s AND is_latest = TRUE
+            """,
+            (em_id,)
+        )
+        verify_row = cursor.fetchone()
+        if not verify_row or verify_row["em_verify_status"] != "VERIFIED":
+            raise HTTPException(
+                status_code=403,
+                detail="Account not verified. Your account must be verified before creating tours."
+            )
+
         cursor.execute(
             """
             INSERT INTO jobs (em_id, job_title, job_description, job_start_date, job_end_date,
@@ -145,7 +160,7 @@ def create_tour(data: dict):
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """,
             (
-                data.get("em_id"),
+                em_id,
                 data.get("job_title"),
                 data.get("job_description"),
                 data.get("job_start_date"),
@@ -194,7 +209,6 @@ def create_tour(data: dict):
                      p.get("note") or None),
                 )
 
-        # Fixed: read job_expenses (not job_entrance_fees), use item_name and amount
         for idx, exp in enumerate(data.get("job_expenses", [])):
             if exp.get("item_name"):
                 cursor.execute(
@@ -204,6 +218,8 @@ def create_tour(data: dict):
 
         conn.commit()
         return {"success": True, "job_id": job_id}
+    except HTTPException:
+        raise
     except Exception as e:
         if conn:
             conn.rollback()
