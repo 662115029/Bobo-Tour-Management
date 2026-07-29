@@ -76,6 +76,7 @@ import { computed, ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAvatar } from '@/composables/useAvatar'
 import { useVerifyBanner } from '@/components/useVerifyBanner.js'
+import { useSidebar } from '@/components/useSidebar.js'
 
 const { avatarStyle, initials2 } = useAvatar()
 const { verifyStatus } = useVerifyBanner()
