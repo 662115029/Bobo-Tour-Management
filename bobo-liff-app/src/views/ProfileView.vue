@@ -628,6 +628,10 @@ function openDocPreview(doc) {
 
 async function uploadDocument(e, doc) {
   const file = e.target.files[0]; if (!file) return
+  if (doc.fl_doc_status === 'APPROVED') {
+    const ok = confirm('Re-uploading this document will reset your verification status to PENDING until reviewed by an Admin. Do you want to continue?')
+    if (!ok) { e.target.value = ''; return }
+  }
   const idx = documents.value.findIndex(d => d.fl_doc_type === doc.fl_doc_type)
   if (idx === -1) return
   documents.value[idx] = { ...documents.value[idx], uploading: true }
