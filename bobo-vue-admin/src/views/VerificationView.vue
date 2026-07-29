@@ -60,7 +60,7 @@
             <td colspan="4" class="text-center py-6 text-red-600">{{ listLoadError }}</td>
           </tr>
           <tr v-else-if="!isLoading && sortedList.length === 0">
-            <td colspan="4" class="text-center text-muted py-6">No results found</td>
+            <td colspan="4" class="text-center text-muted py-6">No verification requests found.</td>
           </tr>
           <tr v-for="v in sortedList" :key="v.id">
             <td class="truncate-cell">
