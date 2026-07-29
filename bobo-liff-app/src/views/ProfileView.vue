@@ -341,6 +341,9 @@
               <span v-else-if="verifyInfo.fl_submitted_at" class="text-xs text-gray-400">Submitted {{ formatDate(verifyInfo.fl_submitted_at) }}</span>
               <span v-if="verifyInfo.reviewed_by_name && verifyInfo.fl_verify_status === 'VERIFIED'" class="text-xs text-gray-400">By {{ verifyInfo.reviewed_by_name }}</span>
             </div>
+            <div v-if="verifyLoadError" class="px-4 pb-2 -mt-1">
+              <p class="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{{ verifyLoadError }}</p>
+            </div>
             <div v-if="!documents.some(d => d.file_url)" class="px-4 pb-2 -mt-1">
               <p class="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
                 Please upload your documents to complete verification.
@@ -471,6 +474,7 @@ const areaError = ref('')
 const completedJobs = ref(0)
 const modalImage = ref(null)
 const docEditMode = ref(false)
+const verifyLoadError = ref('')
 
 // Accordion: which sections are open (null = all collapsed by default)
 const openSection = ref(null)
@@ -550,7 +554,11 @@ onMounted(async () => {
     vehicle.value       = vehicleData.items?.[0]   || null
     vehicleImages.value = vehicleImgData.items      || []
     documents.value     = docData.items             || []
-    verifyInfo.value    = verifyData.items?.[0]     || {}
+    if (verifyRes.ok) {
+         verifyInfo.value = verifyData.items?.[0] || {}
+       } else {
+         verifyLoadError.value = 'Failed to load verification status. Please try again.'
+       }
     languages.value     = langData.items            || []
     pickupAreas.value   = areaData.items            || []
     completedJobs.value = jobsData.total ?? (jobsData.items?.length ?? 0)
