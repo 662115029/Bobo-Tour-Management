@@ -56,6 +56,9 @@
               <td><span class="skeleton skeleton-text" style="width:75%"></span></td>
             </tr>
           </template>
+          <tr v-else-if="listLoadError">
+            <td colspan="4" class="text-center py-6 text-red-600">{{ listLoadError }}</td>
+          </tr>
           <tr v-else-if="!isLoading && sortedList.length === 0">
             <td colspan="4" class="text-center text-muted py-6">No results found</td>
           </tr>
@@ -154,6 +157,7 @@ const emDocs = ref([])
 const selectedUser = ref(null)
 const selectedDocs = ref([])
 const needsReload = ref(false)
+const listLoadError = ref('')
 
 const onDocModalClose = async () => {
   selectedUser.value = null
@@ -301,8 +305,10 @@ async function loadUsers(page = 1) {
     }
 
     if (hasMore.value) fetchPageData(page + 1).catch(() => {})
+    listLoadError.value = ''
   } catch (e) {
     console.error('Failed to load:', e)
+    listLoadError.value = 'Failed to load verification list. Please try again.'
   } finally {
     isLoading.value = false
   }
@@ -352,7 +358,7 @@ const reviewDoc = async (doc, newStatus, reason = '') => {
       body: JSON.stringify({ status: newStatus, reviewed_by: localStorage.getItem('admin_id') || '', reason: reason || null })
     })
     const data = await res.json()
-    if (data.status === 'updated') {
+    if (res.ok && data.status === 'updated') {
       selectedDocs.value = selectedDocs.value.map(d => {
         if (d.id != doc.id) return d
         return {
@@ -374,9 +380,13 @@ const reviewDoc = async (doc, newStatus, reason = '') => {
         if (raw) raw.em_doc_status = newStatus
       }
       needsReload.value = true
+      alert('Document status updated successfully.')
+    } else {
+      alert(data.detail || 'Failed to update document status. Please try again.')
     }
   } catch (e) {
     console.error('Failed to review doc:', e)
+    alert('Failed to update document status. Please try again.')
   }
 }
 
