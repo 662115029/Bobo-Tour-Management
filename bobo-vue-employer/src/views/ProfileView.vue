@@ -470,6 +470,10 @@ const openDocModal = (doc) => { modalDoc.value = doc }
 const uploadDocument = async (e, doc) => {
   const file = e.target.files[0]
   if (!file) return
+  if (doc.em_doc_status === 'APPROVED') {
+    const ok = confirm('Re-uploading this document will reset your verification status to PENDING until reviewed by an Admin. Do you want to continue?')
+    if (!ok) { e.target.value = ''; return }
+  }
   doc.uploading = true
   try {
     const em_id = localStorage.getItem('em_id')
