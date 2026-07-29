@@ -62,9 +62,11 @@
       </router-link>
     </div>
   </header>
+
   <!-- Not-verified banner -->
   <div v-if="verifyStatus && verifyStatus !== 'VERIFIED'"
-    class="fixed top-[72px] right-0 left-0 z-20 bg-amber-50 border-b border-amber-200 text-amber-800 text-[13px] px-4 py-2 text-center">
+    class="fixed top-[72px] right-0 z-20 bg-amber-50 border-b border-amber-200 text-amber-800 text-[13px] px-4 py-2 text-center transition-all duration-300"
+    :class="isOpen ? 'left-56' : 'left-16'">
     Your account is not yet verified. Please complete the verification to access all features.
   </div>
 </template>
@@ -72,7 +74,6 @@
 <script setup>
 import { computed, ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useSidebar } from '@/components/useSidebar.js'
 import { useAvatar } from '@/composables/useAvatar'
 import { useVerifyBanner } from '@/components/useVerifyBanner.js'
 
