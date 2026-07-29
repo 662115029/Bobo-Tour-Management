@@ -107,21 +107,22 @@ def get_employers(limit: int = 10, offset: int = 0, search: str = "", status: st
         where = []
         params = []
         if search:
-            where.append("(em_name LIKE %s OR em_username LIKE %s)")
+            where.append("(e.em_name LIKE %s OR e.em_username LIKE %s)")
             params += [f"%{search}%", f"%{search}%"]
         if status:
-            where.append("em_verify_status = %s")
+            where.append("e.em_verify_status = %s")
             params.append(status)
         where_sql = "WHERE " + " AND ".join(where) if where else ""
         params += [limit, offset]
-        allowed_sort = {"em_name", "em_rating_avg", "em_updated_at", "em_created_at"}
-        safe_sort_by, safe_order = sanitize_sort_params(sort_by, sort_order, allowed_sort, "em_updated_at")
+        allowed_sort = {"e.em_name", "e.em_rating_avg", "e.em_updated_at", "e.em_created_at", "ev.em_submitted_at"}
+        safe_sort_by, safe_order = sanitize_sort_params(sort_by, sort_order, allowed_sort, "e.em_updated_at")
         cursor.execute(
             f"""
-            SELECT em_id, em_username, em_email, em_name, em_phone, em_address, em_bio,
-                   em_profile_image_url, em_verify_status, em_is_active, job_templates,
-                   em_rating_avg, em_created_at, em_updated_at
-            FROM employers
+            SELECT e.em_id, e.em_username, e.em_email, e.em_name, e.em_phone, e.em_address, e.em_bio,
+                   e.em_profile_image_url, e.em_verify_status, e.em_is_active, e.job_templates,
+                   e.em_rating_avg, e.em_created_at, e.em_updated_at, ev.em_submitted_at
+            FROM employers e
+            LEFT JOIN em_verification ev ON ev.em_id = e.em_id AND ev.is_latest = 1
             {where_sql}
             ORDER BY {safe_sort_by} {safe_order}
             LIMIT %s OFFSET %s

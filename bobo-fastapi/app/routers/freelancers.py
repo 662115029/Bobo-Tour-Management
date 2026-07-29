@@ -184,10 +184,9 @@ def freelancer_login(body: FreelancerLoginRequest):
         if conn:
             conn.close()
 
-
 @router.get("/freelancers")
 @router.get("/admin/freelancers")
-def get_freelancers(limit: int = 10, offset: int = 0, search: str = "", status: str = "", sort_by: str = "fl_updated_at", sort_order: str = "desc"):
+def get_freelancers(limit: int = 10, offset: int = 0, search: str = "", status: str = "", sort_by: str = "f.fl_updated_at", sort_order: str = "desc"):
     conn = None
     try:
         conn = get_connection()
@@ -195,22 +194,23 @@ def get_freelancers(limit: int = 10, offset: int = 0, search: str = "", status: 
         where = []
         params = []
         if search:
-            where.append("(fl_name LIKE %s OR fl_username LIKE %s)")
+            where.append("(f.fl_name LIKE %s OR f.fl_username LIKE %s)")
             params += [f"%{search}%", f"%{search}%"]
         if status:
-            where.append("fl_verify_status = %s")
+            where.append("f.fl_verify_status = %s")
             params.append(status)
         where_sql = "WHERE " + " AND ".join(where) if where else ""
         params += [limit, offset]
-        allowed_sort = {"fl_name", "fl_rating_avg", "fl_updated_at", "fl_created_at"}
-        safe_sort_by, safe_order = sanitize_sort_params(sort_by, sort_order, allowed_sort, "fl_updated_at")
+        allowed_sort = {"f.fl_name", "f.fl_rating_avg", "f.fl_updated_at", "f.fl_created_at", "fv.fl_submitted_at"}
+        safe_sort_by, safe_order = sanitize_sort_params(sort_by, sort_order, allowed_sort, "f.fl_updated_at")
         cursor.execute(
             f"""
-            SELECT fl_id, line_user_id, fl_username, fl_email, fl_name, fl_date_of_birth,
-                   fl_phone, fl_address, fl_bio, fl_profile_image_url,
-                   fl_verify_status, fl_is_active, fl_rating_avg,
-                   fl_created_at, fl_updated_at
-            FROM freelancers
+            SELECT f.fl_id, f.line_user_id, f.fl_username, f.fl_email, f.fl_name, f.fl_date_of_birth,
+                   f.fl_phone, f.fl_address, f.fl_bio, f.fl_profile_image_url,
+                   f.fl_verify_status, f.fl_is_active, f.fl_rating_avg,
+                   f.fl_created_at, f.fl_updated_at, fv.fl_submitted_at
+            FROM freelancers f
+            LEFT JOIN fl_verification fv ON fv.fl_id = f.fl_id AND fv.is_latest = 1
             {where_sql}
             ORDER BY {safe_sort_by} {safe_order}
             LIMIT %s OFFSET %s
@@ -224,6 +224,7 @@ def get_freelancers(limit: int = 10, offset: int = 0, search: str = "", status: 
     finally:
         if conn:
             conn.close()
+            
 @router.get("/freelancers/{fl_id}")
 def get_freelancer(fl_id: str):
     conn = None
@@ -1132,7 +1133,7 @@ def review_fl_document(doc_id: str, body: DocReviewRequest):
     finally:
         if conn:
             conn.close()
-            
+
 @router.patch("/freelancers/{fl_id}/ban")
 def ban_freelancer(fl_id: str, body: BanRequest):
     conn = None
