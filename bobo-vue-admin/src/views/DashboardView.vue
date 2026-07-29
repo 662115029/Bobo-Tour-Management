@@ -347,9 +347,9 @@ onMounted(async () => {
     const [pingRes, jobsRes, flRes, emRes] = await Promise.all([
       fetch(`${API_BASE}/admin/db/ping`),
       fetch(`${API_BASE}/jobs?limit=10`),
-      fetch(`${API_BASE}/freelancers?limit=10&status=PENDING&sort_by=fl_updated_at&sort_order=desc`),
-      fetch(`${API_BASE}/employers?limit=10&status=PENDING&sort_by=em_updated_at&sort_order=desc`),
-    ])
+      fetch(`${API_BASE}/freelancers?limit=10&status=PENDING&sort_by=fv.fl_submitted_at&sort_order=desc`),
+      fetch(`${API_BASE}/employers?limit=10&status=PENDING&sort_by=ev.em_submitted_at&sort_order=desc`),
+   ])
 
     const [ping, jobsData, flData, emData] = await Promise.all([
       pingRes.json(), jobsRes.json(), flRes.json(), emRes.json(),
@@ -376,14 +376,14 @@ onMounted(async () => {
       name: f.fl_name || f.line_user_id,
       type: 'Freelancer',
       status: f.fl_verify_status,
-      updated_at: f.fl_updated_at,
+      updated_at: f.fl_submitted_at || f.fl_updated_at,
     }))
     const allEm = emItems.map(e => ({
       id: e.em_id,
       name: e.em_name || e.em_username,
       type: 'Employer',
       status: e.em_verify_status,
-      updated_at: e.em_updated_at,
+      updated_at: e.em_submitted_at || e.em_updated_at,
     }))
     verifications.value = [...allFl, ...allEm]
       .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
