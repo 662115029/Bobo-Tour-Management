@@ -339,6 +339,7 @@
             <!-- Documents label -->
             <div class="px-4 pt-3 pb-1">
               <p class="text-xs font-medium text-gray-500">Documents</p>
+              <p class="text-xs text-gray-400 mt-0.5">All 5 documents are required to complete verification.</p>
             </div>
 
             <!-- Documents list (1 per row) -->
@@ -655,9 +656,11 @@ async function uploadDocument(e, doc) {
       const verifyData = await verifyRes.json()
       verifyInfo.value = verifyData.items?.[0] || {}
     }
+    alert('Document uploaded successfully.')
   } catch (err) {
     console.error('Failed to upload:', err.message)
     documents.value[idx] = { ...documents.value[idx], uploading: false }
+    alert('Failed to upload document. Please try again.')
   } finally { e.target.value = '' }
 }
 
