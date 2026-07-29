@@ -18,6 +18,12 @@
           <h2 class="text-lg font-bold text-gray-900 leading-tight">Profile</h2>
         </div>
       </div>
+      
+      <!-- Not-verified banner -->
+      <div v-if="profile.fl_verify_status && profile.fl_verify_status !== 'VERIFIED'"
+        class="bg-amber-50 border-b border-amber-200 text-amber-800 text-xs px-4 py-2 text-center flex-shrink-0">
+        Your account is not yet verified. Please complete the verification to access all features.
+      </div>
 
       <!-- Scrollable body -->
       <div class="flex-1 overflow-y-auto">
@@ -334,6 +340,14 @@
               <span v-if="verifyInfo.fl_verify_status === 'VERIFIED' && verifyInfo.fl_verified_at" class="text-xs text-gray-400">Verified {{ formatDate(verifyInfo.fl_verified_at) }}</span>
               <span v-else-if="verifyInfo.fl_submitted_at" class="text-xs text-gray-400">Submitted {{ formatDate(verifyInfo.fl_submitted_at) }}</span>
               <span v-if="verifyInfo.reviewed_by_name && verifyInfo.fl_verify_status === 'VERIFIED'" class="text-xs text-gray-400">By {{ verifyInfo.reviewed_by_name }}</span>
+            </div>
+            <div v-if="!documents.some(d => d.file_url)" class="px-4 pb-2 -mt-1">
+              <p class="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                Please upload your documents to complete verification.
+              </p>
+            </div>
+            <div v-else-if="documents.filter(d => d.file_url).length < 5" class="px-4 pb-2 -mt-1">
+              <p class="text-xs text-gray-500">{{ documents.filter(d => d.file_url).length }} of 5 documents submitted</p>
             </div>
 
             <!-- Documents label -->
