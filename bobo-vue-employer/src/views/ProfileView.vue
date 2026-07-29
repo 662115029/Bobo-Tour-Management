@@ -199,6 +199,11 @@
               </button>
             </div>
             <div class="px-5 py-4 flex flex-col gap-4">
+              <!-- Error loading verification status -->
+              <div v-if="verifyLoadError" class="text-[12px] text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                {{ verifyLoadError }}
+              </div>
+
               <!-- Required-docs / progress message -->
               <div v-if="!documents.some(d => d.file_url)" class="text-[12px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
                 Please upload your documents to complete verification.
@@ -352,6 +357,7 @@ import AppLayout from '../components/AppLayout.vue'
 const API_BASE = '/api'
 const documents = ref([])
 const docsLoading = ref(false)
+const verifyLoadError = ref('')
 const docEditMode = ref(false)
 const modalDoc = ref(null)
 const avatarModal = ref(false)
@@ -537,15 +543,20 @@ onMounted(async () => {
     totalJobs.value = jobs.length
     completedJobs.value = jobs.filter(j => j.job_status === 'COMPLETED').length
 
-    const verifyItems = verifyData.items || verifyData || []
-    const latest = Array.isArray(verifyItems) ? verifyItems[0] : null
-    if (latest?.em_verified_at) verifiedAt.value = latest.em_verified_at
-    if (latest?.em_submitted_at) submittedAt.value = latest.em_submitted_at
+    if (verifyRes.ok) {
+        const verifyItems = verifyData.items || verifyData || []
+        const latest = Array.isArray(verifyItems) ? verifyItems[0] : null
+        if (latest?.em_verified_at) verifiedAt.value = latest.em_verified_at
+        if (latest?.em_submitted_at) submittedAt.value = latest.em_submitted_at
+      } else {
+        verifyLoadError.value = 'Failed to load verification status. Please try again.'
+      }
 
   } catch {
     form.em_name     = localStorage.getItem('em_name')     || ''
     form.em_email    = localStorage.getItem('em_email')    || ''
     form.em_username = localStorage.getItem('em_username') || ''
+    verifyLoadError.value = 'Failed to load verification status. Please try again.'
   } finally {
     docsLoading.value = false
   }
