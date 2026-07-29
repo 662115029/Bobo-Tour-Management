@@ -490,7 +490,7 @@ const uploadDocument = async (e, doc) => {
     })
     if (!res.ok) {
       const err = await res.json().catch(() => ({}))
-      throw new Error(err.detail || err.error || 'Upload failed')
+      throw new Error(err.detail || err.error || '')
     }
     const data = await res.json()
     doc.file_url = data.file_url
@@ -505,7 +505,7 @@ const uploadDocument = async (e, doc) => {
     submittedAt.value = new Date().toISOString()
 
   alert('Document uploaded successfully.')
-  } catch (e) { alert('Failed to upload document. Please try again.') }
+  } catch (e) { alert(e.message || 'Failed to upload document. Please try again.') }
   finally { doc.uploading = false; e.target.value = '' }
 }
 
