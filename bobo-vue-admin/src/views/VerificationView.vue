@@ -139,12 +139,12 @@ const pageCache = new Map()
 const inFlight = new Map()
 const nameSort = ref('')
 const statusFilter = ref('PENDING')
-const sortField = ref('fl_updated_at')
+const sortField = ref('fv.fl_submitted_at')
 const sortOrder = ref('asc')
 
 const SORT_FIELD_MAP = {
-  Freelancer: { name: 'fl_name', date: 'fl_updated_at' },
-  Employer:   { name: 'em_name', date: 'em_updated_at' },
+  Freelancer: { name: 'f.fl_name', date: 'fv.fl_submitted_at' },
+  Employer:   { name: 'e.em_name', date: 'ev.em_submitted_at' },
 }
 const dateSort = ref('asc')
 const showStatusDropdown = ref(false)
@@ -192,7 +192,7 @@ const cycleSort = (key) => {
     sortField.value = SORT_FIELD_MAP[activeTab.value][key]
     sortOrder.value = next
   } else {
-    sortField.value = activeTab.value === 'Employer' ? 'em_updated_at' : 'fl_updated_at'
+    sortField.value = activeTab.value === 'Employer' ? 'ev.em_submitted_at' : 'fv.fl_submitted_at'
     sortOrder.value = 'desc'
   }
   pageCache.clear(); inFlight.clear()
@@ -217,7 +217,7 @@ const resetAllFilters = () => {
   statusFilter.value = 'PENDING'
   dateSort.value = ''
   search.value = ''
-  sortField.value = activeTab.value === 'Employer' ? 'em_updated_at' : 'fl_updated_at'
+  sortField.value = activeTab.value === 'Employer' ? 'ev.em_submitted_at' : 'fv.fl_submitted_at'
   sortOrder.value = 'asc'
   pageCache.clear(); inFlight.clear()
   loadUsers(1)
@@ -283,7 +283,7 @@ async function loadUsers(page = 1) {
         id: f.fl_id,
         name: f.fl_name || f.line_user_id,
         status: f.fl_verify_status,
-        updated: formatDateTime(f.fl_updated_at),
+        updated: formatDateTime(f.fl_submitted_at || f.fl_updated_at),
         createdAt: f.fl_created_at || '',
         imageUrl: f.fl_profile_image_url || null,
         rawData: f,
@@ -297,7 +297,7 @@ async function loadUsers(page = 1) {
         id: e.em_id,
         name: e.em_name || e.em_username,
         status: e.em_verify_status,
-        updated: formatDateTime(e.em_updated_at),
+        updated: formatDateTime(e.em_submitted_at || e.em_updated_at),
         createdAt: e.em_created_at || '',
         imageUrl: e.em_profile_image_url || null,
         rawData: e,
@@ -396,7 +396,7 @@ const switchTab = async (tab) => {
   statusFilter.value = 'PENDING'
   nameSort.value = ''
   dateSort.value = ''
-  sortField.value = tab === 'Employer' ? 'em_updated_at' : 'fl_updated_at'
+  sortField.value = tab === 'Employer' ? 'ev.em_submitted_at' : 'fv.fl_submitted_at'
   sortOrder.value = 'asc'
   pageCache.clear(); inFlight.clear()
   await loadUsers(1)
