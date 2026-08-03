@@ -483,7 +483,10 @@ const uploadDocument = async (e, doc) => {
   const file = e.target.files[0]
   if (!file) return
   if (doc.em_doc_status === 'APPROVED') {
-  const ok = await confirmDialog('Re-uploading this document will reset your verification status to PENDING until reviewed by an Admin. Do you want to continue?')
+  const ok = await confirmDialog(
+    'Re-uploading this document will reset your verification status to PENDING until reviewed by an Admin. Do you want to continue?',
+    'Re-upload Document?'
+  )  
   if (!ok) { e.target.value = ''; return }
   }
 
