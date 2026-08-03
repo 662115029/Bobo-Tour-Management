@@ -1,8 +1,10 @@
 <template>
-  <div class="min-h-screen bg-gray-100">
-    <router-view />
-  </div>
+  <router-view />
+  <Toast />
+  <ConfirmDialog />
 </template>
 
 <script setup>
+import Toast from '@/components/Toast.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 </script>
