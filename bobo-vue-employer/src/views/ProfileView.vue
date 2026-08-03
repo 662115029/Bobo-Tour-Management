@@ -94,7 +94,7 @@
             </div>
             <div class="px-4 py-4">
               <div v-if="!pwOpen">
-                <button @click="pwOpen = true" class="px-4 py-2 text-[13px] font-medium rounded-lg border border-[#e0e0e0] text-[#555] hover:bg-[#f5f5f5] transition">Change Password</button>
+                <button @click="pwOpen = true" class="px-4 py-2 text-[13px] font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700 transition shadow-sm">Change Password</button>
               </div>
               <div v-else class="flex flex-col gap-3">
                 <div v-if="pwSuccess" class="px-3 py-2 bg-green-50 border border-green-200 rounded-lg text-[13px] text-green-700">Password changed!</div>
@@ -114,7 +114,7 @@
                 <div class="flex items-center justify-between">
                   <button @click="pwOpen = false; pwError = ''" class="text-[12px] text-[#bbb] hover:text-[#666]">Cancel</button>
                   <button @click="changePassword" :disabled="changingPw || !pwForm.current || !pwForm.newPw || !pwForm.confirm"
-                    class="px-4 py-2 text-[13px] font-semibold rounded-lg bg-[#222] text-white hover:bg-[#444] transition disabled:opacity-50">
+                    class="px-4 py-2 text-[13px] font-semibold rounded-lg bg-green-600 text-white hover:bg-green-700 transition disabled:opacity-50 shadow-sm">
                     {{ changingPw ? 'Updating…' : 'Update Password' }}
                   </button>
                 </div>
@@ -132,13 +132,16 @@
             <div class="px-5 py-3 border-b border-[#f0f0f0] flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Edit Profile</span>
+                <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Profile</span>
               </div>
               <div class="flex items-center gap-2">
-                <button v-if="!isEditing" @click="startEditing" class="px-3.5 py-1.5 text-[13px] font-medium rounded-lg border border-[#e0e0e0] text-[#666] hover:bg-[#f5f5f5] transition">Edit</button>
-                <button v-if="isEditing" @click="cancelEditing" class="px-3.5 py-1.5 text-[13px] font-medium rounded-lg border border-[#e0e0e0] text-[#666] hover:bg-[#f5f5f5] transition">Cancel</button>
+                <button v-if="!isEditing" @click="startEditing" class="flex items-center gap-1.5 px-3.5 py-1.5 text-[13px] font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700 transition shadow-sm">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                  Edit
+                </button>                
+                <button v-if="isEditing" @click="cancelEditing" class="px-3.5 py-1.5 text-[13px] font-medium rounded-lg border border-[#d0d0d0] text-[#666] hover:bg-[#f5f5f5] transition">Cancel</button>
                 <button v-if="isEditing" @click="handleSubmit" :disabled="saving"
-                  class="px-4 py-1.5 text-[13px] font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700 transition disabled:opacity-50">
+                  class="px-4 py-1.5 text-[13px] font-semibold rounded-lg bg-green-600 text-white hover:bg-green-700 transition disabled:opacity-50 shadow-sm">
                   {{ saving ? 'Saving…' : 'Save' }}
                 </button>
               </div>
@@ -193,7 +196,8 @@
                 <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Verification</span>
               </div>
               <button @click="docEditMode = !docEditMode"
-                class="flex items-center gap-1.5 px-3.5 py-1.5 text-[13px] font-medium rounded-lg border border-[#e0e0e0] text-[#666] hover:bg-[#f5f5f5] transition">
+                class="flex items-center gap-1.5 px-3.5 py-1.5 text-[13px] font-semibold rounded-lg transition shadow-sm"
+                :class="docEditMode ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-red-600 text-white hover:bg-red-700'">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                 {{ docEditMode ? 'Done' : 'Edit' }}
               </button>
