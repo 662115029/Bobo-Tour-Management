@@ -123,6 +123,7 @@ import { useAvatar } from '../composables/useAvatar'
 import { formatDateTime, groupDocsByLatest } from '../utils/formatDate'
 import { API_BASE } from '../data/api'
 import { formatVerifyStatus } from '../utils/statusClasses'
+import { useToast } from '../components/useToast.js'
 
 const router = useRouter()
 defineOptions({ name: 'VerificationView' })
@@ -158,6 +159,7 @@ const selectedUser = ref(null)
 const selectedDocs = ref([])
 const needsReload = ref(false)
 const listLoadError = ref('')
+const { showToast } = useToast()
 
 const onDocModalClose = async () => {
   selectedUser.value = null
@@ -380,13 +382,13 @@ const reviewDoc = async (doc, newStatus, reason = '') => {
         if (raw) raw.em_doc_status = newStatus
       }
       needsReload.value = true
-      alert('Document status updated successfully.')
+      showToast('Document status updated successfully.', 'success')
     } else {
-      alert(data.detail || 'Failed to update document status. Please try again.')
+      showToast(data.detail || 'Failed to update document status. Please try again.', 'error')
     }
   } catch (e) {
     console.error('Failed to review doc:', e)
-    alert('Failed to update document status. Please try again.')
+    showToast('Failed to update document status. Please try again.', 'error')
   }
 }
 
