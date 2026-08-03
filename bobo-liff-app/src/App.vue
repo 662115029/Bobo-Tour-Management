@@ -13,7 +13,7 @@
   <div v-else>
     <RouterView :user="user" @login="handleLogin" @logout="handleLogout" @show-toast="showToast" />
 
-    <!-- Toast notification -->
+    <!-- Toast notification (legacy, kept for existing callers using @show-toast) -->
     <Transition name="toast">
       <div v-if="toast.visible"
         class="fixed top-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-lg max-w-[320px] w-[calc(100%-2rem)]"
@@ -26,6 +26,10 @@
         <p class="text-[13px] font-semibold text-white leading-snug flex-1">{{ toast.message }}</p>
       </div>
     </Transition>
+
+    <!-- New Toast/ConfirmDialog components -->
+    <Toast />
+    <ConfirmDialog />
   </div>
 </template>
 
@@ -36,6 +40,8 @@ import boboLogo from '@/assets/logo.png'
 import LoadingView from '@/views/LoadingView.vue'
 import { RouterView } from 'vue-router'
 import { initLiff } from './liff.js'
+import Toast from '@/components/Toast.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 
 const router = useRouter()
 const user = ref(null)
