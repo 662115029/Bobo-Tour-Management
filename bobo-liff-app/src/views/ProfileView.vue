@@ -77,14 +77,14 @@
               <div class="flex items-center gap-2">
                 <div v-if="openSection === 'basic'" class="flex items-center gap-2">
                   <button v-if="!isEditing"
-                    class="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                    class="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700 transition shadow-sm"
                     @click.stop="isEditing = true">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     Edit
                   </button>
-                  <button v-if="isEditing" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-500" @click.stop="cancelEdit">Cancel</button>
+                  <button v-if="isEditing" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition" @click.stop="cancelEdit">Cancel</button>
                   <button v-if="isEditing"
-                    class="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-600 text-white disabled:opacity-60"
+                    class="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg bg-green-600 text-white hover:bg-green-700 transition disabled:opacity-60 shadow-sm"
                     :disabled="saving" @click.stop="saveProfile">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
                     {{ saving ? 'Saving...' : 'Save' }}
@@ -158,7 +158,9 @@
                 <span class="text-sm font-semibold text-gray-700">Languages & Areas</span>
               </div>
               <div class="flex items-center gap-2">
-                <button v-if="openSection === 'tags'" class="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition" @click.stop="isEditingTags = !isEditingTags">
+                <button v-if="openSection === 'tags'" class="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg transition shadow-sm"
+                  :class="isEditingTags ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-red-600 text-white hover:bg-red-700'"
+                  @click.stop="isEditingTags = !isEditingTags">
                   <svg v-if="!isEditingTags" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   {{ isEditingTags ? 'Done' : 'Edit' }}
                 </button>
@@ -231,14 +233,14 @@
               <div class="flex items-center gap-2">
                 <div v-if="vehicle && openSection === 'vehicle'" class="flex items-center gap-2">
                   <button v-if="!isEditingVehicle"
-                    class="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+                    class="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700 transition shadow-sm"
                     @click.stop="startEditVehicle">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     Edit
                   </button>
-                  <button v-if="isEditingVehicle" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-500" @click.stop="cancelEditVehicle">Cancel</button>
+                  <button v-if="isEditingVehicle" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition" @click.stop="cancelEditVehicle">Cancel</button>
                   <button v-if="isEditingVehicle"
-                    class="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-600 text-white disabled:opacity-60"
+                    class="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg bg-green-600 text-white hover:bg-green-700 transition disabled:opacity-60 shadow-sm"
                     :disabled="savingVehicle" @click.stop="saveVehicle">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
                     {{ savingVehicle ? 'Saving...' : 'Save' }}
@@ -318,7 +320,9 @@
                 <span class="text-sm font-semibold text-gray-700">Verification & Documents</span>
               </div>
               <div class="flex items-center gap-2">
-                <button v-if="openSection === 'docs'" class="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition" @click.stop="docEditMode = !docEditMode">
+                <button v-if="openSection === 'docs'" class="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg transition shadow-sm"
+                  :class="docEditMode ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-red-600 text-white hover:bg-red-700'"
+                  @click.stop="docEditMode = !docEditMode">
                   <svg v-if="!docEditMode" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   {{ docEditMode ? 'Done' : 'Edit' }}
                 </button>
@@ -357,6 +361,7 @@
             <div class="px-4 pt-3 pb-1">
               <p class="text-xs font-medium text-gray-500">Documents</p>
               <p class="text-xs text-gray-400 mt-0.5">All 5 documents are required to complete verification.</p>
+              <p class="text-[11px] text-gray-300 mt-0.5">Accepted: JPG, PNG, PDF · Max 5 MB</p>
             </div>
 
             <!-- Documents list (1 per row) -->
@@ -373,9 +378,9 @@
                     <div v-else-if="doc.file_url && doc.file_url.endsWith('.pdf')" class="w-full h-full flex items-center justify-center bg-red-50">
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                     </div>
-                    <div v-else-if="docEditMode" class="w-full h-full flex items-center justify-center flex-col gap-0.5 px-0.5">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v12"/></svg>
-                      <span class="text-[7px] text-gray-400 font-medium leading-tight text-center">Click to upload from device</span>
+                    <div v-else-if="docEditMode" class="w-full h-full bg-red-600/85 flex items-center justify-center flex-col gap-0.5 px-0.5">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v12"/></svg>
+                      <span class="text-[7px] text-white font-semibold leading-tight text-center">Click to upload from device</span>
                     </div>
                     <div v-else class="w-full h-full flex items-center justify-center">
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
@@ -452,6 +457,8 @@
 import LoadingView from './LoadingView.vue'
 import { ref, reactive, onMounted } from 'vue'
 import { getVerifyStatusClass, formatVerifyStatus, getDocStatusClass, BADGE_BASE } from '@/utils/statusClasses.js'
+import { useConfirm } from '@/components/useConfirm.js'
+import { useToast } from '@/components/useToast.js'
 
 const props = defineProps({ user: Object })
 
@@ -507,6 +514,9 @@ const HEADERS = { 'ngrok-skip-browser-warning': 'true' }
 
 const form = reactive({ fl_name: '', fl_email: '', fl_phone: '', fl_address: '', fl_bio: '', fl_date_of_birth: '', fl_profile_image_url: '' })
 const formSnapshot = reactive({})
+
+const { confirmDialog } = useConfirm()
+const { showToast } = useToast()
 
 const vehicleEditFields = [
   { key: 'fl_vehicle_brand',         label: 'Brand',         placeholder: 'e.g. Toyota',   type: 'text' },
@@ -653,7 +663,10 @@ function openDocPreview(doc) {
 async function uploadDocument(e, doc) {
   const file = e.target.files[0]; if (!file) return
   if (doc.fl_doc_status === 'APPROVED') {
-    const ok = confirm('Re-uploading this document will reset your verification status to PENDING until reviewed by an Admin. Do you want to continue?')
+  const ok = await confirmDialog(
+    'Re-uploading this document will reset your verification status to PENDING until reviewed by an Admin. Do you want to continue?',
+    'Re-upload Document?'
+  )
     if (!ok) { e.target.value = ''; return }
   }
   const idx = documents.value.findIndex(d => d.fl_doc_type === doc.fl_doc_type)
@@ -662,7 +675,7 @@ async function uploadDocument(e, doc) {
   try {
     const fd = new FormData(); fd.append('file', file)
     const res = await fetch(`${API_BASE}/fl-documents/${props.user.fl_id}/upload?doc_type=${doc.fl_doc_type}`, { method: 'POST', headers: HEADERS, body: fd })
-    if (!res.ok) { const err = await res.json(); throw new Error(err.detail || 'Upload failed') }
+    if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.detail || 'Upload failed') }
     const data = await res.json()
     documents.value[idx] = { ...documents.value[idx], file_url: data.file_url, fl_doc_status: 'PENDING', fl_uploaded_at: new Date().toISOString(), uploading: false }
     // Reset verification status to PENDING
@@ -679,11 +692,11 @@ async function uploadDocument(e, doc) {
       const verifyData = await verifyRes.json()
       verifyInfo.value = verifyData.items?.[0] || {}
     }
-    alert('Document uploaded successfully.')
+    showToast('Document uploaded successfully.', 'success')
   } catch (err) {
     console.error('Failed to upload:', err.message)
     documents.value[idx] = { ...documents.value[idx], uploading: false }
-    alert('Failed to upload document. Please try again.')
+    showToast(err.message || 'Failed to upload document. Please try again.', 'error')
   } finally { e.target.value = '' }
 }
 
