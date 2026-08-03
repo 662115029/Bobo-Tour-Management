@@ -34,6 +34,7 @@ CREATE TABLE admin_logs (
                     CHECK (action_type IN (
                         'APPROVE_DOCUMENT',
                         'REJECT_DOCUMENT',
+                        'RESET_DOCUMENT',
                         'VERIFY_FREELANCER',
                         'VERIFY_EMPLOYER',
                         'NOT_VERIFY_FREELANCER',
