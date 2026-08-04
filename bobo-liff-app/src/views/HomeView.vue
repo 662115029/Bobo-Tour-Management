@@ -57,22 +57,17 @@
       <transition name="slide-up">
         <div v-if="menuOpen" class="grid grid-rows-2 grid-cols-3 border-b border-gray-100">
 
-          <!-- Login/Register -->
+          <!-- Login -->
           <button
             class="border-r border-b border-gray-100 py-5 flex flex-col items-center gap-2 active:bg-red-50 transition-colors bg-white"
-            @click="user ? handleLogout() : $router.push('/login')"
+            @click="$router.push('/login')"
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="1.8">
-              <path v-if="!user" d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-              <polyline v-if="!user" points="10 17 15 12 10 7"/>
-              <path v-if="!user" d="M15 12 L3 12" stroke-linecap="round"/>
-              <path v-if="user" d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-              <polyline v-if="user" points="16 17 21 12 16 7"/>
-              <path v-if="user" d="M21 12 L9 12" stroke-linecap="round"/>
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+              <polyline points="10 17 15 12 10 7"/>
+              <path d="M15 12 L3 12" stroke-linecap="round"/>
             </svg>
-            <span class="text-[11px] font-bold text-gray-700 text-center leading-tight">
-              {{ user ? 'Logout' : 'Login /\nRegister' }}
-            </span>
+            <span class="text-[11px] font-bold text-gray-700 text-center leading-tight">Login</span>
           </button>
 
           <!-- Profile -->
@@ -161,7 +156,6 @@
 import { ref } from 'vue'
 
 const props = defineProps({ user: Object })
-const emit = defineEmits(['logout'])
 
 const menuOpen = ref(true)
 const chatInput = ref('')
@@ -173,10 +167,6 @@ function guardedNav(path) {
     return
   }
   window.location.hash = path
-}
-
-function handleLogout() {
-  emit('logout')
 }
 
 function showToast(msg) {
