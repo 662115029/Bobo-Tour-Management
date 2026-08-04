@@ -34,7 +34,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import boboLogo from '@/assets/logo.png'
 import LoadingView from '@/views/LoadingView.vue'
@@ -81,7 +81,44 @@ function showToast({ message, type = 'success' }) {
 const API_BASE = import.meta.env.VITE_FASTAPI_URL || 'http://localhost:8000'
 const HEADERS = { 'ngrok-skip-browser-warning': 'true' }
 
-onMounted(() => init())
+// --- PIN idle-timeout (bank-app style) ---
+// If the LIFF webview is hidden (user switches app / locks phone) for longer
+// than this, the next time it's opened the person must re-enter their PIN,
+// even though the underlying sessionStorage session hasn't technically expired.
+const IDLE_TIMEOUT_MS = 5 * 60 * 1000 // 5 minutes
+
+function clearSessionIfExpired() {
+  const lastHidden = sessionStorage.getItem('fl_last_hidden')
+  sessionStorage.removeItem('fl_last_hidden')
+  if (lastHidden && Date.now() - Number(lastHidden) > IDLE_TIMEOUT_MS) {
+    sessionStorage.removeItem('fl_session')
+    return true
+  }
+  return false
+}
+
+function handleVisibilityChange() {
+  if (document.hidden) {
+    // Going into background — only matters if someone is actually logged in.
+    if (appUser.value) {
+      sessionStorage.setItem('fl_last_hidden', String(Date.now()))
+    }
+  } else {
+    // Coming back to foreground — if we were away too long, force PIN re-entry.
+    if (clearSessionIfExpired()) {
+      appUser.value = null
+      router.push('/login')
+    }
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('visibilitychange', handleVisibilityChange)
+  init()
+})
+onUnmounted(() => {
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
+})
 
 async function init() {
   loading.value = true
@@ -89,6 +126,10 @@ async function init() {
   try {
     // Always get LINE identity first — this is free, no user interaction needed.
     lineProfile.value = await initLiff()
+
+    // If the app was reloaded after sitting hidden past the idle timeout,
+    // drop the stale session before deciding where to route.
+    clearSessionIfExpired()
 
     const stored = sessionStorage.getItem('fl_session')
     if (stored) {
@@ -129,6 +170,7 @@ function handleLogin(userData) {
 
 function handleLogout() {
   sessionStorage.removeItem('fl_session')
+  sessionStorage.removeItem('fl_last_hidden')
   appUser.value = null
   router.push('/login')
 }
