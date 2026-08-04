@@ -10,75 +10,22 @@
       </button>
       <div>
         <p class="text-xs font-semibold text-red-600 uppercase tracking-wider">Freelancer</p>
-        <h2 class="text-lg font-bold text-gray-900 leading-tight">
-          {{ step === 'pin' ? 'Enter PIN' : 'Login' }}
-        </h2>
+        <h2 class="text-lg font-bold text-gray-900 leading-tight">Enter PIN</h2>
       </div>
     </div>
 
-    <!-- Step: Username -->
-    <div v-if="step === 'username'" class="flex-1 flex flex-col p-6 gap-6">
-
-      <div class="bg-blue-50 border-l-4 border-blue-400 rounded-lg px-3 py-2.5 text-xs text-blue-700">
-        Enter your username or email to continue.
-      </div>
-
-      <div class="space-y-1">
-        <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Username or Email</label>
-        <div class="relative">
-          <svg class="absolute left-3 top-1/2 -translate-y-1/2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2">
-            <circle cx="12" cy="8" r="4"/>
-            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
-          </svg>
-          <input
-            v-model="identifier"
-            type="text"
-            placeholder="e.g. somchai99"
-            class="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm bg-white focus:outline-none focus:border-red-400"
-            :class="identifierError ? 'border-red-400' : ''"
-            @keyup.enter="submitIdentifier"
-          />
-        </div>
-        <p v-if="identifierError" class="text-xs text-red-500">{{ identifierError }}</p>
-      </div>
-
-      <button
-        class="w-full bg-red-600 text-white text-sm font-bold py-3.5 rounded-xl flex items-center justify-center gap-2"
-        @click="submitIdentifier"
-      >
-        Next
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
-          <path d="M9 18l6-6-6-6"/>
-        </svg>
-      </button>
-
-      <!-- Register link -->
-      <div class="flex items-center gap-3">
-        <div class="flex-1 h-px bg-gray-200"/>
-        <span class="text-xs text-gray-400">or</span>
-        <div class="flex-1 h-px bg-gray-200"/>
-      </div>
-
-      <button
-        class="w-full border-2 border-red-600 text-red-600 text-sm font-bold py-3.5 rounded-xl"
-        @click="$router.push('/register')"
-      >
-        Create an Account
-      </button>
-
-    </div>
-
-    <!-- Step: PIN pad -->
-    <div v-else-if="step === 'pin'" class="flex-1 flex flex-col items-center justify-center p-6 gap-4">
+    <!-- PIN pad -->
+    <div class="flex-1 flex flex-col items-center justify-center p-6 gap-4">
 
       <div class="text-center">
-        <div class="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="1.8">
+        <div class="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3 overflow-hidden">
+          <img v-if="lineProfile?.pictureUrl" :src="lineProfile.pictureUrl" class="w-full h-full object-cover" />
+          <svg v-else width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="1.8">
             <circle cx="12" cy="8" r="4"/>
             <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
           </svg>
         </div>
-        <p class="text-sm font-bold text-gray-800">{{ identifier }}</p>
+        <p class="text-sm font-bold text-gray-800">{{ lineProfile?.displayName || 'Welcome back' }}</p>
         <p class="text-xs text-gray-400 mt-1">Enter your 6-digit PIN</p>
       </div>
 
@@ -88,10 +35,6 @@
         :error="pinError"
         @complete="handlePinComplete"
       />
-
-      <button class="text-xs text-gray-400 underline" @click="step = 'username'; pinError = ''">
-        Back
-      </button>
 
     </div>
 
@@ -107,28 +50,16 @@ import { useRouter } from 'vue-router'
 import PinPad from './PinPad.vue'
 import LoadingView from './LoadingView.vue'
 
-defineProps({ user: Object })
+const props = defineProps({ user: Object, lineProfile: Object })
 const emit = defineEmits(['login'])
 const router = useRouter()
 
-const step = ref('username')
-const identifier = ref('')
-const identifierError = ref('')
 const pinError = ref('')
 const loading = ref(false)
 const pinPadRef = ref(null)
 
 const API_BASE = import.meta.env.VITE_FASTAPI_URL || 'http://localhost:8000'
 const HEADERS = { 'ngrok-skip-browser-warning': 'true' }
-
-function submitIdentifier() {
-  if (!identifier.value.trim()) {
-    identifierError.value = 'Please enter your username or email.'
-    return
-  }
-  identifierError.value = ''
-  step.value = 'pin'
-}
 
 async function handlePinComplete(pin) {
   loading.value = true
@@ -137,7 +68,7 @@ async function handlePinComplete(pin) {
     const res = await fetch(`${API_BASE}/freelancers/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...HEADERS },
-      body: JSON.stringify({ identifier: identifier.value, pin }),
+      body: JSON.stringify({ line_user_id: props.lineProfile?.lineUserId, pin }),
     })
     const data = await res.json()
     if (!res.ok) {
