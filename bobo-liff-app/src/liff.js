@@ -1,15 +1,26 @@
 import liffSdk from '@line/liff'
 
 const LIFF_ID = import.meta.env.VITE_LIFF_ID || ''
+// Force mock even if LIFF_ID is set — useful for `npm run dev` on http://localhost,
+// where real LIFF init always fails (endpoint isn't registered in LINE console).
+const FORCE_MOCK = import.meta.env.VITE_LIFF_MOCK === 'true'
+const USE_MOCK = FORCE_MOCK || !LIFF_ID
 
 export async function initLiff() {
-  // --- Dev fallback: no LIFF_ID or not inside LINE ---
-  if (!LIFF_ID) {
-    const stored = sessionStorage.getItem('dev_user')
+  // --- Dev fallback: mock LINE profile via sessionStorage ---
+  if (USE_MOCK) {
+    const stored = sessionStorage.getItem('mock_line_profile')
     if (stored) return JSON.parse(stored)
-    return null   // triggers login screen in App.vue
+    const fallback = {
+      lineUserId: 'Umockdev0000000000000000000000',
+      displayName: 'Dev Tester',
+      pictureUrl: '',
+    }
+    sessionStorage.setItem('mock_line_profile', JSON.stringify(fallback))
+    return fallback
   }
 
+  // --- Real LIFF ---
   await liffSdk.init({ liffId: LIFF_ID })
 
   if (!liffSdk.isLoggedIn()) {
