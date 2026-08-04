@@ -11,7 +11,7 @@
 
   <!-- App -->
   <div v-else>
-    <RouterView :user="user" @login="handleLogin" @logout="handleLogout" @show-toast="showToast" />
+    <RouterView :user="appUser" :lineProfile="lineProfile" @login="handleLogin" @logout="handleLogout" @show-toast="showToast" />
 
     <!-- Toast notification (legacy, kept for existing callers using @show-toast) -->
     <Transition name="toast">
@@ -44,7 +44,15 @@ import Toast from '@/components/Toast.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 
 const router = useRouter()
-const user = ref(null)
+
+// lineProfile: identity from LINE (lineUserId, displayName, pictureUrl) — available
+// as soon as the LIFF app opens, regardless of whether the person is registered.
+const lineProfile = ref(null)
+
+// appUser: the authenticated app session (has fl_id) — only set after PIN is verified.
+// Every view (Home/Jobs/Profile/Availability/ChangePin) gates access on this, not lineProfile.
+const appUser = ref(null)
+
 const loading = ref(true)
 const error = ref(false)
 const errorMessage = ref('')
@@ -70,17 +78,28 @@ function showToast({ message, type = 'success' }) {
   toastTimer = setTimeout(() => { toast.value.visible = false }, 3000)
 }
 
+const API_BASE = import.meta.env.VITE_FASTAPI_URL || 'http://localhost:8000'
+const HEADERS = { 'ngrok-skip-browser-warning': 'true' }
+
 onMounted(() => init())
 
 async function init() {
   loading.value = true
   error.value = false
   try {
-    const stored = sessionStorage.getItem('dev_user')
+    // Always get LINE identity first — this is free, no user interaction needed.
+    lineProfile.value = await initLiff()
+
+    const stored = sessionStorage.getItem('fl_session')
     if (stored) {
-      user.value = JSON.parse(stored)
+      // Already logged in this session (PIN was verified earlier) — restore it.
+      appUser.value = JSON.parse(stored)
+    } else if (lineProfile.value?.lineUserId) {
+      // Not logged in yet this session — figure out whether this LINE user
+      // is already registered, and route to PIN-unlock or Register accordingly.
+      await routeByLineStatus(lineProfile.value.lineUserId)
     } else {
-      user.value = await initLiff()
+      router.push('/login')
     }
   } catch (e) {
     error.value = true
@@ -90,16 +109,27 @@ async function init() {
   }
 }
 
+async function routeByLineStatus(lineUserId) {
+  try {
+    const res = await fetch(`${API_BASE}/freelancers/by-line/${lineUserId}`, { headers: HEADERS })
+    const data = await res.json()
+    router.push(data.exists ? '/login' : '/register')
+  } catch {
+    // Backend unreachable — fall back to the login screen either way.
+    router.push('/login')
+  }
+}
+
 function retry() { init() }
 
 function handleLogin(userData) {
-  sessionStorage.setItem('dev_user', JSON.stringify(userData))
-  user.value = userData
+  sessionStorage.setItem('fl_session', JSON.stringify(userData))
+  appUser.value = userData
 }
 
 function handleLogout() {
-  sessionStorage.removeItem('dev_user')
-  user.value = null
+  sessionStorage.removeItem('fl_session')
+  appUser.value = null
   router.push('/login')
 }
 </script>
