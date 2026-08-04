@@ -378,12 +378,13 @@
                     <div v-else-if="doc.file_url && doc.file_url.endsWith('.pdf')" class="w-full h-full flex items-center justify-center bg-red-50">
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                     </div>
-                    <div v-else-if="docEditMode" class="w-full h-full bg-red-600/85 flex items-center justify-center flex-col gap-0.5 px-0.5">
+                    <div v-else-if="docEditMode" class="w-full h-full bg-gray-400 flex items-center justify-center flex-col gap-0.5 px-0.5">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v12"/></svg>
                       <span class="text-[7px] text-white font-semibold leading-tight text-center">Click to upload from device</span>
                     </div>
-                    <div v-else class="w-full h-full flex items-center justify-center">
+                    <div v-else class="w-full h-full flex items-center justify-center flex-col gap-0.5">
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                      <span class="text-[7px] text-gray-300 font-medium">Not uploaded yet</span>
                     </div>
                     <div v-if="doc.uploading" class="absolute inset-0 bg-white/80 flex items-center justify-center">
                       <div class="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
