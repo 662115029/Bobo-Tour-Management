@@ -34,7 +34,8 @@ class FreelancerRegisterRequest(BaseModel):
 
 
 class FreelancerLoginRequest(BaseModel):
-    identifier: str
+    identifier: Optional[str] = None
+    line_user_id: Optional[str] = None
     pin: str
 
 
@@ -155,20 +156,46 @@ def register_freelancer(body: FreelancerRegisterRequest):
 def freelancer_login(body: FreelancerLoginRequest):
     conn = None
     try:
+        if not body.identifier and not body.line_user_id:
+            raise HTTPException(status_code=400, detail="identifier or line_user_id is required.")
+
         conn = get_connection()
         cursor = get_cursor(conn)
-        cursor.execute(
-            """
-            SELECT fl_id, fl_username, fl_name, fl_email, fl_pin_hash, fl_profile_image_url
-            FROM freelancers WHERE fl_username = %s OR fl_email = %s
-            """,
-            (body.identifier, body.identifier)
-        )
+
+        if body.line_user_id:
+            cursor.execute(
+                """
+                SELECT fl_id, fl_username, fl_name, fl_email, fl_pin_hash,
+                       fl_profile_image_url, line_user_id
+                FROM freelancers WHERE line_user_id = %s
+                """,
+                (body.line_user_id,)
+            )
+        else:
+            cursor.execute(
+                """
+                SELECT fl_id, fl_username, fl_name, fl_email, fl_pin_hash,
+                       fl_profile_image_url, line_user_id
+                FROM freelancers WHERE fl_username = %s OR fl_email = %s
+                """,
+                (body.identifier, body.identifier)
+            )
+
         freelancer = cursor.fetchone()
         if not freelancer:
-            raise HTTPException(status_code=401, detail="Invalid username/email or PIN.")
+            raise HTTPException(status_code=401, detail="Invalid credentials.")
         if not bcrypt.checkpw(body.pin.encode(), freelancer["fl_pin_hash"].encode()):
-            raise HTTPException(status_code=401, detail="Invalid username/email or PIN.")
+            raise HTTPException(status_code=401, detail="Invalid credentials.")
+
+        # Auto-link legacy accounts: if this record has no LINE ID on file yet,
+        # and we now know it from this login, attach it.
+        if body.line_user_id and not freelancer["line_user_id"]:
+            cursor.execute(
+                "UPDATE freelancers SET line_user_id = %s WHERE fl_id = %s AND line_user_id IS NULL",
+                (body.line_user_id, freelancer["fl_id"])
+            )
+            conn.commit()
+
         return {
             "fl_id": freelancer["fl_id"],
             "fl_username": freelancer["fl_username"],
@@ -184,7 +211,26 @@ def freelancer_login(body: FreelancerLoginRequest):
         if conn:
             conn.close()
 
+@router.get("/freelancers/by-line/{line_user_id}")
+def check_freelancer_by_line(line_user_id: str):
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute(
+            "SELECT fl_id FROM freelancers WHERE line_user_id = %s",
+            (line_user_id,)
+        )
+        freelancer = cursor.fetchone()
+        return {"exists": freelancer is not None}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
+
 @router.get("/freelancers")
+
 @router.get("/admin/freelancers")
 def get_freelancers(limit: int = 10, offset: int = 0, search: str = "", status: str = "", sort_by: str = "f.fl_updated_at", sort_order: str = "desc"):
     conn = None
