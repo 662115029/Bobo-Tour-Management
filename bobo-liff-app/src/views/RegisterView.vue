@@ -130,7 +130,8 @@
 import { ref, reactive, nextTick } from 'vue'
 import PinPad from './PinPad.vue'
 
-const props = defineProps({ user: Object })
+const props = defineProps({ user: Object, lineProfile: Object })
+const emit = defineEmits(['login'])
 
 const step = ref('info') // info | pin | confirm
 const submitting = ref(false)
@@ -201,11 +202,17 @@ async function submitRegister() {
         fl_name: `${form.firstName} ${form.lastName}`.trim(),
         fl_phone: form.phone,
         fl_pin: form.pin,
-        line_user_id: props.user?.lineUserId || null,
-      })
+        line_user_id: props.lineProfile?.lineUserId || null,      })
     })
     const data = await res.json()
     if (data.success) {
+      emit('login', {
+        fl_id: data.fl_id,
+        fl_username: form.username,
+        fl_name: `${form.firstName} ${form.lastName}`.trim(),
+        fl_email: form.email,
+        fl_profile_image_url: null,
+      })
       submitted.value = true
     } else {
       apiError.value = data.detail || data.error || 'Registration failed'
