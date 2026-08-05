@@ -82,16 +82,23 @@ const API_BASE = import.meta.env.VITE_FASTAPI_URL || 'http://localhost:8000'
 const HEADERS = { 'ngrok-skip-browser-warning': 'true' }
 
 // --- PIN idle-timeout (bank-app style) ---
-// If the LIFF webview is hidden (user switches app / locks phone) for longer
-// than this, the next time it's opened the person must re-enter their PIN,
-// even though the underlying sessionStorage session hasn't technically expired.
+// Using localStorage (not sessionStorage) because LINE opens a brand-new
+// webview instance every time a Rich Menu button is tapped — sessionStorage
+// would reset every single time, forcing PIN re-entry constantly even
+// seconds apart. localStorage persists across those separate webview
+// launches, so the 5-minute idle window is the only thing that expires it.
 const IDLE_TIMEOUT_MS = 5 * 60 * 1000 // 5 minutes
 
+function touchLastActive() {
+  if (appUser.value) {
+    localStorage.setItem('fl_last_active', String(Date.now()))
+  }
+}
+
 function clearSessionIfExpired() {
-  const lastHidden = sessionStorage.getItem('fl_last_hidden')
-  sessionStorage.removeItem('fl_last_hidden')
-  if (lastHidden && Date.now() - Number(lastHidden) > IDLE_TIMEOUT_MS) {
-    sessionStorage.removeItem('fl_session')
+  const lastActive = localStorage.getItem('fl_last_active')
+  if (lastActive && Date.now() - Number(lastActive) > IDLE_TIMEOUT_MS) {
+    localStorage.removeItem('fl_session')
     return true
   }
   return false
@@ -100,9 +107,7 @@ function clearSessionIfExpired() {
 function handleVisibilityChange() {
   if (document.hidden) {
     // Going into background — only matters if someone is actually logged in.
-    if (appUser.value) {
-      sessionStorage.setItem('fl_last_hidden', String(Date.now()))
-    }
+    touchLastActive()
   } else {
     // Coming back to foreground — if we were away too long, force PIN re-entry.
     if (clearSessionIfExpired()) {
@@ -114,10 +119,12 @@ function handleVisibilityChange() {
 
 onMounted(() => {
   document.addEventListener('visibilitychange', handleVisibilityChange)
+  window.addEventListener('pagehide', touchLastActive)
   init()
 })
 onUnmounted(() => {
   document.removeEventListener('visibilitychange', handleVisibilityChange)
+  window.removeEventListener('pagehide', touchLastActive)
 })
 
 async function init() {
@@ -132,15 +139,22 @@ async function init() {
     const intendedPath = target ? `/${target}` : null
 
     lineProfile.value = await initLiff()
+
+    // If we were idle past the timeout, drop the stale session before
+    // deciding where to route.
     clearSessionIfExpired()
 
-    const stored = sessionStorage.getItem('fl_session')
+    const stored = localStorage.getItem('fl_session')
     if (stored) {
+      // Already logged in (PIN was verified earlier, even in a different
+      // webview launch) — restore it and jump straight to the intended page.
       appUser.value = JSON.parse(stored)
       if (intendedPath) {
         router.replace(intendedPath)
       }
     } else if (lineProfile.value?.lineUserId) {
+      // Not logged in yet — figure out whether this LINE user is already
+      // registered, and route to PIN-unlock or Register accordingly.
       await routeByLineStatus(lineProfile.value.lineUserId, intendedPath)
     } else {
       router.push('/login')
@@ -170,13 +184,14 @@ async function routeByLineStatus(lineUserId, intendedPath) {
 function retry() { init() }
 
 function handleLogin(userData) {
-  sessionStorage.setItem('fl_session', JSON.stringify(userData))
+  localStorage.setItem('fl_session', JSON.stringify(userData))
+  localStorage.setItem('fl_last_active', String(Date.now()))
   appUser.value = userData
 }
 
 function handleLogout() {
-  sessionStorage.removeItem('fl_session')
-  sessionStorage.removeItem('fl_last_hidden')
+  localStorage.removeItem('fl_session')
+  localStorage.removeItem('fl_last_active')
   appUser.value = null
   router.push('/login')
 }
