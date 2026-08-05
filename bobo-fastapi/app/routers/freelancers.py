@@ -12,8 +12,27 @@ from .utils import (
     validate_pin,
 )
 import bcrypt
+import os
+import requests
 
 router = APIRouter(tags=["freelancers"])
+
+LINE_CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
+RICH_MENU_ID_REGISTERED = "richmenu-5712b3e0dace8d4cfe59e128a89439d7"
+
+
+def link_rich_menu_to_user(line_user_id: str):
+    """Switch a user's rich menu to the full (registered) menu after they sign up."""
+    if not line_user_id:
+        return
+    try:
+        requests.post(
+            f"https://api.line.me/v2/bot/user/{line_user_id}/richmenu/{RICH_MENU_ID_REGISTERED}",
+            headers={"Authorization": f"Bearer {LINE_CHANNEL_ACCESS_TOKEN}"},
+            timeout=5,
+        )
+    except Exception:
+        pass  # rich menu switch failing shouldn't block registration
 
 FL_DOC_TYPES = [
     "PERSONAL_ID",
@@ -139,6 +158,7 @@ def register_freelancer(body: FreelancerRegisterRequest):
             )
 
         conn.commit()
+        link_rich_menu_to_user(body.line_user_id)
         return {"success": True, "fl_id": fl_id}
 
     except HTTPException:
