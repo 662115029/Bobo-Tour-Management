@@ -4,7 +4,7 @@ import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
-  base: '/Bobo-Tour-Management/',
+  base: '/Bobo-Tour-Management/freelancer/',
   plugins: [
     vue(),
     // vueDevTools(), -- disabled (causes false vue-inspector parse errors)
