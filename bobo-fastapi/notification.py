@@ -8,7 +8,7 @@ from linebot.v3.messaging import (
 )
 from bot import configuration
 
-LIFF_URL = "https://liff.line.me/2010970688-OfR4fiYR"
+LIFF_URL = "https://liff.line.me/2010988299-KhiGZeLc"
 
 
 def get_messaging_api():

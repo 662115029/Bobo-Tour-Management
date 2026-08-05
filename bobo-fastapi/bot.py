@@ -73,7 +73,7 @@ def handle_message(event):
 
 
 def send_job_list_message(api, reply_token):
-    LIFF_URL = "https://liff.line.me/2010970688-OfR4fiYR"
+    LIFF_URL = "https://liff.line.me/2010988299-KhiGZeLc"
     flex_content = {
         "type": "bubble",
         "header": {
