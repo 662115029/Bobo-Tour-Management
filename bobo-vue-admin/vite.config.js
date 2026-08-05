@@ -3,7 +3,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
 export default defineConfig({
-  base: '/Bobo-Tour-Management-Admin/',
+  base: '/Bobo-Tour-Management/admin/',
   plugins: [vue()],
   resolve: {
     alias: {
