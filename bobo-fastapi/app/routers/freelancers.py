@@ -18,7 +18,7 @@ import requests
 router = APIRouter(tags=["freelancers"])
 
 LINE_CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
-RICH_MENU_ID_REGISTERED = "richmenu-5712b3e0dace8d4cfe59e128a89439d7"
+RICH_MENU_ID_REGISTERED = "richmenu-9005d3bf60b4b4f52b8ee95a472242b9"
 
 
 def link_rich_menu_to_user(line_user_id: str):
