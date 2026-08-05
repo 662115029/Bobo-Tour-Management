@@ -53,6 +53,7 @@ import LoadingView from './LoadingView.vue'
 const props = defineProps({ user: Object, lineProfile: Object })
 const emit = defineEmits(['login'])
 const router = useRouter()
+const route = useRoute()
 
 const pinError = ref('')
 const loading = ref(false)
@@ -77,7 +78,7 @@ async function handlePinComplete(pin) {
       return
     }
     emit('login', data)
-    router.push('/')
+    router.push(route.query.redirect || '/')
   } catch {
     pinError.value = 'Cannot connect to server.'
     pinPadRef.value?.reset()

@@ -124,6 +124,12 @@ async function init() {
   loading.value = true
   error.value = false
   try {
+    // Capture where the person was trying to go BEFORE we possibly redirect
+    // them to /login or /register — e.g. they tapped "Profile" on the real
+    // LINE Rich Menu, which deep-links straight to #/profile.
+    await router.isReady()
+    const intendedPath = router.currentRoute.value.fullPath
+
     // Always get LINE identity first — this is free, no user interaction needed.
     lineProfile.value = await initLiff()
 
@@ -134,11 +140,12 @@ async function init() {
     const stored = sessionStorage.getItem('fl_session')
     if (stored) {
       // Already logged in this session (PIN was verified earlier) — restore it.
+      // Hash-mode routing already preserved intendedPath, nothing to do.
       appUser.value = JSON.parse(stored)
     } else if (lineProfile.value?.lineUserId) {
       // Not logged in yet this session — figure out whether this LINE user
       // is already registered, and route to PIN-unlock or Register accordingly.
-      await routeByLineStatus(lineProfile.value.lineUserId)
+      await routeByLineStatus(lineProfile.value.lineUserId, intendedPath)
     } else {
       router.push('/login')
     }
@@ -150,14 +157,23 @@ async function init() {
   }
 }
 
-async function routeByLineStatus(lineUserId) {
+async function routeByLineStatus(lineUserId, intendedPath) {
+  // Only worth remembering if it points somewhere other than the root/register/login.
+  const redirect = intendedPath && !['/', '/login', '/register'].includes(intendedPath)
+    ? intendedPath
+    : undefined
+
   try {
     const res = await fetch(`${API_BASE}/freelancers/by-line/${lineUserId}`, { headers: HEADERS })
     const data = await res.json()
-    router.push(data.exists ? '/login' : '/register')
+    if (data.exists) {
+      router.push({ path: '/login', query: redirect ? { redirect } : {} })
+    } else {
+      router.push('/register')
+    }
   } catch {
     // Backend unreachable — fall back to the login screen either way.
-    router.push('/login')
+    router.push({ path: '/login', query: redirect ? { redirect } : {} })
   }
 }
 
