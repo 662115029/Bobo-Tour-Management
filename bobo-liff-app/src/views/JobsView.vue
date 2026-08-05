@@ -4,7 +4,7 @@
     <!-- Header -->
     <div class="flex items-center gap-3 px-4 py-3 bg-white border-b border-[#e0e0e0] flex-shrink-0">
       <button class="w-9 h-9 rounded-full bg-[#f5f5f5] flex items-center justify-center"
-        @click="selectedJob ? selectedJob = null : $router.push('/')">
+        @click="selectedJob = null">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
       </button>
       <div class="flex-1">
