@@ -124,27 +124,23 @@ async function init() {
   loading.value = true
   error.value = false
   try {
-    // Capture where the person was trying to go BEFORE we possibly redirect
-    // them to /login or /register — e.g. they tapped "Profile" on the real
-    // LINE Rich Menu, which deep-links straight to #/profile.
-    await router.isReady()
-    const intendedPath = router.currentRoute.value.fullPath
+    // Read the deep-link target from the query string (?target=profile) —
+    // NOT from the URL hash, because the hash gets dropped during LIFF's
+    // OAuth login redirect. Query params survive that round-trip.
+    const searchParams = new URLSearchParams(window.location.search)
+    const target = searchParams.get('target')
+    const intendedPath = target ? `/${target}` : null
 
-    // Always get LINE identity first — this is free, no user interaction needed.
     lineProfile.value = await initLiff()
-
-    // If the app was reloaded after sitting hidden past the idle timeout,
-    // drop the stale session before deciding where to route.
     clearSessionIfExpired()
 
     const stored = sessionStorage.getItem('fl_session')
     if (stored) {
-      // Already logged in this session (PIN was verified earlier) — restore it.
-      // Hash-mode routing already preserved intendedPath, nothing to do.
       appUser.value = JSON.parse(stored)
+      if (intendedPath) {
+        router.replace(intendedPath)
+      }
     } else if (lineProfile.value?.lineUserId) {
-      // Not logged in yet this session — figure out whether this LINE user
-      // is already registered, and route to PIN-unlock or Register accordingly.
       await routeByLineStatus(lineProfile.value.lineUserId, intendedPath)
     } else {
       router.push('/login')
@@ -158,22 +154,16 @@ async function init() {
 }
 
 async function routeByLineStatus(lineUserId, intendedPath) {
-  // Only worth remembering if it points somewhere other than the root/register/login.
-  const redirect = intendedPath && !['/', '/login', '/register'].includes(intendedPath)
-    ? intendedPath
-    : undefined
-
   try {
     const res = await fetch(`${API_BASE}/freelancers/by-line/${lineUserId}`, { headers: HEADERS })
     const data = await res.json()
     if (data.exists) {
-      router.push({ path: '/login', query: redirect ? { redirect } : {} })
+      router.push({ path: '/login', query: intendedPath ? { redirect: intendedPath } : {} })
     } else {
       router.push('/register')
     }
   } catch {
-    // Backend unreachable — fall back to the login screen either way.
-    router.push({ path: '/login', query: redirect ? { redirect } : {} })
+    router.push({ path: '/login', query: intendedPath ? { redirect: intendedPath } : {} })
   }
 }
 
