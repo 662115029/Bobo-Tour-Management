@@ -8,3 +8,4 @@ export function useSidebar() {
   const open = () => { isOpen.value = true }
   return { isOpen, toggle, close, open }
 }
+

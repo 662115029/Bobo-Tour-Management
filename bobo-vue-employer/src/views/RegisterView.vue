@@ -248,7 +248,7 @@
 import { reactive, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 
-const API_BASE = '/api'
+const API_BASE = import.meta.env.VITE_API_BASE || '/api'
 const router = useRouter()
 
 const form = reactive({

@@ -80,7 +80,7 @@ import { useSidebar } from '@/components/useSidebar.js'
 
 const { avatarStyle, initials2 } = useAvatar()
 const { verifyStatus } = useVerifyBanner()
-const API_BASE = '/api'
+const API_BASE = import.meta.env.VITE_API_BASE || '/api'
 const router = useRouter()
 const route = useRoute()
 const { isOpen, toggle } = useSidebar()

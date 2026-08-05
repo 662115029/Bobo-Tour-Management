@@ -586,7 +586,7 @@ import { useAvatar } from '@/composables/useAvatar'
 
 const { avatarStyle, initials2 } = useAvatar()
 
-const API_BASE = '/api'
+const API_BASE = import.meta.env.VITE_API_BASE || '/api'
 const router = useRouter()
 const route = useRoute()
 const emId = localStorage.getItem('em_id')

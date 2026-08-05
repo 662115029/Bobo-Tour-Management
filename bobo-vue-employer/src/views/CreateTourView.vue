@@ -388,7 +388,7 @@ import { reactive, ref, computed, watch, onMounted } from 'vue'
 import { useRouter, onBeforeRouteLeave } from 'vue-router'
 import AppLayout from '../components/AppLayout.vue'
 
-const API_BASE = '/api'
+const API_BASE = import.meta.env.VITE_API_BASE || '/api'
 const router = useRouter()
 const DRAFT_KEY = 'create_job_draft'
 

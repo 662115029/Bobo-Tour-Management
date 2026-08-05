@@ -164,7 +164,7 @@ const props = defineProps({
 defineEmits(['close'])
 
 const { avatarStyle, initials2 } = useAvatar()
-const API_BASE = '/api'
+const API_BASE = import.meta.env.VITE_API_BASE || '/api'
 const fl = ref(null)
 const loading = ref(true)
 const error = ref('')

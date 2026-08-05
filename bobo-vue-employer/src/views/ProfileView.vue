@@ -360,7 +360,7 @@ import { useConfirm } from '@/components/useConfirm.js'
 const { showToast } = useToast()
 const { confirmDialog } = useConfirm()
 
-const API_BASE = '/api'
+const API_BASE = import.meta.env.VITE_API_BASE || '/api'
 const documents = ref([])
 const docsLoading = ref(false)
 const verifyLoadError = ref('')
