@@ -46,7 +46,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import PinPad from './PinPad.vue'
 import LoadingView from './LoadingView.vue'
 
