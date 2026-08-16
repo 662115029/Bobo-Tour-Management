@@ -63,6 +63,14 @@
         </svg>
         <span v-if="isOpen" class="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">Admin Logs</span>
       </router-link>
+
+      <router-link to="/matching-weights" class="nav-item" :class="navClasses($route.path === '/matching-weights')">
+        <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 21v-7m0-4V3m8 18v-9m0-4V3m8 18v-5m0-4V3" />
+          <circle cx="4" cy="14" r="2" /><circle cx="12" cy="8" r="2" /><circle cx="20" cy="12" r="2" />
+        </svg>
+        <span v-if="isOpen" class="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">Matching Weights</span>
+      </router-link>
     </nav>
 
     <!-- Bottom section -->

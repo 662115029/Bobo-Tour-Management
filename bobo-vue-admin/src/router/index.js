@@ -8,6 +8,7 @@ import FreelancerDetail from "../views/FreelancerDetailView.vue";
 import EmployerDetail from "../views/EmployerDetailView.vue";
 import Users from "../views/UsersView.vue";
 import Logs from "../views/LogsView.vue";
+import MatchingWeights from "../views/MatchingWeightsView.vue";
 import Profile from "../views/ProfileView.vue";
 import Login from "../views/LoginView.vue";
 import Register from "../views/RegisterView.vue";
@@ -17,6 +18,7 @@ export const pageNames = {
   Verification: "Verification",
   Users: "Users",
   Logs: "Admin Logs",
+  MatchingWeights: "Matching Score Weights",
   Profile: "Profile",
   Dashboard: "Dashboard",
 };
@@ -51,6 +53,7 @@ const routes = [
       },
       { path: "users", name: "Users", component: Users },
       { path: "logs", name: "Logs", component: Logs },
+      { path: "matching-weights", name: "MatchingWeights", component: MatchingWeights },
       { path: "profile", name: "Profile", component: Profile },
     ],
   },
