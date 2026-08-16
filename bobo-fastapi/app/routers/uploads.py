@@ -5,10 +5,8 @@ from app.db.storage_service import upload_image_to_supabase
 router = APIRouter(tags=["uploads"])
 
 ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp"}
-ALLOWED_TYPES_WITH_PDF = {"image/jpeg", "image/png", "image/webp", "application/pdf"}
-ALLOWED_DOC_TYPES = {"image/jpeg", "image/png", "application/pdf"}
-DOC_TYPE_ERROR = "File must be in .jpg, .png, or .pdf format only."
-
+ALLOWED_DOC_TYPES = {"image/jpeg", "image/png"}
+DOC_TYPE_ERROR = "File must be in .jpg or .png format only."
 
 @router.post("/upload/image")
 async def upload_image(file: UploadFile = File(...)):

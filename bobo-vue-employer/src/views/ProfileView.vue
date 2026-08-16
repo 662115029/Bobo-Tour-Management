@@ -230,7 +230,7 @@
               <div>
                 <div class="text-[12px] font-bold text-[#444] uppercase tracking-wide mb-1">Documents</div>
                 <p class="text-[12px] text-[#999] mb-1">All 5 documents are required to complete verification.</p>
-                <p class="text-[11px] text-[#bbb] mb-3">Accepted formats: JPG, PNG, PDF · Max size: 5 MB</p>
+                <p class="text-[11px] text-[#bbb] mb-3">Accepted formats: JPG, PNG · Max size: 5 MB</p>
                 <div v-if="docsLoading" class="text-center py-4 text-[13px] text-[#bbb]">Loading…</div>
                 <div v-else-if="documents.length === 0" class="text-center py-4 text-[13px] text-[#bbb] italic">No documents.</div>
                 <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
@@ -261,7 +261,7 @@
                       <span v-if="doc.reviewed_by_name && doc.em_doc_status === 'APPROVED'" class="text-[10px] text-[#bbb]">By {{ doc.reviewed_by_name }}</span>
                       <span v-if="doc.em_doc_status === 'REJECTED' && doc.reject_reason" class="text-[10px] text-red-400 leading-snug">Reason: {{ doc.reject_reason }}</span>
                     </div>
-                    <input :id="'doc-input-' + doc.em_doc_id" type="file" accept="image/*,application/pdf" class="hidden"
+                    <input :id="'doc-input-' + doc.em_doc_id" type="file" accept="image/*" class="hidden"
                       @change="e => uploadDocument(e, doc)" />
                   </div>
                 </div>

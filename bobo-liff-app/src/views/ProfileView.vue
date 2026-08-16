@@ -358,7 +358,7 @@
             <div class="px-4 pt-3 pb-1">
               <p class="text-xs font-medium text-gray-500">Documents</p>
               <p class="text-xs text-gray-400 mt-0.5">All 5 documents are required to complete verification.</p>
-              <p class="text-[11px] text-gray-300 mt-0.5">Accepted: JPG, PNG, PDF · Max 5 MB</p>
+              <p class="text-[11px] text-gray-300 mt-0.5">Accepted: JPG, PNG · Max 5 MB</p>
             </div>
 
             <!-- Documents list (1 per row) -->
@@ -371,10 +371,7 @@
 
                   <!-- Thumbnail -->
                   <div class="w-14 h-14 rounded-lg bg-gray-50 flex-shrink-0 relative overflow-hidden">
-                    <img v-if="doc.file_url && !doc.file_url.endsWith('.pdf')" :src="doc.file_url" class="w-full h-full object-cover" />
-                    <div v-else-if="doc.file_url && doc.file_url.endsWith('.pdf')" class="w-full h-full flex items-center justify-center bg-red-50">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                    </div>
+                    <img v-if="doc.file_url" :src="doc.file_url" class="w-full h-full object-cover" />
                     <div v-else-if="docEditMode" class="w-full h-full bg-gray-400 flex items-center justify-center flex-col gap-0.5 px-0.5">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v12"/></svg>
                       <span class="text-[7px] text-white font-semibold leading-tight text-center">Click to upload from device</span>
@@ -406,7 +403,7 @@
                     <p v-if="doc.fl_doc_status === 'REJECTED' && doc.reject_reason" class="text-xs text-red-400 mt-0.5">{{ doc.reject_reason }}</p>
                   </div>
                 </div>
-                <input :id="'doc-input-' + doc.fl_doc_type" type="file" accept="image/*,application/pdf" class="hidden" @change="(e) => uploadDocument(e, doc)" />
+                <input :id="'doc-input-' + doc.fl_doc_type" type="file" accept="image/*" class="hidden" @change="(e) => uploadDocument(e, doc)" />
               </div>
             </div>
             </div><!-- end v-show docs -->
@@ -628,12 +625,12 @@ async function uploadAvatar(e) {
   try {
     const fd = new FormData(); fd.append('file', file)
     const res = await fetch(`${API_BASE}/upload/freelancer-profile`, { method: 'POST', headers: HEADERS, body: fd })
-    if (!res.ok) throw new Error('Upload failed')
+    if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.detail || 'Upload failed') }
     const data = await res.json()
     const url = data.url || data.file_url || data.public_url
     form.fl_profile_image_url = url
     await fetch(`${API_BASE}/freelancers/${props.user.fl_id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', ...HEADERS }, body: JSON.stringify({ fl_profile_image_url: url }) })
-  } catch { saveError.value = 'Failed to upload photo.' }
+  } catch (err) { saveError.value = err.message || 'Failed to upload photo.' }
   finally { avatarUploading.value = false; e.target.value = '' }
 }
 
@@ -644,9 +641,9 @@ async function uploadVehicleImage(e) {
   try {
     const fd = new FormData(); fd.append('file', file)
     const res = await fetch(`${API_BASE}/fl-vehicle/${vehicle.value.fl_vehicle_id}/images`, { method: 'POST', headers: HEADERS, body: fd })
-    if (!res.ok) throw new Error('Upload failed')
+    if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.detail || 'Upload failed') }
     const data = await res.json(); vehicleImages.value.unshift(data)
-  } catch { vehicleSaveError.value = 'Failed to upload vehicle image.' }
+  } catch (err) { vehicleSaveError.value = err.message || 'Failed to upload vehicle image.' }
   finally { e.target.value = '' }
 }
 
@@ -654,8 +651,7 @@ function triggerDocUpload(doc) { document.getElementById('doc-input-' + doc.fl_d
 
 function openDocPreview(doc) {
   if (!doc.file_url) return
-  if (doc.file_url.endsWith('.pdf')) { window.open(doc.file_url, '_blank') }
-  else { modalImage.value = doc.file_url }
+  modalImage.value = doc.file_url
 }
 
 async function uploadDocument(e, doc) {
