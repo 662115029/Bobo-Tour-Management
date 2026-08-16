@@ -2,7 +2,7 @@
   <AppLayout>
     <div class="px-5 pb-8">
 
-      <!-- Top bar: Back + Action buttons -->
+      <!-- Top bar: Back only -->
       <div class="flex items-center justify-between flex-wrap gap-2 py-3 mb-5">
         <button
           @click="$router.back()"
@@ -13,30 +13,54 @@
           </svg>
           Back
         </button>
+      </div>
 
-        <div v-if="job" class="flex items-center gap-2">
-          <template v-if="!editing">
-            <button v-if="canEdit" @click="startEditing"
-              class="flex items-center gap-1.5 px-3.5 py-2 text-[13px] font-semibold rounded-lg border-2 border-red-500 text-red-600 hover:bg-red-50 transition">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-              Edit Tour
-            </button>
-            <button v-if="canCancel" @click="confirmCancel" :disabled="cancelling"
-              class="flex items-center gap-1.5 px-3.5 py-2 text-[13px] font-medium rounded-lg border border-[#e0e0e0] text-[#666] hover:bg-[#f5f5f5] transition disabled:opacity-50">
-              {{ cancelling ? 'Cancelling…' : 'Cancel Tour' }}
-            </button>
-          </template>
-          <template v-else>
-            <button @click="cancelEditing"
-              class="px-3.5 py-2 text-[13px] font-medium rounded-lg border border-[#e0e0e0] text-[#666] hover:bg-[#f5f5f5] transition">
-              Discard
-            </button>
-            <button @click="saveJob" :disabled="submitting"
-              class="px-5 py-2 text-[13px] font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700 transition disabled:opacity-50">
-              {{ submitting ? 'Saving…' : 'Save Changes' }}
-            </button>
-          </template>
-        </div>
+      <!-- Floating Matching / Applications toolbar — fixed top-right -->
+      <div v-if="job" class="fixed top-20 right-6 z-40 flex items-center gap-2">
+        <button
+          class="group flex items-center justify-center gap-2 w-[150px] px-3 py-2 rounded-full text-[13px] font-bold bg-white border-2 border-violet-500 text-violet-700 hover:bg-violet-50 shadow-md transition-colors cursor-pointer"
+          @click="showMatchingModal = true">
+          <span class="w-6 h-6 rounded-full bg-violet-100 flex items-center justify-center shrink-0">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4M16 17H4m0 0l4 4m-4-4l4-4"/></svg>
+          </span>
+          Matching
+          <span v-if="suggestedMatches.length" class="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-violet-600 text-white text-[10px] font-bold">{{ suggestedMatches.length }}</span>
+        </button>
+
+        <button
+          class="group flex items-center justify-center gap-2 w-[150px] px-3 py-2 rounded-full text-[13px] font-bold bg-white border-2 border-amber-500 text-amber-700 hover:bg-amber-50 shadow-md transition-colors cursor-pointer"
+          @click="showApplicationModal = true">
+          <span class="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          </span>
+          Applications
+          <span v-if="applications.length" class="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-amber-600 text-white text-[10px] font-bold">{{ applications.length }}</span>
+        </button>
+      </div>
+
+      <!-- Floating Edit / Cancel toolbar — fixed bottom-right -->
+      <div v-if="job" class="fixed bottom-6 right-6 z-40 flex items-center gap-2">
+        <template v-if="!editing">
+          <button v-if="canCancel" @click="confirmCancel" :disabled="cancelling"
+            class="flex items-center justify-center w-[140px] px-3 py-2.5 text-[13px] font-medium rounded-full bg-white border border-[#e0e0e0] text-[#666] hover:bg-[#f5f5f5] shadow-md transition disabled:opacity-50">
+            {{ cancelling ? 'Cancelling…' : 'Cancel Tour' }}
+          </button>
+          <button v-if="canEdit" @click="startEditing"
+            class="flex items-center justify-center gap-1.5 w-[140px] px-3 py-2.5 text-[13px] font-semibold rounded-full bg-white border-2 border-red-500 text-red-600 hover:bg-red-50 shadow-md transition">
+            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            Edit Tour
+          </button>
+        </template>
+        <template v-else>
+          <button @click="cancelEditing"
+            class="flex items-center justify-center w-[140px] px-3 py-2.5 text-[13px] font-medium rounded-full bg-white border border-[#e0e0e0] text-[#666] hover:bg-[#f5f5f5] shadow-md transition">
+            Discard
+          </button>
+          <button @click="saveJob" :disabled="submitting"
+            class="flex items-center justify-center w-[140px] px-3 py-2.5 text-[13px] font-semibold rounded-full bg-red-600 text-white hover:bg-red-700 shadow-md transition disabled:opacity-50">
+            {{ submitting ? 'Saving…' : 'Save Changes' }}
+          </button>
+        </template>
       </div>
 
       <!-- Loading -->
@@ -511,43 +535,6 @@
               </div>
             </div>
 
-            <!-- Applications -->
-            <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-              <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
-                <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                <span class="text-[13px] font-bold text-[#444] tracking-wide">Applications</span>
-                <span class="ml-auto inline-flex items-center justify-center bg-[#f0f4ff] text-[#3d5afe] rounded-full text-[11px] font-bold px-2 py-0.5">{{ applications.length }}</span>
-              </div>
-              <div class="px-4 py-4 flex flex-col gap-2">
-                <div v-if="!applications.length" class="text-center py-8 text-[#bbb] text-[13px]">No applications yet.</div>
-                <div v-else v-for="(app, idx) in applications" :key="app.job_application_id || idx"
-                  class="flex flex-col sm:flex-row sm:items-center gap-2 px-4 py-3 bg-[#f8f9fa] rounded-lg border border-[#e8e8e8] hover:border-[#ddd] hover:bg-[#f2f2f2] transition-all">
-                  <div class="flex items-center gap-3 flex-1 min-w-0">
-                    <div class="w-8 h-8 rounded-full text-sm font-bold flex items-center justify-center shrink-0" :style="avatarStyle(app.fl_id, app.driver_name)">{{ initials2(app.driver_name || '?') }}</div>
-                    <div class="min-w-0">
-                      <div class="text-[13px] font-medium text-[#222]">{{ app.driver_name || "–" }}</div>
-                      <div class="text-[11px] text-[#999] mt-0.5">Applied {{ formatDate(app.applied_at) }}</div>
-                    </div>
-                    <span class="application-badge shrink-0 ml-auto sm:ml-0" :class="app.application_status?.toLowerCase()">{{ app.application_status }}</span>
-                  </div>
-                  <div class="flex items-center gap-1.5 shrink-0">
-                    <button @click="miniModalFlId = app.fl_id"
-                      class="px-2.5 py-1.5 text-[11px] font-medium rounded-lg border border-[#e0e0e0] text-[#666] hover:bg-white hover:border-[#bbb] transition">
-                      View
-                    </button>
-                    <button @click="handleAccept(app)" :disabled="app.application_status === 'ACCEPTED' || app.application_status === 'REJECTED'"
-                      class="w-8 h-8 flex items-center justify-center rounded-lg border border-[#e0e0e0] text-[#aaa] hover:bg-green-50 hover:text-green-600 hover:border-green-200 transition disabled:opacity-30 disabled:cursor-not-allowed" title="Accept">
-                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                    </button>
-                    <button @click="handleReject(app)" :disabled="app.application_status === 'ACCEPTED' || app.application_status === 'REJECTED'"
-                      class="w-8 h-8 flex items-center justify-center rounded-lg border border-[#e0e0e0] text-[#aaa] hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition disabled:opacity-30 disabled:cursor-not-allowed" title="Reject">
-                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
           </div>
         </div>
 
@@ -574,6 +561,113 @@
       :job-id="job?.job_id"
       @close="miniModalFlId = null"
     />
+
+    <!-- Matching Modal -->
+    <div v-if="showMatchingModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70" @click.self="showMatchingModal = false">
+      <div class="bg-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-lg mx-4 flex flex-col" style="max-height:88vh">
+        <div class="flex items-center justify-between px-5 py-3.5 border-b border-[#eee] shrink-0">
+          <div class="flex items-center gap-2">
+            <span class="w-7 h-7 rounded-full bg-violet-100 flex items-center justify-center shrink-0">
+              <svg class="w-3.5 h-3.5 text-violet-800" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4M16 17H4m0 0l4 4m-4-4l4-4"/></svg>
+            </span>
+            <div>
+              <div class="text-[15px] font-semibold text-[#111] leading-tight">Suggested Matches</div>
+              <div class="text-[11px] text-[#999] leading-tight mt-0.5">Freelancers that fit this tour's requirements</div>
+            </div>
+          </div>
+          <button class="text-[#999] hover:text-[#333] transition" @click="showMatchingModal = false">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <div class="overflow-y-auto px-5 py-4 flex flex-col gap-2.5">
+          <div v-if="!suggestedMatches.length" class="text-center py-10">
+            <p class="text-[13px] text-[#bbb]">No suggested matches for this tour yet.</p>
+          </div>
+          <div v-for="cand in suggestedMatches" :key="cand.fl_id"
+            class="flex items-center gap-3 px-3.5 py-3 bg-[#f8f9fa] rounded-lg border border-[#e8e8e8] hover:border-[#ddd] hover:bg-[#f2f2f2] transition-all">
+            <div class="w-9 h-9 rounded-full text-sm font-bold flex items-center justify-center shrink-0" :style="avatarStyle(cand.fl_id, cand.name)">{{ initials2(cand.name) }}</div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-1.5">
+                <span class="text-[13px] font-semibold text-[#222] truncate">{{ cand.name }}</span>
+                <span class="shrink-0 inline-flex items-center gap-1 bg-[#e8f5e9] text-[#2e7d32] text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                  <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                  {{ cand.matchScore }}% match
+                </span>
+              </div>
+              <div class="flex flex-wrap gap-1 mt-1.5">
+                <span v-for="tag in cand.reasons" :key="tag" class="text-[10px] text-[#888] bg-white border border-[#e8e8e8] rounded-full px-2 py-0.5">{{ tag }}</span>
+              </div>
+            </div>
+            <button class="shrink-0 flex items-center gap-1 text-[11px] font-semibold rounded-lg px-2.5 py-1.5 border-none transition-colors"
+              :class="matchedFlId === cand.fl_id
+                ? 'text-green-700 bg-green-100 cursor-default'
+                : 'text-violet-800 bg-violet-100 hover:bg-violet-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-violet-100'"
+              :disabled="isMatchLocked && matchedFlId !== cand.fl_id"
+              @click="matchedFlId === cand.fl_id ? null : handleInviteCandidate(cand)">
+              <svg v-if="matchedFlId === cand.fl_id" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              {{ matchedFlId === cand.fl_id ? 'Invited' : 'Invite' }}
+            </button>
+          </div>
+        </div>
+
+        <div class="px-5 py-3 border-t border-[#f0f0f0] shrink-0">
+          <p v-if="isMatchLocked" class="text-[11px] text-[#bbb] leading-relaxed">This tour is already matched — invites are locked.</p>
+          <p v-else class="text-[11px] text-[#bbb] leading-relaxed">Matching preview only — inviting a freelancer here isn't wired to the backend yet.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Applications Modal -->
+    <div v-if="showApplicationModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70" @click.self="showApplicationModal = false">
+      <div class="bg-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-lg mx-4 flex flex-col" style="max-height:88vh">
+        <div class="flex items-center justify-between px-5 py-3.5 border-b border-[#eee] shrink-0">
+          <div class="flex items-center gap-2">
+            <span class="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+              <svg class="w-3.5 h-3.5 text-amber-800" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </span>
+            <div>
+              <div class="text-[15px] font-semibold text-[#111] leading-tight">Applications</div>
+              <div class="text-[11px] text-[#999] leading-tight mt-0.5">{{ applications.length }} freelancer{{ applications.length === 1 ? '' : 's' }} applied</div>
+            </div>
+          </div>
+          <button class="text-[#999] hover:text-[#333] transition" @click="showApplicationModal = false">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <div class="overflow-y-auto px-5 py-4 flex flex-col gap-2.5">
+          <div v-if="!applications.length" class="text-center py-10">
+            <p class="text-[13px] text-[#bbb]">No applications yet.</p>
+          </div>
+          <div v-for="(app, idx) in applications" :key="app.job_application_id || idx"
+            class="flex flex-col sm:flex-row sm:items-center gap-2 px-3.5 py-3 bg-[#f8f9fa] rounded-lg border border-[#e8e8e8] hover:border-[#ddd] hover:bg-[#f2f2f2] transition-all">
+            <div class="flex items-center gap-3 flex-1 min-w-0">
+              <div class="w-9 h-9 rounded-full text-sm font-bold flex items-center justify-center shrink-0" :style="avatarStyle(app.fl_id, app.driver_name)">{{ initials2(app.driver_name || '?') }}</div>
+              <div class="min-w-0">
+                <div class="text-[13px] font-medium text-[#222]">{{ app.driver_name || "–" }}</div>
+                <div class="text-[11px] text-[#999] mt-0.5">Applied {{ formatDate(app.applied_at) }}</div>
+              </div>
+              <span class="application-badge shrink-0 ml-auto sm:ml-0" :class="app.application_status?.toLowerCase()">{{ app.application_status }}</span>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button @click="miniModalFlId = app.fl_id"
+                class="px-2.5 py-1.5 text-[11px] font-medium rounded-lg border border-[#e0e0e0] text-[#666] hover:bg-white hover:border-[#bbb] transition">
+                View
+              </button>
+              <button @click="handleAccept(app)" :disabled="app.application_status === 'ACCEPTED' || app.application_status === 'REJECTED'"
+                class="w-8 h-8 flex items-center justify-center rounded-lg border border-[#e0e0e0] text-[#aaa] hover:bg-green-50 hover:text-green-600 hover:border-green-200 transition disabled:opacity-30 disabled:cursor-not-allowed" title="Accept">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              </button>
+              <button @click="handleReject(app)" :disabled="app.application_status === 'ACCEPTED' || app.application_status === 'REJECTED'"
+                class="w-8 h-8 flex items-center justify-center rounded-lg border border-[#e0e0e0] text-[#aaa] hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition disabled:opacity-30 disabled:cursor-not-allowed" title="Reject">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </AppLayout>
 </template>
 
@@ -583,8 +677,10 @@ import { useRouter, useRoute } from 'vue-router'
 import AppLayout from '@/components/AppLayout.vue'
 import FreelancerMiniModal from '@/components/FreelancerMiniModal.vue'
 import { useAvatar } from '@/composables/useAvatar'
+import { useToast } from '@/components/useToast.js'
 
 const { avatarStyle, initials2 } = useAvatar()
+const { showToast } = useToast()
 
 const API_BASE = import.meta.env.VITE_API_BASE || '/api'
 const router = useRouter()
@@ -601,6 +697,8 @@ const editing = ref(false)
 // Applications state
 const applications = ref([])
 const miniModalFlId = ref(null)
+const showMatchingModal = ref(false)
+const showApplicationModal = ref(false)
 // Pickup areas (from assigned freelancer)
 const pickups = ref([])
 const jobReview = ref(null)
@@ -982,6 +1080,31 @@ const sortedExpenses = computed(() =>
 )
 const canEdit = computed(() => job.value?.job_status === 'OPEN')
 const canCancel = computed(() => ['OPEN', 'PENDING', 'MATCHED'].includes(job.value?.job_status))
+const canMatch = computed(() => ['OPEN', 'PENDING'].includes(job.value?.job_status))
+
+// TODO(backend): replace with real matching results, e.g. GET /tours/{id}/matches
+const MOCK_CANDIDATES = [
+  { fl_id: 101, name: 'Somchai Prasert', matchScore: 96, reasons: ['Van certified', 'Speaks English', 'Free on dates'] },
+  { fl_id: 102, name: 'Nattapong Wong', matchScore: 89, reasons: ['Speaks Thai, Chinese', '5★ rating'] },
+  { fl_id: 103, name: 'Anucha Suksawat', matchScore: 74, reasons: ['Van certified', 'Nearby pickup area'] },
+]
+
+const suggestedMatches = computed(() => {
+  const appliedIds = new Set(applications.value.map(a => a.fl_id))
+  return MOCK_CANDIDATES.filter(c => !appliedIds.has(c.fl_id))
+})
+
+const invitedCandidateId = ref(null)
+
+// Locked once the tour is already matched (e.g. accepted via Applications) or once a local invite is picked
+const matchedFlId = computed(() => invitedCandidateId.value ?? (job.value?.job_status === 'MATCHED' ? job.value?.selected_fl_id : null))
+const isMatchLocked = computed(() => job.value?.job_status === 'MATCHED' || invitedCandidateId.value !== null)
+
+const handleInviteCandidate = (candidate) => {
+  // TODO(backend): wire up to a real invite/match endpoint
+  invitedCandidateId.value = candidate.fl_id
+  showToast(`${candidate.name} would be invited — matching isn't connected to the backend yet`)
+}
 
 // ── Status display ─────────────────────────────────────────────────────────
 const STATUS_MAP = {
