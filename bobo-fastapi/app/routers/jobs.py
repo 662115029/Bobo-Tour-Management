@@ -391,10 +391,15 @@ def get_job_applications(limit: int = 50, offset: int = 0, job_id: str = None, e
         cursor.execute(
             f"""
             SELECT ja.job_application_id, ja.job_id, j.job_title,
+                   j.job_start_date, j.job_end_date,
+                   j.job_required_vehicle_type, j.job_required_seat,
+                   j.job_price, j.job_status,
+                   em.em_name AS company,
                    ja.fl_id, f.fl_name AS driver_name,
                    ja.application_status, ja.applied_at, ja.updated_at
             FROM job_applications ja
             JOIN jobs j ON ja.job_id = j.job_id
+            JOIN employers em ON j.em_id = em.em_id
             JOIN freelancers f ON ja.fl_id = f.fl_id
             {where}
             ORDER BY ja.applied_at DESC
@@ -760,6 +765,19 @@ def accept_application(application_id: int, data: Optional[dict] = Body(default=
         cursor.execute(
             "UPDATE jobs SET selected_fl_id = %s, job_status = 'MATCHED' WHERE job_id = %s",
             (app["fl_id"], app["job_id"])
+        )
+        # Reject every other application/invite for this job — regardless of whether
+        # accept was triggered by the employer (web) or the freelancer (LIFF), so the
+        # cleanup always happens rather than depending on frontend-side logic.
+        cursor.execute(
+            """
+            UPDATE job_applications
+            SET application_status = 'REJECTED', updated_at = NOW()
+            WHERE job_id = %s
+              AND job_application_id != %s
+              AND application_status NOT IN ('ACCEPTED', 'REJECTED')
+            """,
+            (app["job_id"], application_id)
         )
         conn.commit()
         return {"success": True}

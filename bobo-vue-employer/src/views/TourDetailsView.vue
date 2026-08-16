@@ -581,8 +581,19 @@
         </div>
 
         <div class="overflow-y-auto px-5 py-4 flex flex-col gap-2.5">
-          <div v-if="!suggestedMatches.length" class="text-center py-10">
+          <div v-if="matchesLoading" class="flex flex-col gap-2.5">
+            <div v-for="i in 3" :key="i" class="flex items-center gap-3 px-3.5 py-3 bg-[#f8f9fa] rounded-lg border border-[#e8e8e8]">
+              <span class="animate-pulse bg-[#ebebeb] w-9 h-9 rounded-full block shrink-0"></span>
+              <div class="flex-1 flex flex-col gap-2">
+                <span class="animate-pulse bg-[#ebebeb] h-3.5 w-2/5 rounded block"></span>
+                <span class="animate-pulse bg-[#ebebeb] h-2.5 w-3/5 rounded block"></span>
+              </div>
+              <span class="animate-pulse bg-[#ebebeb] w-14 h-6 rounded-lg block shrink-0"></span>
+            </div>
+          </div>
+          <div v-else-if="!suggestedMatches.length" class="text-center py-10">
             <p class="text-[13px] text-[#bbb]">No suggested matches for this tour yet.</p>
+            <p class="text-[11px] text-[#ccc] mt-1">Freelancers must be verified, drive the right vehicle, and be available on these dates.</p>
           </div>
           <div v-for="cand in suggestedMatches" :key="cand.fl_id"
             class="flex items-center gap-3 px-3.5 py-3 bg-[#f8f9fa] rounded-lg border border-[#e8e8e8] hover:border-[#ddd] hover:bg-[#f2f2f2] transition-all">
@@ -600,20 +611,25 @@
               </div>
             </div>
             <button class="shrink-0 flex items-center gap-1 text-[11px] font-semibold rounded-lg px-2.5 py-1.5 border-none transition-colors"
-              :class="matchedFlId === cand.fl_id
-                ? 'text-green-700 bg-green-100 cursor-default'
-                : 'text-violet-800 bg-violet-100 hover:bg-violet-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-violet-100'"
-              :disabled="isMatchLocked && matchedFlId !== cand.fl_id"
-              @click="matchedFlId === cand.fl_id ? null : handleInviteCandidate(cand)">
-              <svg v-if="matchedFlId === cand.fl_id" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-              {{ matchedFlId === cand.fl_id ? 'Invited' : 'Invite' }}
+              :class="candidateStatus(cand.fl_id) === 'REJECTED'
+                ? 'text-red-400 bg-red-50 cursor-not-allowed'
+                : candidateStatus(cand.fl_id) === 'APPLIED'
+                  ? 'text-blue-700 bg-blue-100 cursor-not-allowed'
+                  : candidateStatus(cand.fl_id)
+                    ? 'text-green-700 bg-green-100 cursor-default'
+                    : 'text-violet-800 bg-violet-100 hover:bg-violet-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-violet-100'"
+              :disabled="inviting || candidateStatus(cand.fl_id) !== null || job?.job_status === 'MATCHED' || hasPendingInvite"
+              @click="handleInviteCandidate(cand)">
+              <svg v-if="candidateStatus(cand.fl_id) === 'PENDING' || candidateStatus(cand.fl_id) === 'ACCEPTED'" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              {{ candidateLabel(cand.fl_id) }}
             </button>
           </div>
         </div>
 
         <div class="px-5 py-3 border-t border-[#f0f0f0] shrink-0">
-          <p v-if="isMatchLocked" class="text-[11px] text-[#bbb] leading-relaxed">This tour is already matched — invites are locked.</p>
-          <p v-else class="text-[11px] text-[#bbb] leading-relaxed">Matching preview only — inviting a freelancer here isn't wired to the backend yet.</p>
+          <p v-if="job?.job_status === 'MATCHED'" class="text-[11px] text-[#bbb] leading-relaxed">This tour is already matched — invites are locked.</p>
+          <p v-else-if="hasPendingInvite" class="text-[11px] text-[#bbb] leading-relaxed">An invite is already pending for this tour — you can invite someone else once they respond.</p>
+          <p v-else class="text-[11px] text-[#bbb] leading-relaxed">You can invite one freelancer at a time — they'll show up as "Pending" until they respond.</p>
         </div>
       </div>
     </div>
@@ -655,16 +671,22 @@
                 class="px-2.5 py-1.5 text-[11px] font-medium rounded-lg border border-[#e0e0e0] text-[#666] hover:bg-white hover:border-[#bbb] transition">
                 View
               </button>
-              <button @click="handleAccept(app)" :disabled="app.application_status === 'ACCEPTED' || app.application_status === 'REJECTED'"
-                class="w-8 h-8 flex items-center justify-center rounded-lg border border-[#e0e0e0] text-[#aaa] hover:bg-green-50 hover:text-green-600 hover:border-green-200 transition disabled:opacity-30 disabled:cursor-not-allowed" title="Accept">
+              <button @click="handleAccept(app)" title="Accept"
+                :disabled="app.application_status !== 'APPLIED' || hasPendingInvite"
+                class="w-8 h-8 flex items-center justify-center rounded-lg border border-[#e0e0e0] text-[#aaa] hover:bg-green-50 hover:text-green-600 hover:border-green-200 transition disabled:opacity-30 disabled:cursor-not-allowed">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
               </button>
-              <button @click="handleReject(app)" :disabled="app.application_status === 'ACCEPTED' || app.application_status === 'REJECTED'"
-                class="w-8 h-8 flex items-center justify-center rounded-lg border border-[#e0e0e0] text-[#aaa] hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition disabled:opacity-30 disabled:cursor-not-allowed" title="Reject">
+              <button @click="handleReject(app)" title="Reject"
+                :disabled="app.application_status !== 'APPLIED' || hasPendingInvite"
+                class="w-8 h-8 flex items-center justify-center rounded-lg border border-[#e0e0e0] text-[#aaa] hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition disabled:opacity-30 disabled:cursor-not-allowed">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
               </button>
             </div>
           </div>
+        </div>
+
+        <div v-if="hasPendingInvite" class="px-5 py-3 border-t border-[#f0f0f0] shrink-0">
+          <p class="text-[11px] text-[#bbb] leading-relaxed">A Matching invite is pending — waiting for the freelancer to respond. Accept/Reject is locked for everyone (including the invited person) until then.</p>
         </div>
       </div>
     </div>
@@ -699,6 +721,10 @@ const applications = ref([])
 const miniModalFlId = ref(null)
 const showMatchingModal = ref(false)
 const showApplicationModal = ref(false)
+
+// Matching state
+const matches = ref([])
+const matchesLoading = ref(false)
 // Pickup areas (from assigned freelancer)
 const pickups = ref([])
 const jobReview = ref(null)
@@ -840,6 +866,21 @@ const fetchJob = async () => {
   } finally {
     loading.value = false
   }
+  fetchMatches()
+}
+
+const fetchMatches = async () => {
+  const id = route.params.id
+  matchesLoading.value = true
+  try {
+    const res = await fetch(`${API_BASE}/tours/${id}/matches?em_id=${emId}`)
+    const data = await res.json()
+    matches.value = res.ok ? (data.items || []) : []
+  } catch {
+    matches.value = []
+  } finally {
+    matchesLoading.value = false
+  }
 }
 
 onMounted(() => {
@@ -974,15 +1015,12 @@ const handleAccept = async (app) => {
         if (flRes.ok) job.value.driver_phone = flData.fl_phone
       } catch {}
 
-      // reject ALL other applications regardless of status
-      const others = applications.value.filter(a => a.job_application_id !== app.job_application_id)
-      await Promise.allSettled(
-        others.map(a =>
-          fetch(`${API_BASE}/job-applications/${a.job_application_id}/reject`, {
-            method: 'PATCH', headers: { 'Content-Type': 'application/json' }
-          }).then(r => { if (r.ok) a.application_status = 'REJECTED' })
-        )
-      )
+      // backend already rejects everyone else for this job atomically — mirror that locally
+      applications.value.forEach(a => {
+        if (a.job_application_id !== app.job_application_id && a.application_status !== 'ACCEPTED' && a.application_status !== 'REJECTED') {
+          a.application_status = 'REJECTED'
+        }
+      })
     } else {
       const d = await res.json().catch(() => ({}))
       alert('Failed to accept: ' + (d.detail || res.status))
@@ -1082,28 +1120,61 @@ const canEdit = computed(() => job.value?.job_status === 'OPEN')
 const canCancel = computed(() => ['OPEN', 'PENDING', 'MATCHED'].includes(job.value?.job_status))
 const canMatch = computed(() => ['OPEN', 'PENDING'].includes(job.value?.job_status))
 
-// TODO(backend): replace with real matching results, e.g. GET /tours/{id}/matches
-const MOCK_CANDIDATES = [
-  { fl_id: 101, name: 'Somchai Prasert', matchScore: 96, reasons: ['Van certified', 'Speaks English', 'Free on dates'] },
-  { fl_id: 102, name: 'Nattapong Wong', matchScore: 89, reasons: ['Speaks Thai, Chinese', '5★ rating'] },
-  { fl_id: 103, name: 'Anucha Suksawat', matchScore: 74, reasons: ['Van certified', 'Nearby pickup area'] },
-]
+// ── Matching ────────────────────────────────────────────────────────────────
+const suggestedMatches = computed(() => matches.value)
+const inviting = ref(false)
 
-const suggestedMatches = computed(() => {
-  const appliedIds = new Set(applications.value.map(a => a.fl_id))
-  return MOCK_CANDIDATES.filter(c => !appliedIds.has(c.fl_id))
-})
+// Single source of truth: any fl_id with a real application row (from either
+// Applications or a Matching invite) is locked here too — synced both ways.
+// REJECTED stays locked permanently, same as an ACCEPTED/PENDING one.
+const candidateStatus = (fl_id) => {
+  const app = applications.value.find(a => a.fl_id === fl_id)
+  return app ? app.application_status : null
+}
 
-const invitedCandidateId = ref(null)
+// PENDING = employer invited them (this Matching flow). APPLIED = they applied
+// on their own via Job Opening, unrelated to being invited. Label each honestly.
+const candidateLabel = (fl_id) => {
+  const status = candidateStatus(fl_id)
+  if (status === 'REJECTED') return 'Rejected'
+  if (status === 'ACCEPTED') return 'Matched'
+  if (status === 'PENDING') return 'Invited'
+  if (status === 'APPLIED') return 'Applied'
+  return 'Invite'
+}
 
-// Locked once the tour is already matched (e.g. accepted via Applications) or once a local invite is picked
-const matchedFlId = computed(() => invitedCandidateId.value ?? (job.value?.job_status === 'MATCHED' ? job.value?.selected_fl_id : null))
-const isMatchLocked = computed(() => job.value?.job_status === 'MATCHED' || invitedCandidateId.value !== null)
+// Only one freelancer can be invited per tour at a time — once someone has a
+// pending invite, every other Invite button locks (cursor-not-allowed) until
+// they respond (accepted/rejected).
+const hasPendingInvite = computed(() => applications.value.some(a => a.application_status === 'PENDING'))
 
-const handleInviteCandidate = (candidate) => {
-  // TODO(backend): wire up to a real invite/match endpoint
-  invitedCandidateId.value = candidate.fl_id
-  showToast(`${candidate.name} would be invited — matching isn't connected to the backend yet`)
+const handleInviteCandidate = async (candidate) => {
+  inviting.value = true
+  try {
+    const res = await fetch(`${API_BASE}/tours/${route.params.id}/invite`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ em_id: emId, fl_id: candidate.fl_id }),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      showToast(data.detail || 'Failed to invite freelancer.', 'error')
+      return
+    }
+    // reflect immediately in the Applications list/badge without a full refetch
+    applications.value.unshift({
+      job_application_id: data.job_application_id,
+      fl_id: candidate.fl_id,
+      driver_name: candidate.name,
+      application_status: 'PENDING',
+      applied_at: new Date().toISOString(),
+    })
+    showToast(`Invitation sent to ${candidate.name} — waiting for their response`)
+  } catch {
+    showToast('Cannot connect to the server.', 'error')
+  } finally {
+    inviting.value = false
+  }
 }
 
 // ── Status display ─────────────────────────────────────────────────────────
