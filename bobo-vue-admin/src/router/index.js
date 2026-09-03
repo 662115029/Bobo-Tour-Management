@@ -18,7 +18,7 @@ export const pageNames = {
   Verification: "Verification",
   Users: "Users",
   Logs: "Admin Logs",
-  MatchingWeights: "Matching Score Weights",
+  MatchingWeights: "Matching Weights",
   Profile: "Profile",
   Dashboard: "Dashboard",
 };

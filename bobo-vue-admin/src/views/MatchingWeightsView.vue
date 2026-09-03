@@ -7,10 +7,7 @@
       <!-- Page header -->
       <div class="flex items-start justify-between gap-4 flex-wrap py-4 mb-1">
         <div>
-          <h1 class="text-[20px] font-bold text-[#111] leading-tight">Matching Score Weights</h1>
-          <p class="text-[13px] text-[#888] mt-1 max-w-xl leading-relaxed">
-            Set how much each factor counts toward a freelancer's match score. The four weights must add up to 100.
-          </p>
+          <h1 class="text-[20px] font-bold text-[#111] leading-tight">Matching Weights</h1>
         </div>
         <div class="text-right shrink-0">
           <div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium">Last saved</div>
@@ -63,10 +60,11 @@
       </div>
 
       <!-- Weight controls -->
-      <div class="grid gap-3 mb-4" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+      <div class="flex flex-col gap-3 mb-4">
         <div v-for="f in factors" :key="f.key"
-          class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm p-5 hover:shadow-md transition-shadow">
-          <div class="flex items-center gap-2.5 mb-3">
+          class="bg-white rounded-xl border shadow-sm p-5 transition-shadow"
+          :class="locks[f.key] ? 'border-[#e0e0e0]' : 'border-[#e0e0e0] hover:shadow-md'">
+          <div class="flex items-center gap-2.5 mb-4">
             <span class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" :style="{ background: f.bg, color: f.text }">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" v-html="f.icon"></svg>
             </span>
@@ -74,16 +72,46 @@
               <div class="text-[13px] font-bold text-[#222] leading-tight">{{ f.label }}</div>
               <div class="text-[11px] text-[#999] leading-tight mt-0.5">{{ f.description }}</div>
             </div>
-          </div>
-
-          <div class="flex items-center gap-3">
-            <input type="range" min="0" max="100" step="1" v-model.number="weights[f.key]"
-              class="flex-1 cursor-pointer" :style="{ accentColor: f.solid }" />
-            <div class="flex items-center shrink-0 border border-[#e0e0e0] rounded-lg overflow-hidden">
-              <input type="number" min="0" max="100" step="1" v-model.number="weights[f.key]"
-                class="w-14 text-center text-[13px] font-bold text-[#222] py-1.5 border-none focus:outline-none focus:ring-0" />
+            <button type="button" @click="toggleLock(f.key)"
+              class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border transition-colors"
+              :class="locks[f.key] ? 'border-transparent' : 'border-[#e0e0e0] text-[#bbb] hover:text-[#888] hover:border-[#ccc]'"
+              :style="locks[f.key] ? { background: f.bg, color: f.text } : {}"
+              :title="locks[f.key] ? 'Locked — click to unlock' : 'Lock this value'">
+              <svg v-if="locks[f.key]" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              <svg v-else class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M7 11V7a5 5 0 019.9-1"/></svg>
+            </button>
+            <div class="flex items-center shrink-0 border border-[#e0e0e0] rounded-lg overflow-hidden"
+              :class="locks[f.key] ? 'opacity-50' : ''">
+              <input type="number" min="0" max="100" step="1" :value="weights[f.key]" :disabled="locks[f.key]"
+                @input="redistribute(f.key, $event.target.valueAsNumber)"
+                class="w-14 text-center text-[13px] font-bold text-[#222] py-1.5 border-none focus:outline-none focus:ring-0 disabled:cursor-not-allowed" />
               <span class="text-[12px] text-[#999] pr-2.5">%</span>
             </div>
+          </div>
+
+          <div class="relative flex items-center" style="height: 32px;" :class="locks[f.key] ? 'opacity-50' : ''">
+            <input type="range" min="0" max="100" step="1" :value="weights[f.key]" :disabled="locks[f.key]"
+              @input="redistribute(f.key, $event.target.valueAsNumber)"
+              class="weight-slider w-full" :class="locks[f.key] ? 'cursor-not-allowed' : 'cursor-pointer'" :style="sliderStyle(f)" />
+            <span v-for="n in 11" :key="n"
+              class="absolute rounded-full pointer-events-none transition-colors duration-150"
+              :class="(n - 1) % 2 === 0 ? 'w-3.5 h-3.5 border-2 border-white' : 'w-2 h-2'"
+              :style="{
+                left: (n - 1) * 10 + '%',
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
+                background: weights[f.key] >= (n - 1) * 10 ? f.solid : '#dcdcdc',
+              }">
+            </span>
+          </div>
+
+          <!-- Number labels every 20, positioned at the exact same % as their dot above -->
+          <div class="relative text-[13px] text-[#999]" style="height: 18px; margin-top: 6px;">
+            <span v-for="n in 6" :key="n" class="absolute"
+              :style="{
+                left: (n - 1) * 20 + '%',
+                transform: n === 1 ? 'translateX(0)' : n === 6 ? 'translateX(-100%)' : 'translateX(-50%)',
+              }">{{ (n - 1) * 20 }}</span>
           </div>
         </div>
       </div>
@@ -96,7 +124,11 @@
           Split evenly (25 / 25 / 25 / 25)
         </button>
 
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-3">
+          <span class="text-[12px] font-semibold text-green-600 flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            {{ totalWeight }} / 100
+          </span>
           <button v-if="isDirty" @click="revert"
             class="px-3.5 py-2 text-[13px] font-medium rounded-lg border border-[#e0e0e0] text-[#666] hover:bg-[#f5f5f5] transition">
             Revert
@@ -109,32 +141,6 @@
       </div>
 
       <!-- Live example -->
-      <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden">
-        <div class="px-5 py-3.5 border-b border-[#f0f0f0] flex items-center gap-2">
-          <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-          <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Try it on a sample freelancer</span>
-          <span class="ml-auto text-[11px] text-[#bbb]">Move the sliders to see the score change live</span>
-        </div>
-
-        <div class="p-5 grid gap-5" style="grid-template-columns: 1.3fr 1fr;">
-          <div class="grid gap-4" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
-            <div v-for="f in factors" :key="f.key + '-sample'">
-              <div class="flex items-center justify-between mb-1.5">
-                <span class="text-[12px] font-semibold text-[#555]">{{ f.label }}</span>
-                <span class="text-[12px] font-bold" :style="{ color: f.text }">{{ sample[f.key] }}%</span>
-              </div>
-              <input type="range" min="0" max="100" step="1" v-model.number="sample[f.key]"
-                class="w-full cursor-pointer" :style="{ accentColor: f.solid }" />
-            </div>
-          </div>
-
-          <div class="flex flex-col items-center justify-center bg-[#f8f9fa] border border-[#eee] rounded-lg py-6">
-            <div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium mb-1">Resulting match score</div>
-            <div class="text-[40px] font-bold leading-none" :style="{ color: scoreColor }">{{ sampleScore }}%</div>
-          </div>
-        </div>
-      </div>
-
     </div>
   </div>
 </template>
@@ -153,25 +159,25 @@ const factors = [
   {
     key: 'pickupArea', short: 'PA', label: 'Pickup Area',
     description: 'Freelancer\u2019s pickup zones overlap the tour\u2019s route',
-    bg: '#e0f7fa', text: '#00838f', solid: '#00acc1',
+    bg: '#ecfeff', text: '#0e7490', solid: '#06b6d4',
     icon: '<path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>',
   },
   {
     key: 'availability', short: 'AV', label: 'Availability',
     description: 'Freelancer is free for the tour\u2019s full date range',
-    bg: '#e8f5e9', text: '#2e7d32', solid: '#43a047',
+    bg: '#fffbeb', text: '#b45309', solid: '#f59e0b',
     icon: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
   },
   {
     key: 'verification', short: 'VF', label: 'Verification',
     description: 'Account is verified, active, and in good standing',
-    bg: '#fff3e0', text: '#e65100', solid: '#fb8c00',
+    bg: '#f0fdf4', text: '#15803d', solid: '#22c55e',
     icon: '<path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>',
   },
   {
     key: 'language', short: 'LG', label: 'Language',
     description: 'Overlap between spoken languages and the tour\u2019s requirements',
-    bg: '#e8eaf6', text: '#3949ab', solid: '#5c6bc0',
+    bg: '#eef2ff', text: '#4338ca', solid: '#6366f1',
     icon: '<path stroke-linecap="round" stroke-linejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/>',
   },
 ]
@@ -179,8 +185,24 @@ const factors = [
 const weights = reactive({ ...DEFAULT_WEIGHTS })
 const savedWeights = ref({ ...DEFAULT_WEIGHTS })
 const lastSavedAt = ref(null)
+const locks = reactive({ pickupArea: false, availability: false, verification: false, language: false })
+const MAX_LOCKS = 2 // always leave at least 2 factors free to redistribute between
 
-const sample = reactive({ pickupArea: 80, availability: 90, verification: 100, language: 65 })
+function toggleLock(key) {
+  if (!locks[key] && Object.values(locks).filter(Boolean).length >= MAX_LOCKS) {
+    showToast(`You can lock up to ${MAX_LOCKS} factors at a time`, 'error')
+    return
+  }
+  locks[key] = !locks[key]
+}
+
+function sliderStyle(f) {
+  const pct = weights[f.key]
+  return {
+    color: f.solid,
+    '--slider-fill': `linear-gradient(to right, ${f.solid} 0%, ${f.solid} ${pct}%, #ececec ${pct}%, #ececec 100%)`,
+  }
+}
 
 onMounted(() => {
   try {
@@ -213,6 +235,7 @@ const lastSavedLabel = computed(() => {
 
 const distributeEvenly = () => {
   Object.assign(weights, DEFAULT_WEIGHTS)
+  Object.keys(locks).forEach(k => { locks[k] = false })
 }
 
 const revert = () => {
@@ -229,24 +252,48 @@ const save = () => {
   // TODO(backend): persist to a real settings endpoint, e.g. PUT /admin/matching-weights
 }
 
-// Clamp any out-of-range typed values
-watch(weights, () => {
-  factors.forEach(f => {
-    const v = weights[f.key]
-    if (v === '' || v === null || Number.isNaN(Number(v))) { weights[f.key] = 0; return }
-    weights[f.key] = Math.min(100, Math.max(0, Math.round(Number(v))))
-  })
-}, { deep: true })
+// Auto-redistribute: when one factor's weight changes, scale the *unlocked*
+// others proportionally so the total always stays at exactly 100. Locked
+// factors keep their current value untouched and are excluded entirely.
+let isRedistributing = false
 
-const sampleScore = computed(() => {
-  const raw = factors.reduce((sum, f) => sum + (weights[f.key] / 100) * sample[f.key], 0)
-  return Math.round(Math.min(100, Math.max(0, raw)))
-})
+function redistribute(changedKey, rawValue) {
+  if (isRedistributing) return
+  if (locks[changedKey]) return // shouldn't happen (input is disabled), but stay safe
+  if (rawValue === '' || rawValue === null || Number.isNaN(rawValue)) return
+  isRedistributing = true
 
-const scoreColor = computed(() => {
-  const s = sampleScore.value
-  if (s >= 80) return '#2e7d32'
-  if (s >= 50) return '#f9a825'
-  return '#e53935'
-})
+  const others = factors.map(f => f.key).filter(k => k !== changedKey)
+  const lockedOthers = others.filter(k => locks[k])
+  const unlockedOthers = others.filter(k => !locks[k])
+  const lockedSum = lockedOthers.reduce((sum, k) => sum + weights[k], 0)
+
+  // never let the changed value eat into what's reserved for locked factors
+  const maxAllowed = Math.max(0, 100 - lockedSum)
+  const newValue = Math.min(maxAllowed, Math.max(0, Math.round(rawValue)))
+  const remaining = 100 - newValue - lockedSum
+
+  if (unlockedOthers.length > 0) {
+    const oldUnlockedSum = unlockedOthers.reduce((sum, k) => sum + weights[k], 0)
+    let newUnlocked
+    if (oldUnlockedSum === 0) {
+      const base = Math.floor(remaining / unlockedOthers.length)
+      newUnlocked = unlockedOthers.map(() => base)
+      let leftover = remaining - base * unlockedOthers.length
+      for (let i = 0; leftover > 0; i++, leftover--) newUnlocked[i % unlockedOthers.length]++
+    } else {
+      newUnlocked = unlockedOthers.map(k => Math.round((weights[k] * remaining) / oldUnlockedSum))
+      const diff = remaining - newUnlocked.reduce((a, b) => a + b, 0)
+      if (diff !== 0) {
+        const maxIdx = newUnlocked.indexOf(Math.max(...newUnlocked))
+        newUnlocked[maxIdx] += diff
+      }
+    }
+    unlockedOthers.forEach((k, i) => { weights[k] = Math.max(0, Math.min(100, newUnlocked[i])) })
+  }
+
+  weights[changedKey] = newValue
+
+  isRedistributing = false
+}
 </script>
