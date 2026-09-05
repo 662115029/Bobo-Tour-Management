@@ -123,10 +123,6 @@ def get_job(job_id: str):
 def create_job(data: dict):
     conn = None
     try:
-        conn = get_connection()
-        cursor = get_cursor(conn)
-
-        job_id = data.get("job_id")
         em_id = data.get("em_id")
         job_title = data.get("job_title")
         job_description = data.get("job_description")
@@ -135,54 +131,74 @@ def create_job(data: dict):
         job_required_vehicle_type = data.get("job_required_vehicle_type", "VAN")
         job_required_seat = data.get("job_required_seat", 9)
         job_price = data.get("job_price", 0)
-        driver_name = data.get("driver_name")
-        driver_phone = data.get("driver_phone")
 
-        cursor.execute(
-            """
-            INSERT INTO jobs (job_id, em_id, job_title, job_description, job_start_date, job_end_date,
-                              job_required_vehicle_type, job_required_seat, job_price, driver_name, driver_phone)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """,
-            (job_id, em_id, job_title, job_description, job_start_date, job_end_date,
-             job_required_vehicle_type, job_required_seat, job_price, driver_name, driver_phone),
-        )
-
-        for lang in data.get("job_required_languages", []):
-            cursor.execute(
-                "INSERT INTO job_required_languages (job_req_lg_id, job_id, language_name) VALUES (%s, %s, %s)",
-                (f"LG{job_id[-6:]}", job_id, lang),
+        if not em_id or not job_title or not job_start_date or not job_end_date:
+            raise HTTPException(
+                status_code=400,
+                detail="em_id, job_title, job_start_date, and job_end_date are required.",
             )
 
+        conn = get_connection()
+        cursor = get_cursor(conn)
+
+        # job_id is AUTO_INCREMENT in the real schema — never pass it in, let MySQL assign it.
+        cursor.execute(
+            """
+            INSERT INTO jobs (em_id, job_title, job_description, job_start_date, job_end_date,
+                              job_required_vehicle_type, job_required_seat, job_price)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (em_id, job_title, job_description, job_start_date, job_end_date,
+             job_required_vehicle_type, job_required_seat, job_price),
+        )
+        job_id = cursor.lastrowid
+
+        # job_required_languages only has (job_id, language_id) — no job_req_lg_id, no language_name
+        # column. Incoming payload sends language names (e.g. "English"), so look up each
+        # language_id from the languages table before inserting.
+        for lang_name in data.get("job_required_languages", []):
+            cursor.execute(
+                "SELECT language_id FROM languages WHERE language_name = %s",
+                (lang_name,),
+            )
+            lang_row = cursor.fetchone()
+            if not lang_row:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Unknown language: '{lang_name}'. It must already exist in the languages table.",
+                )
+            cursor.execute(
+                "INSERT INTO job_required_languages (job_id, language_id) VALUES (%s, %s)",
+                (job_id, lang_row["language_id"]),
+            )
+
+        # job_itinerary_id is AUTO_INCREMENT — don't set it manually.
+        # itinerary_date is NOT NULL with no default, so it must be supplied per item
+        # (falls back to job_start_date if the caller didn't send one).
         for idx, it in enumerate(data.get("job_itineraries", [])):
             if it.get("place_name"):
                 cursor.execute(
                     """
-                    INSERT INTO job_itineraries (job_itinerary_id, job_id, place_name, start_time, end_time, note)
-                    VALUES (%s, %s, %s, %s, %s, %s)
+                    INSERT INTO job_itineraries
+                        (job_id, itinerary_date, place_name, start_time, end_time, note, sequence)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
                     """,
-                    (f"IT{job_id[-6:]}{idx}", job_id, it.get("place_name"),
-                     it.get("start_time"), it.get("end_time"), it.get("note")),
-                )
-
-        for idx, p in enumerate(data.get("job_pickups", [])):
-            if p.get("pickup_location"):
-                cursor.execute(
-                    """
-                    INSERT INTO job_pickups (job_pickup_id, job_id, hotel_name, pickup_location, pickup_time, sequence)
-                    VALUES (%s, %s, %s, %s, %s, %s)
-                    """,
-                    (f"PK{job_id[-6:]}{idx}", job_id, p.get("hotel_name"),
-                     p.get("pickup_location"), p.get("pickup_time"), idx + 1),
+                    (job_id, it.get("itinerary_date", job_start_date), it.get("place_name"),
+                     it.get("start_time"), it.get("end_time"), it.get("note"), idx + 1),
                 )
 
         conn.commit()
         return {"success": True, "job_id": job_id}
+    except HTTPException:
+        raise
     except Exception as e:
+        if conn:
+            conn.rollback()
         return {"error": str(e)}
     finally:
         if conn:
             conn.close()
+
 
 
 @router.get("/job-required-languages")
@@ -875,6 +891,56 @@ def delete_job(job_id: str, x_admin_id: Optional[str] = Header(None, alias="X-Ad
         if conn:
             conn.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to delete job: {str(e)}")
+    finally:
+        if conn:
+            conn.close()
+
+@router.get("/jobs/{job_id}/suggested-freelancers")
+def get_suggested_freelancers(job_id: int):
+    """
+    Returns freelancers ranked by match_score for this job, computed by the
+    scheduled Lambda (bobo-matching-processor) and stored in job_fl_matches.
+    This endpoint only reads that pre-computed table — it does not recompute
+    the matching formula itself.
+    """
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+
+        # confirm the job exists first, so a bad job_id gives a clear 404
+        # instead of silently returning an empty suggestions list
+        cursor.execute("SELECT job_id, job_status FROM jobs WHERE job_id = %s", (job_id,))
+        job = cursor.fetchone()
+        if not job:
+            raise HTTPException(status_code=404, detail=f"Job {job_id} not found.")
+
+        cursor.execute(
+            """
+            SELECT
+                m.fl_id,
+                m.match_score,
+                f.fl_verify_status,
+                m.computed_at
+            FROM job_fl_matches m
+            JOIN freelancers f ON f.fl_id = m.fl_id
+            WHERE m.job_id = %s
+            ORDER BY m.match_score DESC
+            """,
+            (job_id,),
+        )
+        suggestions = cursor.fetchall()
+
+        return {
+            "job_id": job_id,
+            "job_status": job["job_status"],
+            "suggestion_count": len(suggestions),
+            "suggestions": suggestions,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        return {"error": str(e), "suggestions": []}
     finally:
         if conn:
             conn.close()

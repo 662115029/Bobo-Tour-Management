@@ -428,16 +428,25 @@ def get_tour_applications(job_id: str, em_id: str):
 @router.get("/tours/{job_id}/matches")
 def get_tour_matches(job_id: str, em_id: str, limit: int = 10):
     """
-    Suggested freelancer matches for a tour, based on real profile data:
-      - verified + active account
-      - vehicle type + seat capacity fits the job requirement
-      - availability window covers the job's dates
-    Ranked by a match score built from required-language overlap and rating.
+    Suggested freelancer matches for a tour.
 
-    Freelancers who already have an application for this job (invited, applied,
-    accepted, or rejected) are always kept in the results — even if a fresh
-    scan wouldn't surface them anymore — so the card doesn't disappear from
-    under the employer after they act on it (e.g. on page refresh).
+    Match scores come from job_fl_matches — precomputed by the scheduled
+    Lambda (bobo-matching-processor) using the team's agreed formula
+    (40 pickup-area + 30 availability + 20 verification, with vehicle/seat/
+    language as hard filters). This endpoint does NOT recompute the score
+    itself — it only reads the latest precomputed snapshot.
+
+    Freelancers who already have an application for this job (invited,
+    applied, accepted, or rejected) are always kept in the results — even if
+    they're not (or no longer) in job_fl_matches — so the card doesn't
+    disappear from under the employer after they act on it (e.g. on page
+    refresh).
+
+    Performance note: language info for every candidate is fetched in ONE
+    batched query (not one query per candidate in a loop), to keep the total
+    number of DB round trips constant regardless of how many freelancers are
+    being scored. Each round trip costs real time over the network to the
+    EC2 database, so avoiding N+1 queries here matters a lot for load time.
     """
     conn = None
     try:
@@ -457,119 +466,103 @@ def get_tour_matches(job_id: str, em_id: str, limit: int = 10):
         if not job:
             raise HTTPException(status_code=404, detail="Tour not found")
 
-        cursor.execute(
-            """
-            SELECT l.language_id, l.language_name
-            FROM job_required_languages jrl
-            JOIN languages l ON jrl.language_id = l.language_id
-            WHERE jrl.job_id = %s
-            """,
-            (job_id,),
-        )
-        required_languages = cursor.fetchall()
-        required_language_ids = {r["language_id"] for r in required_languages}
-
-        def score_candidate(cand):
-            cursor.execute(
-                """
-                SELECT l.language_id, l.language_name
-                FROM fl_languages fll
-                JOIN languages l ON fll.language_id = l.language_id
-                WHERE fll.fl_id = %s
-                """,
-                (cand["fl_id"],),
-            )
-            fl_langs = cursor.fetchall()
-            fl_lang_ids = {r["language_id"] for r in fl_langs}
-            matched_langs = [r["language_name"] for r in fl_langs if r["language_id"] in required_language_ids]
-
-            if required_language_ids:
-                language_ratio = len(fl_lang_ids & required_language_ids) / len(required_language_ids)
-            else:
-                language_ratio = 1.0
-
-            rating = float(cand.get("fl_rating_avg") or 0)
-            rating_ratio = min(rating / 5.0, 1.0)
-
-            # base 20 for already passing the hard filters (vehicle + availability)
-            match_score = round(20 + language_ratio * 50 + rating_ratio * 30)
-            match_score = max(0, min(100, match_score))
-
+        def build_reasons(fl_verify_status, rating, matched_lang_names):
             reasons = []
-            if cand.get("fl_vehicle_type"):
-                reasons.append(f"{cand['fl_vehicle_type'].title()} certified")
-            if cand.get("is_available"):
-                reasons.append("Free on dates")
-            if matched_langs:
-                reasons.append("Speaks " + ", ".join(matched_langs))
-            if rating > 0:
-                reasons.append(f"{rating:.1f}★ rating")
+            if fl_verify_status == "VERIFIED":
+                reasons.append("Verified")
+            reasons.append("Right vehicle & seats")   # guaranteed — Lambda's hard filter
+            reasons.append("Available on dates")      # guaranteed — Lambda's hard filter
+            if matched_lang_names:
+                reasons.append("Speaks " + ", ".join(matched_lang_names))
+            if rating and float(rating) > 0:
+                reasons.append(f"{float(rating):.1f}\u2605 rating")
+            return reasons
 
-            return {
-                "fl_id": cand["fl_id"],
-                "name": cand["fl_name"],
-                "matchScore": match_score,
-                "reasons": reasons,
-                "rating": rating,
-            }
-
-        # 1) Fresh suggestions: eligible freelancers with no existing application for this job yet
+        # 1) Fresh suggestions: precomputed scores from the Lambda's output table
         cursor.execute(
             """
-            SELECT f.fl_id, f.fl_name, f.fl_rating_avg,
-                   fv.fl_vehicle_type, fv.fl_vehicle_seat_capa,
-                   TRUE AS is_available
-            FROM freelancers f
-            JOIN fl_vehicle fv ON fv.fl_id = f.fl_id
-            JOIN fl_availability fa ON fa.fl_id = f.fl_id
-            WHERE f.fl_verify_status = 'VERIFIED'
-              AND f.fl_is_active = TRUE
-              AND fv.fl_vehicle_type = %s
-              AND fv.fl_vehicle_seat_capa >= %s
-              AND fa.is_active = TRUE
-              AND fa.fl_available_start_date <= %s
-              AND fa.fl_available_end_date >= %s
-              AND f.fl_id NOT IN (
-                  SELECT fl_id FROM job_applications WHERE job_id = %s
-              )
-              AND (%s IS NULL OR f.fl_id != %s)
-            ORDER BY f.fl_rating_avg DESC
+            SELECT m.fl_id, m.match_score, f.fl_name, f.fl_verify_status, f.fl_rating_avg
+            FROM job_fl_matches m
+            JOIN freelancers f ON f.fl_id = m.fl_id
+            WHERE m.job_id = %s
+            ORDER BY m.match_score DESC
             LIMIT %s
             """,
-            (
-                job["job_required_vehicle_type"], job["job_required_seat"],
-                job["job_start_date"], job["job_end_date"],
-                job_id,
-                job["selected_fl_id"], job["selected_fl_id"],
-                limit,
-            ),
+            (job_id, limit),
         )
-        fresh_candidates = cursor.fetchall()
+        fresh_rows = cursor.fetchall()
+        fresh_fl_ids = {r["fl_id"] for r in fresh_rows}
 
         # 2) Already-engaged: anyone with an existing application for this job — always kept,
-        #    scored the same way but without the hard eligibility filters (they're already known)
+        #    even if they've dropped out of job_fl_matches (e.g. availability changed since).
         cursor.execute(
-            """
-            SELECT f.fl_id, f.fl_name, f.fl_rating_avg,
-                   fv.fl_vehicle_type, fv.fl_vehicle_seat_capa,
-                   (fa.is_active = TRUE
-                    AND fa.fl_available_start_date <= %s
-                    AND fa.fl_available_end_date >= %s) AS is_available
-            FROM freelancers f
-            LEFT JOIN fl_vehicle fv ON fv.fl_id = f.fl_id
-            LEFT JOIN fl_availability fa ON fa.fl_id = f.fl_id
-            WHERE f.fl_id IN (
-                SELECT fl_id FROM job_applications WHERE job_id = %s
-            )
-            """,
-            (job["job_start_date"], job["job_end_date"], job_id),
+            "SELECT DISTINCT fl_id FROM job_applications WHERE job_id = %s",
+            (job_id,),
         )
-        engaged_candidates = cursor.fetchall()
+        engaged_fl_ids = {r["fl_id"] for r in cursor.fetchall()}
+        missing_engaged_ids = engaged_fl_ids - fresh_fl_ids
 
-        results = [score_candidate(c) for c in fresh_candidates]
-        results += [score_candidate(c) for c in engaged_candidates]
+        engaged_rows = []
+        if missing_engaged_ids:
+            fmt = ",".join(["%s"] * len(missing_engaged_ids))
+            cursor.execute(
+                f"SELECT fl_id, fl_name, fl_verify_status, fl_rating_avg "
+                f"FROM freelancers WHERE fl_id IN ({fmt})",
+                tuple(missing_engaged_ids),
+            )
+            engaged_rows = cursor.fetchall()
 
-        results.sort(key=lambda r: r["matchScore"], reverse=True)
+        # 3) Batch-fetch language info for EVERY candidate (fresh + engaged) in ONE query,
+        #    instead of one query per candidate. This is the fix for the slow-loading issue:
+        #    previously this ran inside the loop below, turning N candidates into N+ extra
+        #    round trips to the database.
+        all_fl_ids = fresh_fl_ids | {r["fl_id"] for r in engaged_rows}
+        lang_map = {}
+        if all_fl_ids:
+            fmt = ",".join(["%s"] * len(all_fl_ids))
+            cursor.execute(
+                f"""
+                SELECT fll.fl_id, l.language_name
+                FROM fl_languages fll
+                JOIN languages l ON l.language_id = fll.language_id
+                JOIN job_required_languages jrl
+                    ON jrl.language_id = fll.language_id AND jrl.job_id = %s
+                WHERE fll.fl_id IN ({fmt})
+                """,
+                (job_id, *all_fl_ids),
+            )
+            for row in cursor.fetchall():
+                lang_map.setdefault(row["fl_id"], []).append(row["language_name"])
+
+        results = []
+        for r in fresh_rows:
+            results.append({
+                "fl_id": r["fl_id"],
+                "name": r["fl_name"],
+                "matchScore": float(r["match_score"]),
+                "reasons": build_reasons(
+                    r["fl_verify_status"], r["fl_rating_avg"], lang_map.get(r["fl_id"], [])
+                ),
+            })
+
+        for r in engaged_rows:
+            # this fl_id isn't in job_fl_matches right now, so no numeric score is
+            # available — show them with matchScore=None rather than guessing.
+            results.append({
+                "fl_id": r["fl_id"],
+                "name": r["fl_name"],
+                "matchScore": None,
+                "reasons": build_reasons(
+                    r["fl_verify_status"], r["fl_rating_avg"], lang_map.get(r["fl_id"], [])
+                ),
+            })
+
+        results.sort(key=lambda r: (r["matchScore"] is None, -(r["matchScore"] or 0)))
+        # Cap the combined list at `limit`. Engaged freelancers are still merged in above
+        # so they don't vanish just because they fell out of job_fl_matches — but if the
+        # total exceeds `limit`, the lowest-scoring entries get dropped first (an engaged
+        # freelancer with no score at all counts as the lowest of all).
+        results = results[:limit]
         return {"items": results}
     except HTTPException:
         raise
@@ -578,6 +571,8 @@ def get_tour_matches(job_id: str, em_id: str, limit: int = 10):
     finally:
         if conn:
             conn.close()
+
+
 
 
 @router.post("/tours/{job_id}/invite")

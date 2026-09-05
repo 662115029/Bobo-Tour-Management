@@ -367,3 +367,102 @@ def admin_logs(limit: int = 50, offset: int = 0,
     finally:
         if conn:
             conn.close()
+
+
+@router.get("/matching-config")
+def get_matching_config():
+    """Returns the current matching formula weights."""
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute(
+            """
+            SELECT weight_pickup_area, weight_availability,
+                   weight_verification, weight_language, updated_at
+            FROM matching_config
+            WHERE id = 1
+            """
+        )
+        config = cursor.fetchone()
+        if not config:
+            raise HTTPException(status_code=404, detail="Matching config not found.")
+        return config
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
+
+
+@router.put("/matching-config")
+def update_matching_config(data: dict):
+    """
+    Updates the matching formula weights. All four weights are required and
+    must sum to exactly 100 — enforced here AND at the database level
+    (matching_config has a CHECK constraint), so this can never be violated
+    even if another endpoint writes to this table in the future.
+    """
+    required_fields = [
+        "weight_pickup_area", "weight_availability",
+        "weight_verification", "weight_language",
+    ]
+    missing = [f for f in required_fields if f not in data]
+    if missing:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Missing required field(s): {', '.join(missing)}",
+        )
+
+    weights = {}
+    for field in required_fields:
+        value = data[field]
+        if not isinstance(value, int) or isinstance(value, bool):
+            raise HTTPException(status_code=400, detail=f"{field} must be an integer.")
+        if value < 0 or value > 100:
+            raise HTTPException(status_code=400, detail=f"{field} must be between 0 and 100.")
+        weights[field] = value
+
+    total = sum(weights.values())
+    if total != 100:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Weights must sum to exactly 100 (got {total}). "
+                   f"Received: {weights}",
+        )
+
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute(
+            """
+            UPDATE matching_config
+            SET weight_pickup_area = %s,
+                weight_availability = %s,
+                weight_verification = %s,
+                weight_language = %s
+            WHERE id = 1
+            """,
+            (
+                weights["weight_pickup_area"],
+                weights["weight_availability"],
+                weights["weight_verification"],
+                weights["weight_language"],
+            ),
+        )
+        conn.commit()
+        return {"success": True, "weights": weights}
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        # if the DB-level CHECK constraint somehow catches something the
+        # application check above missed, it surfaces here as a normal error
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
