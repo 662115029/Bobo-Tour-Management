@@ -692,6 +692,85 @@
   .profile-avatar-wrap {
     @apply shrink-0;
   }
+
+  /* ─── Weight Slider (Matching Score Weights page) ────── */
+
+  /* The host itself is now a bigger *invisible* tap target (32px) —
+     good for touch — while the *visible* line stays a thin 3px track,
+     drawn on the pseudo-element instead of the host's own background. */
+  .weight-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 32px;
+    background: transparent;
+    outline: none;
+  }
+
+  .weight-slider::-webkit-slider-runnable-track {
+    height: 3px;
+    border-radius: 999px;
+    background: var(--slider-fill, #ececec);
+  }
+
+  .weight-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 999px;
+    background: currentColor;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    margin-top: -6.5px;
+    cursor: pointer;
+    outline: none;
+  }
+
+  .weight-slider::-moz-range-track {
+    height: 3px;
+    border-radius: 999px;
+    background: #ececec;
+  }
+
+  .weight-slider::-moz-range-progress {
+    height: 3px;
+    border-radius: 999px;
+    background: currentColor;
+  }
+
+  .weight-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 999px;
+    background: currentColor;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    outline: none;
+  }
+
+  /* Force the same thumb appearance regardless of focus/active state —
+     some browsers otherwise add their own extra ring around a focused
+     or currently-dragged thumb, making it look different from the rest. */
+  .weight-slider:focus,
+  .weight-slider:focus-visible,
+  .weight-slider:active {
+    outline: none;
+  }
+
+  .weight-slider:focus::-webkit-slider-thumb,
+  .weight-slider:focus-visible::-webkit-slider-thumb,
+  .weight-slider:active::-webkit-slider-thumb {
+    outline: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  }
+
+  .weight-slider:focus::-moz-range-thumb,
+  .weight-slider:focus-visible::-moz-range-thumb,
+  .weight-slider:active::-moz-range-thumb {
+    outline: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  }
 }
 
 /* ─── Responsive ──────────────────────────────────────────── */

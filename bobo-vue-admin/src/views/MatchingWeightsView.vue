@@ -57,11 +57,12 @@
         </div>
       </div>
 
-      <!-- Weight controls — linked sliders, always sum to 100 -->
-      <div class="grid gap-3 mb-4" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+      <!-- Weight controls -->
+      <div class="flex flex-col gap-3 mb-4">
         <div v-for="f in factors" :key="f.key"
-          class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm p-5 hover:shadow-md transition-shadow">
-          <div class="flex items-center gap-2.5 mb-3">
+          class="bg-white rounded-xl border shadow-sm p-5 transition-shadow"
+          :class="locks[f.key] ? 'border-[#e0e0e0]' : 'border-[#e0e0e0] hover:shadow-md'">
+          <div class="flex items-center gap-2.5 mb-4">
             <span class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" :style="{ background: f.bg, color: f.text }">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" v-html="f.icon"></svg>
             </span>
@@ -69,18 +70,46 @@
               <div class="text-[13px] font-bold text-[#222] leading-tight">{{ f.label }}</div>
               <div class="text-[11px] text-[#999] leading-tight mt-0.5">{{ f.description }}</div>
             </div>
-          </div>
-
-          <div class="flex items-center gap-3">
-            <input type="range" min="0" max="100" step="1" :value="weights[f.key]"
-              @input="onSliderInput(f.key, $event.target.value)"
-              class="flex-1 cursor-pointer" :style="{ accentColor: f.solid }" />
-            <div class="flex items-center shrink-0 border border-[#e0e0e0] rounded-lg overflow-hidden">
-              <input type="number" min="0" max="100" step="1" :value="weights[f.key]"
-                @change="onSliderInput(f.key, $event.target.value)"
-                class="w-14 text-center text-[13px] font-bold text-[#222] py-1.5 border-none focus:outline-none focus:ring-0" />
+            <button type="button" @click="toggleLock(f.key)"
+              class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border transition-colors"
+              :class="locks[f.key] ? 'border-transparent' : 'border-[#e0e0e0] text-[#bbb] hover:text-[#888] hover:border-[#ccc]'"
+              :style="locks[f.key] ? { background: f.bg, color: f.text } : {}"
+              :title="locks[f.key] ? 'Locked — click to unlock' : 'Lock this value'">
+              <svg v-if="locks[f.key]" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              <svg v-else class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M7 11V7a5 5 0 019.9-1"/></svg>
+            </button>
+            <div class="flex items-center shrink-0 border border-[#e0e0e0] rounded-lg overflow-hidden"
+              :class="locks[f.key] ? 'opacity-50' : ''">
+              <input type="number" min="0" max="100" step="1" :value="weights[f.key]" :disabled="locks[f.key]"
+                @input="redistribute(f.key, $event.target.valueAsNumber)"
+                class="w-14 text-center text-[13px] font-bold text-[#222] py-1.5 border-none focus:outline-none focus:ring-0 disabled:cursor-not-allowed" />
               <span class="text-[12px] text-[#999] pr-2.5">%</span>
             </div>
+          </div>
+
+          <div class="relative flex items-center" style="height: 32px;" :class="locks[f.key] ? 'opacity-50' : ''">
+            <input type="range" min="0" max="100" step="1" :value="weights[f.key]" :disabled="locks[f.key]"
+              @input="redistribute(f.key, $event.target.valueAsNumber)"
+              class="weight-slider w-full" :class="locks[f.key] ? 'cursor-not-allowed' : 'cursor-pointer'" :style="sliderStyle(f)" />
+            <span v-for="n in 11" :key="n"
+              class="absolute rounded-full pointer-events-none transition-colors duration-150"
+              :class="(n - 1) % 2 === 0 ? 'w-3.5 h-3.5 border-2 border-white' : 'w-2 h-2'"
+              :style="{
+                left: (n - 1) * 10 + '%',
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
+                background: weights[f.key] >= (n - 1) * 10 ? f.solid : '#dcdcdc',
+              }">
+            </span>
+          </div>
+
+          <!-- Number labels every 20, positioned at the exact same % as their dot above -->
+          <div class="relative text-[13px] text-[#999]" style="height: 18px; margin-top: 6px;">
+            <span v-for="n in 6" :key="n" class="absolute"
+              :style="{
+                left: (n - 1) * 20 + '%',
+                transform: n === 1 ? 'translateX(0)' : n === 6 ? 'translateX(-100%)' : 'translateX(-50%)',
+              }">{{ (n - 1) * 20 }}</span>
           </div>
         </div>
       </div>
@@ -93,7 +122,11 @@
           Split evenly (25 / 25 / 25 / 25)
         </button>
 
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-3">
+          <span class="text-[12px] font-semibold text-green-600 flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            {{ totalWeight }} / 100
+          </span>
           <button v-if="isDirty" @click="reset"
             class="px-3.5 py-2 text-[13px] font-medium rounded-lg border border-[#e0e0e0] text-[#666] hover:bg-[#f5f5f5] transition">
             Reset
@@ -226,6 +259,25 @@ const savedWeights = ref({ ...DEFAULT_WEIGHTS })
 const lastSavedAt = ref(null)
 const saving = ref(false)
 
+const locks = reactive({ pickupArea: false, availability: false, verification: false, language: false })
+const MAX_LOCKS = 2 // always leave at least 2 factors free to redistribute between
+
+function toggleLock(key) {
+  if (!locks[key] && Object.values(locks).filter(Boolean).length >= MAX_LOCKS) {
+    showToast(`You can lock up to ${MAX_LOCKS} factors at a time`, 'error')
+    return
+  }
+  locks[key] = !locks[key]
+}
+
+function sliderStyle(f) {
+  const pct = weights[f.key]
+  return {
+    color: f.solid,
+    '--slider-fill': `linear-gradient(to right, ${f.solid} 0%, ${f.solid} ${pct}%, #ececec ${pct}%, #ececec 100%)`,
+  }
+}
+
 const toFrontendShape = (backendData) => ({
   pickupArea: backendData.weight_pickup_area,
   availability: backendData.weight_availability,
@@ -260,70 +312,13 @@ const lastSavedLabel = computed(() => {
   })
 })
 
-// Linked slider logic: moving one weight redistributes the change across the
-// other three, proportional to their current share, so the total always
-// stays exactly 100. No invalid-total state is possible with this UI.
-const onSliderInput = (key, rawValue) => {
-  const newVal = Math.min(100, Math.max(0, Math.round(Number(rawValue) || 0)))
-  const oldVal = weights[key]
-  const delta = newVal - oldVal
-  if (delta === 0) return
-
-  const otherKeys = KEYS.filter(k => k !== key)
-  const otherSum = otherKeys.reduce((s, k) => s + weights[k], 0)
-
-  if (otherSum <= 0) {
-    if (delta > 0) {
-      // nothing to take from — clamp so total never exceeds 100
-      weights[key] = Math.min(newVal, 100)
-      return
-    }
-    // delta < 0: dragging this slider down frees up weight, but the other
-    // three have no existing proportion to redistribute by (they're all 0),
-    // so split the freed amount evenly between them instead of leaving them stuck at 0.
-    const freed = -delta
-    const share = Math.floor(freed / otherKeys.length)
-    let remainder = freed - share * otherKeys.length
-    otherKeys.forEach((k, idx) => {
-      weights[k] = share + (idx < remainder ? 1 : 0)
-    })
-    weights[key] = newVal
-    return
-  }
-
-  let remaining = -delta
-  const adjustments = {}
-  otherKeys.forEach((k, idx) => {
-    if (idx === otherKeys.length - 1) {
-      adjustments[k] = remaining
-    } else {
-      const share = Math.round((weights[k] / otherSum) * (-delta))
-      adjustments[k] = share
-      remaining -= share
-    }
-  })
-
-  otherKeys.forEach(k => {
-    weights[k] = Math.min(100, Math.max(0, weights[k] + adjustments[k]))
-  })
-  weights[key] = newVal
-
-  // rounding safety net — nudge the largest other weight so the total is
-  // exactly 100 even after clamping above
-  const total = KEYS.reduce((s, k) => s + weights[k], 0)
-  if (total !== 100) {
-    const diff = 100 - total
-    const target = otherKeys.reduce((best, k) => (weights[k] > weights[best] ? k : best), otherKeys[0])
-    weights[target] = Math.min(100, Math.max(0, weights[target] + diff))
-  }
-}
-
 const distributeEvenly = () => {
   Object.assign(weights, { pickupArea: 25, availability: 25, verification: 25, language: 25 })
 }
 
 const reset = () => {
   Object.assign(weights, DEFAULT_WEIGHTS)
+  Object.keys(locks).forEach(k => { locks[k] = false })
 }
 
 const save = async () => {
@@ -365,5 +360,50 @@ const scoreColorFor = (score) => {
   if (score >= 80) return '#2e7d32'
   if (score >= 50) return '#f9a825'
   return '#e53935'
+}
+
+// Auto-redistribute: when one factor's weight changes, scale the *unlocked*
+// others proportionally so the total always stays at exactly 100. Locked
+// factors keep their current value untouched and are excluded entirely.
+let isRedistributing = false
+
+function redistribute(changedKey, rawValue) {
+  if (isRedistributing) return
+  if (locks[changedKey]) return // shouldn't happen (input is disabled), but stay safe
+  if (rawValue === '' || rawValue === null || Number.isNaN(rawValue)) return
+  isRedistributing = true
+
+  const others = factors.map(f => f.key).filter(k => k !== changedKey)
+  const lockedOthers = others.filter(k => locks[k])
+  const unlockedOthers = others.filter(k => !locks[k])
+  const lockedSum = lockedOthers.reduce((sum, k) => sum + weights[k], 0)
+
+  // never let the changed value eat into what's reserved for locked factors
+  const maxAllowed = Math.max(0, 100 - lockedSum)
+  const newValue = Math.min(maxAllowed, Math.max(0, Math.round(rawValue)))
+  const remaining = 100 - newValue - lockedSum
+
+  if (unlockedOthers.length > 0) {
+    const oldUnlockedSum = unlockedOthers.reduce((sum, k) => sum + weights[k], 0)
+    let newUnlocked
+    if (oldUnlockedSum === 0) {
+      const base = Math.floor(remaining / unlockedOthers.length)
+      newUnlocked = unlockedOthers.map(() => base)
+      let leftover = remaining - base * unlockedOthers.length
+      for (let i = 0; leftover > 0; i++, leftover--) newUnlocked[i % unlockedOthers.length]++
+    } else {
+      newUnlocked = unlockedOthers.map(k => Math.round((weights[k] * remaining) / oldUnlockedSum))
+      const diff = remaining - newUnlocked.reduce((a, b) => a + b, 0)
+      if (diff !== 0) {
+        const maxIdx = newUnlocked.indexOf(Math.max(...newUnlocked))
+        newUnlocked[maxIdx] += diff
+      }
+    }
+    unlockedOthers.forEach((k, i) => { weights[k] = Math.max(0, Math.min(100, newUnlocked[i])) })
+  }
+
+  weights[changedKey] = newValue
+
+  isRedistributing = false
 }
 </script>
