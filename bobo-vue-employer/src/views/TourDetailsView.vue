@@ -161,8 +161,30 @@
         <!-- 2-col layout -->
         <div class="grid gap-4 grid-cols-1 lg:grid-cols-[320px_1fr] items-start">
 
-          <!-- ── LEFT ── -->
+          <!-- LEFT -->
           <div class="flex flex-col gap-3">
+
+            <!-- Area Required -->
+            <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm hover:shadow-md transition-shadow">
+              <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
+                <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                <span class="text-[13px] font-bold text-[#444] tracking-wide">Pickup Area</span>
+              </div>
+
+              <!-- View mode -->
+              <div v-if="!editing" class="px-4 py-4 flex flex-wrap gap-1.5">
+                <span v-if="job.job_area_name" class="info-tag area">{{ job.job_area_name }}</span>
+                <span v-else class="text-[13px] text-[#bbb]">None specified</span>
+              </div>
+
+              <!-- Edit mode -->
+              <div v-else class="px-4 py-4">
+                <select v-model="form.job_area_id" class="field-input text-[13px] w-full">
+                  <option :value="null">None specified</option>
+                  <option v-for="a in areas" :key="a.area_id" :value="a.area_id">{{ a.area_name }}</option>
+                </select>
+              </div>
+            </div>
 
             <!-- Languages Required -->
             <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm hover:shadow-md transition-shadow">
@@ -452,7 +474,7 @@
 
           </div>
 
-          <!-- ── RIGHT ── -->
+          <!-- RIGHT -->
           <div class="flex flex-col gap-3">
 
             <!-- Tour Schedule -->
@@ -471,7 +493,7 @@
                       <div v-if="item.note" class="text-[11px] text-[#999] mt-0.5">{{ item.note }}</div>
                     </div>
                     <div class="flex justify-center" style="flex: 2">
-                      <span v-if="item.start_time || item.end_time" class="text-[12px] font-bold text-[#7b1fa2] bg-[#f3e5f5] px-2 py-0.5 rounded-md whitespace-nowrap">{{ item.start_time }} – {{ item.end_time }}</span>
+                      <span v-if="item.start_time || item.end_time" class="text-[12px] font-bold text-[#7b1fa2] bg-[#f3e5f5] px-2 py-0.5 rounded-md whitespace-nowrap">{{ item.start_time }} - {{ item.end_time }}</span>
                     </div>
                     <span v-if="item.itinerary_date" class="text-[12px] text-[#aaa] whitespace-nowrap shrink-0 w-20 text-left">{{ formatDate(item.itinerary_date) }}</span>
                   </div>
@@ -660,7 +682,7 @@
             <div class="flex items-center gap-3 flex-1 min-w-0">
               <div class="w-9 h-9 rounded-full text-sm font-bold flex items-center justify-center shrink-0" :style="avatarStyle(app.fl_id, app.driver_name)">{{ initials2(app.driver_name || '?') }}</div>
               <div class="min-w-0">
-                <div class="text-[13px] font-medium text-[#222]">{{ app.driver_name || "–" }}</div>
+                <div class="text-[13px] font-medium text-[#222]">{{ app.driver_name || "-" }}</div>
                 <div class="text-[11px] text-[#999] mt-0.5">Applied {{ formatDate(app.applied_at) }}</div>
               </div>
               <span class="application-badge shrink-0 ml-auto sm:ml-0" :class="app.application_status?.toLowerCase()">{{ app.application_status }}</span>
@@ -746,6 +768,16 @@ const showSuggestions = ref(false)
 const langSuggestions = ref([])
 const exactMatch = ref(false)
 
+// Areas DB fetch (for the job's own Area Required dropdown - distinct from
+// `pickups`, which is the assigned freelancer's own coverage areas)
+const areas = ref([])
+const fetchAreas = async () => {
+  try {
+    const res = await fetch(`${API_BASE}/areas`)
+    if (res.ok) areas.value = await res.json()
+  } catch {}
+}
+
 const fetchLanguages = async () => {
   try {
     const res = await fetch(`${API_BASE}/languages`)
@@ -801,6 +833,7 @@ const form = reactive({
   job_end_date: '',
   job_required_vehicle_type: 'VAN',
   job_required_seat: 9,
+  job_area_id: null,
   job_price: null,
   job_required_languages: [],
   job_itineraries: [],
@@ -808,7 +841,7 @@ const form = reactive({
   job_expenses: [],
 })
 
-// ── Fetch tour ─────────────────────────────────────────────────────────────
+// Fetch tour
 const fetchJob = async () => {
   loading.value = true
   error.value = ''
@@ -885,9 +918,10 @@ const fetchMatches = async () => {
 onMounted(() => {
   fetchJob()
   fetchLanguages()
+  fetchAreas()
 })
 
-// ── Refresh payment only ───────────────────────────────────────────────────
+// Refresh payment only
 const fetchPayment = async () => {
   const id = route.params.id
   try {
@@ -995,7 +1029,7 @@ const submitReupload = async () => {
   }
 }
 
-// ── Accept / Reject ────────────────────────────────────────────────────────
+// Accept / Reject
 const handleAccept = async (app) => {
   try {
     const res = await fetch(`${API_BASE}/job-applications/${app.job_application_id}/accept`, {
@@ -1040,7 +1074,7 @@ const handleReject = async (app) => {
   } catch { alert('Failed to reject application.') }
 }
 
-// ── Edit helpers ───────────────────────────────────────────────────────────
+// Edit helpers
 const toDateInput = (d) => d ? new Date(d).toISOString().slice(0, 10) : ''
 
 const startEditing = () => {
@@ -1052,12 +1086,13 @@ const startEditing = () => {
     job_end_date: toDateInput(j.job_end_date),
     job_required_vehicle_type: j.job_required_vehicle_type || 'VAN',
     job_required_seat: j.job_required_seat ?? 9,
+    job_area_id: j.job_area_id ?? null,
     job_price: j.job_price ?? null,
     job_required_languages: [...(j.job_required_languages || [])],
     job_itineraries: (j.job_itineraries || []).map(i => ({ ...i })),
     job_passengers: (j.job_passengers || []).map(p => ({
       ...p,
-      pickup_time: formatPickupTime(p.pickup_time) === '–' ? '' : formatPickupTime(p.pickup_time),
+      pickup_time: formatPickupTime(p.pickup_time) === '-' ? '' : formatPickupTime(p.pickup_time),
     })),
     job_expenses: (j.job_expenses || []).map(e => ({ ...e })),
   })
@@ -1072,7 +1107,7 @@ const toggleLanguage = (lang) => {
   else form.job_required_languages.push(lang)
 }
 
-// ── Save ───────────────────────────────────────────────────────────────────
+// Save
 const saveJob = async () => {
   submitting.value = true
   try {
@@ -1094,6 +1129,8 @@ const saveJob = async () => {
         job_end_date: form.job_end_date,
         job_required_vehicle_type: form.job_required_vehicle_type,
         job_required_seat: form.job_required_seat,
+        job_area_id: form.job_area_id,
+        job_area_name: areas.value.find(a => a.area_id === form.job_area_id)?.area_name || null,
         job_price: form.job_price,
         job_required_languages: [...form.job_required_languages],
         job_itineraries: form.job_itineraries.map(i => ({ ...i })),
@@ -1111,7 +1148,7 @@ const saveJob = async () => {
   }
 }
 
-// ── Computed helpers ───────────────────────────────────────────────────────
+// Computed helpers
 const sortedExpenses = computed(() =>
   [...(job.value?.job_expenses ?? [])].sort((a, b) => (a.sequence ?? 0) - (b.sequence ?? 0))
 )
@@ -1119,7 +1156,7 @@ const canEdit = computed(() => job.value?.job_status === 'OPEN')
 const canCancel = computed(() => ['OPEN', 'PENDING', 'MATCHED'].includes(job.value?.job_status))
 const canMatch = computed(() => ['OPEN', 'PENDING'].includes(job.value?.job_status))
 
-// ── Matching ────────────────────────────────────────────────────────────────
+// Matching
 const suggestedMatches = computed(() => matches.value)
 const inviting = ref(false)
 
@@ -1194,7 +1231,7 @@ const handleInviteCandidate = async (candidate) => {
   }
 }
 
-// ── Status display ─────────────────────────────────────────────────────────
+// Status display
 const STATUS_MAP = {
   OPEN:        { label: 'Open'        },
   PENDING:     { label: 'Pending'     },
@@ -1205,9 +1242,9 @@ const STATUS_MAP = {
 }
 const statusLabel = (s) => STATUS_MAP[s]?.label ?? s
 
-// ── Formatters ─────────────────────────────────────────────────────────────
+// Formatters
 const formatPickupTime = (val) => {
-  if (!val) return '–'
+  if (!val) return '-'
   if (typeof val === 'number' || /^\d+$/.test(String(val))) {
     const secs = Number(val)
     return `${String(Math.floor(secs / 3600)).padStart(2, '0')}:${String(Math.floor((secs % 3600) / 60)).padStart(2, '0')}`
@@ -1231,7 +1268,7 @@ const formatDateTime = (d) => {
   return dt.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: TZ })
 }
 
-// ── Cancel tour ────────────────────────────────────────────────────────────
+// Cancel tour
 const confirmCancel = async () => {
   if (!confirm('Are you sure you want to cancel this tour? This cannot be undone.')) return
   cancelling.value = true

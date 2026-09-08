@@ -1248,6 +1248,21 @@ def get_languages():
             conn.close()
 
 
+@router.get("/areas")
+def get_areas():
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT area_id, area_name FROM areas ORDER BY area_name ASC")
+        return cursor.fetchall()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
+
+
 @router.post("/languages")
 def create_or_get_language(data: dict):
     conn = None

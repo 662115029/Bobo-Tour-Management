@@ -56,6 +56,7 @@ def get_tour(job_id: str, em_id: str):
                    j.job_title, j.job_description,
                    j.job_start_date, j.job_end_date,
                    j.job_required_vehicle_type, j.job_required_seat,
+                   j.area_id AS job_area_id, ar.area_name AS job_area_name,
                    j.job_price, j.job_status,
                    j.selected_fl_id,
                    f.fl_name AS driver_name,
@@ -65,6 +66,7 @@ def get_tour(job_id: str, em_id: str):
             FROM jobs j
             JOIN employers em ON j.em_id = em.em_id
             LEFT JOIN freelancers f ON j.selected_fl_id = f.fl_id
+            LEFT JOIN areas ar ON j.area_id = ar.area_id
             WHERE j.job_id = %s AND j.em_id = %s
             """,
             (job_id, em_id)
@@ -255,6 +257,7 @@ def update_tour(job_id: str, data: dict):
                 job_title = %s, job_description = %s,
                 job_start_date = %s, job_end_date = %s,
                 job_required_vehicle_type = %s, job_required_seat = %s,
+                area_id = %s,
                 job_price = %s,
                 job_updated_at = NOW()
             WHERE job_id = %s
@@ -264,6 +267,7 @@ def update_tour(job_id: str, data: dict):
                 data.get("job_start_date"), data.get("job_end_date"),
                 data.get("job_required_vehicle_type", "VAN"),
                 data.get("job_required_seat", 9),
+                data.get("job_area_id") or None,
                 data.get("job_price") or 0,  # Fixed: treat None as 0
                 job_id,
             ),
