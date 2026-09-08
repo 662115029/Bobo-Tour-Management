@@ -466,16 +466,15 @@ def get_tour_matches(job_id: str, em_id: str, limit: int = 10):
         if not job:
             raise HTTPException(status_code=404, detail="Tour not found")
 
-        def build_reasons(fl_verify_status, rating, matched_lang_names):
+        def build_reasons(fl_verify_status, matched_lang_names):
             reasons = []
             if fl_verify_status == "VERIFIED":
                 reasons.append("Verified")
-            reasons.append("Right vehicle & seats")   # guaranteed — Lambda's hard filter
+            else:
+                reasons.append("Not Verified")
             reasons.append("Available on dates")      # guaranteed — Lambda's hard filter
             if matched_lang_names:
                 reasons.append("Speaks " + ", ".join(matched_lang_names))
-            if rating and float(rating) > 0:
-                reasons.append(f"{float(rating):.1f}\u2605 rating")
             return reasons
 
         # 1) Fresh suggestions: precomputed scores from the Lambda's output table
@@ -541,7 +540,7 @@ def get_tour_matches(job_id: str, em_id: str, limit: int = 10):
                 "name": r["fl_name"],
                 "matchScore": float(r["match_score"]),
                 "reasons": build_reasons(
-                    r["fl_verify_status"], r["fl_rating_avg"], lang_map.get(r["fl_id"], [])
+                    r["fl_verify_status"], lang_map.get(r["fl_id"], [])
                 ),
             })
 
@@ -553,7 +552,7 @@ def get_tour_matches(job_id: str, em_id: str, limit: int = 10):
                 "name": r["fl_name"],
                 "matchScore": None,
                 "reasons": build_reasons(
-                    r["fl_verify_status"], r["fl_rating_avg"], lang_map.get(r["fl_id"], [])
+                    r["fl_verify_status"], lang_map.get(r["fl_id"], [])
                 ),
             })
 

@@ -15,13 +15,13 @@
         </button>
       </div>
 
-      <!-- Floating Matching / Applications toolbar — fixed top-right -->
+      <!-- Floating Matching / Applications toolbar - fixed top-right -->
       <div v-if="job" class="fixed top-20 right-6 z-40 flex items-center gap-2">
         <button
           class="group flex items-center justify-center gap-2 w-[150px] px-3 py-2 rounded-full text-[13px] font-bold bg-white border-2 border-violet-500 text-violet-700 hover:bg-violet-50 shadow-md transition-colors cursor-pointer"
           @click="showMatchingModal = true">
           <span class="w-6 h-6 rounded-full bg-violet-100 flex items-center justify-center shrink-0">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4M16 17H4m0 0l4 4m-4-4l4-4"/></svg>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           </span>
           Matching
           <span v-if="suggestedMatches.length" class="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-violet-600 text-white text-[10px] font-bold">{{ suggestedMatches.length }}</span>
@@ -38,7 +38,7 @@
         </button>
       </div>
 
-      <!-- Floating Edit / Cancel toolbar — fixed bottom-right -->
+      <!-- Floating Edit / Cancel toolbar - fixed bottom-right -->
       <div v-if="job" class="fixed bottom-6 right-6 z-40 flex items-center gap-2">
         <template v-if="!editing">
           <button v-if="canCancel" @click="confirmCancel" :disabled="cancelling"
@@ -316,7 +316,7 @@
                     <div class="px-4 py-3 flex items-center justify-between">
                       <div class="flex items-center gap-2">
                         <div class="w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center shrink-0" :style="avatarStyle(payment.fl_id, payment.driver_name)">{{ initials2(payment.driver_name || '?') }}</div>
-                        <span class="text-[13px] font-medium text-[#222]">{{ payment.driver_name || '—' }}</span>
+                        <span class="text-[13px] font-medium text-[#222]">{{ payment.driver_name || '-' }}</span>
                       </div>
                       <span class="payment-badge" :class="payment.payment_status?.toLowerCase()">{{ payment.payment_status }}</span>
                     </div>
@@ -568,11 +568,10 @@
         <div class="flex items-center justify-between px-5 py-3.5 border-b border-[#eee] shrink-0">
           <div class="flex items-center gap-2">
             <span class="w-7 h-7 rounded-full bg-violet-100 flex items-center justify-center shrink-0">
-              <svg class="w-3.5 h-3.5 text-violet-800" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4M16 17H4m0 0l4 4m-4-4l4-4"/></svg>
+              <svg class="w-3.5 h-3.5 text-violet-800" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             </span>
             <div>
               <div class="text-[15px] font-semibold text-[#111] leading-tight">Suggested Matches</div>
-              <div class="text-[11px] text-[#999] leading-tight mt-0.5">Freelancers that fit this tour's requirements</div>
             </div>
           </div>
           <button class="text-[#999] hover:text-[#333] transition" @click="showMatchingModal = false">
@@ -607,7 +606,7 @@
                 </span>
               </div>
               <div class="flex flex-wrap gap-1 mt-1.5">
-                <span v-for="tag in cand.reasons" :key="tag" class="text-[10px] text-[#888] bg-white border border-[#e8e8e8] rounded-full px-2 py-0.5">{{ tag }}</span>
+                <span v-for="tag in cand.reasons" :key="tag" :class="reasonClass(tag)">{{ tag }}</span>
               </div>
             </div>
             <button class="shrink-0 flex items-center gap-1 text-[11px] font-semibold rounded-lg px-2.5 py-1.5 border-none transition-colors"
@@ -627,9 +626,10 @@
         </div>
 
         <div class="px-5 py-3 border-t border-[#f0f0f0] shrink-0">
-          <p v-if="job?.job_status === 'MATCHED'" class="text-[11px] text-[#bbb] leading-relaxed">This tour is already matched — invites are locked.</p>
-          <p v-else-if="hasPendingInvite" class="text-[11px] text-[#bbb] leading-relaxed">An invite is already pending for this tour — you can invite someone else once they respond.</p>
-          <p v-else class="text-[11px] text-[#bbb] leading-relaxed">You can invite one freelancer at a time — they'll show up as "Pending" until they respond.</p>
+          <p v-if="job?.job_status === 'MATCHED'" class="text-[11px] text-[#bbb] leading-relaxed">This tour is already matched - invites are locked.</p>
+          <p v-else-if="hasPendingInvite" class="text-[11px] text-[#bbb] leading-relaxed">An invite is already pending for this tour - you can invite someone else once they respond.</p>
+          <p v-else-if="hasAppliedCandidate" class="text-[11px] text-[#bbb] leading-relaxed">Some freelancers below have already applied on their own - you can accept them directly, or invite anyone else.</p>
+          <p v-else class="text-[11px] text-[#bbb] leading-relaxed">You can invite one freelancer at a time - they'll show up as "Pending" until they respond.</p>
         </div>
       </div>
     </div>
@@ -644,7 +644,6 @@
             </span>
             <div>
               <div class="text-[15px] font-semibold text-[#111] leading-tight">Applications</div>
-              <div class="text-[11px] text-[#999] leading-tight mt-0.5">{{ applications.length }} freelancer{{ applications.length === 1 ? '' : 's' }} applied</div>
             </div>
           </div>
           <button class="text-[#999] hover:text-[#333] transition" @click="showApplicationModal = false">
@@ -686,7 +685,7 @@
         </div>
 
         <div v-if="hasPendingInvite" class="px-5 py-3 border-t border-[#f0f0f0] shrink-0">
-          <p class="text-[11px] text-[#bbb] leading-relaxed">A Matching invite is pending — waiting for the freelancer to respond. Accept/Reject is locked for everyone (including the invited person) until then.</p>
+          <p class="text-[11px] text-[#bbb] leading-relaxed">A Matching invite is pending - waiting for the freelancer to respond. Accept/Reject is locked for everyone (including the invited person) until then.</p>
         </div>
       </div>
     </div>
@@ -1015,7 +1014,7 @@ const handleAccept = async (app) => {
         if (flRes.ok) job.value.driver_phone = flData.fl_phone
       } catch {}
 
-      // backend already rejects everyone else for this job atomically — mirror that locally
+      // backend already rejects everyone else for this job atomically - mirror that locally
       applications.value.forEach(a => {
         if (a.job_application_id !== app.job_application_id && a.application_status !== 'ACCEPTED' && a.application_status !== 'REJECTED') {
           a.application_status = 'REJECTED'
@@ -1125,7 +1124,7 @@ const suggestedMatches = computed(() => matches.value)
 const inviting = ref(false)
 
 // Single source of truth: any fl_id with a real application row (from either
-// Applications or a Matching invite) is locked here too — synced both ways.
+// Applications or a Matching invite) is locked here too - synced both ways.
 // REJECTED stays locked permanently, same as an ACCEPTED/PENDING one.
 const candidateStatus = (fl_id) => {
   const app = applications.value.find(a => a.fl_id === fl_id)
@@ -1143,10 +1142,28 @@ const candidateLabel = (fl_id) => {
   return 'Invite'
 }
 
-// Only one freelancer can be invited per tour at a time — once someone has a
+// Color-code the reason tags on each match card: Verified/Available on dates
+// (green) and Not Verified (red) carry status info the employer should
+// notice; everything else (e.g. Speaks...) stays a neutral gray pill.
+const reasonClass = (tag) => {
+  if (tag === 'Verified' || tag === 'Available on dates') {
+    return 'text-[10px] font-semibold text-[#2e7d32] bg-white border border-[#e8e8e8] rounded-full px-2 py-0.5'
+  }
+  if (tag === 'Not Verified') {
+    return 'text-[10px] font-semibold text-[#c62828] bg-white border border-[#e8e8e8] rounded-full px-2 py-0.5'
+  }
+  return 'text-[10px] text-[#888] bg-white border border-[#e8e8e8] rounded-full px-2 py-0.5'
+}
+
+// Only one freelancer can be invited per tour at a time - once someone has a
 // pending invite, every other Invite button locks (cursor-not-allowed) until
 // they respond (accepted/rejected).
 const hasPendingInvite = computed(() => applications.value.some(a => a.application_status === 'PENDING'))
+
+// True when at least one freelancer in the Suggested Matches list has applied
+// on their own (via Job Opening) rather than being invited - surfaced in the
+// modal footer so the employer notices without hunting for the "Applied" pill.
+const hasAppliedCandidate = computed(() => suggestedMatches.value.some(c => candidateStatus(c.fl_id) === 'APPLIED'))
 
 const handleInviteCandidate = async (candidate) => {
   inviting.value = true
@@ -1169,7 +1186,7 @@ const handleInviteCandidate = async (candidate) => {
       application_status: 'PENDING',
       applied_at: new Date().toISOString(),
     })
-    showToast(`Invitation sent to ${candidate.name} — waiting for their response`)
+    showToast(`Invitation sent to ${candidate.name} - waiting for their response`)
   } catch {
     showToast('Cannot connect to the server.', 'error')
   } finally {
@@ -1205,12 +1222,12 @@ const parseDate = (d) => {
 }
 const formatDate = (d) => {
   const dt = parseDate(d)
-  if (!dt) return '—'
+  if (!dt) return '-'
   return dt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', timeZone: TZ })
 }
 const formatDateTime = (d) => {
   const dt = parseDate(d)
-  if (!dt) return '—'
+  if (!dt) return '-'
   return dt.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: TZ })
 }
 
