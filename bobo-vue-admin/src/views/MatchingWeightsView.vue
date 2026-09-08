@@ -80,7 +80,7 @@
             </button>
             <div class="flex items-center shrink-0 border border-[#e0e0e0] rounded-lg overflow-hidden"
               :class="locks[f.key] ? 'opacity-50' : ''">
-              <input type="number" min="0" max="100" step="1" :value="weights[f.key]" :disabled="locks[f.key]"
+              <input type="number" min="0" max="100" step="5" :value="weights[f.key]" :disabled="locks[f.key]"
                 @input="redistribute(f.key, $event.target.valueAsNumber)"
                 class="w-14 text-center text-[13px] font-bold text-[#222] py-1.5 border-none focus:outline-none focus:ring-0 disabled:cursor-not-allowed" />
               <span class="text-[12px] text-[#999] pr-2.5">%</span>
@@ -88,28 +88,28 @@
           </div>
 
           <div class="relative flex items-center" style="height: 32px;" :class="locks[f.key] ? 'opacity-50' : ''">
-            <input type="range" min="0" max="100" step="1" :value="weights[f.key]" :disabled="locks[f.key]"
+            <input type="range" min="0" max="100" step="5" :value="weights[f.key]" :disabled="locks[f.key]"
               @input="redistribute(f.key, $event.target.valueAsNumber)"
               class="weight-slider w-full" :class="locks[f.key] ? 'cursor-not-allowed' : 'cursor-pointer'" :style="sliderStyle(f)" />
-            <span v-for="n in 11" :key="n"
+            <span v-for="n in 21" :key="n"
               class="absolute rounded-full pointer-events-none transition-colors duration-150"
-              :class="(n - 1) % 2 === 0 ? 'w-3.5 h-3.5 border-2 border-white' : 'w-2 h-2'"
+              :class="(n - 1) % 2 === 0 ? 'w-[2.5px] h-3.5' : 'w-[1.5px] h-2'"
               :style="{
-                left: (n - 1) * 10 + '%',
+                left: (n - 1) * 5 + '%',
                 top: '50%',
                 transform: 'translate(-50%, -50%)',
-                background: weights[f.key] >= (n - 1) * 10 ? f.solid : '#dcdcdc',
+                background: weights[f.key] >= (n - 1) * 5 ? f.solid : '#dcdcdc',
               }">
             </span>
           </div>
 
-          <!-- Number labels every 20, positioned at the exact same % as their dot above -->
+          <!-- Number labels every 10, positioned at the exact same % as their big tick above -->
           <div class="relative text-[13px] text-[#999]" style="height: 18px; margin-top: 6px;">
-            <span v-for="n in 6" :key="n" class="absolute"
+            <span v-for="n in 11" :key="n" class="absolute"
               :style="{
-                left: (n - 1) * 20 + '%',
-                transform: n === 1 ? 'translateX(0)' : n === 6 ? 'translateX(-100%)' : 'translateX(-50%)',
-              }">{{ (n - 1) * 20 }}</span>
+                left: (n - 1) * 10 + '%',
+                transform: n === 1 ? 'translateX(0)' : n === 11 ? 'translateX(-100%)' : 'translateX(-50%)',
+              }">{{ (n - 1) * 10 }}</span>
           </div>
         </div>
       </div>
@@ -365,6 +365,11 @@ const scoreColorFor = (score) => {
 // Auto-redistribute: when one factor's weight changes, scale the *unlocked*
 // others proportionally so the total always stays at exactly 100. Locked
 // factors keep their current value untouched and are excluded entirely.
+// Every weight is snapped to the nearest multiple of STEP (5), so values
+// only ever end in 0 or 5.
+const STEP = 5
+const roundToStep = (v) => Math.round(v / STEP) * STEP
+
 let isRedistributing = false
 
 function redistribute(changedKey, rawValue) {
@@ -380,20 +385,22 @@ function redistribute(changedKey, rawValue) {
 
   // never let the changed value eat into what's reserved for locked factors
   const maxAllowed = Math.max(0, 100 - lockedSum)
-  const newValue = Math.min(maxAllowed, Math.max(0, Math.round(rawValue)))
-  const remaining = 100 - newValue - lockedSum
+  const newValue = Math.min(maxAllowed, Math.max(0, roundToStep(rawValue)))
+  const remaining = 100 - newValue - lockedSum // always a multiple of STEP, since newValue/lockedSum are
 
   if (unlockedOthers.length > 0) {
     const oldUnlockedSum = unlockedOthers.reduce((sum, k) => sum + weights[k], 0)
     let newUnlocked
     if (oldUnlockedSum === 0) {
-      const base = Math.floor(remaining / unlockedOthers.length)
-      newUnlocked = unlockedOthers.map(() => base)
-      let leftover = remaining - base * unlockedOthers.length
-      for (let i = 0; leftover > 0; i++, leftover--) newUnlocked[i % unlockedOthers.length]++
+      // split the remainder evenly in whole STEPs, handing out any leftover STEPs one at a time
+      const steps = remaining / STEP
+      const baseSteps = Math.floor(steps / unlockedOthers.length)
+      newUnlocked = unlockedOthers.map(() => baseSteps * STEP)
+      let leftoverSteps = steps - baseSteps * unlockedOthers.length
+      for (let i = 0; leftoverSteps > 0; i++, leftoverSteps--) newUnlocked[i % unlockedOthers.length] += STEP
     } else {
-      newUnlocked = unlockedOthers.map(k => Math.round((weights[k] * remaining) / oldUnlockedSum))
-      const diff = remaining - newUnlocked.reduce((a, b) => a + b, 0)
+      newUnlocked = unlockedOthers.map(k => roundToStep((weights[k] * remaining) / oldUnlockedSum))
+      const diff = remaining - newUnlocked.reduce((a, b) => a + b, 0) // always a multiple of STEP
       if (diff !== 0) {
         const maxIdx = newUnlocked.indexOf(Math.max(...newUnlocked))
         newUnlocked[maxIdx] += diff
