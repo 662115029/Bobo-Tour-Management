@@ -577,13 +577,6 @@
         </div>
       </div>
     </div>
-    <FreelancerMiniModal
-      v-if="miniModalFlId"
-      :fl-id="miniModalFlId"
-      :job-id="job?.job_id"
-      @close="miniModalFlId = null"
-    />
-
     <!-- Matching Modal -->
     <div v-if="showMatchingModal" class="fixed inset-0 z-50 flex items-start justify-center pt-16 bg-black/70" @click.self="showMatchingModal = false">
       <div class="bg-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-lg mx-4 flex flex-col" style="max-height:88vh">
@@ -717,6 +710,12 @@
         </div>
       </div>
     </div>
+    <FreelancerMiniModal
+      v-if="miniModalFlId"
+      :fl-id="miniModalFlId"
+      :job-id="job?.job_id"
+      @close="miniModalFlId = null"
+    />
   </AppLayout>
 </template>
 
