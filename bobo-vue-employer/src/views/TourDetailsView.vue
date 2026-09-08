@@ -693,12 +693,12 @@
               </button>
               <button @click="handleAccept(app)" title="Accept"
                 :disabled="app.application_status !== 'APPLIED' || hasPendingInvite"
-                class="w-8 h-8 flex items-center justify-center rounded-lg border border-[#e0e0e0] text-[#aaa] hover:bg-green-50 hover:text-green-600 hover:border-green-200 transition disabled:opacity-30 disabled:cursor-not-allowed">
+                class="w-8 h-8 flex items-center justify-center rounded-lg border border-green-200 bg-green-50 text-green-600 hover:bg-green-100 hover:border-green-300 transition disabled:opacity-30 disabled:cursor-not-allowed disabled:bg-[#f5f5f5] disabled:border-[#e0e0e0] disabled:text-[#aaa]">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
               </button>
               <button @click="handleReject(app)" title="Reject"
                 :disabled="app.application_status !== 'APPLIED' || hasPendingInvite"
-                class="w-8 h-8 flex items-center justify-center rounded-lg border border-[#e0e0e0] text-[#aaa] hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition disabled:opacity-30 disabled:cursor-not-allowed">
+                class="w-8 h-8 flex items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-500 hover:bg-red-100 hover:border-red-300 transition disabled:opacity-30 disabled:cursor-not-allowed disabled:bg-[#f5f5f5] disabled:border-[#e0e0e0] disabled:text-[#aaa]">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
               </button>
             </div>
