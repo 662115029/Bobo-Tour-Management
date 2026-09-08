@@ -585,7 +585,7 @@
     />
 
     <!-- Matching Modal -->
-    <div v-if="showMatchingModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70" @click.self="showMatchingModal = false">
+    <div v-if="showMatchingModal" class="fixed inset-0 z-50 flex items-start justify-center pt-16 bg-black/70" @click.self="showMatchingModal = false">
       <div class="bg-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-lg mx-4 flex flex-col" style="max-height:88vh">
         <div class="flex items-center justify-between px-5 py-3.5 border-b border-[#eee] shrink-0">
           <div class="flex items-center gap-2">
@@ -631,19 +631,25 @@
                 <span v-for="tag in cand.reasons" :key="tag" :class="reasonClass(tag)">{{ tag }}</span>
               </div>
             </div>
-            <button class="shrink-0 flex items-center gap-1 text-[11px] font-semibold rounded-lg px-2.5 py-1.5 border-none transition-colors"
-              :class="candidateStatus(cand.fl_id) === 'REJECTED'
-                ? 'text-red-400 bg-red-50 cursor-not-allowed'
-                : candidateStatus(cand.fl_id) === 'APPLIED'
-                  ? 'text-blue-700 bg-blue-100 cursor-not-allowed'
-                  : candidateStatus(cand.fl_id)
-                    ? 'text-green-700 bg-green-100 cursor-default'
-                    : 'text-violet-800 bg-violet-100 hover:bg-violet-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-violet-100'"
-              :disabled="inviting || candidateStatus(cand.fl_id) !== null || job?.job_status === 'MATCHED' || hasPendingInvite"
-              @click="handleInviteCandidate(cand)">
-              <svg v-if="candidateStatus(cand.fl_id) === 'PENDING' || candidateStatus(cand.fl_id) === 'ACCEPTED'" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-              {{ candidateLabel(cand.fl_id) }}
-            </button>
+            <div class="shrink-0 flex items-center gap-1.5">
+              <button @click="miniModalFlId = cand.fl_id"
+                class="px-2.5 py-1.5 text-[11px] font-medium rounded-lg border border-[#e0e0e0] text-[#666] hover:bg-white hover:border-[#bbb] transition">
+                View
+              </button>
+              <button class="flex items-center gap-1 text-[11px] font-semibold rounded-lg px-2.5 py-1.5 border-none transition-colors"
+                :class="candidateStatus(cand.fl_id) === 'REJECTED'
+                  ? 'text-red-400 bg-red-50 cursor-not-allowed'
+                  : candidateStatus(cand.fl_id) === 'APPLIED'
+                    ? 'text-blue-700 bg-blue-100 cursor-not-allowed'
+                    : candidateStatus(cand.fl_id)
+                      ? 'text-green-700 bg-green-100 cursor-default'
+                      : 'text-violet-800 bg-violet-100 hover:bg-violet-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-violet-100'"
+                :disabled="inviting || candidateStatus(cand.fl_id) !== null || job?.job_status === 'MATCHED' || hasPendingInvite"
+                @click="handleInviteCandidate(cand)">
+                <svg v-if="candidateStatus(cand.fl_id) === 'PENDING' || candidateStatus(cand.fl_id) === 'ACCEPTED'" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                {{ candidateLabel(cand.fl_id) }}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -657,7 +663,7 @@
     </div>
 
     <!-- Applications Modal -->
-    <div v-if="showApplicationModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70" @click.self="showApplicationModal = false">
+    <div v-if="showApplicationModal" class="fixed inset-0 z-50 flex items-start justify-center pt-16 bg-black/70" @click.self="showApplicationModal = false">
       <div class="bg-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-lg mx-4 flex flex-col" style="max-height:88vh">
         <div class="flex items-center justify-between px-5 py-3.5 border-b border-[#eee] shrink-0">
           <div class="flex items-center gap-2">
