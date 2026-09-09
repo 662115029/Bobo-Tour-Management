@@ -9,7 +9,7 @@ import requests
 
 TOKEN = "USNnVdV1IUx4vy8tMS/Ul3Or5XkFswlfkmUGpEH/RGNC2y6fMKcBpb/m2WmvN+h2AWoGpKHl/cUiecOUJAEuMgCQ8eeQt9R+42Gms7+bXmPxJQ61h7Rd9w0AZulRUW2L3aZJHyqMm0tSt4gxCtwiIgdB04t89/1O/w1cDnyilFU="
 LIFF_ID = "2010988299-KhiGZeLc"
-OLD_MENU_B_ID = "richmenu-5712b3e0dace8d4cfe59e128a89439d7"
+OLD_MENU_B_ID = "richmenu-9005d3bf60b4b4f52b8ee95a472242b9"
 
 BASE_URL = f"https://liff.line.me/{LIFF_ID}"
 HEADERS_JSON = {"Authorization": f"Bearer {TOKEN}", "Content-Type": "application/json"}
