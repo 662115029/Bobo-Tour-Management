@@ -1188,10 +1188,10 @@ const candidateLabel = (fl_id) => {
 // (green) and Not Verified (red) carry status info the employer should
 // notice; everything else (e.g. Speaks...) stays a neutral gray pill.
 const reasonClass = (tag) => {
-  if (tag === 'Verified' || tag === 'Available on dates') {
+  if (tag === 'Verified' || tag === 'Available on dates' || tag === 'Covers Pickup Area') {
     return 'text-[10px] font-semibold text-[#2e7d32] bg-white border border-[#e8e8e8] rounded-full px-2 py-0.5'
   }
-  if (tag === 'Not Verified') {
+  if (tag === 'Not Verified' || tag === 'Outside Pickup Area') {
     return 'text-[10px] font-semibold text-[#c62828] bg-white border border-[#e8e8e8] rounded-full px-2 py-0.5'
   }
   return 'text-[10px] text-[#888] bg-white border border-[#e8e8e8] rounded-full px-2 py-0.5'
