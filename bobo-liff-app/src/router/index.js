@@ -1,5 +1,4 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
 import JobsView from '../views/JobsView.vue'
 import RegisterView from '../views/RegisterView.vue'
 import ProfileView from '../views/ProfileView.vue'
@@ -10,7 +9,9 @@ import AvailabilityView from '../views/AvailabilityView.vue'
 const router = createRouter({
   history: createWebHashHistory(),
   routes: [
-    { path: '/', component: HomeView },
+    // No standalone Home page — App.vue's init() always routes to /login,
+    // /register, or a specific target before this ever needs to resolve.
+    { path: '/', redirect: '/profile' },
     { path: '/login', component: LoginView },
     { path: '/register', component: RegisterView },
     { path: '/profile', component: ProfileView },

@@ -3,7 +3,7 @@
 
     <!-- Header -->
     <div class="flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-100">
-      <button class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center" @click="$router.push('/')">
+      <button class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center" @click="closeLiff">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <path d="M19 12H5M5 12l7-7M5 12l7 7"/>
         </svg>
@@ -49,6 +49,7 @@ import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import PinPad from './PinPad.vue'
 import LoadingView from './LoadingView.vue'
+import { closeLiff } from '@/liff.js'
 
 const props = defineProps({ user: Object, lineProfile: Object })
 const emit = defineEmits(['login'])
@@ -78,7 +79,7 @@ async function handlePinComplete(pin) {
       return
     }
     emit('login', data)
-    router.push(route.query.redirect || '/')
+    router.push(route.query.redirect || '/profile')
   } catch {
     pinError.value = 'Cannot connect to server.'
     pinPadRef.value?.reset()

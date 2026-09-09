@@ -109,10 +109,15 @@ function handleVisibilityChange() {
     // Going into background — only matters if someone is actually logged in.
     touchLastActive()
   } else {
-    // Coming back to foreground — if we were away too long, force PIN re-entry.
+    // Coming back to foreground — if we were away too long, force PIN re-entry,
+    // but remember which page we were on so we can return there after unlock.
     if (clearSessionIfExpired()) {
+      const currentPath = router.currentRoute.value.fullPath
+      const redirect = (currentPath && currentPath !== '/login' && currentPath !== '/register')
+        ? currentPath
+        : undefined
       appUser.value = null
-      router.push('/login')
+      router.push({ path: '/login', query: redirect ? { redirect } : {} })
     }
   }
 }
