@@ -1191,7 +1191,7 @@ const reasonClass = (tag) => {
   if (tag === 'Verified' || tag === 'Available on dates' || tag === 'Covers Pickup Area') {
     return 'text-[10px] font-semibold text-[#2e7d32] bg-white border border-[#e8e8e8] rounded-full px-2 py-0.5'
   }
-  if (tag === 'Not Verified' || tag === 'Outside Pickup Area') {
+  if (tag === 'Not Verified' || tag === 'Outside Pickup Area' || tag === 'No Availability on Dates') {
     return 'text-[10px] font-semibold text-[#c62828] bg-white border border-[#e8e8e8] rounded-full px-2 py-0.5'
   }
   return 'text-[10px] text-[#888] bg-white border border-[#e8e8e8] rounded-full px-2 py-0.5'
