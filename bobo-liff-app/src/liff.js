@@ -37,3 +37,12 @@ export async function initLiff() {
 }
 
 export { liffSdk as liff }
+
+// Closes the LIFF window, returning the person to the LINE chat — used by
+// "back" buttons on entry screens (Login/Register) instead of navigating to
+// an in-app page. In mock/dev mode there's no real window to close, so it's
+// a no-op there (nothing else makes sense on localhost).
+export function closeLiff() {
+  if (USE_MOCK) return
+  liffSdk.closeWindow()
+}

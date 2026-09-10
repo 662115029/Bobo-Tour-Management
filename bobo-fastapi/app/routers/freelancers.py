@@ -18,7 +18,7 @@ import requests
 router = APIRouter(tags=["freelancers"])
 
 LINE_CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
-RICH_MENU_ID_REGISTERED = "richmenu-9005d3bf60b4b4f52b8ee95a472242b9"
+RICH_MENU_ID_REGISTERED = "richmenu-c9acfca1c30c791f00f2142556c8b616"
 
 def link_rich_menu_to_user(line_user_id: str):
     """Switch a user's rich menu to the full (registered) menu after they sign up."""
@@ -923,7 +923,7 @@ def get_fl_documents(limit: int = 10, offset: int = 0, status: str = "", fl_id: 
             conn.close()
 
 @router.get("/fl-verification")
-def get_fl_verification(limit: int = 10, offset: int = 0, status: str = "PENDING", fl_id: Optional[int] = None):
+def get_fl_verification(limit: int = 10, offset: int = 0, status: str = "PENDING", fl_id: Optional[int] = None, is_latest: Optional[bool] = None):
     conn = None
     try:
         conn = get_connection()
@@ -936,6 +936,9 @@ def get_fl_verification(limit: int = 10, offset: int = 0, status: str = "PENDING
         if status:
             where.append("fv.fl_verify_status = %s")
             params.append(status)
+        if is_latest is not None:
+            where.append("fv.is_latest = %s")
+            params.append(is_latest)
         where_sql = ("WHERE " + " AND ".join(where)) if where else ""
         params += [limit, offset]
         cursor.execute(
@@ -1240,6 +1243,21 @@ def get_languages():
         conn = get_connection()
         cursor = get_cursor(conn)
         cursor.execute("SELECT language_id, language_name FROM languages ORDER BY language_name ASC")
+        return cursor.fetchall()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
+
+
+@router.get("/areas")
+def get_areas():
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT area_id, area_name FROM areas ORDER BY area_name ASC")
         return cursor.fetchall()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

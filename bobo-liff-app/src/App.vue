@@ -109,10 +109,15 @@ function handleVisibilityChange() {
     // Going into background — only matters if someone is actually logged in.
     touchLastActive()
   } else {
-    // Coming back to foreground — if we were away too long, force PIN re-entry.
+    // Coming back to foreground — if we were away too long, force PIN re-entry,
+    // but remember which page we were on so we can return there after unlock.
     if (clearSessionIfExpired()) {
+      const currentPath = router.currentRoute.value.fullPath
+      const redirect = (currentPath && currentPath !== '/login' && currentPath !== '/register')
+        ? currentPath
+        : undefined
       appUser.value = null
-      router.push('/login')
+      router.push({ path: '/login', query: redirect ? { redirect } : {} })
     }
   }
 }
@@ -145,19 +150,37 @@ async function init() {
     clearSessionIfExpired()
 
     const stored = localStorage.getItem('fl_session')
+    let sessionValid = false
     if (stored) {
-      // Already logged in (PIN was verified earlier, even in a different
-      // webview launch) — restore it and jump straight to the intended page.
-      appUser.value = JSON.parse(stored)
-      if (intendedPath) {
-        router.replace(intendedPath)
+      // Validate the cached fl_id against the backend before trusting it — it
+      // may belong to a database that no longer exists (e.g. after switching
+      // to a new DB), so a cached session alone is not proof of a real account.
+      try {
+        const parsed = JSON.parse(stored)
+        const check = await fetch(`${API_BASE}/freelancers/${parsed.fl_id}`, { headers: HEADERS })
+        if (check.ok) {
+          appUser.value = parsed
+          sessionValid = true
+          if (intendedPath) {
+            router.replace(intendedPath)
+          }
+        }
+      } catch {
+        // fall through — treat as invalid below
       }
-    } else if (lineProfile.value?.lineUserId) {
-      // Not logged in yet — figure out whether this LINE user is already
-      // registered, and route to PIN-unlock or Register accordingly.
-      await routeByLineStatus(lineProfile.value.lineUserId, intendedPath)
-    } else {
-      router.push('/login')
+      if (!sessionValid) {
+        localStorage.removeItem('fl_session')
+        localStorage.removeItem('fl_last_active')
+      }
+    }
+    if (!sessionValid) {
+      if (lineProfile.value?.lineUserId) {
+        // Not logged in yet — figure out whether this LINE user is already
+        // registered, and route to PIN-unlock or Register accordingly.
+        await routeByLineStatus(lineProfile.value.lineUserId, intendedPath)
+      } else {
+        router.push('/login')
+      }
     }
   } catch (e) {
     error.value = true

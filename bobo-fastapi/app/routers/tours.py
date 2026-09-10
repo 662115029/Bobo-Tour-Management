@@ -56,6 +56,7 @@ def get_tour(job_id: str, em_id: str):
                    j.job_title, j.job_description,
                    j.job_start_date, j.job_end_date,
                    j.job_required_vehicle_type, j.job_required_seat,
+                   j.area_id AS job_area_id, ar.area_name AS job_area_name,
                    j.job_price, j.job_status,
                    j.selected_fl_id,
                    f.fl_name AS driver_name,
@@ -65,6 +66,7 @@ def get_tour(job_id: str, em_id: str):
             FROM jobs j
             JOIN employers em ON j.em_id = em.em_id
             LEFT JOIN freelancers f ON j.selected_fl_id = f.fl_id
+            LEFT JOIN areas ar ON j.area_id = ar.area_id
             WHERE j.job_id = %s AND j.em_id = %s
             """,
             (job_id, em_id)
@@ -255,6 +257,7 @@ def update_tour(job_id: str, data: dict):
                 job_title = %s, job_description = %s,
                 job_start_date = %s, job_end_date = %s,
                 job_required_vehicle_type = %s, job_required_seat = %s,
+                area_id = %s,
                 job_price = %s,
                 job_updated_at = NOW()
             WHERE job_id = %s
@@ -264,6 +267,7 @@ def update_tour(job_id: str, data: dict):
                 data.get("job_start_date"), data.get("job_end_date"),
                 data.get("job_required_vehicle_type", "VAN"),
                 data.get("job_required_seat", 9),
+                data.get("job_area_id") or None,
                 data.get("job_price") or 0,  # Fixed: treat None as 0
                 job_id,
             ),
@@ -435,7 +439,8 @@ def get_tour_matches(job_id: str, em_id: str, limit: int = 10):
         cursor.execute(
             """
             SELECT job_id, job_status, job_start_date, job_end_date,
-                   job_required_vehicle_type, job_required_seat, selected_fl_id
+                   job_required_vehicle_type, job_required_seat, selected_fl_id,
+                   area_id
             FROM jobs
             WHERE job_id = %s AND em_id = %s
             """,
@@ -445,16 +450,23 @@ def get_tour_matches(job_id: str, em_id: str, limit: int = 10):
         if not job:
             raise HTTPException(status_code=404, detail="Tour not found")
 
-        def build_reasons(fl_verify_status, rating, matched_lang_names):
+        def build_reasons(fl_verify_status, matched_lang_names, covers_area, has_availability):
             reasons = []
             if fl_verify_status == "VERIFIED":
                 reasons.append("Verified")
-            reasons.append("Right vehicle & seats")   # guaranteed — Lambda's hard filter
-            reasons.append("Available on dates")      # guaranteed — Lambda's hard filter
+            else:
+                reasons.append("Not Verified")
+            if has_availability:
+                reasons.append("Available on dates")
+            else:
+                reasons.append("No Availability on Dates")
+            if covers_area is True:
+                reasons.append("Covers Pickup Area")
+            elif covers_area is False:
+                reasons.append("Outside Pickup Area")
+            # covers_area is None when the job has no required area set — no badge
             if matched_lang_names:
                 reasons.append("Speaks " + ", ".join(matched_lang_names))
-            if rating and float(rating) > 0:
-                reasons.append(f"{float(rating):.1f}\u2605 rating")
             return reasons
 
         # 1) Fresh suggestions: precomputed scores from the Lambda's output table
@@ -513,6 +525,36 @@ def get_tour_matches(job_id: str, em_id: str, limit: int = 10):
             for row in cursor.fetchall():
                 lang_map.setdefault(row["fl_id"], []).append(row["language_name"])
 
+        # 4) Batch-check pickup-area coverage: does each candidate's fl_pickup_areas
+        #    include the job's required area? Same batching reasoning as lang_map above.
+        #    job["area_id"] is None when the job has no required area set, in which
+        #    case we skip the badge entirely rather than showing a misleading result.
+        covers_area_fl_ids = set()
+        if job["area_id"] and all_fl_ids:
+            fmt = ",".join(["%s"] * len(all_fl_ids))
+            cursor.execute(
+                f"SELECT fl_id FROM fl_pickup_areas WHERE area_id = %s AND fl_id IN ({fmt})",
+                (job["area_id"], *all_fl_ids),
+            )
+            covers_area_fl_ids = {row["fl_id"] for row in cursor.fetchall()}
+
+        # 5) Batch-check real availability overlap with the job's date range.
+        #    Same batching reasoning as covers_area_fl_ids above — one query for
+        #    every candidate instead of one per candidate in the loop.
+        has_availability_fl_ids = set()
+        if all_fl_ids:
+            fmt = ",".join(["%s"] * len(all_fl_ids))
+            cursor.execute(
+                f"""
+                SELECT fl_id FROM fl_availability
+                WHERE fl_id IN ({fmt})
+                  AND fl_available_start_date <= %s
+                  AND fl_available_end_date   >= %s
+                """,
+                (*all_fl_ids, job["job_end_date"], job["job_start_date"]),
+            )
+            has_availability_fl_ids = {row["fl_id"] for row in cursor.fetchall()}
+
         results = []
         for r in fresh_rows:
             results.append({
@@ -520,7 +562,9 @@ def get_tour_matches(job_id: str, em_id: str, limit: int = 10):
                 "name": r["fl_name"],
                 "matchScore": float(r["match_score"]),
                 "reasons": build_reasons(
-                    r["fl_verify_status"], r["fl_rating_avg"], lang_map.get(r["fl_id"], [])
+                    r["fl_verify_status"], lang_map.get(r["fl_id"], []),
+                    (r["fl_id"] in covers_area_fl_ids) if job["area_id"] else None,
+                    r["fl_id"] in has_availability_fl_ids
                 ),
             })
 
@@ -532,7 +576,9 @@ def get_tour_matches(job_id: str, em_id: str, limit: int = 10):
                 "name": r["fl_name"],
                 "matchScore": None,
                 "reasons": build_reasons(
-                    r["fl_verify_status"], r["fl_rating_avg"], lang_map.get(r["fl_id"], [])
+                    r["fl_verify_status"], lang_map.get(r["fl_id"], []),
+                    (r["fl_id"] in covers_area_fl_ids) if job["area_id"] else None,
+                    r["fl_id"] in has_availability_fl_ids
                 ),
             })
 
