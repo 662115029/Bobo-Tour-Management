@@ -605,9 +605,12 @@
               <span class="animate-pulse bg-[#ebebeb] w-14 h-6 rounded-lg block shrink-0"></span>
             </div>
           </div>
+          <div v-else-if="matchesError" class="text-center py-10">
+            <p class="text-[13px] text-red-500 font-medium mb-3">{{ matchesError }}</p>
+            <button @click="fetchMatches" class="px-4 py-1.5 text-[12px] font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition">Retry</button>
+          </div>
           <div v-else-if="!suggestedMatches.length" class="text-center py-10">
             <p class="text-[13px] text-[#bbb]">No suggested matches for this tour yet.</p>
-            <p class="text-[11px] text-[#ccc] mt-1">Freelancers must be verified, drive the right vehicle, and be available on these dates.</p>
           </div>
           <div v-for="cand in suggestedMatches" :key="cand.fl_id"
             class="flex items-center gap-3 px-3.5 py-3 bg-[#f8f9fa] rounded-lg border border-[#e8e8e8] hover:border-[#ddd] hover:bg-[#f2f2f2] transition-all">
@@ -615,7 +618,7 @@
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-1.5">
                 <span class="text-[13px] font-semibold text-[#222] truncate">{{ cand.name }}</span>
-                <span class="shrink-0 inline-flex items-center gap-1 bg-[#e8f5e9] text-[#2e7d32] text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                <span v-if="cand.matchScore != null" class="shrink-0 inline-flex items-center gap-1 bg-[#e8f5e9] text-[#2e7d32] text-[10px] font-bold px-1.5 py-0.5 rounded-full">
                   <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
                   {{ cand.matchScore }}% match
                 </span>
@@ -751,6 +754,7 @@ const showApplicationModal = ref(false)
 // Matching state
 const matches = ref([])
 const matchesLoading = ref(false)
+const matchesError = ref('')
 // Pickup areas (from assigned freelancer)
 const pickups = ref([])
 const jobReview = ref(null)
@@ -909,12 +913,19 @@ const fetchJob = async () => {
 const fetchMatches = async () => {
   const id = route.params.id
   matchesLoading.value = true
+  matchesError.value = ''
   try {
     const res = await fetch(`${API_BASE}/tours/${id}/matches?em_id=${emId}`)
     const data = await res.json()
-    matches.value = res.ok ? (data.items || []) : []
+    if (!res.ok) {
+      matches.value = []
+      matchesError.value = 'Failed to load matched list. Please try again.'
+      return
+    }
+    matches.value = data.items || []
   } catch {
     matches.value = []
+    matchesError.value = 'Failed to load matched list. Please try again.'
   } finally {
     matchesLoading.value = false
   }
