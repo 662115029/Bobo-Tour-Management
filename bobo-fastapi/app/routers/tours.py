@@ -427,27 +427,6 @@ def get_tour_applications(job_id: str, em_id: str):
 
 @router.get("/tours/{job_id}/matches")
 def get_tour_matches(job_id: str, em_id: str, limit: int = 10):
-    """
-    Suggested freelancer matches for a tour.
-
-    Match scores come from job_fl_matches — precomputed by the scheduled
-    Lambda (bobo-matching-processor) using the team's agreed formula
-    (40 pickup-area + 30 availability + 20 verification, with vehicle/seat/
-    language as hard filters). This endpoint does NOT recompute the score
-    itself — it only reads the latest precomputed snapshot.
-
-    Freelancers who already have an application for this job (invited,
-    applied, accepted, or rejected) are always kept in the results — even if
-    they're not (or no longer) in job_fl_matches — so the card doesn't
-    disappear from under the employer after they act on it (e.g. on page
-    refresh).
-
-    Performance note: language info for every candidate is fetched in ONE
-    batched query (not one query per candidate in a loop), to keep the total
-    number of DB round trips constant regardless of how many freelancers are
-    being scored. Each round trip costs real time over the network to the
-    EC2 database, so avoiding N+1 queries here matters a lot for load time.
-    """
     conn = None
     try:
         conn = get_connection()

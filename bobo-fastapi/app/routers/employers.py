@@ -132,7 +132,7 @@ def get_employers(limit: int = 10, offset: int = 0, search: str = "", status: st
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset, "search": search, "status": status}
     except Exception as e:
-        return {"error": str(e), "items": []}
+        raise HTTPException(status_code=500, detail=str(e))
     finally:
         if conn:
             conn.close()
@@ -301,7 +301,7 @@ def get_em_bank_accounts(limit: int = 10, offset: int = 0, em_id: Optional[int] 
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
-        return {"error": str(e), "items": []}
+        raise HTTPException(status_code=500, detail=str(e))
     finally:
         if conn:
             conn.close()
@@ -348,7 +348,7 @@ def get_em_documents(limit: int = 10, offset: int = 0, status: str = "", em_id: 
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
-        return {"error": str(e), "items": []}
+        raise HTTPException(status_code=500, detail=str(e))
     finally:
         if conn:
             conn.close()
@@ -391,7 +391,7 @@ def get_em_verification(limit: int = 10, offset: int = 0, status: str = "", em_i
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
-        return {"error": str(e), "items": []}
+        raise HTTPException(status_code=500, detail=str(e))
     finally:
         if conn:
             conn.close()
