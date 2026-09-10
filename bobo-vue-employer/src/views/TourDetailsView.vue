@@ -729,9 +729,11 @@ import AppLayout from '@/components/AppLayout.vue'
 import FreelancerMiniModal from '@/components/FreelancerMiniModal.vue'
 import { useAvatar } from '@/composables/useAvatar'
 import { useToast } from '@/components/useToast.js'
+import { useConfirm } from '@/components/useConfirm.js'
 
 const { avatarStyle, initials2 } = useAvatar()
 const { showToast } = useToast()
+const { confirmDialog } = useConfirm()
 
 const API_BASE = import.meta.env.VITE_API_BASE || '/api'
 const router = useRouter()
@@ -1047,7 +1049,8 @@ const submitReupload = async () => {
 
 // Accept / Reject
 const handleAccept = async (app) => {
-  if (!confirm(`Accept ${app.driver_name}'s application for this tour?`)) return
+  const ok = await confirmDialog(`Accept ${app.driver_name}'s application for this tour?`, 'Confirm Accept')
+  if (!ok) return
   try {
     const res = await fetch(`${API_BASE}/job-applications/${app.job_application_id}/accept`, {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' }
@@ -1079,7 +1082,8 @@ const handleAccept = async (app) => {
 }
 
 const handleReject = async (app) => {
-  if (!confirm(`Reject ${app.driver_name}'s application?`)) return
+  const ok = await confirmDialog(`Reject ${app.driver_name}'s application?`, 'Confirm Reject')
+  if (!ok) return
   try {
     const res = await fetch(`${API_BASE}/job-applications/${app.job_application_id}/reject`, {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' }
@@ -1221,7 +1225,8 @@ const hasPendingInvite = computed(() => applications.value.some(a => a.applicati
 const hasAppliedCandidate = computed(() => suggestedMatches.value.some(c => candidateStatus(c.fl_id) === 'APPLIED'))
 
 const handleInviteCandidate = async (candidate) => {
-  if (!confirm(`Invite ${candidate.name} for this tour?`)) return
+  const ok = await confirmDialog(`Invite ${candidate.name} for this tour?`, 'Confirm Invite')
+  if (!ok) return
   inviting.value = true
   try {
     const res = await fetch(`${API_BASE}/tours/${route.params.id}/invite`, {
