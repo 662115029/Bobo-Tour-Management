@@ -117,8 +117,8 @@
         <h3 class="text-xl font-bold text-gray-900 mb-2">Registration Successful!</h3>
         <p class="text-sm text-gray-500 mb-2 leading-relaxed">Please add vehicle details and upload documents in Profile for Admin review.</p>
         <p class="text-xs text-gray-400 mb-6">We'll notify you via LINE once approved.</p>
-        <button class="w-full bg-red-600 text-white font-bold py-3 rounded-xl" @click="$router.push('/profile')">
-          Go to Profile
+        <button class="w-full bg-red-600 text-white font-bold py-3 rounded-xl transition-all active:scale-[0.98]" @click="closeLiff">
+          Done
         </button>
       </div>
     </div>
@@ -203,7 +203,8 @@ async function submitRegister() {
         fl_name: `${form.firstName} ${form.lastName}`.trim(),
         fl_phone: form.phone,
         fl_pin: form.pin,
-        line_user_id: props.lineProfile?.lineUserId || null,      })
+        line_user_id: props.lineProfile?.lineUserId || null,
+      })
     })
     const data = await res.json()
     if (data.success) {
