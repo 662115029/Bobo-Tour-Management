@@ -423,6 +423,8 @@ def update_matching_config(data: dict):
             raise HTTPException(status_code=400, detail=f"{field} must be an integer.")
         if value < 0 or value > 100:
             raise HTTPException(status_code=400, detail=f"{field} must be between 0 and 100.")
+        if value % 5 != 0:
+            raise HTTPException(status_code=400, detail=f"{field} must be a multiple of 5.")
         weights[field] = value
 
     total = sum(weights.values())
