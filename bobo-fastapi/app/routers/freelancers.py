@@ -923,7 +923,7 @@ def get_fl_documents(limit: int = 10, offset: int = 0, status: str = "", fl_id: 
             conn.close()
 
 @router.get("/fl-verification")
-def get_fl_verification(limit: int = 10, offset: int = 0, status: str = "PENDING", fl_id: Optional[int] = None):
+def get_fl_verification(limit: int = 10, offset: int = 0, status: str = "PENDING", fl_id: Optional[int] = None, is_latest: Optional[bool] = None):
     conn = None
     try:
         conn = get_connection()
@@ -936,6 +936,9 @@ def get_fl_verification(limit: int = 10, offset: int = 0, status: str = "PENDING
         if status:
             where.append("fv.fl_verify_status = %s")
             params.append(status)
+        if is_latest is not None:
+            where.append("fv.is_latest = %s")
+            params.append(is_latest)
         where_sql = ("WHERE " + " AND ".join(where)) if where else ""
         params += [limit, offset]
         cursor.execute(
