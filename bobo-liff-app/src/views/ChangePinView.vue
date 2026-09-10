@@ -3,7 +3,7 @@
 
     <!-- Header -->
     <div class="flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-100">
-      <button class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center" @click="$router.push('/profile')">
+      <button class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center" @click="$router.back()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <path d="M19 12H5M5 12l7-7M5 12l7 7"/>
         </svg>
@@ -47,7 +47,7 @@
           <h3 class="text-xl font-bold text-gray-900 mb-1">PIN Updated!</h3>
           <p class="text-sm text-gray-400">Your PIN has been changed successfully.</p>
         </div>
-        <button class="w-full bg-red-600 text-white text-sm font-bold py-3.5 rounded-xl" @click="$router.push('/profile')">
+        <button class="w-full bg-red-600 text-white text-sm font-bold py-3.5 rounded-xl" @click="$router.back()">
           Back to Profile
         </button>
       </template>
