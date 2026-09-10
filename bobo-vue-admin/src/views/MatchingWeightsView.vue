@@ -336,14 +336,14 @@ const save = async () => {
     })
     const data = await res.json()
     if (!res.ok) {
-      showToast(data.detail || 'Failed to save matching weights', 'error')
+      showToast('Failed to save weights. Please try again.', 'error')
       return
     }
     savedWeights.value = { ...weights }
     lastSavedAt.value = new Date().toISOString()
     showToast('Matching weights saved')
   } catch (err) {
-    showToast('Could not reach the server — weights not saved', 'error')
+    showToast('Failed to save weights. Please try again.', 'error')
   } finally {
     saving.value = false
   }
