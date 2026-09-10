@@ -73,7 +73,7 @@ async def upload_vehicle_image(vehicle_id: str, file: UploadFile = File(...)):
     except HTTPException:
         raise
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))
     finally:
         if conn:
             conn.close()
@@ -111,7 +111,7 @@ async def upload_fl_document(fl_id: str, doc_type: str, file: UploadFile = File(
     except HTTPException:
         raise
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))
     finally:
         if conn:
             conn.close()
@@ -153,7 +153,7 @@ async def upload_em_document(em_id: str, doc_type: str, file: UploadFile = File(
     except HTTPException:
         raise
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))
     finally:
         if conn:
             conn.close()
