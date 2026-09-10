@@ -1047,6 +1047,7 @@ const submitReupload = async () => {
 
 // Accept / Reject
 const handleAccept = async (app) => {
+  if (!confirm(`Accept ${app.driver_name}'s application for this tour?`)) return
   try {
     const res = await fetch(`${API_BASE}/job-applications/${app.job_application_id}/accept`, {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' }
@@ -1078,6 +1079,7 @@ const handleAccept = async (app) => {
 }
 
 const handleReject = async (app) => {
+  if (!confirm(`Reject ${app.driver_name}'s application?`)) return
   try {
     const res = await fetch(`${API_BASE}/job-applications/${app.job_application_id}/reject`, {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' }
@@ -1219,6 +1221,7 @@ const hasPendingInvite = computed(() => applications.value.some(a => a.applicati
 const hasAppliedCandidate = computed(() => suggestedMatches.value.some(c => candidateStatus(c.fl_id) === 'APPLIED'))
 
 const handleInviteCandidate = async (candidate) => {
+  if (!confirm(`Invite ${candidate.name} for this tour?`)) return
   inviting.value = true
   try {
     const res = await fetch(`${API_BASE}/tours/${route.params.id}/invite`, {
