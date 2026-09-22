@@ -6,6 +6,7 @@ from notification import (
     notify_applied,
     notify_application_accepted,
     notify_application_rejected,
+    notify_application_cancelled,
     notify_invite_accepted,
     notify_invite_rejected,
 )
@@ -536,7 +537,7 @@ def cancel_job_application(application_id: int, fl_id: Optional[int] = None):
         conn = get_connection()
         cursor = get_cursor(conn)
         cursor.execute(
-            "SELECT job_application_id, fl_id, application_status FROM job_applications WHERE job_application_id = %s",
+            "SELECT job_application_id, job_id, fl_id, application_status FROM job_applications WHERE job_application_id = %s",
             (application_id,)
         )
         app = cursor.fetchone()
@@ -552,6 +553,16 @@ def cancel_job_application(application_id: int, fl_id: Optional[int] = None):
 
         cursor.execute("DELETE FROM job_applications WHERE job_application_id = %s", (application_id,))
         conn.commit()
+
+        line_user_id = _get_freelancer_line_id(cursor, app["fl_id"])
+        if line_user_id:
+            job_info = _get_job_notify_info(cursor, app["job_id"])
+            if job_info:
+                try:
+                    notify_application_cancelled(line_user_id, job_info)
+                except Exception as notify_err:
+                    print(f"[WARN] notify_application_cancelled failed: {notify_err}")
+
         return {"success": True}
     except HTTPException:
         raise

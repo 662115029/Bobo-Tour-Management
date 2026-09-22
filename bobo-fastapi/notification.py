@@ -47,7 +47,7 @@ def _detail_row(label: str, value: str):
 
 
 def _build_job_flex(headline: str, header_color: str, job: dict,
-                     button_label: str = None, button_target: str = None):
+                     button_label: str = None, button_target: str = None, button_tab: str = None):
     """
     job dict fields used: job_id, job_title, job_start_date, job_end_date,
     job_price, em_name, em_profile_image_url, pickup_area
@@ -126,6 +126,9 @@ def _build_job_flex(headline: str, header_color: str, job: dict,
     }
 
     if button_label and button_target:
+        uri = f"{LIFF_URL}?target={button_target}"
+        if button_tab:
+            uri += f"&tab={button_tab}"
         bubble["footer"] = {
             "type": "box",
             "layout": "vertical",
@@ -138,7 +141,7 @@ def _build_job_flex(headline: str, header_color: str, job: dict,
                     "action": {
                         "type": "uri",
                         "label": button_label,
-                        "uri": f"{LIFF_URL}?target={button_target}",
+                        "uri": uri,
                     },
                 }
             ],
@@ -163,7 +166,7 @@ def _push_flex(line_user_id: str, alt_text: str, bubble: dict):
 def notify_applied(line_user_id: str, job: dict):
     bubble = _build_job_flex(
         "Application sent", "#06C755", job,
-        button_label="View application status", button_target="jobs",
+        button_label="View application status", button_target="jobs", button_tab="my-request",
     )
     _push_flex(line_user_id, f"You've applied for {job.get('job_title', '')}", bubble)
 
@@ -174,7 +177,7 @@ def notify_applied(line_user_id: str, job: dict):
 def notify_application_accepted(line_user_id: str, job: dict):
     bubble = _build_job_flex(
         "Application accepted", "#06C755", job,
-        button_label="View my jobs", button_target="jobs",
+        button_label="View my jobs", button_target="jobs", button_tab="my-job",
     )
     _push_flex(line_user_id, f"Your application for {job.get('job_title', '')} was accepted", bubble)
 
@@ -184,13 +187,18 @@ def notify_application_rejected(line_user_id: str, job: dict):
     _push_flex(line_user_id, f"Your application for {job.get('job_title', '')} was rejected", bubble)
 
 
+def notify_application_cancelled(line_user_id: str, job: dict):
+    bubble = _build_job_flex("Application cancelled", "#888888", job)
+    _push_flex(line_user_id, f"You've cancelled your application for {job.get('job_title', '')}", bubble)
+
+
 # ---------------------------------------------------------------------------
 # 3. Freelancer is invited to a job via matching (employer-initiated)
 # ---------------------------------------------------------------------------
 def notify_invited(line_user_id: str, job: dict):
     bubble = _build_job_flex(
         "New job invite", "#06C755", job,
-        button_label="View invite", button_target="jobs",
+        button_label="View invite", button_target="jobs", button_tab="job-offer",
     )
     _push_flex(line_user_id, f"You've been invited to {job.get('job_title', '')}", bubble)
 
@@ -201,7 +209,7 @@ def notify_invited(line_user_id: str, job: dict):
 def notify_invite_accepted(line_user_id: str, job: dict):
     bubble = _build_job_flex(
         "Job confirmed", "#06C755", job,
-        button_label="View my jobs", button_target="jobs",
+        button_label="View my jobs", button_target="jobs", button_tab="my-job",
     )
     _push_flex(line_user_id, f"You've taken {job.get('job_title', '')}", bubble)
 
