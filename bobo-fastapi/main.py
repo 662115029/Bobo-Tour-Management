@@ -94,5 +94,6 @@ app.include_router(reviews.router)
 
 
 @app.get("/")
+@app.head("/")
 def root():
     return {"status": "running"}
