@@ -4,7 +4,7 @@ from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage, FlexSendMessage
 from pydantic import BaseModel
-from notification import notify_job_matched, notify_job_confirmed, notify_job_declined
+from notification import notify_invited, notify_application_accepted, notify_application_rejected
 from app.db.connection import get_connection, get_cursor
 
 router = APIRouter(tags=["line_bot"])
@@ -87,7 +87,7 @@ def test_notify_match(request: NotifyRequest):
         )
         job = cursor.fetchone()
         if job:
-            notify_job_matched(request.line_user_id, job)
+            notify_invited(request.line_user_id, job)
             return {"status": "notification sent", "job": job}
         return {"status": "no jobs found"}
     except Exception as e:
@@ -112,7 +112,7 @@ def accept_job(job_id: str, request: JobResponseRequest):
         )
         job = cursor.fetchone()
         if job:
-            notify_job_confirmed(request.line_user_id, job)
+            notify_application_accepted(request.line_user_id, job)
         return {"status": "accepted", "job": job if job else None}
     except Exception as e:
         return {"error": str(e)}
@@ -136,7 +136,7 @@ def decline_job(job_id: str, request: JobResponseRequest):
         )
         job = cursor.fetchone()
         if job:
-            notify_job_declined(request.line_user_id, job)
+            notify_application_rejected(request.line_user_id, job)
         return {"status": "declined", "job": job if job else None}
     except Exception as e:
         return {"error": str(e)}

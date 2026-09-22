@@ -1,8 +1,34 @@
 from fastapi import APIRouter, HTTPException
 from app.db.connection import get_connection, get_cursor
 from .utils import format_time, is_tour_cancellable
+from notification import notify_invited
 
 router = APIRouter(tags=["tours"])
+
+
+def _get_job_notify_info(cursor, job_id):
+    """Fields notify_* expects: job_id, job_title, job_start_date, job_end_date,
+    job_price, em_name, em_profile_image_url, pickup_area."""
+    cursor.execute(
+        """
+        SELECT j.job_id, j.job_title, j.job_start_date, j.job_end_date, j.job_price,
+               em.em_name, em.em_profile_image_url,
+               (SELECT COALESCE(jp.hotel_name, jp.pickup_location)
+                FROM job_pickups jp
+                WHERE jp.job_id = j.job_id
+                ORDER BY jp.sequence ASC LIMIT 1) AS pickup_area
+        FROM jobs j JOIN employers em ON j.em_id = em.em_id
+        WHERE j.job_id = %s
+        """,
+        (job_id,)
+    )
+    return cursor.fetchone()
+
+
+def _get_freelancer_line_id(cursor, fl_id):
+    cursor.execute("SELECT line_user_id FROM freelancers WHERE fl_id = %s", (fl_id,))
+    row = cursor.fetchone()
+    return row["line_user_id"] if row else None
 
 
 def _upsert_language(cursor, name: str) -> int:
@@ -658,7 +684,18 @@ def invite_freelancer(job_id: str, data: dict):
             (job_id, fl_id),
         )
         conn.commit()
-        return {"success": True, "job_application_id": cursor.lastrowid}
+        new_application_id = cursor.lastrowid
+
+        line_user_id = _get_freelancer_line_id(cursor, fl_id)
+        if line_user_id:
+            job_info = _get_job_notify_info(cursor, job_id)
+            if job_info:
+                try:
+                    notify_invited(line_user_id, job_info)
+                except Exception as notify_err:
+                    print(f"[WARN] notify_invited failed: {notify_err}")
+
+        return {"success": True, "job_application_id": new_application_id}
     except HTTPException:
         raise
     except Exception as e:

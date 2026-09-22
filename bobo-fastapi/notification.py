@@ -2,7 +2,6 @@ from linebot.v3.messaging import (
     ApiClient,
     MessagingApi,
     PushMessageRequest,
-    TextMessage,
     FlexMessage,
     FlexContainer
 )
@@ -15,263 +14,198 @@ def get_messaging_api():
     return MessagingApi(ApiClient(configuration))
 
 
-def notify_job_matched(line_user_id: str, job: dict):
-    """
-    Send a push message to freelancer when they are matched to a job.
-    job dict should contain: id, title, date, time, pickup, destination, passengers, employer
-    """
-    api = get_messaging_api()
+def _format_date_range(start, end):
+    """start/end may be date/datetime objects or 'YYYY-MM-DD' strings."""
+    def fmt(d):
+        if d is None:
+            return "-"
+        if hasattr(d, "strftime"):
+            return d.strftime("%d %b %Y")
+        return str(d)
+    s, e = fmt(start), fmt(end)
+    return s if s == e else f"{s} - {e}"
 
-    flex_content = {
+
+def _format_price(price):
+    if price is None:
+        return "-"
+    try:
+        return f"\u0e3f{float(price):,.0f}"
+    except (TypeError, ValueError):
+        return f"\u0e3f{price}"
+
+
+def _detail_row(label: str, value: str):
+    return {
+        "type": "box",
+        "layout": "horizontal",
+        "contents": [
+            {"type": "text", "text": label, "size": "sm", "color": "#888888", "flex": 2},
+            {"type": "text", "text": str(value), "size": "sm", "color": "#333333", "flex": 3, "wrap": True},
+        ],
+    }
+
+
+def _build_job_flex(headline: str, header_color: str, job: dict,
+                     button_label: str = None, button_target: str = None):
+    """
+    job dict fields used: job_id, job_title, job_start_date, job_end_date,
+    job_price, em_name, em_profile_image_url, pickup_area
+    """
+    date_range = _format_date_range(job.get("job_start_date"), job.get("job_end_date"))
+    pickup_area = job.get("pickup_area") or "-"
+    price_text = _format_price(job.get("job_price"))
+    employer_name = job.get("em_name") or "-"
+    employer_photo = job.get("em_profile_image_url")
+
+    employer_row = {
+        "type": "box",
+        "layout": "horizontal",
+        "spacing": "sm",
+        "alignItems": "center",
+        "margin": "sm",
+        "contents": [],
+    }
+    if employer_photo:
+        employer_row["contents"].append({
+            "type": "image",
+            "url": employer_photo,
+            "size": "xxs",
+            "aspectMode": "cover",
+            "flex": 0,
+        })
+    employer_row["contents"].append({
+        "type": "text",
+        "text": employer_name,
+        "size": "sm",
+        "color": "#333333",
+        "flex": 1,
+        "gravity": "center",
+        "wrap": True,
+    })
+
+    bubble = {
         "type": "bubble",
         "header": {
             "type": "box",
             "layout": "vertical",
+            "backgroundColor": header_color,
+            "paddingAll": "16px",
             "contents": [
-                {
-                    "type": "text",
-                    "text": "🚐 Bobo Tour",
-                    "color": "#ffffff",
-                    "size": "sm"
-                },
-                {
-                    "type": "text",
-                    "text": "มีงานใหม่สำหรับคุณ!",
-                    "color": "#ffffff",
-                    "size": "xl",
-                    "weight": "bold"
-                }
+                {"type": "text", "text": headline, "color": "#ffffff", "size": "md", "weight": "bold", "wrap": True}
             ],
-            "backgroundColor": "#06C755",
-            "paddingAll": "20px"
         },
         "body": {
             "type": "box",
             "layout": "vertical",
+            "paddingAll": "20px",
             "contents": [
                 {
                     "type": "text",
-                    "text": job["title"],
+                    "text": job.get("job_title", ""),
                     "size": "lg",
                     "weight": "bold",
-                    "color": "#333333"
+                    "color": "#333333",
+                    "wrap": True,
                 },
-                {
-                    "type": "separator",
-                    "margin": "md"
-                },
+                {"type": "separator", "margin": "md"},
                 {
                     "type": "box",
                     "layout": "vertical",
                     "margin": "md",
                     "spacing": "sm",
                     "contents": [
-                        {
-                            "type": "box",
-                            "layout": "horizontal",
-                            "contents": [
-                                {
-                                    "type": "text",
-                                    "text": "📅 วันที่",
-                                    "size": "sm",
-                                    "color": "#888888",
-                                    "flex": 2
-                                },
-                                {
-                                    "type": "text",
-                                    "text": job["date"],
-                                    "size": "sm",
-                                    "color": "#333333",
-                                    "flex": 3
-                                }
-                            ]
-                        },
-                        {
-                            "type": "box",
-                            "layout": "horizontal",
-                            "contents": [
-                                {
-                                    "type": "text",
-                                    "text": "⏰ เวลา",
-                                    "size": "sm",
-                                    "color": "#888888",
-                                    "flex": 2
-                                },
-                                {
-                                    "type": "text",
-                                    "text": job["time"],
-                                    "size": "sm",
-                                    "color": "#333333",
-                                    "flex": 3
-                                }
-                            ]
-                        },
-                        {
-                            "type": "box",
-                            "layout": "horizontal",
-                            "contents": [
-                                {
-                                    "type": "text",
-                                    "text": "📍 รับ",
-                                    "size": "sm",
-                                    "color": "#888888",
-                                    "flex": 2
-                                },
-                                {
-                                    "type": "text",
-                                    "text": job["pickup"],
-                                    "size": "sm",
-                                    "color": "#333333",
-                                    "flex": 3,
-                                    "wrap": True
-                                }
-                            ]
-                        },
-                        {
-                            "type": "box",
-                            "layout": "horizontal",
-                            "contents": [
-                                {
-                                    "type": "text",
-                                    "text": "🏁 ส่ง",
-                                    "size": "sm",
-                                    "color": "#888888",
-                                    "flex": 2
-                                },
-                                {
-                                    "type": "text",
-                                    "text": job["destination"],
-                                    "size": "sm",
-                                    "color": "#333333",
-                                    "flex": 3,
-                                    "wrap": True
-                                }
-                            ]
-                        },
-                        {
-                            "type": "box",
-                            "layout": "horizontal",
-                            "contents": [
-                                {
-                                    "type": "text",
-                                    "text": "👥 ผู้โดยสาร",
-                                    "size": "sm",
-                                    "color": "#888888",
-                                    "flex": 2
-                                },
-                                {
-                                    "type": "text",
-                                    "text": f"{job['passengers']} คน",
-                                    "size": "sm",
-                                    "color": "#333333",
-                                    "flex": 3
-                                }
-                            ]
-                        },
-                        {
-                            "type": "box",
-                            "layout": "horizontal",
-                            "contents": [
-                                {
-                                    "type": "text",
-                                    "text": "🏢 บริษัท",
-                                    "size": "sm",
-                                    "color": "#888888",
-                                    "flex": 2
-                                },
-                                {
-                                    "type": "text",
-                                    "text": job["employer"],
-                                    "size": "sm",
-                                    "color": "#333333",
-                                    "flex": 3
-                                }
-                            ]
-                        }
-                    ]
-                }
+                        _detail_row("Job date", date_range),
+                        _detail_row("Pickup area", pickup_area),
+                        _detail_row("Pay", price_text),
+                        employer_row,
+                    ],
+                },
             ],
-            "paddingAll": "20px"
         },
-        "footer": {
+    }
+
+    if button_label and button_target:
+        bubble["footer"] = {
             "type": "box",
             "layout": "vertical",
-            "spacing": "sm",
+            "paddingAll": "12px",
             "contents": [
                 {
                     "type": "button",
+                    "style": "primary",
+                    "color": header_color,
                     "action": {
                         "type": "uri",
-                        "label": "ดูรายละเอียดและตอบรับ",
-                        "uri": f"{LIFF_URL}/jobs/{job['id']}"
+                        "label": button_label,
+                        "uri": f"{LIFF_URL}?target={button_target}",
                     },
-                    "style": "primary",
-                    "color": "#06C755"
-                },
-                {
-                    "type": "text",
-                    "text": "กรุณาตอบรับภายใน 24 ชั่วโมง",
-                    "size": "xs",
-                    "color": "#aaaaaa",
-                    "align": "center",
-                    "margin": "sm"
                 }
             ],
-            "paddingAll": "12px"
         }
-    }
 
-    api.push_message(
-        PushMessageRequest(
-            to=line_user_id,
-            messages=[
-                FlexMessage(
-                    alt_text=f"มีงานใหม่สำหรับคุณ: {job['title']}",
-                    contents=FlexContainer.from_dict(flex_content)
-                )
-            ]
-        )
-    )
+    return bubble
 
 
-def notify_job_confirmed(line_user_id: str, job: dict):
-    """
-    Confirm to freelancer that their acceptance was recorded.
-    """
+def _push_flex(line_user_id: str, alt_text: str, bubble: dict):
     api = get_messaging_api()
     api.push_message(
         PushMessageRequest(
             to=line_user_id,
-            messages=[
-                TextMessage(
-                    text=(
-                        f"✅ ยืนยันแล้ว!\n\n"
-                        f"คุณได้รับงาน: {job['title']}\n"
-                        f"วันที่: {job['date']} เวลา {job['time']}\n\n"
-                        f"นายจ้างจะติดต่อกลับเร็วๆ นี้ครับ"
-                    )
-                )
-            ]
+            messages=[FlexMessage(alt_text=alt_text[:400], contents=FlexContainer.from_dict(bubble))],
         )
     )
 
 
-def notify_job_declined(line_user_id: str, job: dict):
-    """
-    Confirm to freelancer that their decline was recorded.
-    """
-    api = get_messaging_api()
-    api.push_message(
-        PushMessageRequest(
-            to=line_user_id,
-            messages=[
-                TextMessage(
-                    text=(
-                        f"รับทราบครับ\n\n"
-                        f"คุณได้ปฏิเสธงาน: {job['title']}\n"
-                        f"ระบบจะหาผู้ขับรายอื่นให้ครับ 👍"
-                    )
-                )
-            ]
-        )
+# ---------------------------------------------------------------------------
+# 1. Freelancer self-applies to a job
+# ---------------------------------------------------------------------------
+def notify_applied(line_user_id: str, job: dict):
+    bubble = _build_job_flex(
+        "Application sent", "#06C755", job,
+        button_label="View application status", button_target="jobs",
     )
+    _push_flex(line_user_id, f"You've applied for {job.get('job_title', '')}", bubble)
+
+
+# ---------------------------------------------------------------------------
+# 2. Employer responds to a freelancer's own application
+# ---------------------------------------------------------------------------
+def notify_application_accepted(line_user_id: str, job: dict):
+    bubble = _build_job_flex(
+        "Application accepted", "#06C755", job,
+        button_label="View my jobs", button_target="jobs",
+    )
+    _push_flex(line_user_id, f"Your application for {job.get('job_title', '')} was accepted", bubble)
+
+
+def notify_application_rejected(line_user_id: str, job: dict):
+    bubble = _build_job_flex("Application rejected", "#E24B4A", job)
+    _push_flex(line_user_id, f"Your application for {job.get('job_title', '')} was rejected", bubble)
+
+
+# ---------------------------------------------------------------------------
+# 3. Freelancer is invited to a job via matching (employer-initiated)
+# ---------------------------------------------------------------------------
+def notify_invited(line_user_id: str, job: dict):
+    bubble = _build_job_flex(
+        "New job invite", "#06C755", job,
+        button_label="View invite", button_target="jobs",
+    )
+    _push_flex(line_user_id, f"You've been invited to {job.get('job_title', '')}", bubble)
+
+
+# ---------------------------------------------------------------------------
+# 4. Freelancer responds to an invite
+# ---------------------------------------------------------------------------
+def notify_invite_accepted(line_user_id: str, job: dict):
+    bubble = _build_job_flex(
+        "Job confirmed", "#06C755", job,
+        button_label="View my jobs", button_target="jobs",
+    )
+    _push_flex(line_user_id, f"You've taken {job.get('job_title', '')}", bubble)
+
+
+def notify_invite_rejected(line_user_id: str, job: dict):
+    bubble = _build_job_flex("Invite declined", "#888888", job)
+    _push_flex(line_user_id, f"You've declined the invite for {job.get('job_title', '')}", bubble)

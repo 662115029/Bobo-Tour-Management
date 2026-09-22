@@ -2,6 +2,38 @@ from fastapi import APIRouter, HTTPException, Header, Body
 from typing import Optional
 from app.db.connection import get_connection, get_cursor
 from .utils import validate_job_payment_review, sanitize_sort_params
+from notification import (
+    notify_applied,
+    notify_application_accepted,
+    notify_application_rejected,
+    notify_invite_accepted,
+    notify_invite_rejected,
+)
+
+
+def _get_job_notify_info(cursor, job_id):
+    """Fields notify_* expects: job_id, job_title, job_start_date, job_end_date,
+    job_price, em_name, em_profile_image_url, pickup_area."""
+    cursor.execute(
+        """
+        SELECT j.job_id, j.job_title, j.job_start_date, j.job_end_date, j.job_price,
+               em.em_name, em.em_profile_image_url,
+               (SELECT COALESCE(jp.hotel_name, jp.pickup_location)
+                FROM job_pickups jp
+                WHERE jp.job_id = j.job_id
+                ORDER BY jp.sequence ASC LIMIT 1) AS pickup_area
+        FROM jobs j JOIN employers em ON j.em_id = em.em_id
+        WHERE j.job_id = %s
+        """,
+        (job_id,)
+    )
+    return cursor.fetchone()
+
+
+def _get_freelancer_line_id(cursor, fl_id):
+    cursor.execute("SELECT line_user_id FROM freelancers WHERE fl_id = %s", (fl_id,))
+    row = cursor.fetchone()
+    return row["line_user_id"] if row else None
 
 router = APIRouter(tags=["jobs"])
 
@@ -471,7 +503,18 @@ def create_job_application(body: dict):
             (job_id, fl_id)
         )
         conn.commit()
-        return {"success": True, "job_application_id": cursor.lastrowid}
+        new_application_id = cursor.lastrowid
+
+        line_user_id = _get_freelancer_line_id(cursor, fl_id)
+        if line_user_id:
+            job_info = _get_job_notify_info(cursor, job_id)
+            if job_info:
+                try:
+                    notify_applied(line_user_id, job_info)
+                except Exception as notify_err:
+                    print(f"[WARN] notify_applied failed: {notify_err}")
+
+        return {"success": True, "job_application_id": new_application_id}
     except HTTPException:
         raise
     except Exception as e:
@@ -768,6 +811,7 @@ def accept_application(application_id: int, data: Optional[dict] = Body(default=
             cursor.execute("SELECT job_id FROM jobs WHERE job_id = %s AND em_id = %s", (app["job_id"], em_id))
             if not cursor.fetchone():
                 raise HTTPException(status_code=403, detail="Access denied.")
+        was_invite = app["application_status"] == "PENDING"
         cursor.execute(
             "UPDATE job_applications SET application_status = 'ACCEPTED', updated_at = NOW() WHERE job_application_id = %s",
             (application_id,)
@@ -780,6 +824,13 @@ def accept_application(application_id: int, data: Optional[dict] = Body(default=
         # accept was triggered by the employer (web) or the freelancer (LIFF), so the
         # cleanup always happens rather than depending on frontend-side logic.
         cursor.execute(
+            "SELECT fl_id FROM job_applications WHERE job_id = %s AND job_application_id != %s "
+            "AND application_status NOT IN ('ACCEPTED', 'REJECTED')",
+            (app["job_id"], application_id)
+        )
+        other_applicant_ids = [row["fl_id"] for row in cursor.fetchall()]
+
+        cursor.execute(
             """
             UPDATE job_applications
             SET application_status = 'REJECTED', updated_at = NOW()
@@ -790,6 +841,24 @@ def accept_application(application_id: int, data: Optional[dict] = Body(default=
             (app["job_id"], application_id)
         )
         conn.commit()
+
+        job_info = _get_job_notify_info(cursor, app["job_id"])
+        if job_info:
+            accepted_line_id = _get_freelancer_line_id(cursor, app["fl_id"])
+            if accepted_line_id:
+                try:
+                    notify_fn = notify_invite_accepted if was_invite else notify_application_accepted
+                    notify_fn(accepted_line_id, job_info)
+                except Exception as notify_err:
+                    print(f"[WARN] accept notify failed: {notify_err}")
+            for other_fl_id in other_applicant_ids:
+                other_line_id = _get_freelancer_line_id(cursor, other_fl_id)
+                if other_line_id:
+                    try:
+                        notify_application_rejected(other_line_id, job_info)
+                    except Exception as notify_err:
+                        print(f"[WARN] notify_application_rejected failed: {notify_err}")
+
         return {"success": True}
     except HTTPException:
         raise
@@ -815,11 +884,23 @@ def reject_application(application_id: int, data: Optional[dict] = Body(default=
             cursor.execute("SELECT job_id FROM jobs WHERE job_id = %s AND em_id = %s", (app["job_id"], em_id))
             if not cursor.fetchone():
                 raise HTTPException(status_code=403, detail="Access denied.")
+        was_invite = app["application_status"] == "PENDING"
         cursor.execute(
             "UPDATE job_applications SET application_status = 'REJECTED', updated_at = NOW() WHERE job_application_id = %s",
             (application_id,)
         )
         conn.commit()
+
+        line_user_id = _get_freelancer_line_id(cursor, app["fl_id"])
+        if line_user_id:
+            job_info = _get_job_notify_info(cursor, app["job_id"])
+            if job_info:
+                try:
+                    notify_fn = notify_invite_rejected if was_invite else notify_application_rejected
+                    notify_fn(line_user_id, job_info)
+                except Exception as notify_err:
+                    print(f"[WARN] reject notify failed: {notify_err}")
+
         return {"success": True}
     except HTTPException:
         raise
