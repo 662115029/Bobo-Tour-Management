@@ -18,11 +18,10 @@ def _get_job_notify_info(cursor, job_id):
         """
         SELECT j.job_id, j.job_title, j.job_start_date, j.job_end_date, j.job_price,
                em.em_name, em.em_profile_image_url,
-               (SELECT COALESCE(jp.hotel_name, jp.pickup_location)
-                FROM job_pickups jp
-                WHERE jp.job_id = j.job_id
-                ORDER BY jp.sequence ASC LIMIT 1) AS pickup_area
-        FROM jobs j JOIN employers em ON j.em_id = em.em_id
+               a.area_name AS pickup_area
+        FROM jobs j
+        JOIN employers em ON j.em_id = em.em_id
+        LEFT JOIN areas a ON j.area_id = a.area_id
         WHERE j.job_id = %s
         """,
         (job_id,)
