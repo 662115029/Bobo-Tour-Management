@@ -41,6 +41,7 @@
               <span :class="[BADGE_BASE, statusBadge(item).class, 'flex-shrink-0']">{{ statusBadge(item).label }}</span>
             </div>
             <div class="space-y-1.5">
+              <span v-if="item.area_name" class="info-tag area">{{ item.area_name }}</span>
               <p class="text-[13px] text-[#888] flex items-center gap-1.5">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
                 {{ formatDate(item.job_start_date) }}<span v-if="item.job_end_date"> – {{ formatDate(item.job_end_date) }}</span>

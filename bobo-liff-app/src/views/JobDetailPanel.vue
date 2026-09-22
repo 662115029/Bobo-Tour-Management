@@ -27,6 +27,7 @@
                 <span :class="[BADGE_BASE, statusBadge.class]">{{ statusBadge.label }}</span>
               </div>
               <h1 class="text-[17px] font-bold text-[#111] leading-tight mb-1">{{ job.job_title }}</h1>
+              <span v-if="job.area_name" class="info-tag area mb-1.5">{{ job.area_name }}</span>
               <p v-if="job.job_description" class="text-[13px] text-[#888] leading-relaxed mt-1.5 max-w-sm">{{ job.job_description }}</p>
               <p class="text-[12px] text-[#bbb] mt-1">{{ job.company || job.em_name || '-' }}</p>
             </div>
