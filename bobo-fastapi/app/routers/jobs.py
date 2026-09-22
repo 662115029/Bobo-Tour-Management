@@ -96,10 +96,12 @@ def get_jobs(
                    j.job_required_vehicle_type, j.job_required_seat,
                    j.job_price, j.job_status,
                    j.selected_fl_id, f.fl_name AS selected_driver,
+                   a.area_name,
                    j.job_created_at, j.job_updated_at
             FROM jobs j
             JOIN employers em ON j.em_id = em.em_id
             LEFT JOIN freelancers f ON j.selected_fl_id = f.fl_id
+            LEFT JOIN areas a ON j.area_id = a.area_id
             {where_sql}
             ORDER BY {sort_col} {order}
             LIMIT %s OFFSET %s
@@ -442,12 +444,14 @@ def get_job_applications(limit: int = 50, offset: int = 0, job_id: str = None, e
                    j.job_required_vehicle_type, j.job_required_seat,
                    j.job_price, j.job_status,
                    em.em_name AS company,
+                   a.area_name,
                    ja.fl_id, f.fl_name AS driver_name,
                    ja.application_status, ja.applied_at, ja.updated_at
             FROM job_applications ja
             JOIN jobs j ON ja.job_id = j.job_id
             JOIN employers em ON j.em_id = em.em_id
             JOIN freelancers f ON ja.fl_id = f.fl_id
+            LEFT JOIN areas a ON j.area_id = a.area_id
             {where}
             ORDER BY ja.applied_at DESC
             LIMIT %s OFFSET %s
