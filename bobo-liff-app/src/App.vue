@@ -1,6 +1,6 @@
 <template>
   <!-- Loading / Splash -->
-  <LoadingView v-if="loading" message="Tour Management" />
+  <LoadingView v-if="loading" :message="loadingMessage" />
 
   <!-- Error -->
   <div v-else-if="error" class="flex flex-col items-center justify-center h-dvh max-w-md mx-auto gap-4 px-6 text-center">
@@ -54,6 +54,7 @@ const lineProfile = ref(null)
 const appUser = ref(null)
 
 const loading = ref(true)
+const loadingMessage = ref('Tour Management')
 const error = ref(false)
 const errorMessage = ref('')
 
@@ -134,7 +135,14 @@ onUnmounted(() => {
 
 async function init() {
   loading.value = true
+  loadingMessage.value = 'Tour Management'
   error.value = false
+  // If loading takes a while (e.g. the backend was asleep and needs to wake
+  // up), swap to a generic message rather than leaving a silent splash screen
+  // — deliberately vague so it doesn't expose backend/infra details to users.
+  const coldStartTimer = setTimeout(() => {
+    loadingMessage.value = 'Just a moment...'
+  }, 4000)
   try {
     // Read the deep-link target from the query string (?target=profile) —
     // NOT from the URL hash, because the hash gets dropped during LIFF's
@@ -186,6 +194,7 @@ async function init() {
     error.value = true
     errorMessage.value = `Error: ${e.message || JSON.stringify(e)}`
   } finally {
+    clearTimeout(coldStartTimer)
     loading.value = false
   }
 }
