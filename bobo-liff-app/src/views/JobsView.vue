@@ -87,12 +87,15 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import JobDetailPanel from './JobDetailPanel.vue'
 import { getJobStatusClass, formatJobStatus, BADGE_BASE } from '@/utils/statusClasses.js'
 
 const props = defineProps({ user: Object })
 defineEmits(['show-toast'])
-const activeTab = ref('my-job')
+const route = useRoute()
+const validTabKeys = ['my-job', 'job-offer', 'my-request', 'job-opening']
+const activeTab = ref(validTabKeys.includes(route.query.tab) ? route.query.tab : 'my-job')
 const items = ref([])
 const loading = ref(false)
 const selectedJob = ref(null)

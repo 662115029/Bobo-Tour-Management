@@ -149,7 +149,8 @@ async function init() {
     // OAuth login redirect. Query params survive that round-trip.
     const searchParams = new URLSearchParams(window.location.search)
     const target = searchParams.get('target')
-    const intendedPath = target ? `/${target}` : null
+    const tab = searchParams.get('tab')
+    const intendedPath = target ? `/${target}${tab ? `?tab=${tab}` : ''}` : null
 
     lineProfile.value = await initLiff()
 
