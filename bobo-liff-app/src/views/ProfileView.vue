@@ -3,22 +3,22 @@
     <div v-if="loading" class="fixed inset-0 z-50">
       <LoadingView message="Loading profile..."></LoadingView>
     </div>
-    <div v-else-if="error" class="flex flex-col h-dvh max-w-md mx-auto bg-gray-50 items-center justify-center px-6 text-center">
-      <p class="text-body text-red-500">{{ error }}</p>
+    <div v-else-if="error" class="flex flex-col h-dvh max-w-md mx-auto bg-[#F8FAFC] items-center justify-center px-6 text-center">
+      <p class="text-body text-[#B91C1C]">{{ error }}</p>
     </div>
-    <div v-else class="flex flex-col h-dvh max-w-md mx-auto bg-gray-50 overflow-hidden">
+    <div v-else class="flex flex-col h-dvh max-w-md mx-auto bg-[#F8FAFC] overflow-hidden">
 
       <!-- Header -->
-      <div class="flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-100 flex-shrink-0">
-        <div>
-          <p class="text-caption font-semibold text-red-600 uppercase tracking-wider">Freelancer</p>
-          <h2 class="text-header font-bold text-gray-900 leading-tight">Profile</h2>
+      <div class="bg-white border-b border-[#E2E8F0] flex-shrink-0 px-4 py-3">
+        <div class="flex flex-col items-center justify-center">
+          <p class="text-meta font-semibold text-[#DC2626] uppercase tracking-[0.16em] leading-none">Freelancer</p>
+          <h2 class="text-[20px] font-bold text-[#0F172A] leading-none mt-1.5">Profile</h2>
         </div>
       </div>
       
       <!-- Not-verified banner -->
       <div v-if="profile.fl_verify_status && profile.fl_verify_status !== 'VERIFIED'"
-        class="bg-amber-50 border-b border-amber-200 text-amber-800 text-caption px-4 py-2 text-center flex-shrink-0">
+        class="bg-[#FFFBEB] border-b border-[#FDE68A] text-[#92400E] text-caption px-4 py-2 text-center flex-shrink-0">
         Your account is not yet verified. Please complete the verification to access all features.
       </div>
 
@@ -27,14 +27,32 @@
         <div class="p-4 space-y-3">
 
           <!-- Profile Hero -->
-          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col items-center gap-3">
-            <div class="relative cursor-pointer group" @click="avatarModal = true">
-              <div class="w-20 h-20 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center">
+          <div class="relative bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-5 flex flex-col items-center gap-3 overflow-hidden">
+            <!-- Decorative Bobo travel pattern -->
+            <div class="absolute right-0 bottom-[82px] pointer-events-none opacity-80" aria-hidden="true">
+              <svg width="126" height="92" viewBox="0 0 126 92" fill="none">
+                <circle cx="126" cy="86" r="62" fill="#FEF2F2"/>
+                <circle cx="118" cy="90" r="34" fill="#FFF7ED"/>
+                <path d="M18 76C42 76 52 66 52 51C52 36 67 28 103 28" stroke="#DC2626" stroke-width="2" stroke-dasharray="5 5" stroke-linecap="round"/>
+                <path d="M103 18C99.1 18 96 21.1 96 25C96 30.2 103 36 103 36C103 36 110 30.2 110 25C110 21.1 106.9 18 103 18Z" fill="#DC2626"/>
+                <g transform="translate(58 48) rotate(-7)">
+                  <rect x="0" y="5" width="43" height="21" rx="4.5" fill="#DC2626"/>
+                  <path d="M6 5L12 0H30L37 5" fill="#DC2626"/>
+                  <rect x="7" y="8" width="9" height="8" rx="1.2" fill="white" opacity=".92"/>
+                  <rect x="19" y="8" width="9" height="8" rx="1.2" fill="white" opacity=".92"/>
+                  <rect x="31" y="8" width="7" height="8" rx="1.2" fill="white" opacity=".92"/>
+                  <circle cx="9" cy="27" r="3.2" fill="#0F172A"/>
+                  <circle cx="35" cy="27" r="3.2" fill="#0F172A"/>
+                </g>
+              </svg>
+            </div>
+            <div class="relative z-10 cursor-pointer group" @click="avatarModal = true">
+              <div class="w-24 h-24 rounded-full bg-[#F1F5F9] ring-4 ring-[#FEF2F2] overflow-hidden flex items-center justify-center">
                 <img v-if="form.fl_profile_image_url" :src="form.fl_profile_image_url" class="w-full h-full object-cover" />
-                <svg v-else width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                <svg v-else width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
               </div>
-              <div class="absolute inset-0 rounded-full bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="3"/></svg>
+              <div class="absolute -right-1 -bottom-1 w-7 h-7 rounded-full bg-[#DC2626] text-white flex items-center justify-center shadow-md ring-2 ring-white">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="3"/></svg>
               </div>
               <div v-if="avatarUploading" class="absolute inset-0 rounded-full bg-white/70 flex items-center justify-center">
                 <div class="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
@@ -42,46 +60,48 @@
             </div>
             <input ref="avatarInput" type="file" accept="image/*" class="hidden" @change="uploadAvatar" />
             <div class="text-center">
-              <h3 class="text-body font-bold text-gray-900">{{ form.fl_name }}</h3>
-              <p class="text-body text-gray-400">@{{ profile.fl_username }}</p>
+              <h3 class="text-body font-bold text-[#0F172A]">{{ form.fl_name }}</h3>
+              <p class="text-body text-[#64748B]">@{{ profile.fl_username }}</p>
             </div>
             <span :class="[BADGE_BASE, getVerifyStatusClass(profile.fl_verify_status)]">
               {{ formatVerifyStatus(profile.fl_verify_status) || 'Pending' }}
             </span>
-            <div class="grid grid-cols-2 gap-4 w-full pt-2 border-t border-gray-100">
+            <div class="grid grid-cols-2 gap-4 w-full pt-2 border-t border-[#E2E8F0]">
               <div class="text-center">
-                <p class="text-header font-bold text-gray-900 flex items-center justify-center gap-1">
+                <p class="text-header font-bold text-[#0F172A] flex items-center justify-center gap-1">
                   {{ Number(profile.fl_rating_avg || 0).toFixed(1) }}
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="#f9a825"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
                 </p>
-                <p class="text-caption text-gray-400">Rating</p>
+                <p class="text-caption text-[#64748B]">Rating</p>
               </div>
               <div class="text-center">
-                <p class="text-header font-bold text-gray-900">{{ completedJobs }}</p>
-                <p class="text-caption text-gray-400">Completed Jobs</p>
+                <p class="text-header font-bold text-[#0F172A]">{{ completedJobs }}</p>
+                <p class="text-caption text-[#64748B]">Completed Jobs</p>
               </div>
             </div>
           </div>
 
           <!-- Basic Information (accordion) -->
-          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
-            <div class="w-full flex items-center justify-between px-4 py-3 border-b border-gray-100 active:bg-gray-50 transition cursor-pointer select-none"
+          <div class="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm">
+            <div class="w-full flex items-center justify-between px-4 py-3 border-b border-[#E2E8F0] active:bg-[#F8FAFC] transition cursor-pointer select-none"
               @click="toggleSection('basic')">
               <div class="flex items-center gap-2">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-                <span class="text-body font-semibold text-gray-700">Basic Information</span>
+                <span class="w-8 h-8 rounded-full bg-[#FEF2F2] text-[#DC2626] flex items-center justify-center flex-shrink-0">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                </span>
+                <span class="text-body font-semibold text-[#0F172A]">Basic Information</span>
               </div>
               <div class="flex items-center gap-2">
                 <div v-if="openSection === 'basic'" class="flex items-center gap-2">
                   <button v-if="!isEditing"
-                    class="flex items-center gap-1 px-3 py-1.5 text-caption font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700 transition shadow-sm"
+                    class="flex items-center gap-1 px-3 py-1.5 text-caption font-semibold rounded-lg bg-[#DC2626] text-white hover:bg-[#B91C1C] transition shadow-sm"
                     @click.stop="isEditing = true">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     Edit
                   </button>
-                  <button v-if="isEditing" class="px-3 py-1.5 text-caption font-medium rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition" @click.stop="cancelEdit">Cancel</button>
+                  <button v-if="isEditing" class="px-3 py-1.5 text-caption font-medium rounded-lg border border-[#E2E8F0] text-[#64748B] hover:bg-[#F8FAFC] transition" @click.stop="cancelEdit">Cancel</button>
                   <button v-if="isEditing"
-                    class="flex items-center gap-1 px-3 py-1.5 text-caption font-semibold rounded-lg bg-green-600 text-white hover:bg-green-700 transition disabled:opacity-60 shadow-sm"
+                    class="flex items-center gap-1 px-3 py-1.5 text-caption font-semibold rounded-lg bg-[#16A34A] text-white hover:bg-[#15803D] transition disabled:opacity-60 shadow-sm"
                     :disabled="saving" @click.stop="saveProfile">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
                     {{ saving ? 'Saving...' : 'Save' }}
@@ -94,69 +114,71 @@
               </div>
             </div>
             <div v-show="openSection === 'basic'">
-              <div v-if="saveSuccess" class="mx-4 mt-3 px-3 py-2 bg-green-50 border border-green-200 rounded-lg text-caption text-green-700">Profile updated!</div>
-              <div v-if="saveError" class="mx-4 mt-3 px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-caption text-red-600">{{ saveError }}</div>
+              <div v-if="saveSuccess" class="mx-4 mt-3 px-3 py-2 bg-[#F0FDF4] border border-[#BBF7D0] rounded-lg text-caption text-[#15803D]">Profile updated!</div>
+              <div v-if="saveError" class="mx-4 mt-3 px-3 py-2 bg-[#FEF2F2] border border-[#FECACA] rounded-lg text-caption text-[#B91C1C]">{{ saveError }}</div>
             <div class="px-4 py-4 space-y-3">
               <div>
-                <label class="block text-caption font-medium text-gray-500 mb-1">Username</label>
+                <label class="block text-caption font-medium text-[#475569] mb-1">Username</label>
                 <div class="relative">
-                  <input :value="profile.fl_username" disabled class="w-full border border-gray-100 rounded-xl px-3 py-2.5 text-body bg-gray-50 text-gray-400 cursor-not-allowed pr-14" />
-                  <span class="absolute right-3 top-1/2 -translate-y-1/2 text-caption text-gray-300 uppercase">Fixed</span>
+                  <input :value="profile.fl_username" disabled class="w-full border border-[#E2E8F0] rounded-xl px-3 py-2.5 text-body bg-[#F8FAFC] text-[#64748B] cursor-not-allowed pr-14" />
+                  <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-medium text-[#64748B] bg-[#F1F5F9] px-2 py-0.5 rounded-md uppercase tracking-wide">Fixed</span>
                 </div>
               </div>
               <div>
-                <label class="block text-caption font-medium text-gray-500 mb-1">Full Name <span class="text-red-400">*</span></label>
+                <label class="block text-caption font-medium text-[#475569] mb-1">Full Name <span class="text-[#DC2626]">*</span></label>
                 <input v-model="form.fl_name" type="text" :disabled="!isEditing" placeholder="e.g. Somchai Jaidee"
-                  class="w-full border rounded-xl px-3 py-2.5 text-body transition"
-                  :class="isEditing ? 'border-gray-200 bg-white focus:outline-none focus:border-red-400' : 'border-gray-100 bg-gray-50 text-gray-700 cursor-default'" />
+                  class="w-full border rounded-xl px-3 py-2.5 text-body font-medium transition placeholder:text-[#94A3B8]"
+                  :class="isEditing ? 'border-[#E2E8F0] bg-white text-[#0F172A] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/15' : 'border-[#E2E8F0] bg-[#F8FAFC] text-[#475569] cursor-default'" />
               </div>
               <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label class="block text-caption font-medium text-gray-500 mb-1">Phone <span class="text-red-400">*</span></label>
+                  <label class="block text-caption font-medium text-[#475569] mb-1">Phone <span class="text-[#DC2626]">*</span></label>
                   <input v-model="form.fl_phone" type="tel" :disabled="!isEditing" placeholder="0812345678"
-                    class="w-full border rounded-xl px-3 py-2.5 text-body transition"
-                    :class="isEditing ? 'border-gray-200 bg-white focus:outline-none focus:border-red-400' : 'border-gray-100 bg-gray-50 text-gray-700 cursor-default'" />
+                    class="w-full border rounded-xl px-3 py-2.5 text-body font-medium transition placeholder:text-[#94A3B8]"
+                    :class="isEditing ? 'border-[#E2E8F0] bg-white text-[#0F172A] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/15' : 'border-[#E2E8F0] bg-[#F8FAFC] text-[#475569] cursor-default'" />
                 </div>
                 <div>
-                  <label class="block text-caption font-medium text-gray-500 mb-1">Date of Birth</label>
+                  <label class="block text-caption font-medium text-[#475569] mb-1">Date of Birth</label>
                   <input v-model="form.fl_date_of_birth" type="date" :disabled="!isEditing"
-                    class="w-full border rounded-xl px-3 py-2.5 text-body transition"
-                    :class="isEditing ? 'border-gray-200 bg-white focus:outline-none focus:border-red-400' : 'border-gray-100 bg-gray-50 text-gray-700 cursor-default'" />
+                    class="w-full border rounded-xl px-3 py-2.5 text-body font-medium transition placeholder:text-[#94A3B8]"
+                    :class="isEditing ? 'border-[#E2E8F0] bg-white text-[#0F172A] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/15' : 'border-[#E2E8F0] bg-[#F8FAFC] text-[#475569] cursor-default'" />
                 </div>
               </div>
               <div>
-                <label class="block text-caption font-medium text-gray-500 mb-1">Email <span class="text-red-400">*</span></label>
+                <label class="block text-caption font-medium text-[#475569] mb-1">Email <span class="text-[#DC2626]">*</span></label>
                 <input v-model="form.fl_email" type="email" :disabled="!isEditing" placeholder="somchai@email.com"
-                  class="w-full border rounded-xl px-3 py-2.5 text-body transition"
-                  :class="isEditing ? 'border-gray-200 bg-white focus:outline-none focus:border-red-400' : 'border-gray-100 bg-gray-50 text-gray-700 cursor-default'" />
+                  class="w-full border rounded-xl px-3 py-2.5 text-body font-medium transition placeholder:text-[#94A3B8]"
+                  :class="isEditing ? 'border-[#E2E8F0] bg-white text-[#0F172A] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/15' : 'border-[#E2E8F0] bg-[#F8FAFC] text-[#475569] cursor-default'" />
               </div>
               <div>
-                <label class="block text-caption font-medium text-gray-500 mb-1">Address</label>
+                <label class="block text-caption font-medium text-[#475569] mb-1">Address</label>
                 <input v-model="form.fl_address" type="text" :disabled="!isEditing" placeholder="e.g. Chiang Mai"
-                  class="w-full border rounded-xl px-3 py-2.5 text-body transition"
-                  :class="isEditing ? 'border-gray-200 bg-white focus:outline-none focus:border-red-400' : 'border-gray-100 bg-gray-50 text-gray-700 cursor-default'" />
+                  class="w-full border rounded-xl px-3 py-2.5 text-body font-medium transition placeholder:text-[#94A3B8]"
+                  :class="isEditing ? 'border-[#E2E8F0] bg-white text-[#0F172A] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/15' : 'border-[#E2E8F0] bg-[#F8FAFC] text-[#475569] cursor-default'" />
               </div>
               <div>
-                <label class="block text-caption font-medium text-gray-500 mb-1">Bio</label>
+                <label class="block text-caption font-medium text-[#475569] mb-1">Bio</label>
                 <textarea v-model="form.fl_bio" rows="3" :disabled="!isEditing" placeholder="Brief description..."
                   class="w-full border rounded-xl px-3 py-2.5 text-body resize-none transition"
-                  :class="isEditing ? 'border-gray-200 bg-white focus:outline-none focus:border-red-400' : 'border-gray-100 bg-gray-50 text-gray-700 cursor-default'"></textarea>
+                  :class="isEditing ? 'border-[#E2E8F0] bg-white text-[#0F172A] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/15' : 'border-[#E2E8F0] bg-[#F8FAFC] text-[#475569] cursor-default'"></textarea>
               </div>
             </div>
             </div><!-- end v-show basic -->
           </div>
 
           <!-- Languages & Areas (accordion) -->
-          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
-            <div class="w-full flex items-center justify-between px-4 py-3 border-b border-gray-100 active:bg-gray-50 transition cursor-pointer select-none"
+          <div class="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm">
+            <div class="w-full flex items-center justify-between px-4 py-3 border-b border-[#E2E8F0] active:bg-[#F8FAFC] transition cursor-pointer select-none"
               @click="toggleSection('tags')">
               <div class="flex items-center gap-2">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                <span class="text-body font-semibold text-gray-700">Languages & Areas</span>
+                <span class="w-8 h-8 rounded-full bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center flex-shrink-0">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                </span>
+                <span class="text-body font-semibold text-[#0F172A]">Languages & Areas</span>
               </div>
               <div class="flex items-center gap-2">
                 <button v-if="openSection === 'tags'" class="flex items-center gap-1 px-3 py-1.5 text-caption font-semibold rounded-lg transition shadow-sm"
-                  :class="isEditingTags ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-red-600 text-white hover:bg-red-700'"
+                  :class="isEditingTags ? 'bg-[#16A34A] text-white hover:bg-[#15803D]' : 'bg-[#DC2626] text-white hover:bg-[#B91C1C]'"
                   @click.stop="isEditingTags = !isEditingTags">
                   <svg v-if="!isEditingTags" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   {{ isEditingTags ? 'Done' : 'Edit' }}
@@ -170,74 +192,78 @@
             <div v-show="openSection === 'tags'">
             <div class="px-4 py-4 space-y-4">
               <div>
-                <p class="text-caption font-medium text-gray-500 mb-2">Languages</p>
+                <p class="text-caption font-medium text-[#64748B] mb-2">Languages</p>
                 <div class="flex flex-wrap gap-2">
                   <span v-for="lang in languages" :key="lang.language_id"
-                    class="bg-indigo-50 text-indigo-700 text-caption font-medium px-3 py-1 rounded-full flex items-center gap-1.5">
+                    class="bg-[#EEF2FF] text-[#4338CA] text-caption font-medium px-3 py-1 rounded-full flex items-center gap-1.5">
                     {{ lang.language_name }}
-                    <button v-if="isEditingTags" @click="removeLang(lang)" class="w-3.5 h-3.5 rounded-full bg-indigo-200 flex items-center justify-center">
+                    <button v-if="isEditingTags" @click="removeLang(lang)" class="w-3.5 h-3.5 rounded-full bg-[#C7D2FE] flex items-center justify-center">
                       <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg>
                     </button>
                   </span>
-                  <span v-if="!languages.length && !isEditingTags" class="text-caption text-gray-400 italic">No languages added.</span>
+                  <span v-if="!languages.length && !isEditingTags" class="text-caption text-[#64748B] italic">No languages added.</span>
                 </div>
                 <div v-if="isEditingTags" class="flex gap-2 mt-2">
-                  <input v-model="newLang" type="text" placeholder="e.g. English" class="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-body focus:outline-none focus:border-red-400" @keyup.enter="addLang" />
-                  <button class="px-3 py-2 bg-red-600 text-white text-caption font-semibold rounded-xl disabled:opacity-60" :disabled="!newLang.trim() || addingLang" @click="addLang">{{ addingLang ? '...' : 'Add' }}</button>
+                  <input v-model="newLang" type="text" placeholder="e.g. English" class="flex-1 border border-[#E2E8F0] rounded-xl px-3 py-2 text-body focus:outline-none focus:border-[#DC2626]" @keyup.enter="addLang" />
+                  <button class="px-3 py-2 bg-[#DC2626] text-white text-caption font-semibold rounded-xl disabled:opacity-60" :disabled="!newLang.trim() || addingLang" @click="addLang">{{ addingLang ? '...' : 'Add' }}</button>
                 </div>
-                <p v-if="langError" class="text-caption text-red-500 mt-1">{{ langError }}</p>
+                <p v-if="langError" class="text-caption text-[#B91C1C] mt-1">{{ langError }}</p>
               </div>
               <div>
-                <p class="text-caption font-medium text-gray-500 mb-2">Pickup Areas</p>
+                <p class="text-caption font-medium text-[#64748B] mb-2">Pickup Areas</p>
                 <div class="flex flex-wrap gap-2">
                   <span v-for="area in pickupAreas" :key="area.area_id"
-                    class="bg-cyan-50 text-cyan-700 text-caption font-medium px-3 py-1 rounded-full flex items-center gap-1.5">
+                    class="bg-[#ECFEFF] text-[#0E7490] text-caption font-medium px-3 py-1 rounded-full flex items-center gap-1.5">
                     {{ area.area_name }}
-                    <button v-if="isEditingTags" @click="removeArea(area)" class="w-3.5 h-3.5 rounded-full bg-cyan-200 flex items-center justify-center">
+                    <button v-if="isEditingTags" @click="removeArea(area)" class="w-3.5 h-3.5 rounded-full bg-[#A5F3FC] flex items-center justify-center">
                       <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg>
                     </button>
                   </span>
-                  <span v-if="!pickupAreas.length && !isEditingTags" class="text-caption text-gray-400 italic">No pickup areas added.</span>
+                  <span v-if="!pickupAreas.length && !isEditingTags" class="text-caption text-[#64748B] italic">No pickup areas added.</span>
                 </div>
                 <div v-if="isEditingTags" class="flex gap-2 mt-2">
-                  <input v-model="newArea" type="text" placeholder="e.g. Chiang Mai" class="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-body focus:outline-none focus:border-red-400" @keyup.enter="addArea" />
-                  <button class="px-3 py-2 bg-red-600 text-white text-caption font-semibold rounded-xl disabled:opacity-60" :disabled="!newArea.trim() || addingArea" @click="addArea">{{ addingArea ? '...' : 'Add' }}</button>
+                  <input v-model="newArea" type="text" placeholder="e.g. Chiang Mai" class="flex-1 border border-[#E2E8F0] rounded-xl px-3 py-2 text-body focus:outline-none focus:border-[#DC2626]" @keyup.enter="addArea" />
+                  <button class="px-3 py-2 bg-[#DC2626] text-white text-caption font-semibold rounded-xl disabled:opacity-60" :disabled="!newArea.trim() || addingArea" @click="addArea">{{ addingArea ? '...' : 'Add' }}</button>
                 </div>
-                <p v-if="areaError" class="text-caption text-red-500 mt-1">{{ areaError }}</p>
+                <p v-if="areaError" class="text-caption text-[#B91C1C] mt-1">{{ areaError }}</p>
               </div>
             </div>
             </div><!-- end v-show tags -->
           </div>
 
           <!-- Change PIN -->
-          <button class="w-full bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-3.5 flex items-center justify-between active:bg-gray-50 transition"
+          <button class="w-full bg-white rounded-2xl border border-[#E2E8F0] shadow-sm px-4 py-3.5 flex items-center justify-between active:bg-[#F8FAFC] transition"
             @click="$router.push('/profile/change-pin')">
             <div class="flex items-center gap-2">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-              <span class="text-body font-semibold text-gray-700">Change PIN</span>
+              <span class="w-8 h-8 rounded-full bg-[#F1F5F9] text-[#475569] flex items-center justify-center flex-shrink-0">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+              </span>
+              <span class="text-body font-semibold text-[#0F172A]">Change PIN</span>
             </div>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
           </button>
 
           <!-- Vehicle (accordion) -->
-          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
-            <div class="w-full flex items-center justify-between px-4 py-3 border-b border-gray-100 active:bg-gray-50 transition cursor-pointer select-none"
+          <div class="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm">
+            <div class="w-full flex items-center justify-between px-4 py-3 border-b border-[#E2E8F0] active:bg-[#F8FAFC] transition cursor-pointer select-none"
               @click="toggleSection('vehicle')">
               <div class="flex items-center gap-2">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><rect x="1" y="8" width="15" height="10" rx="1.5"/><path d="M16 10l4 2v6h-4V10z"/><circle cx="5.5" cy="19.5" r="1.5"/><circle cx="13.5" cy="19.5" r="1.5"/><circle cx="19.5" cy="19.5" r="1.5"/></svg>
-                <span class="text-body font-semibold text-gray-700">Vehicle</span>
+                <span class="w-8 h-8 rounded-full bg-[#FFF7ED] text-[#F59E0B] flex items-center justify-center flex-shrink-0">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="8" width="15" height="10" rx="1.5"/><path d="M16 10l4 2v6h-4V10z"/><circle cx="5.5" cy="19.5" r="1.5"/><circle cx="13.5" cy="19.5" r="1.5"/><circle cx="19.5" cy="19.5" r="1.5"/></svg>
+                </span>
+                <span class="text-body font-semibold text-[#0F172A]">Vehicle</span>
               </div>
               <div class="flex items-center gap-2">
                 <div v-if="vehicle && openSection === 'vehicle'" class="flex items-center gap-2">
                   <button v-if="!isEditingVehicle"
-                    class="flex items-center gap-1 px-3 py-1.5 text-caption font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700 transition shadow-sm"
+                    class="flex items-center gap-1 px-3 py-1.5 text-caption font-semibold rounded-lg bg-[#DC2626] text-white hover:bg-[#B91C1C] transition shadow-sm"
                     @click.stop="startEditVehicle">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     Edit
                   </button>
-                  <button v-if="isEditingVehicle" class="px-3 py-1.5 text-caption font-medium rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition" @click.stop="cancelEditVehicle">Cancel</button>
+                  <button v-if="isEditingVehicle" class="px-3 py-1.5 text-caption font-medium rounded-lg border border-[#E2E8F0] text-[#64748B] hover:bg-[#F8FAFC] transition" @click.stop="cancelEditVehicle">Cancel</button>
                   <button v-if="isEditingVehicle"
-                    class="flex items-center gap-1 px-3 py-1.5 text-caption font-semibold rounded-lg bg-green-600 text-white hover:bg-green-700 transition disabled:opacity-60 shadow-sm"
+                    class="flex items-center gap-1 px-3 py-1.5 text-caption font-semibold rounded-lg bg-[#16A34A] text-white hover:bg-[#15803D] transition disabled:opacity-60 shadow-sm"
                     :disabled="savingVehicle" @click.stop="saveVehicle">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
                     {{ savingVehicle ? 'Saving...' : 'Save' }}
@@ -251,22 +277,22 @@
             </div>
             <div v-show="openSection === 'vehicle'">
             <div v-if="vehicle">
-              <div v-if="vehicleSaveSuccess" class="mx-4 mt-3 px-3 py-2 bg-green-50 border border-green-200 rounded-lg text-caption text-green-700">Saved!</div>
-              <div v-if="vehicleSaveError" class="mx-4 mt-3 px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-caption text-red-600">{{ vehicleSaveError }}</div>
+              <div v-if="vehicleSaveSuccess" class="mx-4 mt-3 px-3 py-2 bg-[#F0FDF4] border border-[#BBF7D0] rounded-lg text-caption text-[#15803D]">Saved!</div>
+              <div v-if="vehicleSaveError" class="mx-4 mt-3 px-3 py-2 bg-[#FEF2F2] border border-[#FECACA] rounded-lg text-caption text-[#B91C1C]">{{ vehicleSaveError }}</div>
               <div class="px-4 py-4 space-y-3">
                 <div v-for="vf in vehicleEditFields" :key="vf.key">
-                  <label class="block text-caption font-medium text-gray-500 mb-1">{{ vf.label }}</label>
+                  <label class="block text-caption font-medium text-[#64748B] mb-1">{{ vf.label }}</label>
                   <input v-if="isEditingVehicle" v-model="vehicleForm[vf.key]" :type="vf.type || 'text'" :placeholder="vf.placeholder"
-                    class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-body bg-white focus:outline-none focus:border-red-400" />
-                  <p v-else class="text-body text-gray-800 px-3 py-2.5 border border-gray-100 rounded-xl bg-gray-50">{{ vehicle[vf.key] || '-' }}</p>
+                    class="w-full border border-[#E2E8F0] rounded-xl px-3 py-2.5 text-body bg-white focus:outline-none focus:border-[#DC2626]" />
+                  <p v-else class="text-body text-[#0F172A] px-3 py-2.5 border border-[#E2E8F0] rounded-xl bg-[#F8FAFC]">{{ vehicle[vf.key] || '-' }}</p>
                 </div>
                 <div>
-                  <label class="block text-caption font-medium text-gray-500 mb-1">Type</label>
-                  <p class="text-body text-gray-800 px-3 py-2.5 border border-gray-100 rounded-xl bg-gray-50">{{ vehicle.fl_vehicle_type }}</p>
+                  <label class="block text-caption font-medium text-[#64748B] mb-1">Type</label>
+                  <p class="text-body text-[#0F172A] px-3 py-2.5 border border-[#E2E8F0] rounded-xl bg-[#F8FAFC]">{{ vehicle.fl_vehicle_type }}</p>
                 </div>
               </div>
               <div v-if="vehicleImages.length" class="px-4 pb-3">
-                <p class="text-caption font-medium text-gray-500 mb-2">Vehicle Photos</p>
+                <p class="text-caption font-medium text-[#64748B] mb-2">Vehicle Photos</p>
                 <div class="flex gap-2 overflow-x-auto pb-1">
                   <div v-for="img in vehicleImages" :key="img.fl_vehicle_image_id"
                     class="relative flex-shrink-0 w-24 h-24">
@@ -282,7 +308,7 @@
                 </div>
               </div>
               <div class="px-4 pb-4">
-                <button class="flex items-center gap-1.5 text-caption text-red-600 font-medium bg-red-50 px-3 py-1.5 rounded-full" @click="triggerVehicleImageUpload">
+                <button class="flex items-center gap-1.5 text-caption text-[#B91C1C] font-medium bg-[#FEF2F2] px-3 py-1.5 rounded-full" @click="triggerVehicleImageUpload">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><path d="M12 3v12"/></svg>
                   Add Vehicle Photo
                 </button>
@@ -290,16 +316,16 @@
               </div>
             </div>
             <div v-else class="px-4 py-4">
-              <p class="text-caption text-gray-400 mb-3">No vehicle added yet.</p>
+              <p class="text-caption text-[#64748B] mb-3">No vehicle added yet.</p>
               <div class="grid grid-cols-2 gap-3">
                 <div v-for="vf in vehicleEditFields" :key="vf.key">
-                  <label class="block text-caption font-medium text-gray-500 mb-1">{{ vf.label }} <span class="text-red-400">*</span></label>
+                  <label class="block text-caption font-medium text-[#64748B] mb-1">{{ vf.label }} <span class="text-[#B91C1C]">*</span></label>
                   <input v-model="newVehicleForm[vf.key]" :type="vf.type || 'text'" :placeholder="vf.placeholder"
-                    class="w-full border border-gray-200 rounded-xl px-3 py-2 text-body bg-white focus:outline-none focus:border-red-400" />
+                    class="w-full border border-[#E2E8F0] rounded-xl px-3 py-2 text-body bg-white focus:outline-none focus:border-[#DC2626]" />
                 </div>
               </div>
-              <p v-if="newVehicleError" class="text-caption text-red-500 mt-2">{{ newVehicleError }}</p>
-              <button class="w-full mt-4 bg-red-600 text-white text-body font-semibold py-3 rounded-xl disabled:opacity-60 flex items-center justify-center gap-2"
+              <p v-if="newVehicleError" class="text-caption text-[#B91C1C] mt-2">{{ newVehicleError }}</p>
+              <button class="w-full mt-4 bg-[#DC2626] text-white text-body font-semibold py-3 rounded-xl disabled:opacity-60 flex items-center justify-center gap-2"
                 :disabled="creatingVehicle" @click="createVehicle">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
                 {{ creatingVehicle ? 'Adding...' : 'Add Vehicle' }}
@@ -309,16 +335,18 @@
           </div>
 
           <!-- Verification + Documents (accordion) -->
-          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
-            <div class="w-full flex items-center justify-between px-4 py-3 border-b border-gray-100 active:bg-gray-50 transition cursor-pointer select-none"
+          <div class="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm">
+            <div class="w-full flex items-center justify-between px-4 py-3 border-b border-[#E2E8F0] active:bg-[#F8FAFC] transition cursor-pointer select-none"
               @click="toggleSection('docs')">
               <div class="flex items-center gap-2">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0 1 12 2.944a11.955 11.955 0 0 1-8.618 3.04A12.02 12.02 0 0 0 3 9c0 5.591 3.824 10.29 9 11.622C17.176 19.29 21 14.591 21 9c0-1.847-.396-3.6-1.118-5.142z"/></svg>
-                <span class="text-body font-semibold text-gray-700">Verification & Documents</span>
+                <span class="w-8 h-8 rounded-full bg-[#F0FDF4] text-[#16A34A] flex items-center justify-center flex-shrink-0">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0 1 12 2.944a11.955 11.955 0 0 1-8.618 3.04A12.02 12.02 0 0 0 3 9c0 5.591 3.824 10.29 9 11.622C17.176 19.29 21 14.591 21 9c0-1.847-.396-3.6-1.118-5.142z"/></svg>
+                </span>
+                <span class="text-body font-semibold text-[#0F172A]">Verification & Documents</span>
               </div>
               <div class="flex items-center gap-2">
                 <button v-if="openSection === 'docs'" class="flex items-center gap-1 px-3 py-1.5 text-caption font-semibold rounded-lg transition shadow-sm"
-                  :class="docEditMode ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-red-600 text-white hover:bg-red-700'"
+                  :class="docEditMode ? 'bg-[#16A34A] text-white hover:bg-[#15803D]' : 'bg-[#DC2626] text-white hover:bg-[#B91C1C]'"
                   @click.stop="docEditMode = !docEditMode">
                   <svg v-if="!docEditMode" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   {{ docEditMode ? 'Done' : 'Edit' }}
@@ -333,44 +361,44 @@
 
             <!-- Verify status -->
             <div class="px-4 py-3 border-b border-gray-50 flex flex-wrap items-center gap-x-3 gap-y-1">
-              <span class="text-caption font-medium text-gray-500">Status</span>
+              <span class="text-caption font-medium text-[#64748B]">Status</span>
               <span class="text-caption font-semibold px-2.5 py-0.5 rounded-full uppercase"
                 :class="[BADGE_BASE, getVerifyStatusClass(verifyInfo.fl_verify_status)]">
                 {{ formatVerifyStatus(verifyInfo.fl_verify_status) || 'Pending' }}
               </span>
-              <span v-if="verifyInfo.fl_verify_status === 'VERIFIED' && verifyInfo.fl_verified_at" class="text-caption text-gray-400">Verified {{ formatDate(verifyInfo.fl_verified_at) }}</span>
-              <span v-else-if="verifyInfo.fl_submitted_at" class="text-caption text-gray-400">Submitted {{ formatDate(verifyInfo.fl_submitted_at) }}</span>
-              <span v-if="verifyInfo.reviewed_by_name && verifyInfo.fl_verify_status === 'VERIFIED'" class="text-caption text-gray-400">By {{ verifyInfo.reviewed_by_name }}</span>
+              <span v-if="verifyInfo.fl_verify_status === 'VERIFIED' && verifyInfo.fl_verified_at" class="text-caption text-[#64748B]">Verified {{ formatDate(verifyInfo.fl_verified_at) }}</span>
+              <span v-else-if="verifyInfo.fl_submitted_at" class="text-caption text-[#64748B]">Submitted {{ formatDate(verifyInfo.fl_submitted_at) }}</span>
+              <span v-if="verifyInfo.reviewed_by_name && verifyInfo.fl_verify_status === 'VERIFIED'" class="text-caption text-[#64748B]">By {{ verifyInfo.reviewed_by_name }}</span>
             </div>
             <div v-if="verifyLoadError" class="px-4 pb-2 -mt-1">
-              <p class="text-caption text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{{ verifyLoadError }}</p>
+              <p class="text-caption text-[#B91C1C] bg-[#FEF2F2] border border-[#FECACA] rounded-lg px-3 py-2">{{ verifyLoadError }}</p>
             </div>
             <div v-if="!documents.some(d => d.file_url)" class="px-4 pb-2 -mt-1">
-              <p class="text-caption text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+              <p class="text-caption text-[#B45309] bg-[#FFFBEB] border border-[#FDE68A] rounded-lg px-3 py-2">
                 Please upload your documents to complete verification.
               </p>
             </div>
             <div v-else-if="documents.filter(d => d.file_url).length < 5" class="px-4 pb-2 -mt-1">
-              <p class="text-caption text-gray-500">{{ documents.filter(d => d.file_url).length }} of 5 documents submitted</p>
+              <p class="text-caption text-[#64748B]">{{ documents.filter(d => d.file_url).length }} of 5 documents submitted</p>
             </div>
 
             <!-- Documents label -->
             <div class="px-4 pt-3 pb-1">
-              <p class="text-caption font-medium text-gray-500">Documents</p>
-              <p class="text-caption text-gray-400 mt-0.5">All 5 documents are required to complete verification.</p>
-              <p class="text-meta text-gray-300 mt-0.5">Accepted: JPG, PNG · Max 5 MB</p>
+              <p class="text-caption font-medium text-[#64748B]">Documents</p>
+              <p class="text-caption text-[#64748B] mt-0.5">All 5 documents are required to complete verification.</p>
+              <p class="text-meta text-[#94A3B8] mt-0.5">Accepted: JPG, PNG · Max 5 MB</p>
             </div>
 
             <!-- Documents list (1 per row) -->
             <div class="px-4 pb-4 space-y-2">
-              <div v-if="!documents.length" class="py-4 text-center text-caption text-gray-400 italic">No documents found.</div>
+              <div v-if="!documents.length" class="py-4 text-center text-caption text-[#64748B] italic">No documents found.</div>
               <div v-for="doc in documents" :key="doc.fl_doc_type"
-                class="border border-gray-100 rounded-xl overflow-hidden bg-white cursor-pointer active:bg-gray-50 transition"
+                class="border border-[#E2E8F0] rounded-xl overflow-hidden bg-white cursor-pointer active:bg-[#F8FAFC] transition"
                 @click="docEditMode ? triggerDocUpload(doc) : (doc.file_url ? openDocPreview(doc) : null)">
                 <div class="flex items-center gap-3 p-3">
 
                   <!-- Thumbnail -->
-                  <div class="w-14 h-14 rounded-lg bg-gray-50 flex-shrink-0 relative overflow-hidden">
+                  <div class="w-14 h-14 rounded-lg bg-[#F8FAFC] flex-shrink-0 relative overflow-hidden">
                     <img v-if="doc.file_url" :src="doc.file_url" class="w-full h-full object-cover" />
                     <div v-else-if="docEditMode" class="w-full h-full bg-gray-400 flex items-center justify-center flex-col gap-0.5 px-0.5">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v12"/></svg>
@@ -378,7 +406,7 @@
                     </div>
                     <div v-else class="w-full h-full flex items-center justify-center flex-col gap-0.5">
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                      <span class="text-meta text-gray-300 font-medium">Not uploaded yet</span>
+                      <span class="text-meta text-[#94A3B8] font-medium">Not uploaded yet</span>
                     </div>
                     <div v-if="doc.uploading" class="absolute inset-0 bg-white/80 flex items-center justify-center">
                       <div class="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
@@ -388,19 +416,19 @@
                   <!-- Info -->
                   <div class="flex-1 min-w-0">
                     <div class="flex items-center justify-between gap-2 mb-1">
-                      <p class="text-body font-semibold text-gray-800 truncate">{{ DOC_META[doc.fl_doc_type]?.label }}</p>
+                      <p class="text-body font-semibold text-[#0F172A] truncate">{{ DOC_META[doc.fl_doc_type]?.label }}</p>
                       <span class="text-caption font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
                         :class="docStatusStyle(doc.fl_doc_status).badge">
                         {{ doc.fl_doc_status || 'NOT UPLOADED' }}
                       </span>
                     </div>
-                    <p class="text-caption text-gray-400">
+                    <p class="text-caption text-[#64748B]">
                       {{ doc.fl_uploaded_at ? 'Last updated ' + formatDate(doc.fl_uploaded_at) : 'Not uploaded yet' }}
                     </p>
-                    <p v-if="doc.reviewed_at && doc.fl_doc_status === 'APPROVED'" class="text-caption text-gray-400">
+                    <p v-if="doc.reviewed_at && doc.fl_doc_status === 'APPROVED'" class="text-caption text-[#64748B]">
                       Verified {{ formatDate(doc.reviewed_at) }}{{ doc.reviewed_by_name ? ' by ' + doc.reviewed_by_name : '' }}
                     </p>
-                    <p v-if="doc.fl_doc_status === 'REJECTED' && doc.reject_reason" class="text-caption text-red-400 mt-0.5">{{ doc.reject_reason }}</p>
+                    <p v-if="doc.fl_doc_status === 'REJECTED' && doc.reject_reason" class="text-caption text-[#B91C1C] mt-0.5">{{ doc.reject_reason }}</p>
                   </div>
                 </div>
                 <input :id="'doc-input-' + doc.fl_doc_type" type="file" accept="image/*" class="hidden" @change="(e) => uploadDocument(e, doc)" />
@@ -415,20 +443,20 @@
       <!-- Avatar modal -->
       <div v-if="avatarModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click.self="avatarModal = false">
         <div class="bg-white rounded-2xl shadow-2xl w-72 overflow-hidden" @click.stop>
-          <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-            <span class="text-body font-semibold text-gray-900">Profile Photo</span>
-            <button @click="avatarModal = false" class="text-gray-400">
+          <div class="px-5 py-4 border-b border-[#E2E8F0] flex items-center justify-between">
+            <span class="text-body font-semibold text-[#0F172A]">Profile Photo</span>
+            <button @click="avatarModal = false" class="text-[#64748B]">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
             </button>
           </div>
           <div class="py-1">
             <button :disabled="!form.fl_profile_image_url"
-              class="w-full flex items-center gap-3 px-5 py-3 text-body text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              class="w-full flex items-center gap-3 px-5 py-3 text-body text-[#475569] hover:bg-[#F8FAFC] disabled:opacity-40 disabled:cursor-not-allowed"
               @click="viewAvatarFull">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               View Photo
             </button>
-            <button class="w-full flex items-center gap-3 px-5 py-3 text-body text-gray-700 hover:bg-gray-50"
+            <button class="w-full flex items-center gap-3 px-5 py-3 text-body text-[#475569] hover:bg-[#F8FAFC]"
               @click="avatarModal = false; avatarInput?.click()">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><path d="M12 3v12"/></svg>
               Update Profile Photo
