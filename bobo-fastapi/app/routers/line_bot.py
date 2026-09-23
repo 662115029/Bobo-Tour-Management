@@ -33,8 +33,26 @@ async def webhook(request: Request):
     return "OK"
 
 
+def reset_menu_if_unregistered(line_user_id: str):
+    """If this LINE user has no freelancer account (e.g. deleted by admin), drop the per-user
+    rich menu so they fall back to the default (register) menu."""
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT fl_id FROM freelancers WHERE line_user_id = %s", (line_user_id,))
+        if not cursor.fetchone():
+            line_bot_api.unlink_rich_menu_from_user(line_user_id)
+    except Exception as e:
+        print(f"reset_menu_if_unregistered: {e}")
+    finally:
+        if conn:
+            conn.close()
+
+
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
+    reset_menu_if_unregistered(event.source.user_id)
     if event.message.text.lower() == "jobs":
         flex_message = FlexSendMessage(
             alt_text="View available jobs",
