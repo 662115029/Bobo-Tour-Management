@@ -1,5 +1,6 @@
 html {
   overflow-y: scroll;
+  font-size: 15px;
 }
 
 ::-webkit-scrollbar {
@@ -26,25 +27,25 @@ html {
 
   /* ── TourDetailsView ── */
   .section-title {
-    @apply text-sm font-semibold text-gray-500 uppercase tracking-wide border-b border-gray-100 pb-2 mb-4 flex items-center gap-2;
+    @apply text-[18px] font-semibold text-gray-500 uppercase tracking-wide border-b border-gray-100 pb-2 mb-4 flex items-center gap-2;
   }
   .count-badge {
-    @apply text-xs font-medium text-gray-400 normal-case tracking-normal;
+    @apply text-[13px] font-medium text-gray-400 normal-case tracking-normal;
   }
   .info-block {
     @apply flex flex-col gap-0.5;
   }
   .info-label {
-    @apply text-xs text-gray-400 font-medium uppercase tracking-wide;
+    @apply text-[11px] text-gray-400 font-medium uppercase tracking-wide;
   }
   .info-value {
-    @apply text-sm font-semibold text-gray-700;
+    @apply text-[15px] font-semibold text-gray-700;
   }
   .field-label {
-    @apply block text-xs text-gray-500 font-medium mb-1;
+    @apply block text-[13px] text-gray-500 font-medium mb-1;
   }
   .field-input {
-    @apply w-full p-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-400;
+    @apply w-full p-2 border border-gray-300 rounded-lg text-[15px] focus:outline-none focus:ring-2 focus:ring-red-400;
   }
 
   /* ── SideBar ── */
@@ -114,7 +115,7 @@ html {
 
   /* ── Document Badge (status overlay on doc thumbnail) ── */
   .doc-badge {
-    @apply inline-flex w-fit items-center rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide;
+    @apply inline-flex w-fit items-center rounded-full px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wide;
   }
   .doc-badge.approved { @apply bg-green-100 text-green-700; }
   .doc-badge.pending  { @apply bg-amber-100 text-amber-700; }

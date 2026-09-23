@@ -22,17 +22,17 @@
         <div class="w-full md:max-w-lg flex-shrink-0">
           <div class="bg-white rounded-2xl border border-gray-200 shadow-md p-7 transition-shadow duration-300 hover:shadow-xl hover:shadow-gray-200/80">
 
-            <h2 class="text-2xl font-bold text-gray-800 mb-1">Create your account</h2>
-            <p class="text-sm text-gray-400 mb-5">Fields marked <span class="text-red-500">*</span> are required.</p>
+            <h2 class="text-title font-bold text-gray-800 mb-1">Create your account</h2>
+            <p class="text-body text-gray-400 mb-5">Fields marked <span class="text-red-500">*</span> are required.</p>
 
             <!-- Error / Success -->
-            <div v-if="error" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm flex items-center gap-2">
+            <div v-if="error" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-body flex items-center gap-2">
               <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                 <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
               </svg>
               {{ error }}
             </div>
-            <div v-if="success" class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm flex items-center gap-2">
+            <div v-if="success" class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-body flex items-center gap-2">
               <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
               </svg>
@@ -43,7 +43,7 @@
 
               <!-- Row 1: Username -->
               <div>
-                <label class="block text-sm font-medium text-gray-600 mb-1">
+                <label class="block text-body font-medium text-gray-600 mb-1">
                   Username <span class="text-red-500">*</span>
                   <span class="text-gray-400 font-normal ml-1">(Cannot be changed)</span>
                 </label>
@@ -56,7 +56,7 @@
                     placeholder="e.g. chiang_mai_tours"
                     autocomplete="username"
                     :class="[
-                      'w-full px-3 py-2.5 pr-9 border rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:border-transparent transition',
+                      'w-full px-3 py-2.5 pr-9 border rounded-lg text-caption focus:outline-none focus:ring-2 focus:border-transparent transition',
                       usernameState === 'taken'
                         ? 'border-red-400 focus:ring-red-300'
                         : usernameState === 'available'
@@ -78,31 +78,31 @@
                     </svg>
                   </span>
                 </div>
-                <p v-if="usernameState === 'taken'" class="mt-1 text-[11px] text-red-500">Username is already taken.</p>
-                <p v-else-if="usernameState === 'available'" class="mt-1 text-[11px] text-green-600">Username is available.</p>
+                <p v-if="usernameState === 'taken'" class="mt-1 text-meta text-red-500">Username is already taken.</p>
+                <p v-else-if="usernameState === 'available'" class="mt-1 text-meta text-green-600">Username is available.</p>
               </div>
 
               <!-- Row 2: Full Name + Email (2-col) -->
               <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label class="block text-sm font-medium text-gray-600 mb-1">Employer Name <span class="text-red-500">*</span></label>
+                  <label class="block text-body font-medium text-gray-600 mb-1">Employer Name <span class="text-red-500">*</span></label>
                   <input
                     v-model="form.em_name"
                     type="text"
                     required
                     placeholder="Your name"
-                    class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent transition"
+                    class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-caption focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent transition"
                   />
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-600 mb-1">Email <span class="text-red-500">*</span></label>
+                  <label class="block text-body font-medium text-gray-600 mb-1">Email <span class="text-red-500">*</span></label>
                   <input
                     v-model="form.em_email"
                     type="email"
                     required
                     placeholder="you@email.com"
                     autocomplete="email"
-                    class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent transition"
+                    class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-caption focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent transition"
                   />
                 </div>
               </div>
@@ -110,43 +110,43 @@
               <!-- Row 3: Phone + Address (2-col) -->
               <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label class="block text-sm font-medium text-gray-600 mb-1">Phone <span class="text-red-500">*</span></label>
+                  <label class="block text-body font-medium text-gray-600 mb-1">Phone <span class="text-red-500">*</span></label>
                   <input
                     v-model="form.em_phone"
                     type="tel"
                     required
                     placeholder="08x xxx xxxx"
                     autocomplete="tel"
-                    class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent transition"
+                    class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-caption focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent transition"
                   />
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-600 mb-1">Address <span class="text-red-500">*</span></label>
+                  <label class="block text-body font-medium text-gray-600 mb-1">Address <span class="text-red-500">*</span></label>
                   <input
                     v-model="form.em_address"
                     type="text"
                     required
                     placeholder="City, Country"
-                    class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent transition"
+                    class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-caption focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent transition"
                   />
                 </div>
               </div>
 
               <!-- Row 4: Bio -->
               <div>
-                <label class="block text-sm font-medium text-gray-600 mb-1">Bio <span class="text-gray-400 font-normal">(optional)</span></label>
+                <label class="block text-body font-medium text-gray-600 mb-1">Bio <span class="text-gray-400 font-normal">(optional)</span></label>
                 <textarea
                   v-model="form.em_bio"
                   rows="2"
                   placeholder="Brief description of your tour company..."
-                  class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent transition resize-none"
+                  class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-caption focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent transition resize-none"
                 ></textarea>
               </div>
 
               <!-- Row 5: Password + Confirm (2-col) -->
               <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label class="block text-sm font-medium text-gray-600 mb-1">Password <span class="text-red-500">*</span></label>
+                  <label class="block text-body font-medium text-gray-600 mb-1">Password <span class="text-red-500">*</span></label>
                   <div class="relative">
                     <input
                       v-model="form.password"
@@ -154,7 +154,7 @@
                       required
                       placeholder="Min. 8 chars"
                       autocomplete="new-password"
-                      class="w-full px-3 py-2.5 pr-9 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent transition"
+                      class="w-full px-3 py-2.5 pr-9 border border-gray-300 rounded-lg text-caption focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent transition"
                     />
                     <button type="button" @click="showPassword = !showPassword"
                       class="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition">
@@ -169,7 +169,7 @@
                     </button>
                   </div>
                   <!-- Password hint -->
-                  <div class="mt-1 text-[13px] text-gray-400 leading-relaxed grid grid-cols-2 gap-x-16">
+                  <div class="mt-1 text-caption text-gray-400 leading-relaxed grid grid-cols-2 gap-x-16">
                     <span class="whitespace-nowrap">Min 8 characters</span>
                     <span class="whitespace-nowrap">At least 1 uppercase</span>
                     <span class="whitespace-nowrap">At least 1 number</span>
@@ -184,11 +184,11 @@
                         :class="i <= passwordStrength.score ? passwordStrength.color : 'bg-gray-200'"
                       />
                     </div>
-                    <p class="text-[10px]" :class="passwordStrength.textColor">{{ passwordStrength.label }}</p>
+                    <p class="text-meta" :class="passwordStrength.textColor">{{ passwordStrength.label }}</p>
                   </div>
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-600 mb-1">Confirm <span class="text-red-500">*</span></label>
+                  <label class="block text-body font-medium text-gray-600 mb-1">Confirm <span class="text-red-500">*</span></label>
                   <div class="relative">
                     <input
                       v-model="form.confirmPassword"
@@ -197,7 +197,7 @@
                       placeholder="Re-enter"
                       autocomplete="new-password"
                       :class="[
-                        'w-full px-3 py-2.5 pr-9 border rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:border-transparent transition',
+                        'w-full px-3 py-2.5 pr-9 border rounded-lg text-caption focus:outline-none focus:ring-2 focus:border-transparent transition',
                         form.confirmPassword && form.password !== form.confirmPassword
                           ? 'border-red-400 focus:ring-red-300'
                           : form.confirmPassword && form.password === form.confirmPassword
@@ -215,15 +215,15 @@
                       </svg>
                     </span>
                   </div>
-                  <p v-if="form.confirmPassword && form.password !== form.confirmPassword" class="mt-1 text-[10px] text-red-500">Passwords do not match.</p>
-                  <p v-else-if="form.confirmPassword && form.password === form.confirmPassword" class="mt-1 text-[10px] text-green-600">Passwords match.</p>
+                  <p v-if="form.confirmPassword && form.password !== form.confirmPassword" class="mt-1 text-meta text-red-500">Passwords do not match.</p>
+                  <p v-else-if="form.confirmPassword && form.password === form.confirmPassword" class="mt-1 text-meta text-green-600">Passwords match.</p>
                 </div>
               </div>
 
               <button
                 type="submit"
                 :disabled="loading || usernameState === 'taken' || usernameChecking"
-                class="w-full py-2.5 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed mt-1 flex items-center justify-center gap-2"
+                class="w-full py-2.5 bg-red-600 text-white text-body font-semibold rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed mt-1 flex items-center justify-center gap-2"
               >
                 <svg v-if="loading" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
@@ -233,7 +233,7 @@
               </button>
             </form>
 
-            <p class="text-center text-sm text-gray-500 mt-4">
+            <p class="text-center text-body text-gray-500 mt-4">
               Already have an account?
               <router-link to="/login" class="text-red-600 font-medium hover:underline">Sign in</router-link>
             </p>

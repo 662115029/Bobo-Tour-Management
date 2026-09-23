@@ -21,9 +21,9 @@
         <!-- Right: Form -->
         <div class="w-full md:max-w-sm flex-shrink-0">
           <div class="bg-white rounded-2xl border border-gray-200 shadow-md p-8 transition-shadow duration-300 hover:shadow-xl hover:shadow-gray-200/80">
-            <h2 class="text-2xl font-bold text-gray-800 mb-6">Sign in to your account</h2>
+            <h2 class="text-title font-bold text-gray-800 mb-6">Sign in to your account</h2>
 
-            <div v-if="error" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm flex items-center gap-2">
+            <div v-if="error" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-body flex items-center gap-2">
               <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                 <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
               </svg>
@@ -32,18 +32,18 @@
 
             <form @submit.prevent="handleLogin" class="space-y-4">
               <div>
-                <label class="block text-sm font-medium text-gray-600 mb-1">Username or Email</label>
+                <label class="block text-body font-medium text-gray-600 mb-1">Username or Email</label>
                 <input
                   v-model="form.identifier"
                   type="text"
                   required
                   placeholder="Your username or email"
                   autocomplete="username"
-                  class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent transition"
+                  class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-caption focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent transition"
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-600 mb-1">Password</label>
+                <label class="block text-body font-medium text-gray-600 mb-1">Password</label>
                 <div class="relative">
                   <input
                     v-model="form.password"
@@ -51,7 +51,7 @@
                     required
                     placeholder="••••••••"
                     autocomplete="current-password"
-                    class="w-full px-3 py-2.5 pr-9 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent transition pr-10"
+                    class="w-full px-3 py-2.5 pr-9 border border-gray-300 rounded-lg text-caption focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent transition pr-10"
                   />
                   <button
                     type="button"
@@ -73,7 +73,7 @@
               <button
                 type="submit"
                 :disabled="loading"
-                class="w-full py-2.5 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed mt-2 flex items-center justify-center gap-2"
+                class="w-full py-2.5 bg-red-600 text-white text-body font-semibold rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed mt-2 flex items-center justify-center gap-2"
               >
                 <svg v-if="loading" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
@@ -83,7 +83,7 @@
               </button>
             </form>
 
-            <p class="text-center text-sm text-gray-500 mt-6">
+            <p class="text-center text-body text-gray-500 mt-6">
               Don't have an account?
               <router-link to="/register" class="text-red-600 font-medium hover:underline">Register here</router-link>
             </p>
