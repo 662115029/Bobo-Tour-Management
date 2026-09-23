@@ -14,8 +14,8 @@
         leave-to-class="opacity-0"
       >
         <div v-if="isOpen" class="flex min-w-0 flex-col overflow-hidden">
-          <span class="whitespace-nowrap text-[15px] font-bold">Admin Panel</span>
-          <span class="whitespace-nowrap text-[11px] text-white/40">BoboTourManagement</span>
+          <span class="whitespace-nowrap text-body font-bold">Admin Panel</span>
+          <span class="whitespace-nowrap text-meta text-white/40">BoboTourManagement</span>
         </div>
       </transition>
     </div>
@@ -93,7 +93,7 @@
         <!-- collapsed: just avatar -->
         <template v-if="!isOpen">
           <div
-            class="flex h-8 w-8 items-center justify-center rounded-full text-[12px] font-bold text-white"
+            class="flex h-8 w-8 items-center justify-center rounded-full text-caption font-bold text-white"
             :style="{ background: avatarColor }"
           >
             {{ adminInitials }}
@@ -105,17 +105,17 @@
           <div class="flex items-center gap-2.5 min-w-0">
             <!-- Avatar -->
             <div
-              class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[13px] font-bold text-white"
+              class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-caption font-bold text-white"
               :style="{ background: avatarColor }"
             >
               {{ adminInitials }}
             </div>
             <!-- Text -->
             <div class="flex min-w-0 flex-1 flex-col">
-              <span class="truncate text-[13px] font-semibold leading-tight text-white">
+              <span class="truncate text-caption font-semibold leading-tight text-white">
                 {{ adminName || 'Admin' }}
               </span>
-              <span class="truncate text-[11px] leading-tight text-white/40">
+              <span class="truncate text-meta leading-tight text-white/40">
                 @{{ adminUsername || 'administrator' }}
               </span>
             </div>
@@ -240,8 +240,8 @@ const toggle = () => {
 </script>
 
 <style scoped>
-@import "tailwindcss" reference;
+@import "../style.css" reference;
 .nav-item {
-  @apply flex w-full cursor-pointer items-center gap-3 rounded-lg border-l-[3px] border-transparent bg-transparent text-left text-sm font-medium no-underline transition-all duration-150;
+  @apply flex w-full cursor-pointer items-center gap-3 rounded-lg border-l-[3px] border-transparent bg-transparent text-left text-body font-medium no-underline transition-all duration-150;
 }
 </style>

@@ -96,7 +96,7 @@
                 </button>
               </div>
             </td>
-            <td class="text-muted text-[13px]">{{ formatDateTime(user.updatedAt) }}</td>
+            <td class="text-muted text-caption">{{ formatDateTime(user.updatedAt) }}</td>
           </tr>
         </tbody>
       </table>

@@ -7,15 +7,11 @@
       <!-- Page header -->
       <div class="flex items-start justify-between gap-4 flex-wrap py-4 mb-1">
         <div>
-          <h1 class="text-[20px] font-bold text-[#111] leading-tight">Matching Score Weights</h1>
-          <p class="text-[13px] text-[#888] mt-1 max-w-xl leading-relaxed">
-            Set how much each factor counts toward a freelancer's match score.
-            Dragging one factor automatically adjusts the others — the total always stays at 100.
-          </p>
+          <h1 class="text-title font-bold text-[#111] leading-tight">Matching Score Weights</h1>
         </div>
         <div class="text-right shrink-0">
-          <div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium">Last saved</div>
-          <div class="text-[13px] font-semibold text-[#444] mt-0.5">{{ lastSavedLabel }}</div>
+          <div class="text-meta text-[#bbb] uppercase tracking-wide font-medium">Last saved</div>
+          <div class="text-caption font-semibold text-[#444] mt-0.5">{{ lastSavedLabel }}</div>
         </div>
       </div>
 
@@ -23,19 +19,19 @@
       <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm p-6 mb-4">
         <div class="flex items-center gap-2 mb-4">
           <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m-6 4h6m-2 5l-4-4h3V7"/></svg>
-          <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Formula</span>
+          <span class="text-caption font-bold text-[#444] uppercase tracking-wide">Formula</span>
         </div>
 
         <div class="bg-[#f8f9fa] border border-[#eee] rounded-lg px-5 py-4 overflow-x-auto">
-          <div class="flex items-center flex-wrap gap-x-2 gap-y-1.5 text-[15px] font-medium text-[#222] whitespace-nowrap">
+          <div class="flex items-center flex-wrap gap-x-2 gap-y-1.5 text-body font-medium text-[#222] whitespace-nowrap">
             <span class="italic">Score</span>
             <span class="text-[#bbb]">=</span>
             <template v-for="(f, i) in factors" :key="f.key">
               <span v-if="i > 0" class="text-[#bbb]">+</span>
               <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md" :style="{ background: f.bg, color: f.text }">
-                W<sub class="text-[10px]">{{ f.short }}</sub>
+                W<sub class="text-meta">{{ f.short }}</sub>
                 <span class="text-[#bbb] mx-0.5">×</span>
-                S<sub class="text-[10px]">{{ f.short }}</sub>
+                S<sub class="text-meta">{{ f.short }}</sub>
               </span>
             </template>
           </div>
@@ -44,8 +40,8 @@
         <!-- Weight balance bar — always exactly 100 now, no invalid state possible -->
         <div class="mt-5">
           <div class="flex items-center justify-between mb-1.5">
-            <span class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium">Weight distribution</span>
-            <span class="text-[12px] font-bold text-green-600">{{ totalWeight }} / 100</span>
+            <span class="text-meta text-[#bbb] uppercase tracking-wide font-medium">Weight distribution</span>
+            <span class="text-caption font-bold text-green-600">{{ totalWeight }} / 100</span>
           </div>
           <div class="w-full h-3 rounded-full overflow-hidden bg-[#eee] flex">
             <div v-for="f in factors" :key="f.key"
@@ -67,8 +63,8 @@
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" v-html="f.icon"></svg>
             </span>
             <div class="flex-1 min-w-0">
-              <div class="text-[13px] font-bold text-[#222] leading-tight">{{ f.label }}</div>
-              <div class="text-[11px] text-[#999] leading-tight mt-0.5">{{ f.description }}</div>
+              <div class="text-caption font-bold text-[#222] leading-tight">{{ f.label }}</div>
+              <div class="text-meta text-[#999] leading-tight mt-0.5">{{ f.description }}</div>
             </div>
             <button type="button" @click="toggleLock(f.key)"
               class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border transition-colors"
@@ -82,8 +78,8 @@
               :class="locks[f.key] ? 'opacity-50' : ''">
               <input type="number" min="0" max="100" step="5" :value="weights[f.key]" :disabled="locks[f.key]"
                 @input="redistribute(f.key, $event.target.valueAsNumber)"
-                class="w-14 text-center text-[13px] font-bold text-[#222] py-1.5 border-none focus:outline-none focus:ring-0 disabled:cursor-not-allowed" />
-              <span class="text-[12px] text-[#999] pr-2.5">%</span>
+                class="w-14 text-center text-caption font-bold text-[#222] py-1.5 border-none focus:outline-none focus:ring-0 disabled:cursor-not-allowed" />
+              <span class="text-caption text-[#999] pr-2.5">%</span>
             </div>
           </div>
 
@@ -104,7 +100,7 @@
           </div>
 
           <!-- Number labels every 10, positioned at the exact same % as their big tick above -->
-          <div class="relative text-[13px] text-[#999]" style="height: 18px; margin-top: 6px;">
+          <div class="relative text-caption text-[#999]" style="height: 18px; margin-top: 6px;">
             <span v-for="n in 11" :key="n" class="absolute"
               :style="{
                 left: (n - 1) * 10 + '%',
@@ -117,22 +113,22 @@
       <!-- Actions -->
       <div class="flex items-center justify-between flex-wrap gap-2 mb-6">
         <button @click="distributeEvenly"
-          class="flex items-center gap-1.5 text-[13px] font-medium text-[#666] hover:text-[#333] transition">
+          class="flex items-center gap-1.5 text-caption font-medium text-[#666] hover:text-[#333] transition">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
           Split evenly (25 / 25 / 25 / 25)
         </button>
 
         <div class="flex items-center gap-3">
-          <span class="text-[12px] font-semibold text-green-600 flex items-center gap-1">
+          <span class="text-caption font-semibold text-green-600 flex items-center gap-1">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
             {{ totalWeight }} / 100
           </span>
           <button v-if="isDirty" @click="reset"
-            class="px-3.5 py-2 text-[13px] font-medium rounded-lg border border-[#e0e0e0] text-[#666] hover:bg-[#f5f5f5] transition">
+            class="px-3.5 py-2 text-caption font-medium rounded-lg border border-[#e0e0e0] text-[#666] hover:bg-[#f5f5f5] transition">
             Reset
           </button>
           <button @click="save" :disabled="!isDirty || saving"
-            class="px-5 py-2 text-[13px] font-semibold rounded-lg bg-[#1a1a2e] text-white hover:bg-[#111122] transition disabled:opacity-40 disabled:cursor-not-allowed">
+            class="px-5 py-2 text-caption font-semibold rounded-lg bg-[#1a1a2e] text-white hover:bg-[#111122] transition disabled:opacity-40 disabled:cursor-not-allowed">
             {{ saving ? 'Saving…' : 'Save Weights' }}
           </button>
         </div>
@@ -142,28 +138,28 @@
       <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden">
         <div class="px-5 py-3.5 border-b border-[#f0f0f0] flex items-center gap-2">
           <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-          <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Sample freelancers</span>
-          <span class="ml-auto text-[11px] text-[#bbb]">Scores update instantly as you adjust the weights above</span>
+          <span class="text-caption font-bold text-[#444] uppercase tracking-wide">Sample freelancers</span>
+          <span class="ml-auto text-meta text-[#bbb]">Scores update instantly as you adjust the weights above</span>
         </div>
 
         <div class="divide-y divide-[#f0f0f0]">
           <div v-for="p in sampleProfiles" :key="p.name" class="px-5 py-4 flex items-center gap-4">
             <div class="flex-1 min-w-0">
-              <div class="text-[13px] font-bold text-[#222]">{{ p.name }}</div>
-              <div class="text-[11px] text-[#999] mt-0.5">{{ p.description }}</div>
+              <div class="text-caption font-bold text-[#222]">{{ p.name }}</div>
+              <div class="text-meta text-[#999] mt-0.5">{{ p.description }}</div>
               <div class="flex flex-wrap gap-1.5 mt-2">
                 <span v-for="f in factors" :key="f.key"
-                  class="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                  class="text-meta font-semibold px-2 py-0.5 rounded-full"
                   :style="{ background: f.bg, color: f.text }">
                   {{ f.short }}: {{ formatCriterionScore(p.scores[f.key]) }}
                 </span>
               </div>
             </div>
             <div class="text-right shrink-0 w-20">
-              <div class="text-[24px] font-bold leading-none" :style="{ color: scoreColorFor(profileScore(p)) }">
+              <div class="text-title font-bold leading-none" :style="{ color: scoreColorFor(profileScore(p)) }">
                 {{ profileScore(p) }}
               </div>
-              <div class="text-[10px] text-[#bbb] uppercase tracking-wide mt-0.5">score</div>
+              <div class="text-meta text-[#bbb] uppercase tracking-wide mt-0.5">score</div>
             </div>
           </div>
         </div>

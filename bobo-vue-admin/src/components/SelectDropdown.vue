@@ -109,7 +109,7 @@ onUnmounted(() => document.removeEventListener('mousedown', onOutside))
   background: #fff;
   border: 1.5px solid #ddd;
   border-radius: 10px;
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 500;
   color: #333;
   cursor: pointer;
@@ -159,7 +159,7 @@ onUnmounted(() => document.removeEventListener('mousedown', onOutside))
   justify-content: space-between;
   padding: 8px 12px;
   border-radius: 8px;
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 450;
   color: #333;
   cursor: pointer;

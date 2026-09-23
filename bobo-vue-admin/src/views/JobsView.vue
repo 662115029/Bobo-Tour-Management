@@ -111,8 +111,8 @@
                   <button class="btn-action delete" @click="deleteJob(job.job_id)">Delete</button>
                 </div>
               </td>
-              <td class="text-muted text-[11px]">{{ formatDate(job.job_start_date) }}</td>
-              <td class="text-muted text-[11px]">{{ formatDateTime(job.job_updated_at) }}</td>
+              <td class="text-muted text-meta">{{ formatDate(job.job_start_date) }}</td>
+              <td class="text-muted text-meta">{{ formatDateTime(job.job_updated_at) }}</td>
             </tr>
           </template>
         </tbody>

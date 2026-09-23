@@ -1,18 +1,18 @@
 <!-- components/BreadcrumbBar.vue -->
 <template>
   <nav
-    class="mb-[15px] flex items-center gap-1 bg-[#1a1a2e] px-5 py-[15px] text-[15px] font-medium tracking-wide text-white"
+    class="mb-[15px] flex items-center gap-1 bg-[#1a1a2e] px-5 py-[15px] text-body font-medium tracking-wide text-white"
   >
     <span v-for="(crumb, i) in crumbs" :key="i" class="flex items-center gap-1">
       <router-link
         v-if="crumb.to"
         :to="crumb.to"
-        class="text-[15px] font-medium text-[#aaa] no-underline hover:text-white"
+        class="text-body font-medium text-[#aaa] no-underline hover:text-white"
       >
         {{ crumb.label }}
       </router-link>
-      <span v-else class="text-[15px] font-medium text-white">{{ crumb.label }}</span>
-      <span v-if="i < crumbs.length - 1" class="text-[15px] text-[#666]">›</span>
+      <span v-else class="text-body font-medium text-white">{{ crumb.label }}</span>
+      <span v-if="i < crumbs.length - 1" class="text-body text-[#666]">›</span>
     </span>
   </nav>
 </template>

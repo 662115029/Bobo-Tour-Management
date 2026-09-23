@@ -99,7 +99,7 @@
               </template>
               <span v-else>{{ log.target_name || log.target_id || "-" }}</span>
             </td>
-            <td class="text-muted text-[11px] max-w-[200px]">
+            <td class="text-muted text-meta max-w-[200px]">
               <span v-if="log.note" class="block truncate cursor-default" style="max-width:200px"
                 @mouseenter="showTooltip($event, log.note)"
                 @mouseleave="hideTooltip">
@@ -113,7 +113,7 @@
                 <span class="overflow-hidden text-ellipsis whitespace-nowrap">{{ log.admin_name || "-" }}</span>
               </div>
             </td>
-            <td class="text-muted text-[11px]">{{ formatDateTime(log.created_at) }}</td>
+            <td class="text-muted text-meta">{{ formatDateTime(log.created_at) }}</td>
           </tr>
           <tr v-if="filteredLogs.length === 0">
             <td colspan="6" class="empty">No logs found.</td>
@@ -198,9 +198,9 @@
 
         <!-- Topbar -->
         <div class="relative flex items-center justify-center px-5 py-3.5 border-b border-[#f0f0f0]">
-          <span class="text-[11px] font-bold uppercase tracking-widest text-[#e53935]">Job</span>
+          <span class="text-meta font-bold uppercase tracking-widest text-[#e53935]">Job</span>
           <button
-            class="absolute right-4 w-7 h-7 rounded-full bg-[#f5f5f5] text-[#888] text-[13px] flex items-center justify-center border-none cursor-pointer hover:bg-[#ebebeb] hover:text-[#111] transition-colors"
+            class="absolute right-4 w-7 h-7 rounded-full bg-[#f5f5f5] text-[#888] text-caption flex items-center justify-center border-none cursor-pointer hover:bg-[#ebebeb] hover:text-[#111] transition-colors"
             @click="deletedJobModal = null">✕</button>
         </div>
 
@@ -211,8 +211,8 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
             </svg>
           </div>
-          <div class="text-[17px] font-bold text-[#111] text-center leading-snug">This job has been deleted</div>
-          <div class="text-[13px] text-[#999] text-center mt-1.5 leading-relaxed">This job no longer exists in the system.</div>
+          <div class="text-header font-bold text-[#111] text-center leading-snug">This job has been deleted</div>
+          <div class="text-caption text-[#999] text-center mt-1.5 leading-relaxed">This job no longer exists in the system.</div>
         </div>
 
         <!-- Divider -->
@@ -221,27 +221,27 @@
         <!-- Info rows -->
         <div class="px-5 py-4 flex flex-col gap-3">
           <div class="flex items-center justify-between bg-[#fafafa] rounded-xl px-4 py-3">
-            <span class="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#bbb]">Job Name</span>
-            <span class="text-[13px] font-semibold text-[#222] max-w-[190px] truncate text-right">{{ deletedJobModal.target_name || deletedJobModal.target_id || '—' }}</span>
+            <span class="text-meta font-semibold uppercase tracking-[0.08em] text-[#bbb]">Job Name</span>
+            <span class="text-caption font-semibold text-[#222] max-w-[190px] truncate text-right">{{ deletedJobModal.target_name || deletedJobModal.target_id || '—' }}</span>
           </div>
           <div class="flex items-center justify-between bg-[#fafafa] rounded-xl px-4 py-3">
-            <span class="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#bbb]">Deleted by</span>
-            <span class="text-[13px] font-semibold text-[#222]">{{ deletedJobModal.admin_name || '—' }}</span>
+            <span class="text-meta font-semibold uppercase tracking-[0.08em] text-[#bbb]">Deleted by</span>
+            <span class="text-caption font-semibold text-[#222]">{{ deletedJobModal.admin_name || '—' }}</span>
           </div>
           <div class="flex items-center justify-between bg-[#fafafa] rounded-xl px-4 py-3">
-            <span class="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#bbb]">Deleted at</span>
-            <span class="text-[13px] font-semibold text-[#222]">{{ formatDateTime(deletedJobModal.created_at) }}</span>
+            <span class="text-meta font-semibold uppercase tracking-[0.08em] text-[#bbb]">Deleted at</span>
+            <span class="text-caption font-semibold text-[#222]">{{ formatDateTime(deletedJobModal.created_at) }}</span>
           </div>
           <div v-if="deletedJobModal.note" class="flex items-start justify-between bg-[#fafafa] rounded-xl px-4 py-3 gap-3">
-            <span class="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#bbb] shrink-0 mt-0.5">Note</span>
-            <span class="text-[13px] text-[#555] text-right leading-relaxed">{{ deletedJobModal.note }}</span>
+            <span class="text-meta font-semibold uppercase tracking-[0.08em] text-[#bbb] shrink-0 mt-0.5">Note</span>
+            <span class="text-caption text-[#555] text-right leading-relaxed">{{ deletedJobModal.note }}</span>
           </div>
         </div>
 
         <!-- Footer -->
         <div class="px-5 pb-5 pt-1">
           <button
-            class="w-full py-3 bg-[#f5f5f5] text-[#666] text-[13px] font-semibold rounded-xl border-none cursor-pointer transition-colors hover:bg-[#ebebeb] active:scale-[0.98]"
+            class="w-full py-3 bg-[#f5f5f5] text-[#666] text-caption font-semibold rounded-xl border-none cursor-pointer transition-colors hover:bg-[#ebebeb] active:scale-[0.98]"
             @click="deletedJobModal = null">Close</button>
         </div>
 
@@ -250,7 +250,7 @@
 
     <!-- Note Tooltip -->
     <Teleport to="body">
-      <div v-if="tooltip.visible" class="fixed z-[9999] w-72 rounded-lg bg-[#1a1a2e] text-white text-[11px] px-3 py-2 shadow-xl leading-relaxed whitespace-pre-wrap break-words pointer-events-none"
+      <div v-if="tooltip.visible" class="fixed z-[9999] w-72 rounded-lg bg-[#1a1a2e] text-white text-meta px-3 py-2 shadow-xl leading-relaxed whitespace-pre-wrap break-words pointer-events-none"
         :style="{ top: tooltip.y + 'px', left: tooltip.x + 'px' }">
         {{ tooltip.text }}
       </div>

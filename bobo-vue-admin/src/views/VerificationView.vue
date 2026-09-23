@@ -75,7 +75,7 @@
                 <button class="btn-action verify-style" @click="openDocs(v)">View Docs</button>
               </div>
             </td>
-            <td class="text-muted text-[13px]">{{ v.updated }}</td>
+            <td class="text-muted text-caption">{{ v.updated }}</td>
           </tr>
         </tbody>
       </table>

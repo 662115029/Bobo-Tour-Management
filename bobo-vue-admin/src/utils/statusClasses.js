@@ -1,4 +1,4 @@
-export const BADGE_BASE = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold w-fit'
+export const BADGE_BASE = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-meta font-semibold w-fit'
 
 const JOB_STATUS_LABEL_MAP = {
   OPEN:        'Open',
@@ -29,9 +29,9 @@ export function getJobStatusClass(status) {
 }
 
 const VERIFY_STATUS_LABEL_MAP = {
-  PENDING:      'Pending',
-  VERIFIED:     'Verified',
-  NOT_VERIFIED: 'Not Verified',
+  PENDING:      'PENDING',
+  VERIFIED:     'VERIFIED',
+  NOT_VERIFIED: 'NOT VERIFIED',
 }
 
 export function formatVerifyStatus(status) {

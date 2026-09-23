@@ -6,7 +6,7 @@
       <div class="modal-header">
         <div>
           <h3>{{ user.name }} - Documents</h3>
-          <div class="text-[12px] mt-0.5 font-medium"
+          <div class="text-caption mt-0.5 font-medium"
             :class="allApproved ? 'text-[#2e7d32]' : 'text-[#999]'">
             {{ approvedCount }} / {{ requiredCount }} Approved
             <span v-if="allApproved"> ✓ Will be VERIFIED</span>
@@ -40,19 +40,19 @@
               <svg class="w-7 h-7 text-[#ddd]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                 <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
               </svg>
-              <span class="text-[10px] text-[#ccc] font-medium">Not uploaded</span>
+              <span class="text-meta text-[#ccc] font-medium">Not uploaded</span>
             </div>
             <span v-if="doc.status" class="absolute top-1.5 left-1.5 doc-badge" :class="doc.status?.toLowerCase()">{{ doc.status }}</span>
           </div>
 
           <!-- Info -->
           <div class="p-2 flex flex-col gap-0.5">
-            <span class="text-[11px] font-semibold text-[#222] leading-snug truncate">
+            <span class="text-meta font-semibold text-[#222] leading-snug truncate">
               {{ doc.type?.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) }}
             </span>
-            <span class="text-[10px] text-[#bbb]">{{ doc.uploaded || '–' }}</span>
-            <span v-if="doc.reviewedBy" class="text-[10px] text-[#bbb]">By {{ doc.reviewedBy }}</span>
-            <span v-if="doc.status === 'REJECTED' && doc.rejectReason" class="text-[10px] text-red-400 leading-snug mt-0.5">Reason: {{ doc.rejectReason }}</span>
+            <span class="text-meta text-[#bbb]">{{ doc.uploaded || '–' }}</span>
+            <span v-if="doc.reviewedBy" class="text-meta text-[#bbb]">By {{ doc.reviewedBy }}</span>
+            <span v-if="doc.status === 'REJECTED' && doc.rejectReason" class="text-meta text-red-400 leading-snug mt-0.5">Reason: {{ doc.rejectReason }}</span>
           </div>
 
           <!-- Actions -->
@@ -64,25 +64,25 @@
                   type="text"
                   maxlength="500"
                   placeholder="Reason for rejection..."
-                  class="w-full rounded-lg border border-[#eee] bg-[#f8f8f8] px-2.5 py-1.5 pr-12 text-[11px] outline-none focus:border-red-300 focus:ring-1 focus:ring-red-100"
+                  class="w-full rounded-lg border border-[#eee] bg-[#f8f8f8] px-2.5 py-1.5 pr-12 text-meta outline-none focus:border-red-300 focus:ring-1 focus:ring-red-100"
                   @keydown.esc="rejectingDoc = null; rejectReason = ''"
                 />
-                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] pointer-events-none"
+                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-meta pointer-events-none"
                   :class="rejectReason.length >= 480 ? 'text-red-400 font-semibold' : 'text-[#bbb]'">
                   {{ 500 - rejectReason.length }}
                 </span>
               </div>
               <div class="flex justify-end gap-1">
-                <button class="btn-reject-row !flex !justify-center !text-[11px] !px-2 !py-1"
+                <button class="btn-reject-row !flex !justify-center !text-meta !px-2 !py-1"
                   :disabled="!rejectReason.trim()"
                   :class="{ 'opacity-40 cursor-not-allowed': !rejectReason.trim() }"
                   @click="confirmReject(doc)">Confirm</button>
-                <button class="btn-cancel-sm !flex !text-[11px] !px-2 !py-1"
+                <button class="btn-cancel-sm !flex !text-meta !px-2 !py-1"
                   @click="rejectingDoc = null; rejectReason = ''">Cancel</button>
               </div>
             </div>
             <div v-else class="flex gap-1">
-              <button class="btn-approve-row !flex flex-1 justify-center !text-[11px] !px-1 !py-1"
+              <button class="btn-approve-row !flex flex-1 justify-center !text-meta !px-1 !py-1"
                 :disabled="doc.status === 'APPROVED'"
                 :class="{ 'opacity-40 cursor-not-allowed': doc.status === 'APPROVED' }"
                 @click="$emit('approve', doc)">
@@ -91,7 +91,7 @@
                 </svg>
                 Approve
               </button>
-              <button class="btn-reject-row !flex flex-1 justify-center !text-[11px] !px-1 !py-1"
+              <button class="btn-reject-row !flex flex-1 justify-center !text-meta !px-1 !py-1"
                 :disabled="doc.status === 'REJECTED'"
                 :class="{ 'opacity-40 cursor-not-allowed': doc.status === 'REJECTED' }"
                 @click="doc.status !== 'REJECTED' && (rejectingDoc = doc.id, rejectReason = doc.rejectReason || '')">
@@ -100,7 +100,7 @@
                 </svg>
                 Reject
               </button>
-              <button class="btn-reset-row !flex !justify-center !text-[11px] !px-1.5 !py-1"
+              <button class="btn-reset-row !flex !justify-center !text-meta !px-1.5 !py-1"
                 :disabled="doc.status === 'PENDING'"
                 :class="{ 'opacity-40 cursor-not-allowed': doc.status === 'PENDING' }"
                 title="Reset to Pending"
@@ -113,7 +113,7 @@
           </div>
 
           <div v-else class="px-2 pb-2 mt-auto">
-            <span class="text-[10px] text-[#ccc] italic">Awaiting upload</span>
+            <span class="text-meta text-[#ccc] italic">Awaiting upload</span>
           </div>
 
         </div>
@@ -141,16 +141,16 @@
         <div class="flex items-center justify-between mt-3 px-1">
           <div class="flex-1"></div>
           <div class="flex flex-col items-center gap-0.5 flex-1">
-            <span class="text-white/90 text-[13px] font-semibold text-center">
+            <span class="text-white/90 text-caption font-semibold text-center">
               {{ lightboxDoc.type?.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) }}
             </span>
-            <span v-if="lightboxDoc.status === 'REJECTED' && lightboxDoc.rejectReason" class="text-red-400 text-[11px] text-center">
+            <span v-if="lightboxDoc.status === 'REJECTED' && lightboxDoc.rejectReason" class="text-red-400 text-meta text-center">
               Reason: {{ lightboxDoc.rejectReason }}
             </span>
           </div>
           <div class="flex flex-col items-end gap-0.5 flex-1">
-            <span v-if="lightboxDoc.uploaded" class="text-white/40 text-[11px]">Uploaded {{ lightboxDoc.uploaded }}</span>
-            <span v-if="lightboxDoc.reviewedBy" class="text-white/40 text-[11px]">By {{ lightboxDoc.reviewedBy }}</span>
+            <span v-if="lightboxDoc.uploaded" class="text-white/40 text-meta">Uploaded {{ lightboxDoc.uploaded }}</span>
+            <span v-if="lightboxDoc.reviewedBy" class="text-white/40 text-meta">By {{ lightboxDoc.reviewedBy }}</span>
           </div>
         </div>
       </div>

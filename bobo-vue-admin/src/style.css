@@ -1,5 +1,18 @@
 @import "tailwindcss";
 
+@theme {
+  --text-meta: 11px;
+  --text-meta--line-height: 1.4;
+  --text-caption: 13px;
+  --text-caption--line-height: 1.4;
+  --text-body: 15px;
+  --text-body--line-height: 1.5;
+  --text-header: 18px;
+  --text-header--line-height: 1.4;
+  --text-title: 22px;
+  --text-title--line-height: 1.3;
+}
+
 @keyframes shimmer {
   0% { background-position: -400px 0; }
   100% { background-position: 400px 0; }
@@ -14,7 +27,7 @@
   }
 
   .search-input {
-    @apply w-[280px] rounded-lg border-[1.5px] border-[#999] bg-white px-3.5 py-2.5 text-sm shadow-[0_1px_6px_rgba(0,0,0,0.12)] outline-none transition-[border-color,box-shadow] duration-150;
+    @apply w-[280px] rounded-lg border-[1.5px] border-[#999] bg-white px-3.5 py-2.5 text-body shadow-[0_1px_6px_rgba(0,0,0,0.12)] outline-none transition-[border-color,box-shadow] duration-150;
   }
 
   .search-input:focus {
@@ -26,11 +39,11 @@
   }
 
   .filter-select {
-    @apply min-w-[130px] rounded-md border border-[#ddd] px-3.5 py-2.5 text-sm;
+    @apply min-w-[130px] rounded-md border border-[#ddd] px-3.5 py-2.5 text-body;
   }
 
   .filter-select-jobs {
-    @apply rounded-lg border-[1.5px] border-[#ddd] bg-white px-3.5 py-2 text-sm font-medium text-[#333] shadow-[0_1px_4px_rgba(0,0,0,0.08)] outline-none transition-[border-color,box-shadow] duration-150 cursor-pointer;
+    @apply rounded-lg border-[1.5px] border-[#ddd] bg-white px-3.5 py-2 text-body font-medium text-[#333] shadow-[0_1px_4px_rgba(0,0,0,0.08)] outline-none transition-[border-color,box-shadow] duration-150 cursor-pointer;
     appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
@@ -47,7 +60,7 @@
   }
 
   .col-filter-btn {
-    @apply ml-1.5 inline-block max-w-[110px] cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap rounded-full border border-[#ccc] bg-transparent px-2 py-0.5 align-middle text-[11px] font-medium leading-none text-[#666];
+    @apply ml-1.5 inline-block max-w-[110px] cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap rounded-full border border-[#ccc] bg-transparent px-2 py-0.5 align-middle text-meta font-medium leading-none text-[#666];
   }
 
   .col-filter-btn:hover {
@@ -59,7 +72,7 @@
   }
 
   .reset-btn {
-    @apply shrink-0 cursor-pointer whitespace-nowrap rounded-md border-none bg-[#ffebee] px-3 py-1.5 text-xs font-semibold text-[#c62828];
+    @apply shrink-0 cursor-pointer whitespace-nowrap rounded-md border-none bg-[#ffebee] px-3 py-1.5 text-caption font-semibold text-[#c62828];
   }
 
   .reset-btn:hover {
@@ -75,7 +88,7 @@
   }
 
   .col-dropdown-item {
-    @apply block w-full cursor-pointer border-none bg-transparent px-3.5 py-2 text-left text-[13px];
+    @apply block w-full cursor-pointer border-none bg-transparent px-3.5 py-2 text-left text-caption;
   }
 
   .col-dropdown-item:hover {
@@ -109,7 +122,7 @@
   }
 
   .sort-label {
-    @apply ml-1 text-[11px];
+    @apply ml-1 text-meta;
   }
 
   .sort-label-dim {
@@ -141,7 +154,7 @@
   }
 
   .table th {
-    @apply relative bg-white text-xs font-semibold tracking-wide text-[#666];
+    @apply relative bg-white text-caption font-semibold tracking-wide text-[#666];
   }
 
   .table th:has(.col-filter-btn) {
@@ -186,7 +199,7 @@
   }
 
   .jobs-table td:nth-child(2) {
-    @apply text-[13px] text-[#888];
+    @apply text-caption text-[#888];
   }
 
   .verify-table th {
@@ -223,7 +236,7 @@
   /* ─── Badge - Job Status ──────────────────────────────── */
 
   .badge {
-    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide;
+    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-meta font-semibold uppercase tracking-wide;
   }
 
   .badge.open        { @apply bg-blue-100   text-blue-800;   }
@@ -244,7 +257,7 @@
   /* ─── Doc Badge - Document Status ────────────────────── */
 
   .doc-badge {
-    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide;
+    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-meta font-semibold uppercase tracking-wide;
   }
 
   .doc-badge.pending  { @apply bg-amber-100 text-amber-800; }
@@ -254,7 +267,7 @@
   /* ─── Action Badge - Log Actions ─────────────────────── */
 
   .action-badge {
-    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide;
+    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-meta font-semibold uppercase tracking-wide;
   }
 
   .action-approve { @apply bg-green-100  text-green-800;  }
@@ -270,7 +283,7 @@
   /* ─── Type Tag - Log Types ───────────────────────────── */
 
   .type-tag {
-    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide;
+    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-meta font-semibold uppercase tracking-wide;
   }
 
   .type-freelancer { @apply bg-sky-100     text-sky-800;     }
@@ -283,7 +296,7 @@
   /* ─── Info Tag - Language / Area chips ───────────────── */
 
   .info-tag {
-    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide;
+    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-meta font-semibold uppercase tracking-wide;
   }
 
   .info-tag.language { @apply bg-indigo-50  text-indigo-700; }
@@ -292,7 +305,7 @@
   /* ─── Payment Badge ───────────────────────────────────── */
 
   .payment-badge {
-    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide;
+    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-meta font-semibold uppercase tracking-wide;
   }
 
   .payment-badge.confirmed { @apply bg-green-100  text-green-800;  }
@@ -303,7 +316,7 @@
   /* ─── Application Badge ───────────────────────────────── */
 
   .application-badge {
-    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide;
+    @apply inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-meta font-semibold uppercase tracking-wide;
   }
 
   .application-badge.accepted { @apply bg-green-100 text-green-800; }
@@ -321,7 +334,7 @@
   }
 
   .tab {
-    @apply cursor-pointer border-none bg-transparent py-3 text-sm text-[#666];
+    @apply cursor-pointer border-none bg-transparent py-3 text-body text-[#666];
   }
 
   .tab.active {
@@ -335,7 +348,7 @@
   }
 
   .user-avatar {
-    @apply flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#6c757d] text-xs font-semibold text-white;
+    @apply flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#6c757d] text-caption font-semibold text-white;
   }
 
   /* ─── Action buttons ──────────────────────────────────── */
@@ -345,7 +358,7 @@
   }
 
   .btn-action {
-    @apply cursor-pointer rounded-[5px] border-none px-2.5 py-1 text-xs font-medium;
+    @apply cursor-pointer rounded-[5px] border-none px-2.5 py-1 text-caption font-medium;
   }
 
   .btn-action.view {
@@ -391,11 +404,11 @@
   /* ─── Approve / Reject row buttons ───────────────────── */
 
   .btn-reset-row {
-    @apply inline-flex items-center rounded-md border border-[#ddd] bg-white px-2 py-1 text-[11px] font-medium text-[#888] transition-colors hover:bg-[#f5f5f5] hover:text-[#555];
+    @apply inline-flex items-center rounded-md border border-[#ddd] bg-white px-2 py-1 text-meta font-medium text-[#888] transition-colors hover:bg-[#f5f5f5] hover:text-[#555];
   }
 
   .btn-approve-row {
-    @apply inline-flex items-center cursor-pointer rounded-[5px] border-none bg-green-100 px-3 py-1.5 text-xs font-medium text-green-800 transition-all duration-200;
+    @apply inline-flex items-center cursor-pointer rounded-[5px] border-none bg-green-100 px-3 py-1.5 text-caption font-medium text-green-800 transition-all duration-200;
   }
 
   .btn-approve-row:hover:not(:disabled) {
@@ -407,7 +420,7 @@
   }
 
   .btn-reject-row {
-    @apply inline-flex items-center cursor-pointer rounded-[5px] border-none bg-red-100 px-3 py-1.5 text-xs font-medium text-red-800 transition-all duration-200;
+    @apply inline-flex items-center cursor-pointer rounded-[5px] border-none bg-red-100 px-3 py-1.5 text-caption font-medium text-red-800 transition-all duration-200;
   }
 
   .btn-reject-row:hover:not(:disabled) {
@@ -441,15 +454,15 @@
   }
 
   .mini-modal-title {
-    @apply m-0 flex-1 pr-3 text-base font-semibold text-[#111];
+    @apply m-0 flex-1 pr-3 text-body font-semibold text-[#111];
   }
 
   .close-btn {
-    @apply shrink-0 cursor-pointer border-none bg-transparent text-base text-[#888];
+    @apply shrink-0 cursor-pointer border-none bg-transparent text-body text-[#888];
   }
 
   .mini-desc {
-    @apply m-0 mb-4 border-b border-[#eee] pb-4 text-[13px] leading-relaxed text-[#666];
+    @apply m-0 mb-4 border-b border-[#eee] pb-4 text-caption leading-relaxed text-[#666];
   }
 
   .mini-grid {
@@ -461,11 +474,11 @@
   }
 
   .mini-item label {
-    @apply mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#999];
+    @apply mb-1 block text-meta font-semibold uppercase tracking-wide text-[#999];
   }
 
   .mini-item span {
-    @apply text-[13px] text-[#222];
+    @apply text-caption text-[#222];
   }
 
   .mini-modal-footer {
@@ -473,7 +486,7 @@
   }
 
   .btn-full-view {
-    @apply cursor-pointer border-none bg-transparent text-[13px] font-medium text-[#06c];
+    @apply cursor-pointer border-none bg-transparent text-caption font-medium text-[#06c];
   }
 
   .btn-full-view:hover {
@@ -489,7 +502,7 @@
   }
 
   .modal h3 {
-    @apply m-0 mb-3 text-xl;
+    @apply m-0 mb-3 text-title;
   }
 
   .modal p {
@@ -497,7 +510,7 @@
   }
 
   .modal-warning {
-    @apply mb-6 text-xs !text-[#dc3545];
+    @apply mb-6 text-caption !text-[#dc3545];
   }
 
   .modal-actions {
@@ -509,19 +522,19 @@
   }
 
   .modal-header h3 {
-    @apply m-0 mb-1.5 text-lg;
+    @apply m-0 mb-1.5 text-header;
   }
 
   .btn-cancel {
-    @apply cursor-pointer rounded-md border border-[#ddd] bg-white px-6 py-2.5 text-sm;
+    @apply cursor-pointer rounded-md border border-[#ddd] bg-white px-6 py-2.5 text-body;
   }
 
   .btn-confirm {
-    @apply cursor-pointer rounded-md border-none px-6 py-2.5 text-sm text-white;
+    @apply cursor-pointer rounded-md border-none px-6 py-2.5 text-body text-white;
   }
 
   .btn-confirm-delete {
-    @apply cursor-pointer rounded-md border-none bg-[#dc3545] px-6 py-2.5 text-sm text-white;
+    @apply cursor-pointer rounded-md border-none bg-[#dc3545] px-6 py-2.5 text-body text-white;
   }
 
   .btn-confirm-delete:hover {
@@ -555,7 +568,7 @@
   }
 
   .doc-type-cell {
-    @apply text-sm font-semibold text-[#222] truncate;
+    @apply text-body font-semibold text-[#222] truncate;
   }
 
   .doc-file-cell {
@@ -575,7 +588,7 @@
   }
 
   .doc-uploaded-cell {
-    @apply text-xs text-[#666];
+    @apply text-caption text-[#666];
   }
 
   .doc-actions-cell {
@@ -609,7 +622,7 @@
   }
 
   .avatar-initial {
-    @apply text-[22px] font-bold text-[#555];
+    @apply text-title font-bold text-[#555];
   }
 
   .profile-info {
@@ -617,11 +630,11 @@
   }
 
   .profile-name {
-    @apply m-0 mb-1 text-base font-semibold text-[#111];
+    @apply m-0 mb-1 text-body font-semibold text-[#111];
   }
 
   .profile-bio {
-    @apply m-0 line-clamp-2 text-xs leading-normal text-[#666];
+    @apply m-0 line-clamp-2 text-caption leading-normal text-[#666];
   }
 
   .profile-bio.muted {
@@ -653,7 +666,7 @@
   .stat-card--purple { @apply border-l-[3px] border-l-purple-400; }
 
   .stat-label {
-    @apply text-[11px] font-semibold tracking-wide text-[#999];
+    @apply text-meta font-semibold tracking-wide text-[#999];
   }
 
   .stat-value {
@@ -666,11 +679,11 @@
   .stat-card--purple .stat-value { @apply text-purple-800; }
 
   .section-title {
-    @apply m-0 border-b border-[#f0f0f0] px-5 pb-3 pt-4 text-[13px] font-bold uppercase tracking-wide text-[#444];
+    @apply m-0 border-b border-[#f0f0f0] px-5 pb-3 pt-4 text-caption font-bold uppercase tracking-wide text-[#444];
   }
 
   .dash-table td:nth-child(2) {
-    @apply text-[13px] text-[#888];
+    @apply text-caption text-[#888];
   }
 
   .dash-profile-avatar {
@@ -782,24 +795,24 @@
   }
 
   .table th {
-    @apply text-[11px];
+    @apply text-meta;
   }
 
   .action-badge,
   .type-tag {
-    @apply px-2 py-0.5 text-[10px];
+    @apply px-2 py-0.5 text-meta;
   }
 
   .badge {
-    @apply px-2 py-0.5 text-[11px];
+    @apply px-2 py-0.5 text-meta;
   }
 
   .btn-action {
-    @apply px-2 py-0.5 text-[11px];
+    @apply px-2 py-0.5 text-meta;
   }
 
   .user-avatar {
-    @apply h-7 w-7 text-[10px];
+    @apply h-7 w-7 text-meta;
   }
 }
 

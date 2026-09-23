@@ -140,11 +140,11 @@
     <div v-else class="px-5 pb-8">
       <!-- Top Bar -->
       <div class="flex items-center justify-between py-3 mb-5">
-        <button class="flex items-center gap-1.5 text-[13px] text-[#555] hover:text-black cursor-pointer border-none bg-transparent" @click="router.back()">
+        <button class="flex items-center gap-1.5 text-caption text-[#555] hover:text-black cursor-pointer border-none bg-transparent" @click="router.back()">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
           Back
         </button>
-        <button class="btn-action !px-4 !py-2 !text-[13px] !rounded-lg flex items-center gap-1.5"
+        <button class="btn-action !px-4 !py-2 !text-caption !rounded-lg flex items-center gap-1.5"
           :class="em.em_is_active ? 'ban' : 'unban'" @click="showBanModal = true">
           <svg v-if="em.em_is_active" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
           <svg v-else class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
@@ -163,33 +163,33 @@
               <UserAvatar :id="em.em_id" :name="em.em_name" :image-url="em.em_profile_image_url" :size="80" />
               <span class="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-white" :class="em.em_is_active ? 'bg-[#4caf50]' : 'bg-[#bbb]'"></span>
             </div>
-            <h2 class="text-[15px] font-bold text-[#111] mb-1.5">{{ em.em_name }}</h2>
+            <h2 class="text-body font-bold text-[#111] mb-1.5">{{ em.em_name }}</h2>
             <span class="badge mb-3" :class="em.em_verify_status?.toLowerCase()">{{ formatVerifyStatus(em.em_verify_status) }}</span>
-            <p v-if="em.em_bio" class="text-[12px] text-[#777] leading-relaxed">{{ em.em_bio }}</p>
-            <p v-else class="text-[12px] text-[#bbb] italic">No bio provided</p>
+            <p v-if="em.em_bio" class="text-caption text-[#777] leading-relaxed">{{ em.em_bio }}</p>
+            <p v-else class="text-caption text-[#bbb] italic">No bio provided</p>
           </div>
 
           <!-- Stats -->
           <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
             <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
               <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-              <span class="text-[12px] font-bold text-[#444] uppercase tracking-wide">Stats</span>
+              <span class="text-caption font-bold text-[#444] uppercase tracking-wide">Stats</span>
             </div>
             <div class="px-4 py-3 grid grid-cols-3 gap-3 text-center">
               <div>
-                <div class="text-[18px] font-bold text-[#111] flex items-center justify-center gap-1">
+                <div class="text-header font-bold text-[#111] flex items-center justify-center gap-1">
                   {{ Number(em.em_rating_avg || 0).toFixed(1) }}
                   <svg class="w-4 h-4 text-[#f9a825]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
                 </div>
-                <div class="text-[11px] text-[#999] mt-0.5">Rating</div>
+                <div class="text-meta text-[#999] mt-0.5">Rating</div>
               </div>
               <div>
-                <div class="text-[18px] font-bold text-[#111]">{{ jobs.filter(j => j.job_status === 'COMPLETED').length }}</div>
-                <div class="text-[11px] text-[#999] mt-0.5">Completed</div>
+                <div class="text-header font-bold text-[#111]">{{ jobs.filter(j => j.job_status === 'COMPLETED').length }}</div>
+                <div class="text-meta text-[#999] mt-0.5">Completed</div>
               </div>
               <div>
-                <div class="text-[18px] font-bold text-[#111]">{{ jobs.length }}</div>
-                <div class="text-[11px] text-[#999] mt-0.5">Total Jobs</div>
+                <div class="text-header font-bold text-[#111]">{{ jobs.length }}</div>
+                <div class="text-meta text-[#999] mt-0.5">Total Jobs</div>
               </div>
             </div>
           </div>
@@ -198,20 +198,20 @@
           <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
             <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
               <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-              <span class="text-[12px] font-bold text-[#444] uppercase tracking-wide">Account</span>
+              <span class="text-caption font-bold text-[#444] uppercase tracking-wide">Account</span>
             </div>
             <div class="px-4 py-3 flex flex-col gap-3">
               <div v-if="em.em_username" class="flex items-center gap-2.5">
                 <svg class="w-3.5 h-3.5 text-[#ccc] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                <div><div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium">Username</div><div class="text-[13px] text-[#222] font-medium">{{ em.em_username }}</div></div>
+                <div><div class="text-meta text-[#bbb] uppercase tracking-wide font-medium">Username</div><div class="text-caption text-[#222] font-medium">{{ em.em_username }}</div></div>
               </div>
               <div v-if="em.em_email" class="flex items-center gap-2.5">
                 <svg class="w-3.5 h-3.5 text-[#ccc] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                <div><div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium">Email</div><div class="text-[13px] text-[#222] font-medium break-all">{{ em.em_email }}</div></div>
+                <div><div class="text-meta text-[#bbb] uppercase tracking-wide font-medium">Email</div><div class="text-caption text-[#222] font-medium break-all">{{ em.em_email }}</div></div>
               </div>
               <div v-if="em.em_phone" class="flex items-center gap-2.5">
                 <svg class="w-3.5 h-3.5 text-[#ccc] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
-                <div><div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium">Phone</div><div class="text-[13px] text-[#222] font-medium">{{ em.em_phone }}</div></div>
+                <div><div class="text-meta text-[#bbb] uppercase tracking-wide font-medium">Phone</div><div class="text-caption text-[#222] font-medium">{{ em.em_phone }}</div></div>
               </div>
             </div>
           </div>
@@ -220,20 +220,20 @@
           <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
             <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
               <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              <span class="text-[12px] font-bold text-[#444] uppercase tracking-wide">Information</span>
+              <span class="text-caption font-bold text-[#444] uppercase tracking-wide">Information</span>
             </div>
             <div class="px-4 py-3 flex flex-col gap-3">
               <div v-if="em.em_address" class="flex items-start gap-2.5">
                 <svg class="w-3.5 h-3.5 text-[#ccc] shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                <div><div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium">Address</div><div class="text-[13px] text-[#222] font-medium leading-snug">{{ em.em_address }}</div></div>
+                <div><div class="text-meta text-[#bbb] uppercase tracking-wide font-medium">Address</div><div class="text-caption text-[#222] font-medium leading-snug">{{ em.em_address }}</div></div>
               </div>
               <div class="flex items-center gap-2.5">
                 <svg class="w-3.5 h-3.5 text-[#ccc] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                <div><div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium">Joined</div><div class="text-[13px] text-[#222] font-medium">{{ formatDate(em.em_created_at) }}</div></div>
+                <div><div class="text-meta text-[#bbb] uppercase tracking-wide font-medium">Joined</div><div class="text-caption text-[#222] font-medium">{{ formatDate(em.em_created_at) }}</div></div>
               </div>
               <div class="flex items-center gap-2.5">
                 <svg class="w-3.5 h-3.5 text-[#ccc] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8 8 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8 8 0 01-15.357-2m15.357 2H15"/></svg>
-                <div><div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium">Last Updated</div><div class="text-[13px] text-[#222] font-medium">{{ formatDateTime(em.em_updated_at) }}</div></div>
+                <div><div class="text-meta text-[#bbb] uppercase tracking-wide font-medium">Last Updated</div><div class="text-caption text-[#222] font-medium">{{ formatDateTime(em.em_updated_at) }}</div></div>
               </div>
             </div>
           </div>
@@ -242,14 +242,14 @@
           <div v-if="bankAccounts.length" class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
             <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
               <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6l9-3 9 3M3 6v12a1 1 0 001 1h16a1 1 0 001-1V6M3 6h18M8 10v7m4-7v7m4-7v7"/></svg>
-              <span class="text-[12px] font-bold text-[#444] uppercase tracking-wide">Bank Account</span>
+              <span class="text-caption font-bold text-[#444] uppercase tracking-wide">Bank Account</span>
             </div>
             <div class="px-4 py-3 flex flex-col gap-3">
               <div v-for="b in bankAccounts" :key="b.em_bank_account_id" class="flex flex-col gap-0.5">
-                <div class="text-[13px] font-semibold text-[#222]">{{ b.bank_name }}</div>
-                <div class="text-[12px] text-[#555]">{{ b.account_name }}</div>
-                <div class="text-[12px] text-[#888] tracking-wide">{{ b.account_number }}</div>
-                <div class="text-[10px] text-[#bbb] mt-0.5">Updated {{ formatDate(b.updated_at) }}</div>
+                <div class="text-caption font-semibold text-[#222]">{{ b.bank_name }}</div>
+                <div class="text-caption text-[#555]">{{ b.account_name }}</div>
+                <div class="text-caption text-[#888] tracking-wide">{{ b.account_number }}</div>
+                <div class="text-meta text-[#bbb] mt-0.5">Updated {{ formatDate(b.updated_at) }}</div>
               </div>
             </div>
           </div>
@@ -263,26 +263,26 @@
           <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
             <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
               <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-              <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Verification</span>
+              <span class="text-caption font-bold text-[#444] uppercase tracking-wide">Verification</span>
             </div>
             <div class="px-4 py-4 flex flex-col gap-4">
               <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
                 <div class="flex items-center gap-2">
-                  <span class="text-[12px] text-[#999] font-medium">Status:</span>
+                  <span class="text-caption text-[#999] font-medium">Status:</span>
                   <span class="badge" :class="em.em_verify_status?.toLowerCase()">{{ formatVerifyStatus(em.em_verify_status) }}</span>
                 </div>
                 <div v-if="verification?.em_verified_at" class="flex items-center gap-1.5">
-                  <span class="text-[12px] text-[#999] font-medium">Verified:</span>
-                  <span class="text-[13px] font-medium text-[#222]">{{ formatDate(verification.em_verified_at) }}</span>
+                  <span class="text-caption text-[#999] font-medium">Verified:</span>
+                  <span class="text-caption font-medium text-[#222]">{{ formatDate(verification.em_verified_at) }}</span>
                 </div>
                 <div v-if="verification?.reviewed_by_name" class="flex items-center gap-1.5">
-                  <span class="text-[12px] text-[#999] font-medium">Reviewed by:</span>
-                  <span class="text-[13px] font-medium text-[#222]">{{ verification.reviewed_by_name }}</span>
+                  <span class="text-caption text-[#999] font-medium">Reviewed by:</span>
+                  <span class="text-caption font-medium text-[#222]">{{ verification.reviewed_by_name }}</span>
                 </div>
               </div>
               <!-- Documents — 5 cols, click → modal -->
               <div>
-                <div class="text-[12px] font-bold text-[#444] uppercase tracking-wide mb-3">Documents</div>
+                <div class="text-caption font-bold text-[#444] uppercase tracking-wide mb-3">Documents</div>
                 <div class="grid grid-cols-5 gap-2">
                   <button v-for="d in documents" :key="d.em_doc_id" type="button"
                     class="rounded-xl border overflow-hidden bg-white flex flex-col transition-colors text-left"
@@ -294,16 +294,16 @@
                       <div class="absolute inset-0 flex items-center justify-center flex-col gap-1"
                         :style="d.file_url ? 'display:none' : ''">
                         <svg class="w-6 h-6 text-[#ddd]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                        <span class="text-[9px] text-[#ccc] font-medium">Not uploaded</span>
+                        <span class="text-meta text-[#ccc] font-medium">Not uploaded</span>
                       </div>
                       <!-- Status badge overlay -->
                       <span v-if="d.em_doc_status" class="absolute top-1.5 left-1.5 doc-badge" :class="d.em_doc_status?.toLowerCase()">{{ d.em_doc_status }}</span>
                     </div>
                     <div class="p-2 flex flex-col gap-0.5">
-                      <span class="text-[11px] font-semibold text-[#222] leading-snug truncate">{{ formatDocType(d.em_doc_type) }}</span>
-                      <span class="text-[10px] text-[#bbb]">{{ d.em_uploaded_at ? formatDate(d.em_uploaded_at) : '–' }}</span>
-                      <span v-if="d.reviewed_by_name" class="text-[10px] text-[#bbb]">By {{ d.reviewed_by_name }}</span>
-                      <span v-if="d.em_doc_status === 'REJECTED' && d.reject_reason" class="text-[10px] text-red-400 leading-snug">Reason: {{ d.reject_reason }}</span>
+                      <span class="text-meta font-semibold text-[#222] leading-snug truncate">{{ formatDocType(d.em_doc_type) }}</span>
+                      <span class="text-meta text-[#bbb]">{{ d.em_uploaded_at ? formatDate(d.em_uploaded_at) : '–' }}</span>
+                      <span v-if="d.reviewed_by_name" class="text-meta text-[#bbb]">By {{ d.reviewed_by_name }}</span>
+                      <span v-if="d.em_doc_status === 'REJECTED' && d.reject_reason" class="text-meta text-red-400 leading-snug">Reason: {{ d.reject_reason }}</span>
                     </div>
                   </button>
                 </div>
@@ -315,16 +315,16 @@
           <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow" v-if="jobs.length">
             <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
               <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 3H8a2 2 0 00-2 2v2h12V5a2 2 0 00-2-2z"/></svg>
-              <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Jobs Posted</span>
-              <span class="ml-auto inline-flex items-center justify-center bg-[#f0f4ff] text-[#3d5afe] rounded-full text-[11px] font-bold px-2 py-0.5">{{ jobs.length }}</span>
+              <span class="text-caption font-bold text-[#444] uppercase tracking-wide">Jobs Posted</span>
+              <span class="ml-auto inline-flex items-center justify-center bg-[#f0f4ff] text-[#3d5afe] rounded-full text-meta font-bold px-2 py-0.5">{{ jobs.length }}</span>
             </div>
             <div class="px-4 py-4 flex flex-col gap-2">
               <div v-for="j in jobs" :key="j.job_id"
                 class="flex items-center gap-3 px-4 py-3 bg-[#f8f9fa] rounded-lg border border-[#e8e8e8] cursor-pointer hover:border-[#aaa] hover:bg-[#f0f0f0] transition-all"
                 @click="router.push({ name: 'JobDetail', params: { id: j.job_id } })">
                 <div class="flex-1 min-w-0">
-                  <div class="text-[13px] font-medium text-[#222] truncate">{{ j.job_title }}</div>
-                  <div class="flex items-center gap-2 text-[12px] text-[#999] mt-0.5">
+                  <div class="text-caption font-medium text-[#222] truncate">{{ j.job_title }}</div>
+                  <div class="flex items-center gap-2 text-caption text-[#999] mt-0.5">
                     <span>{{ formatDate(j.job_start_date) }}</span>
                     <span v-if="j.selected_driver" class="text-[#ccc]">·</span>
                     <span v-if="j.selected_driver">{{ j.selected_driver }}</span>
@@ -332,7 +332,7 @@
                 </div>
                 <div class="flex flex-col items-end gap-1 shrink-0">
                   <span class="badge" :class="j.job_status?.toLowerCase()">{{ formatJobStatus(j.job_status) }}</span>
-                  <span class="text-[12px] font-semibold text-[#333]">{{ j.job_price ? "฿" + Number(j.job_price).toLocaleString() : "–" }}</span>
+                  <span class="text-caption font-semibold text-[#333]">{{ j.job_price ? "฿" + Number(j.job_price).toLocaleString() : "–" }}</span>
                 </div>
                 <svg class="w-4 h-4 text-[#ccc] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
               </div>
@@ -343,20 +343,20 @@
           <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow" v-if="reviewsGiven.length">
             <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
               <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
-              <span class="text-[13px] font-bold text-[#444] uppercase tracking-wide">Reviews Given to Freelancers</span>
-              <span class="ml-auto inline-flex items-center justify-center bg-[#f0f4ff] text-[#3d5afe] rounded-full text-[11px] font-bold px-2 py-0.5">{{ reviewsGiven.length }}</span>
+              <span class="text-caption font-bold text-[#444] uppercase tracking-wide">Reviews Given to Freelancers</span>
+              <span class="ml-auto inline-flex items-center justify-center bg-[#f0f4ff] text-[#3d5afe] rounded-full text-meta font-bold px-2 py-0.5">{{ reviewsGiven.length }}</span>
             </div>
             <div class="px-4 py-4 flex flex-col gap-2">
               <div v-for="r in reviewsGiven" :key="r.fl_review_id" class="p-3.5 bg-[#f8f9fa] rounded-lg border border-[#e8e8e8] hover:border-[#ddd] transition-colors">
                 <div class="flex items-center justify-between mb-1.5">
-                  <span class="text-[13px] font-semibold text-[#222]">{{ r.driver_name }}</span>
+                  <span class="text-caption font-semibold text-[#222]">{{ r.driver_name }}</span>
                   <div class="flex items-center gap-0.5">
                     <svg v-for="i in 5" :key="i" class="w-3.5 h-3.5" :class="i <= r.rating ? 'text-[#f9a825]' : 'text-[#ddd]'" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                    <span class="text-[12px] font-bold text-[#333] ml-1">{{ r.rating }}.0</span>
+                    <span class="text-caption font-bold text-[#333] ml-1">{{ r.rating }}.0</span>
                   </div>
                 </div>
-                <p v-if="r.comment" class="text-[13px] text-[#555] leading-relaxed">{{ r.comment }}</p>
-                <div class="text-[12px] text-[#bbb] mt-1.5">{{ formatDateTime(r.reviewed_at) }} · {{ r.job_title }}</div>
+                <p v-if="r.comment" class="text-caption text-[#555] leading-relaxed">{{ r.comment }}</p>
+                <div class="text-caption text-[#bbb] mt-1.5">{{ formatDateTime(r.reviewed_at) }} · {{ r.job_title }}</div>
               </div>
             </div>
           </div>
@@ -383,12 +383,12 @@
         <div class="flex items-center justify-between mt-3 px-1">
           <div class="flex-1"></div>
           <div class="flex flex-col items-center gap-0.5 flex-1">
-            <span class="text-white/90 text-[13px] font-semibold text-center">{{ modalDoc.title }}</span>
-            <span v-if="modalDoc.status === 'REJECTED' && modalDoc.rejectReason" class="text-red-400 text-[11px] text-center">Reason: {{ modalDoc.rejectReason }}</span>
+            <span class="text-white/90 text-caption font-semibold text-center">{{ modalDoc.title }}</span>
+            <span v-if="modalDoc.status === 'REJECTED' && modalDoc.rejectReason" class="text-red-400 text-meta text-center">Reason: {{ modalDoc.rejectReason }}</span>
           </div>
           <div class="flex flex-col items-end gap-0.5 flex-1">
-            <span v-if="modalDoc.uploadedAt" class="text-white/40 text-[11px]">Uploaded {{ formatDateTime(modalDoc.uploadedAt) }}</span>
-            <span v-if="modalDoc.reviewedBy" class="text-white/40 text-[11px]">By {{ modalDoc.reviewedBy }}</span>
+            <span v-if="modalDoc.uploadedAt" class="text-white/40 text-meta">Uploaded {{ formatDateTime(modalDoc.uploadedAt) }}</span>
+            <span v-if="modalDoc.reviewedBy" class="text-white/40 text-meta">By {{ modalDoc.reviewedBy }}</span>
           </div>
         </div>
       </div>
