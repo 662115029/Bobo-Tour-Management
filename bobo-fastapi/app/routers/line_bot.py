@@ -42,12 +42,12 @@ def reset_menu_if_unregistered(line_user_id: str):
         cursor = get_cursor(conn)
         cursor.execute("SELECT fl_id FROM freelancers WHERE line_user_id = %s", (line_user_id,))
         registered = cursor.fetchone() is not None
-        print(f"[richmenu] message from {line_user_id} registered={registered}")
+        print(f"[richmenu] message from {line_user_id} registered={registered}", flush=True)
         if not registered:
             line_bot_api.unlink_rich_menu_from_user(line_user_id)
-            print(f"[richmenu] unlinked {line_user_id}")
+            print(f"[richmenu] unlinked {line_user_id}", flush=True)
     except Exception as e:
-        print(f"reset_menu_if_unregistered: {e}")
+        print(f"reset_menu_if_unregistered: {e}", flush=True)
     finally:
         if conn:
             conn.close()
