@@ -36,15 +36,17 @@ def link_rich_menu_to_user(line_user_id: str):
 def unlink_rich_menu_from_user(line_user_id: str):
     """Remove the per-user rich menu so the user falls back to the default (register) menu."""
     if not line_user_id:
+        print("[richmenu] skip unlink: no line_user_id")
         return
     try:
-        requests.delete(
+        res = requests.delete(
             f"https://api.line.me/v2/bot/user/{line_user_id}/richmenu",
             headers={"Authorization": f"Bearer {LINE_CHANNEL_ACCESS_TOKEN}"},
             timeout=5,
         )
-    except Exception:
-        pass  # rich menu switch failing shouldn't block deletion
+        print(f"[richmenu] unlink {line_user_id} -> {res.status_code} {res.text}")
+    except Exception as e:
+        print(f"[richmenu] unlink {line_user_id} failed: {e}")  # don't block deletion
 
 FL_DOC_TYPES = [
     "PERSONAL_ID",
