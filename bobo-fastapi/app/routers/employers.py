@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 from typing import Optional
 from app.db.connection import get_connection, get_cursor
@@ -620,6 +620,73 @@ def ban_employer(em_id: str, body: BanRequest):
         raise
     except Exception as e:
         return {"error": str(e)}
+    finally:
+        if conn:
+            conn.close()
+
+
+@router.delete("/employers/{em_id}")
+def delete_employer(em_id: str, x_admin_id: Optional[str] = Header(None, alias="X-Admin-ID")):
+    admin_id = x_admin_id
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT em_id, em_name FROM employers WHERE em_id = %s", (em_id,))
+        em = cursor.fetchone()
+        if not em:
+            raise HTTPException(status_code=404, detail="Employer not found")
+        name = em["em_name"] or em_id
+
+        # delete all of this employer's jobs (same tables as delete_job)
+        job_sub = "job_id IN (SELECT job_id FROM jobs WHERE em_id = %s)"
+        for table in (
+            "fl_reviews", "em_reviews", "job_payments", "job_applications",
+            "job_expenses", "job_passengers", "job_itineraries",
+            "job_required_languages", "job_pickups", "job_fl_matches",
+        ):
+            cursor.execute(f"DELETE FROM {table} WHERE {job_sub}", (em_id,))
+        cursor.execute("DELETE FROM jobs WHERE em_id = %s", (em_id,))
+
+        # leftover rows tied to em_id
+        cursor.execute("DELETE FROM fl_reviews WHERE em_id = %s", (em_id,))
+        cursor.execute("DELETE FROM em_reviews WHERE em_id = %s", (em_id,))
+
+        # profile rows
+        cursor.execute("DELETE FROM em_documents WHERE em_id = %s", (em_id,))
+        cursor.execute("DELETE FROM em_bank_accounts WHERE em_id = %s", (em_id,))
+        cursor.execute("DELETE FROM em_verification WHERE em_id = %s", (em_id,))
+        cursor.execute("DELETE FROM employers WHERE em_id = %s", (em_id,))
+
+        conn.commit()
+
+        if admin_id:
+            log_conn = None
+            try:
+                log_conn = get_connection()
+                log_cursor = get_cursor(log_conn)
+                log_cursor.execute(
+                    """
+                    INSERT INTO admin_logs
+                        (admin_id, action_type, target_type, target_id, target_name, note)
+                    VALUES (%s, 'DELETE_USER', 'EMPLOYER', %s, %s, NULL)
+                    """,
+                    (admin_id, em_id, name),
+                )
+                log_conn.commit()
+            except Exception as log_error:
+                print(f"ERROR inserting log: {str(log_error)}")
+            finally:
+                if log_conn:
+                    log_conn.close()
+
+        return {"status": "deleted", "em_id": em_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to delete employer: {str(e)}")
     finally:
         if conn:
             conn.close()

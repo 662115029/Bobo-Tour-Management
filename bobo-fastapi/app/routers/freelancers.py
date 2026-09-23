@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 from typing import Optional
 from app.db.connection import get_connection, get_cursor
@@ -32,6 +32,19 @@ def link_rich_menu_to_user(line_user_id: str):
         )
     except Exception:
         pass  # rich menu switch failing shouldn't block registration
+
+def unlink_rich_menu_from_user(line_user_id: str):
+    """Remove the per-user rich menu so the user falls back to the default (register) menu."""
+    if not line_user_id:
+        return
+    try:
+        requests.delete(
+            f"https://api.line.me/v2/bot/user/{line_user_id}/richmenu",
+            headers={"Authorization": f"Bearer {LINE_CHANNEL_ACCESS_TOKEN}"},
+            timeout=5,
+        )
+    except Exception:
+        pass  # rich menu switch failing shouldn't block deletion
 
 FL_DOC_TYPES = [
     "PERSONAL_ID",
@@ -1232,6 +1245,76 @@ def ban_freelancer(fl_id: str, body: BanRequest):
         raise
     except Exception as e:
         return {"error": str(e)}
+    finally:
+        if conn:
+            conn.close()
+
+
+@router.delete("/freelancers/{fl_id}")
+def delete_freelancer(fl_id: str, x_admin_id: Optional[str] = Header(None, alias="X-Admin-ID")):
+    admin_id = x_admin_id
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT fl_id, fl_name, line_user_id FROM freelancers WHERE fl_id = %s", (fl_id,))
+        fl = cursor.fetchone()
+        if not fl:
+            raise HTTPException(status_code=404, detail="Freelancer not found")
+        name = fl["fl_name"] or fl_id
+
+        # job-related rows
+        cursor.execute("DELETE FROM fl_reviews WHERE fl_id = %s", (fl_id,))
+        cursor.execute("DELETE FROM em_reviews WHERE fl_id = %s", (fl_id,))
+        cursor.execute("DELETE FROM job_payments WHERE fl_id = %s", (fl_id,))
+        cursor.execute("DELETE FROM job_applications WHERE fl_id = %s", (fl_id,))
+        cursor.execute("DELETE FROM job_fl_matches WHERE fl_id = %s", (fl_id,))
+        cursor.execute("UPDATE jobs SET selected_fl_id = NULL WHERE selected_fl_id = %s", (fl_id,))
+
+        # profile rows
+        cursor.execute(
+            "DELETE FROM fl_vehicle_images WHERE fl_vehicle_id IN (SELECT fl_vehicle_id FROM fl_vehicle WHERE fl_id = %s)",
+            (fl_id,),
+        )
+        cursor.execute("DELETE FROM fl_vehicle WHERE fl_id = %s", (fl_id,))
+        cursor.execute("DELETE FROM fl_languages WHERE fl_id = %s", (fl_id,))
+        cursor.execute("DELETE FROM fl_pickup_areas WHERE fl_id = %s", (fl_id,))
+        cursor.execute("DELETE FROM fl_availability WHERE fl_id = %s", (fl_id,))
+        cursor.execute("DELETE FROM fl_documents WHERE fl_id = %s", (fl_id,))
+        cursor.execute("DELETE FROM fl_bank_accounts WHERE fl_id = %s", (fl_id,))
+        cursor.execute("DELETE FROM fl_verification WHERE fl_id = %s", (fl_id,))
+        cursor.execute("DELETE FROM freelancers WHERE fl_id = %s", (fl_id,))
+
+        conn.commit()
+        unlink_rich_menu_from_user(fl["line_user_id"])
+
+        if admin_id:
+            log_conn = None
+            try:
+                log_conn = get_connection()
+                log_cursor = get_cursor(log_conn)
+                log_cursor.execute(
+                    """
+                    INSERT INTO admin_logs
+                        (admin_id, action_type, target_type, target_id, target_name, note)
+                    VALUES (%s, 'DELETE_USER', 'FREELANCER', %s, %s, NULL)
+                    """,
+                    (admin_id, fl_id, name),
+                )
+                log_conn.commit()
+            except Exception as log_error:
+                print(f"ERROR inserting log: {str(log_error)}")
+            finally:
+                if log_conn:
+                    log_conn.close()
+
+        return {"status": "deleted", "fl_id": fl_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to delete freelancer: {str(e)}")
     finally:
         if conn:
             conn.close()

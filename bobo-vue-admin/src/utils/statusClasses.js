@@ -1,4 +1,4 @@
-export const BADGE_BASE = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-meta font-semibold w-fit'
+export const BADGE_BASE = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold w-fit'
 
 const JOB_STATUS_LABEL_MAP = {
   OPEN:        'Open',
@@ -72,6 +72,7 @@ const ACTION_MAP = {
   ban_user:          'action-ban',
   delete:            'action-delete',
   delete_job:        'action-delete',
+  delete_user:       'action-delete',
 }
 
 export function getActionClass(action) {

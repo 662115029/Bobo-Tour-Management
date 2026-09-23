@@ -143,12 +143,18 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
           Back
         </button>
+        <div class="flex items-center gap-2">
+        <button class="btn-action !px-4 !py-2 !text-caption !rounded-lg flex items-center gap-1.5 delete" @click="showDeleteModal = true">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path stroke-linecap="round" stroke-linejoin="round" d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m5 0V4a1 1 0 011-1h2a1 1 0 011 1v2"/></svg>
+          Delete Freelancer
+        </button>
         <button class="btn-action !px-4 !py-2 !text-caption !rounded-lg flex items-center gap-1.5"
           :class="fl.fl_is_active ? 'ban' : 'unban'" @click="showBanModal = true">
           <svg v-if="fl.fl_is_active" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
           <svg v-else class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
           {{ fl.fl_is_active ? "Ban Freelancer" : "Unban Freelancer" }}
         </button>
+        </div>
       </div>
 
       <div class="grid gap-4" style="grid-template-columns: 320px 1fr; align-items: start;">
@@ -485,12 +491,17 @@
       @confirm="confirmBan"
       @cancel="showBanModal = false"
     />
+
+    <!-- Delete Modal -->
+    <DeleteUserModal :show="showDeleteModal" :name="fl?.fl_name" user-type="Freelancer"
+      @confirm="confirmDelete" @cancel="showDeleteModal = false" />
   </div>
 </template>
 
 <script setup>
 import BreadcrumbBar from '../components/BreadcrumbBar.vue'
 import BanModal from '../components/BanModal.vue'
+import DeleteUserModal from '../components/DeleteUserModal.vue'
 import { ref, computed, onMounted } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { API_BASE } from "../data/api"
@@ -502,6 +513,7 @@ import { formatJobStatus, formatVerifyStatus } from '../utils/statusClasses'
 const route = useRoute()
 const router = useRouter()
 const showBanModal = ref(false)
+const showDeleteModal = ref(false)
 
 const fl = ref(null)
 const languages = ref([])
@@ -537,6 +549,17 @@ const confirmBan = async () => {
     const data = await res.json()
     if (data.status === "updated") fl.value.fl_is_active = !fl.value.fl_is_active
   } catch (e) { console.error(e) } finally { showBanModal.value = false }
+}
+
+const confirmDelete = async () => {
+  if (!fl.value) return
+  try {
+    const res = await fetch(`${API_BASE}/freelancers/${fl.value.fl_id}`, {
+      method: "DELETE",
+      headers: { "X-Admin-ID": localStorage.getItem("admin_id") || "" },
+    })
+    if (res.ok || res.status === 404) router.push({ name: "Users" })
+  } catch (e) { console.error(e) } finally { showDeleteModal.value = false }
 }
 
 onMounted(async () => {

@@ -94,6 +94,7 @@
                 <button class="btn-action" :class="user.isActive ? 'ban' : 'unban'" @click="openBanModal(user)">
                   {{ user.isActive ? 'Ban' : 'Unban' }}
                 </button>
+                <button class="btn-action delete" @click="openDeleteModal(user)">Delete</button>
               </div>
             </td>
             <td class="text-muted text-caption">{{ formatDateTime(user.updatedAt) }}</td>
@@ -119,6 +120,11 @@
       :user-type="activeTab === 'Employer' ? 'Employer' : 'Freelancer'"
       @confirm="confirmBan" @cancel="showBanModal = false" />
 
+    <!-- Delete Modal -->
+    <DeleteUserModal :show="showDeleteModal" :name="deleteTarget?.name"
+      :user-type="activeTab === 'Employer' ? 'Employer' : 'Freelancer'"
+      @confirm="confirmDelete" @cancel="showDeleteModal = false" />
+
     <!-- User Modal -->
     <UserMiniModal :data="userModalMapped" :type="activeTab === 'Employer' ? 'EMPLOYER' : 'FREELANCER'"
       @close="userModal = null" @view-detail="goToFullDetail" />
@@ -133,6 +139,7 @@ import { useAvatar } from '../composables/useAvatar'
 import { formatDateTime } from '../utils/formatDate'
 import UserMiniModal from '../components/UserMiniModal.vue'
 import BanModal from '../components/BanModal.vue'
+import DeleteUserModal from '../components/DeleteUserModal.vue'
 import UserAvatar from '../components/UserAvatar.vue'
 import PaginationBar from '../components/PaginationBar.vue'
 import { API_BASE } from '../data/api'
@@ -151,6 +158,8 @@ const search = ref('')
 const userModal = ref(null)
 const showBanModal = ref(false)
 const banTarget = ref(null)
+const showDeleteModal = ref(false)
+const deleteTarget = ref(null)
 const jobsDoneByFreelancer = ref({})
 const jobsDoneByEmployer = ref({})
 
@@ -400,6 +409,28 @@ const confirmBan = async () => {
   } finally {
     showBanModal.value = false
     banTarget.value = null
+  }
+}
+
+const openDeleteModal = (user) => { deleteTarget.value = user; showDeleteModal.value = true }
+const confirmDelete = async () => {
+  const user = deleteTarget.value
+  const endpoint = activeTab.value === 'Freelancer'
+    ? `${API_BASE}/freelancers/${user.id}`
+    : `${API_BASE}/employers/${user.id}`
+  try {
+    const res = await fetch(endpoint, {
+      method: 'DELETE', headers: { 'X-Admin-ID': localStorage.getItem('admin_id') || '' }
+    })
+    if (res.ok || res.status === 404) {
+      pageCache.clear(); inFlight.clear()
+      await loadUsers(currentPage.value)
+    }
+  } catch (e) {
+    console.error('Failed to delete user:', e)
+  } finally {
+    showDeleteModal.value = false
+    deleteTarget.value = null
   }
 }
 
