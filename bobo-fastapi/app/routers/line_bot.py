@@ -26,6 +26,7 @@ class JobResponseRequest(BaseModel):
 async def webhook(request: Request):
     signature = request.headers.get("X-Line-Signature")
     body = await request.body()
+    print(f"[webhook] {body.decode()[:500]}", flush=True)
     try:
         handler.handle(body.decode(), signature)
     except InvalidSignatureError:
