@@ -6,8 +6,8 @@
         <img :src="boboLogo" alt="Bobo" class="w-32 h-32 object-contain drop-shadow-lg" />
       </div>
       <div class="text-center">
-        <h1 class="text-xl font-black text-gray-900 tracking-tight">BOBO BOT</h1>
-        <p class="text-xs text-gray-400 mt-1">{{ message }}</p>
+        <h1 class="text-title font-black text-gray-900 tracking-tight">BOBO BOT</h1>
+        <p class="text-caption text-gray-400 mt-1">{{ message }}</p>
       </div>
     </div>
     <div class="flex flex-col items-center gap-3 pb-4">

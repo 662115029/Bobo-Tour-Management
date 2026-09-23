@@ -9,8 +9,8 @@
         </svg>
       </button>
       <div>
-        <p class="text-xs font-semibold text-red-600 uppercase tracking-wider">Freelancer</p>
-        <h2 class="text-lg font-bold text-gray-900 leading-tight">
+        <p class="text-caption font-semibold text-red-600 uppercase tracking-wider">Freelancer</p>
+        <h2 class="text-header font-bold text-gray-900 leading-tight">
           {{ step === 'pin' ? 'Set PIN' : step === 'confirm' ? 'Confirm PIN' : 'Register' }}
         </h2>
       </div>
@@ -19,48 +19,48 @@
     <!-- Step: Info form -->
     <div v-if="step === 'info'" class="flex-1 overflow-y-auto p-4 space-y-4">
 
-      <div class="bg-blue-50 border-l-4 border-blue-400 rounded-lg px-3 py-2.5 text-xs text-blue-700">
+      <div class="bg-blue-50 border-l-4 border-blue-400 rounded-lg px-3 py-2.5 text-caption text-blue-700">
         Fill in basic information - vehicle details and documents can be added later in Profile
       </div>
 
       <div class="space-y-1">
-        <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Firstname</label>
+        <label class="text-caption font-semibold text-gray-500 uppercase tracking-wide">Firstname</label>
         <input v-model="form.firstName" type="text" placeholder="e.g. Somchai"
-          class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm bg-white focus:outline-none focus:border-red-400"
+          class="w-full border border-gray-200 rounded-xl px-4 py-3 text-body bg-white focus:outline-none focus:border-red-400"
           :class="errors.firstName ? 'border-red-400' : ''" />
-        <p v-if="errors.firstName" class="text-xs text-red-500">{{ errors.firstName }}</p>
+        <p v-if="errors.firstName" class="text-caption text-red-500">{{ errors.firstName }}</p>
       </div>
 
       <div class="space-y-1">
-        <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Surname</label>
+        <label class="text-caption font-semibold text-gray-500 uppercase tracking-wide">Surname</label>
         <input v-model="form.lastName" type="text" placeholder="e.g. Jaidee"
-          class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm bg-white focus:outline-none focus:border-red-400"
+          class="w-full border border-gray-200 rounded-xl px-4 py-3 text-body bg-white focus:outline-none focus:border-red-400"
           :class="errors.lastName ? 'border-red-400' : ''" />
-        <p v-if="errors.lastName" class="text-xs text-red-500">{{ errors.lastName }}</p>
+        <p v-if="errors.lastName" class="text-caption text-red-500">{{ errors.lastName }}</p>
       </div>
 
       <div class="space-y-1">
-        <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Username</label>
+        <label class="text-caption font-semibold text-gray-500 uppercase tracking-wide">Username</label>
         <input v-model="form.username" type="text" placeholder="e.g. somchai99"
-          class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm bg-white focus:outline-none focus:border-red-400"
+          class="w-full border border-gray-200 rounded-xl px-4 py-3 text-body bg-white focus:outline-none focus:border-red-400"
           :class="errors.username ? 'border-red-400' : ''" />
-        <p v-if="errors.username" class="text-xs text-red-500">{{ errors.username }}</p>
+        <p v-if="errors.username" class="text-caption text-red-500">{{ errors.username }}</p>
       </div>
 
       <div class="space-y-1">
-        <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Email</label>
+        <label class="text-caption font-semibold text-gray-500 uppercase tracking-wide">Email</label>
         <input v-model="form.email" type="email" placeholder="e.g. somchai@email.com"
-          class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm bg-white focus:outline-none focus:border-red-400"
+          class="w-full border border-gray-200 rounded-xl px-4 py-3 text-body bg-white focus:outline-none focus:border-red-400"
           :class="errors.email ? 'border-red-400' : ''" />
-        <p v-if="errors.email" class="text-xs text-red-500">{{ errors.email }}</p>
+        <p v-if="errors.email" class="text-caption text-red-500">{{ errors.email }}</p>
       </div>
 
       <div class="space-y-1">
-        <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Phone number</label>
+        <label class="text-caption font-semibold text-gray-500 uppercase tracking-wide">Phone number</label>
         <input v-model="form.phone" type="tel" placeholder="e.g. 0812345678"
-          class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm bg-white focus:outline-none focus:border-red-400"
+          class="w-full border border-gray-200 rounded-xl px-4 py-3 text-body bg-white focus:outline-none focus:border-red-400"
           :class="errors.phone ? 'border-red-400' : ''" />
-        <p v-if="errors.phone" class="text-xs text-red-500">{{ errors.phone }}</p>
+        <p v-if="errors.phone" class="text-caption text-red-500">{{ errors.phone }}</p>
       </div>
 
     </div>
@@ -86,20 +86,20 @@
     </div>
 
     <!-- API error -->
-    <p v-if="apiError" class="text-xs text-red-500 bg-red-50 px-4 py-2 mx-4 rounded-lg">{{ apiError }}</p>
+    <p v-if="apiError" class="text-caption text-red-500 bg-red-50 px-4 py-2 mx-4 rounded-lg">{{ apiError }}</p>
 
     <!-- Footer -->
     <div class="px-4 py-3 bg-white border-t border-gray-100">
       <button
         v-if="step === 'info'"
-        class="w-full bg-red-600 text-white text-sm font-bold py-3.5 rounded-xl disabled:opacity-60 transition-opacity"
+        class="w-full bg-red-600 text-white text-body font-bold py-3.5 rounded-xl disabled:opacity-60 transition-opacity"
         @click="handleNext"
       >
         Next
       </button>
       <button
         v-if="step === 'pin' || step === 'confirm'"
-        class="text-sm text-gray-400 underline w-full text-center"
+        class="text-body text-gray-400 underline w-full text-center"
         @click="step = 'info'"
       >
         Back
@@ -114,9 +114,9 @@
             <path d="M20 6L9 17l-5-5"/>
           </svg>
         </div>
-        <h3 class="text-xl font-bold text-gray-900 mb-2">Registration Successful!</h3>
-        <p class="text-sm text-gray-500 mb-2 leading-relaxed">Please add vehicle details and upload documents in Profile for Admin review.</p>
-        <p class="text-xs text-gray-400 mb-6">We'll notify you via LINE once approved.</p>
+        <h3 class="text-title font-bold text-gray-900 mb-2">Registration Successful!</h3>
+        <p class="text-body text-gray-500 mb-2 leading-relaxed">Please add vehicle details and upload documents in Profile for Admin review.</p>
+        <p class="text-caption text-gray-400 mb-6">We'll notify you via LINE once approved.</p>
         <button class="w-full bg-red-600 text-white font-bold py-3 rounded-xl transition-all active:scale-[0.98]" @click="closeLiff">
           Done
         </button>

@@ -4,19 +4,19 @@
     <!-- Header -->
     <div class="flex items-center gap-3 px-4 py-3 bg-white border-b border-[#e0e0e0] flex-shrink-0">
       <div class="flex-1">
-        <p class="text-[11px] font-bold text-red-600 uppercase tracking-widest">Freelancer</p>
-        <h2 class="text-[17px] font-bold text-[#111] leading-tight">Availability</h2>
+        <p class="text-meta font-bold text-red-600 uppercase tracking-widest">Freelancer</p>
+        <h2 class="text-header font-bold text-[#111] leading-tight">Availability</h2>
       </div>
-      <button v-if="!editing" class="px-4 py-1.5 text-[13px] font-semibold border border-[#e0e0e0] rounded-lg text-[#444] hover:bg-[#f5f5f5] transition"
+      <button v-if="!editing" class="px-4 py-1.5 text-caption font-semibold border border-[#e0e0e0] rounded-lg text-[#444] hover:bg-[#f5f5f5] transition"
         @click="editing = true">
         Edit
       </button>
       <template v-else>
-        <button class="px-3 py-1.5 text-[13px] font-medium border border-[#e0e0e0] rounded-lg text-[#666] hover:bg-[#f5f5f5] transition mr-1"
+        <button class="px-3 py-1.5 text-caption font-medium border border-[#e0e0e0] rounded-lg text-[#666] hover:bg-[#f5f5f5] transition mr-1"
           @click="cancelEdit">
           Cancel
         </button>
-        <button class="px-4 py-1.5 text-[13px] font-semibold bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50"
+        <button class="px-4 py-1.5 text-caption font-semibold bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50"
           :disabled="!canSave || saving"
           @click="handleSave">
           {{ saving ? 'Saving...' : 'Save' }}
@@ -47,7 +47,7 @@
               @click="prevMonth">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
             </button>
-            <p class="text-[14px] font-bold text-[#111]">{{ monthLabel }}</p>
+            <p class="text-body font-bold text-[#111]">{{ monthLabel }}</p>
             <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#f5f5f5] transition"
               @click="nextMonth">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2.5"><path d="M9 5l7 7-7 7"/></svg>
@@ -57,7 +57,7 @@
           <!-- Day headers -->
           <div class="grid grid-cols-7 mb-1">
             <div v-for="d in ['Su','Mo','Tu','We','Th','Fr','Sa']" :key="d"
-              class="text-center text-[11px] font-bold text-[#bbb] py-1">{{ d }}</div>
+              class="text-center text-meta font-bold text-[#bbb] py-1">{{ d }}</div>
           </div>
 
           <!-- Days grid -->
@@ -66,7 +66,7 @@
             <div v-for="_ in firstDayOfMonth" :key="'e' + _"></div>
             <!-- Day cells -->
             <div v-for="day in daysInMonth" :key="day"
-              class="flex items-center justify-center h-9 text-[13px] relative select-none"
+              class="flex items-center justify-center h-9 text-caption relative select-none"
               :class="[
                 editing ? 'cursor-pointer' : 'cursor-default',
                 dayBg(day),
@@ -85,24 +85,24 @@
         <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm px-4 py-3">
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <p class="text-[11px] font-bold text-[#bbb] uppercase tracking-widest mb-0.5">Start</p>
-              <p class="text-[13px] font-semibold text-[#222]">{{ displayStart || '-' }}</p>
+              <p class="text-meta font-bold text-[#bbb] uppercase tracking-widest mb-0.5">Start</p>
+              <p class="text-caption font-semibold text-[#222]">{{ displayStart || '-' }}</p>
             </div>
             <div>
-              <p class="text-[11px] font-bold text-[#bbb] uppercase tracking-widest mb-0.5">End</p>
-              <p class="text-[13px] font-semibold text-[#222]">{{ displayEnd || '-' }}</p>
+              <p class="text-meta font-bold text-[#bbb] uppercase tracking-widest mb-0.5">End</p>
+              <p class="text-caption font-semibold text-[#222]">{{ displayEnd || '-' }}</p>
             </div>
           </div>
-          <p v-if="selectedDays > 0" class="text-[12px] text-[#888] mt-2">{{ selectedDays }} day{{ selectedDays > 1 ? 's' : '' }} selected</p>
-          <p v-else-if="!displayStart && !displayEnd" class="text-[12px] text-[#bbb] mt-2">No availability set yet.</p>
-          <p v-if="selectedDays > 30" class="text-[12px] text-red-500 mt-1">Maximum 30 days allowed.</p>
+          <p v-if="selectedDays > 0" class="text-caption text-[#888] mt-2">{{ selectedDays }} day{{ selectedDays > 1 ? 's' : '' }} selected</p>
+          <p v-else-if="!displayStart && !displayEnd" class="text-caption text-[#bbb] mt-2">No availability set yet.</p>
+          <p v-if="selectedDays > 30" class="text-caption text-red-500 mt-1">Maximum 30 days allowed.</p>
         </div>
 
-        <p v-if="saveError" class="text-[12px] text-red-500 px-1">{{ saveError }}</p>
+        <p v-if="saveError" class="text-caption text-red-500 px-1">{{ saveError }}</p>
 
         <!-- Hint -->
         <div v-if="editing" class="px-1">
-          <p class="text-[12px] text-[#bbb]">Tap a start date, then tap an end date. Maximum 30 days.</p>
+          <p class="text-caption text-[#bbb]">Tap a start date, then tap an end date. Maximum 30 days.</p>
         </div>
 
       </template>

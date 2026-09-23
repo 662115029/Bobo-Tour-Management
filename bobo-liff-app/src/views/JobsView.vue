@@ -8,8 +8,8 @@
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
       </button>
       <div class="flex-1">
-        <p class="text-[11px] font-bold text-red-600 uppercase tracking-widest">Freelancer</p>
-        <h2 class="text-[17px] font-bold text-[#111] leading-tight">{{ currentTab.label }}</h2>
+        <p class="text-meta font-bold text-red-600 uppercase tracking-widest">Freelancer</p>
+        <h2 class="text-header font-bold text-[#111] leading-tight">{{ currentTab.label }}</h2>
       </div>
     </div>
 
@@ -24,12 +24,12 @@
     <div v-else class="flex-1 overflow-y-auto">
       <div v-if="loading" class="flex flex-col items-center justify-center h-40 gap-3">
         <img src="@/assets/logo.png" alt="Loading" class="w-16 h-16 object-contain animate-pulse" />
-        <p class="text-[13px] text-[#aaa]">Loading...</p>
+        <p class="text-caption text-[#aaa]">Loading...</p>
       </div>
 
       <div v-else-if="!items.length" class="flex flex-col items-center justify-center h-40 gap-2 text-center px-6">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
-        <p class="text-[13px] text-[#bbb]">{{ emptyMessage }}</p>
+        <p class="text-caption text-[#bbb]">{{ emptyMessage }}</p>
       </div>
 
       <div v-else class="p-4 space-y-3">
@@ -37,30 +37,30 @@
           class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden">
           <div class="px-4 pt-4 pb-3">
             <div class="flex items-start justify-between gap-2 mb-2.5">
-              <h3 class="text-[15px] font-bold text-[#111] flex-1 leading-snug">{{ item.job_title }}</h3>
+              <h3 class="text-body font-bold text-[#111] flex-1 leading-snug">{{ item.job_title }}</h3>
               <span :class="[BADGE_BASE, statusBadge(item).class, 'flex-shrink-0']">{{ statusBadge(item).label }}</span>
             </div>
             <div class="space-y-1.5">
               <span v-if="item.area_name" class="info-tag area">{{ item.area_name }}</span>
-              <p class="text-[13px] text-[#888] flex items-center gap-1.5">
+              <p class="text-caption text-[#888] flex items-center gap-1.5">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
                 {{ formatDate(item.job_start_date) }}<span v-if="item.job_end_date"> – {{ formatDate(item.job_end_date) }}</span>
               </p>
-              <p class="text-[13px] text-[#888] flex items-center gap-1.5">
+              <p class="text-caption text-[#888] flex items-center gap-1.5">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 {{ item.company || item.em_name || '-' }}
               </p>
               <div class="flex items-center gap-3 pt-0.5">
-                <p v-if="item.job_price" class="text-[14px] font-bold text-[#111]">฿{{ Number(item.job_price).toLocaleString() }}</p>
-                <p v-if="activeTab === 'my-job'" class="text-[12px] text-[#bbb]">{{ item.job_required_seat }} pax</p>
-                <p v-if="activeTab === 'job-offer' && item.updated_at" class="text-[12px] text-[#bbb]">Offered {{ daysAgo(item.updated_at) }}</p>
-                <p v-if="activeTab === 'my-request' && item.applied_at" class="text-[12px] text-[#bbb]">Applied {{ daysAgo(item.applied_at) }}</p>
-                <p v-if="activeTab === 'job-opening'" class="text-[12px] text-[#bbb]">{{ item.job_required_vehicle_type }} · {{ item.job_required_seat }} pax</p>
+                <p v-if="item.job_price" class="text-body font-bold text-[#111]">฿{{ Number(item.job_price).toLocaleString() }}</p>
+                <p v-if="activeTab === 'my-job'" class="text-caption text-[#bbb]">{{ item.job_required_seat }} pax</p>
+                <p v-if="activeTab === 'job-offer' && item.updated_at" class="text-caption text-[#bbb]">Offered {{ daysAgo(item.updated_at) }}</p>
+                <p v-if="activeTab === 'my-request' && item.applied_at" class="text-caption text-[#bbb]">Applied {{ daysAgo(item.applied_at) }}</p>
+                <p v-if="activeTab === 'job-opening'" class="text-caption text-[#bbb]">{{ item.job_required_vehicle_type }} · {{ item.job_required_seat }} pax</p>
               </div>
             </div>
           </div>
           <div class="border-t border-[#f0f0f0] px-4 py-2.5 flex justify-end">
-            <button class="flex items-center gap-1 text-[12px] font-semibold text-red-600 hover:text-red-700 transition" @click="selectedJob = item">
+            <button class="flex items-center gap-1 text-caption font-semibold text-red-600 hover:text-red-700 transition" @click="selectedJob = item">
               View Detail
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
             </button>
@@ -78,7 +78,7 @@
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" :stroke="activeTab === tab.key ? '#dc2626' : '#ccc'" stroke-width="1.8">
           <path :d="tab.icon"/>
         </svg>
-        <span class="text-[10px] font-semibold leading-tight text-center whitespace-pre-line">{{ tab.label }}</span>
+        <span class="text-meta font-semibold leading-tight text-center whitespace-pre-line">{{ tab.label }}</span>
       </button>
     </div>
 

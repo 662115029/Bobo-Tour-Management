@@ -9,8 +9,8 @@
         </svg>
       </button>
       <div>
-        <p class="text-xs font-semibold text-red-600 uppercase tracking-wider">Security</p>
-        <h2 class="text-lg font-bold text-gray-900 leading-tight">
+        <p class="text-caption font-semibold text-red-600 uppercase tracking-wider">Security</p>
+        <h2 class="text-header font-bold text-gray-900 leading-tight">
           {{ step === 'current' ? 'Current PIN' : step === 'new' ? 'New PIN' : 'Confirm PIN' }}
         </h2>
       </div>
@@ -20,14 +20,14 @@
     <div class="flex items-center justify-center gap-2 px-4 py-3 bg-white border-b border-gray-100">
       <div v-for="(s, i) in steps" :key="i" class="flex items-center gap-2">
         <div class="flex items-center gap-1.5">
-          <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
+          <div class="w-6 h-6 rounded-full flex items-center justify-center text-caption font-bold transition-colors"
             :class="stepIndex > i ? 'bg-green-500 text-white' : stepIndex === i ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-400'">
             <svg v-if="stepIndex > i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
               <path d="M20 6L9 17l-5-5"/>
             </svg>
             <span v-else>{{ i + 1 }}</span>
           </div>
-          <span class="text-xs font-medium" :class="stepIndex === i ? 'text-gray-800' : 'text-gray-400'">{{ s }}</span>
+          <span class="text-caption font-medium" :class="stepIndex === i ? 'text-gray-800' : 'text-gray-400'">{{ s }}</span>
         </div>
         <div v-if="i < steps.length - 1" class="w-6 h-px bg-gray-200"/>
       </div>
@@ -44,10 +44,10 @@
           </svg>
         </div>
         <div class="text-center">
-          <h3 class="text-xl font-bold text-gray-900 mb-1">PIN Updated!</h3>
-          <p class="text-sm text-gray-400">Your PIN has been changed successfully.</p>
+          <h3 class="text-title font-bold text-gray-900 mb-1">PIN Updated!</h3>
+          <p class="text-body text-gray-400">Your PIN has been changed successfully.</p>
         </div>
-        <button class="w-full bg-red-600 text-white text-sm font-bold py-3.5 rounded-xl" @click="$router.back()">
+        <button class="w-full bg-red-600 text-white text-body font-bold py-3.5 rounded-xl" @click="$router.back()">
           Back to Profile
         </button>
       </template>
@@ -61,10 +61,10 @@
               <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
             </svg>
           </div>
-          <p class="text-sm text-gray-500">{{ stepDesc }}</p>
+          <p class="text-body text-gray-500">{{ stepDesc }}</p>
         </div>
 
-        <div v-if="pinError" class="w-full px-4 py-2.5 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600 text-center">
+        <div v-if="pinError" class="w-full px-4 py-2.5 bg-red-50 border border-red-200 rounded-xl text-caption text-red-600 text-center">
           {{ pinError }}
         </div>
 
@@ -75,7 +75,7 @@
           @complete="handlePinComplete"
         />
 
-        <button v-if="step !== 'current'" class="text-xs text-gray-400 underline" @click="goBack">
+        <button v-if="step !== 'current'" class="text-caption text-gray-400 underline" @click="goBack">
           Back
         </button>
       </template>

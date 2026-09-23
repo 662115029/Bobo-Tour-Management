@@ -9,8 +9,8 @@
         </svg>
       </button>
       <div>
-        <p class="text-xs font-semibold text-red-600 uppercase tracking-wider">Freelancer</p>
-        <h2 class="text-lg font-bold text-gray-900 leading-tight">Enter PIN</h2>
+        <p class="text-caption font-semibold text-red-600 uppercase tracking-wider">Freelancer</p>
+        <h2 class="text-header font-bold text-gray-900 leading-tight">Enter PIN</h2>
       </div>
     </div>
 
@@ -25,8 +25,8 @@
             <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
           </svg>
         </div>
-        <p class="text-sm font-bold text-gray-800">{{ lineProfile?.displayName || 'Welcome back' }}</p>
-        <p class="text-xs text-gray-400 mt-1">Enter your 6-digit PIN</p>
+        <p class="text-body font-bold text-gray-800">{{ lineProfile?.displayName || 'Welcome back' }}</p>
+        <p class="text-caption text-gray-400 mt-1">Enter your 6-digit PIN</p>
       </div>
 
       <PinPad

@@ -7,8 +7,8 @@
         <img src="@/assets/logo2.png" class="w-full h-full object-cover" />
       </div>
       <div class="flex-1">
-        <p class="text-white font-bold text-base leading-tight">BOBO BOT</p>
-        <p class="text-red-100 text-xs">Tour Management Assistant</p>
+        <p class="text-white font-bold text-body leading-tight">BOBO BOT</p>
+        <p class="text-red-100 text-caption">Tour Management Assistant</p>
       </div>
       <div v-if="user" class="w-9 h-9 rounded-full overflow-hidden bg-white/30 flex items-center justify-center flex-shrink-0">
         <img v-if="user.fl_profile_image_url" :src="user.fl_profile_image_url" class="w-full h-full object-cover" />
@@ -26,14 +26,14 @@
           <img src="@/assets/logo2.png" class="w-full h-full object-cover" />
         </div>
         <div class="flex flex-col gap-1 max-w-[75%]">
-          <p class="text-xs text-red-400 font-semibold ml-1">BOBO BOT</p>
+          <p class="text-caption text-red-400 font-semibold ml-1">BOBO BOT</p>
           <div class="bg-white rounded-tr-2xl rounded-br-2xl rounded-bl-2xl px-4 py-3 shadow-sm">
-            <p class="text-sm text-gray-800 leading-relaxed">
+            <p class="text-body text-gray-800 leading-relaxed">
               Hello! Welcome to <span class="font-bold text-[#dc2626]">Bobo Tour Management</span>
             </p>
           </div>
           <div class="bg-white rounded-tr-2xl rounded-br-2xl rounded-bl-2xl px-4 py-3 shadow-sm">
-            <p class="text-sm text-gray-800 leading-relaxed">
+            <p class="text-body text-gray-800 leading-relaxed">
               <span v-if="!user">Please Login or Register to get started.</span>
               <span v-else>Welcome back, <span class="font-bold text-gray-900">{{ user.fl_name }}</span>!</span>
             </p>
@@ -46,7 +46,7 @@
 
     <!-- Toast -->
     <div v-if="toast"
-      class="absolute bottom-28 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-lg z-50 whitespace-nowrap">
+      class="absolute bottom-28 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-caption font-semibold px-4 py-2 rounded-full shadow-lg z-50 whitespace-nowrap">
       {{ toast }}
     </div>
 
@@ -67,7 +67,7 @@
               <polyline points="10 17 15 12 10 7"/>
               <path d="M15 12 L3 12" stroke-linecap="round"/>
             </svg>
-            <span class="text-[11px] font-bold text-gray-700 text-center leading-tight">Login</span>
+            <span class="text-meta font-bold text-gray-700 text-center leading-tight">Login</span>
           </button>
 
           <!-- Profile -->
@@ -80,7 +80,7 @@
               <circle cx="12" cy="8" r="4"/>
               <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
             </svg>
-            <span class="text-[11px] font-bold text-gray-700">Profile</span>
+            <span class="text-meta font-bold text-gray-700">Profile</span>
           </button>
 
           <!-- Job — spans 2 rows -->
@@ -93,7 +93,7 @@
               <rect x="2" y="7" width="20" height="14" rx="2"/>
               <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
             </svg>
-            <span class="text-[11px] font-bold text-gray-700">Job</span>
+            <span class="text-meta font-bold text-gray-700">Job</span>
           </button>
 
           <!-- Update Availability — spans 2 cols -->
@@ -107,7 +107,7 @@
               <path d="M16 2v4M8 2v4M3 10h18"/>
               <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>
             </svg>
-            <span class="text-[11px] font-bold text-gray-700">Update Availability</span>
+            <span class="text-meta font-bold text-gray-700">Update Availability</span>
           </button>
 
         </div>
@@ -135,7 +135,7 @@
               v-model="chatInput"
               type="text"
               placeholder="Message..."
-              class="flex-1 bg-gray-100 rounded-full px-4 py-2 text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-red-300 transition-all"
+              class="flex-1 bg-gray-100 rounded-full px-4 py-2 text-body focus:outline-none focus:bg-white focus:ring-1 focus:ring-red-300 transition-all"
             />
             <button class="w-9 h-9 bg-[#dc2626] rounded-full flex items-center justify-center flex-shrink-0 active:opacity-80">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">

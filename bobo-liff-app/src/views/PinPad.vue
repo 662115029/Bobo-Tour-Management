@@ -2,7 +2,7 @@
   <div class="flex flex-col items-center gap-6 w-full">
 
     <!-- Title -->
-    <p v-if="title" class="text-sm font-semibold text-gray-500">{{ title }}</p>
+    <p v-if="title" class="text-body font-semibold text-gray-500">{{ title }}</p>
 
     <!-- Dots -->
     <div class="flex items-center gap-4">
@@ -17,7 +17,7 @@
     </div>
 
     <!-- Error -->
-    <p v-if="error" class="text-xs text-red-500 -mt-3">{{ error }}</p>
+    <p v-if="error" class="text-caption text-red-500 -mt-3">{{ error }}</p>
 
     <!-- Keypad -->
     <div class="grid grid-cols-3 gap-y-3 gap-x-6 w-full max-w-[280px]">
@@ -40,7 +40,7 @@
         <!-- Number -->
         <button
           v-else
-          class="h-16 w-16 mx-auto rounded-full flex items-center justify-center text-2xl font-light text-gray-800 bg-white shadow-md active:bg-gray-100 transition-colors duration-100 select-none"
+          class="h-16 w-16 mx-auto rounded-full flex items-center justify-center text-title font-light text-gray-800 bg-white shadow-md active:bg-gray-100 transition-colors duration-100 select-none"
           @click="pressKey(key)"
         >
           {{ key }}
