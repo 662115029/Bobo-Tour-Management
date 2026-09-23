@@ -215,6 +215,9 @@ def freelancer_login(body: FreelancerLoginRequest):
 
         freelancer = cursor.fetchone()
         if not freelancer:
+            # LINE user has no account (e.g. deleted by admin) → reset to default (register) menu
+            if body.line_user_id:
+                unlink_rich_menu_from_user(body.line_user_id)
             raise HTTPException(status_code=401, detail="Invalid credentials.")
         if not bcrypt.checkpw(body.pin.encode(), freelancer["fl_pin_hash"].encode()):
             raise HTTPException(status_code=401, detail="Invalid credentials.")
