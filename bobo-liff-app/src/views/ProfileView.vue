@@ -389,49 +389,49 @@
               <p class="text-meta text-[#94A3B8] mt-0.5">Accepted: JPG, PNG · Max 5 MB</p>
             </div>
 
-            <!-- Documents list (1 per row) -->
-            <div class="px-4 pb-4 space-y-2">
+            <!-- Documents grid (2 columns, same as employer) -->
+            <div class="px-4 pb-4">
               <div v-if="!documents.length" class="py-4 text-center text-caption text-[#64748B] italic">No documents found.</div>
-              <div v-for="doc in documents" :key="doc.fl_doc_type"
-                class="border border-[#E2E8F0] rounded-xl overflow-hidden bg-white cursor-pointer active:bg-[#F8FAFC] transition"
-                @click="docEditMode ? triggerDocUpload(doc) : (doc.file_url ? openDocPreview(doc) : null)">
-                <div class="flex items-center gap-3 p-3">
+              <div v-else class="grid grid-cols-2 gap-2">
+                <div v-for="doc in documents" :key="doc.fl_doc_type"
+                  class="rounded-xl border overflow-hidden bg-white flex flex-col cursor-pointer active:bg-[#F8FAFC] transition"
+                  :class="doc.file_url ? 'border-[#E2E8F0]' : 'border-dashed border-[#CBD5E1]'"
+                  @click="docEditMode ? triggerDocUpload(doc) : (doc.file_url ? openDocPreview(doc) : null)">
 
-                  <!-- Thumbnail -->
-                  <div class="w-14 h-14 rounded-lg bg-[#F8FAFC] flex-shrink-0 relative overflow-hidden">
-                    <img v-if="doc.file_url" :src="doc.file_url" class="w-full h-full object-cover" />
-                    <div v-else-if="docEditMode" class="w-full h-full bg-gray-400 flex items-center justify-center flex-col gap-0.5 px-0.5">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v12"/></svg>
-                      <span class="text-meta text-white font-semibold leading-tight text-center">Click to upload from device</span>
-                    </div>
-                    <div v-else class="w-full h-full flex items-center justify-center flex-col gap-0.5">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                  <!-- Image -->
+                  <div class="aspect-square bg-[#F8FAFC] relative overflow-hidden w-full">
+                    <img v-if="doc.file_url" :src="doc.file_url" class="absolute inset-0 w-full h-full object-cover" />
+                    <div v-if="!doc.file_url && !docEditMode" class="absolute inset-0 flex items-center justify-center flex-col gap-1">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                       <span class="text-meta text-[#94A3B8] font-medium">Not uploaded yet</span>
                     </div>
-                    <div v-if="doc.uploading" class="absolute inset-0 bg-white/80 flex items-center justify-center">
-                      <div class="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                    <div v-if="docEditMode" class="absolute inset-0 bg-black/45 flex flex-col items-center justify-center gap-1 px-2 text-center">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                      <span class="text-meta text-white font-semibold leading-tight">Click to upload from device</span>
                     </div>
+                    <div v-if="doc.uploading" class="absolute inset-0 bg-white/80 flex items-center justify-center">
+                      <div class="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                    <!-- Status badge on image -->
+                    <span class="absolute top-1.5 left-1.5 text-meta font-semibold px-2 py-0.5 rounded-full shadow-sm"
+                      :class="docStatusStyle(doc.fl_doc_status).badge">
+                      {{ doc.fl_doc_status || 'NOT UPLOADED' }}
+                    </span>
                   </div>
 
                   <!-- Info -->
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center justify-between gap-2 mb-1">
-                      <p class="text-body font-semibold text-[#0F172A] truncate">{{ DOC_META[doc.fl_doc_type]?.label }}</p>
-                      <span class="text-caption font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
-                        :class="docStatusStyle(doc.fl_doc_status).badge">
-                        {{ doc.fl_doc_status || 'NOT UPLOADED' }}
-                      </span>
-                    </div>
-                    <p class="text-caption text-[#64748B]">
+                  <div class="p-2.5 flex flex-col gap-0.5">
+                    <p class="text-caption font-semibold text-[#0F172A] leading-snug">{{ DOC_META[doc.fl_doc_type]?.label }}</p>
+                    <p class="text-meta text-[#64748B]">
                       {{ doc.fl_uploaded_at ? 'Last updated ' + formatDate(doc.fl_uploaded_at) : 'Not uploaded yet' }}
                     </p>
-                    <p v-if="doc.reviewed_at && doc.fl_doc_status === 'APPROVED'" class="text-caption text-[#64748B]">
+                    <p v-if="doc.reviewed_at && doc.fl_doc_status === 'APPROVED'" class="text-meta text-[#64748B]">
                       Verified {{ formatDate(doc.reviewed_at) }}{{ doc.reviewed_by_name ? ' by ' + doc.reviewed_by_name : '' }}
                     </p>
-                    <p v-if="doc.fl_doc_status === 'REJECTED' && doc.reject_reason" class="text-caption text-[#B91C1C] mt-0.5">{{ doc.reject_reason }}</p>
+                    <p v-if="doc.fl_doc_status === 'REJECTED' && doc.reject_reason" class="text-meta text-[#B91C1C]">{{ doc.reject_reason }}</p>
                   </div>
+                  <input :id="'doc-input-' + doc.fl_doc_type" type="file" accept="image/*" class="hidden" @change="(e) => uploadDocument(e, doc)" />
                 </div>
-                <input :id="'doc-input-' + doc.fl_doc_type" type="file" accept="image/*" class="hidden" @change="(e) => uploadDocument(e, doc)" />
               </div>
             </div>
             </div><!-- end v-show docs -->
