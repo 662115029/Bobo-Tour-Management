@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col h-dvh max-w-md mx-auto bg-white font-sans overflow-hidden"
-    style="background-image: radial-gradient(circle, #d6d9df 1px, transparent 1px); background-size: 24px 24px;">
+    :style="step === 'info' ? 'background-image: radial-gradient(circle, #d6d9df 1px, transparent 1px); background-size: 24px 24px;' : ''">
 
     <!-- Header -->
     <div class="relative bg-white border-b border-[#E2E8F0] shrink-0 px-4 py-3">
