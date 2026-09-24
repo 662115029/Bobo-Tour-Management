@@ -68,7 +68,7 @@
 
             <!-- Title + status -->
             <div class="flex items-start justify-between gap-3">
-              <h3 class="text-[15px] font-semibold text-[#111] leading-snug line-clamp-2 min-h-[42px]">{{ job.job_title }}</h3>
+              <h3 class="text-[15px] font-semibold text-[#111] leading-snug line-clamp-2">{{ job.job_title }}</h3>
               <span class="badge shrink-0" :class="job.job_status?.toLowerCase()">{{ statusLabel(job.job_status) }}</span>
             </div>
 

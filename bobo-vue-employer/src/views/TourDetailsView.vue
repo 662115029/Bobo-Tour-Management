@@ -159,7 +159,7 @@
         </div>
 
         <!-- 2-col layout -->
-        <div class="grid gap-4 grid-cols-1 lg:grid-cols-[320px_1fr] items-start">
+        <div class="grid gap-4 grid-cols-1 lg:grid-cols-[380px_1fr] items-start">
 
           <!-- LEFT -->
           <div class="flex flex-col gap-3">
@@ -485,24 +485,39 @@
             <!-- Pick Up Points -->
             <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
               <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
-                <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path stroke-linecap="round" stroke-linejoin="round" d="M23 21v-2a4 4 0 00-3-3.87m-4-12a4 4 0 010 7.75"/></svg>
-                <span class="text-[13px] font-bold text-[#444] tracking-wide">Pick Up Points</span>
-                <span class="ml-auto inline-flex items-center justify-center bg-[#f0f4ff] text-[#3d5afe] rounded-full text-[11px] font-bold px-2 py-0.5">{{ job.job_passengers?.length ?? 0 }}</span>
+                <span class="w-8 h-8 rounded-full bg-[#ECFEFF] flex items-center justify-center shrink-0"><svg class="w-4 h-4 text-[#0891B2]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg></span>
+                <span class="text-[14px] font-bold text-[#111]">Pick Up Points</span>
+                <span class="ml-auto inline-flex items-center justify-center bg-[#ECFEFF] text-[#0891B2] rounded-full text-[11px] font-bold px-2 py-0.5">{{ job.job_passengers?.length ?? 0 }}</span>
               </div>
               <div class="px-4 py-4 flex flex-col gap-2">
                 <template v-if="!editing">
+                  <div v-if="job.job_passengers?.length" class="hidden md:flex items-center gap-4 pl-[52px] pr-4 pb-1 text-[11px] text-[#bbb] uppercase tracking-wide font-medium">
+                    <span class="md:w-[34%]">Hotel</span>
+                    <span class="md:w-[22%]">Passenger</span>
+                    <span class="flex-1">Note</span>
+                    <span class="w-14 text-right">Time</span>
+                  </div>
                   <div v-for="(p, i) in job.job_passengers" :key="i"
-                    class="flex items-center gap-3 px-4 py-3 bg-[#f8f9fa] rounded-lg border border-[#e8e8e8] transition-colors">
-                    <div class="w-6 h-6 rounded-full bg-[#e8f5e9] text-[#2e7d32] text-[11px] font-bold flex items-center justify-center shrink-0">{{ i + 1 }}</div>
-                    <div class="flex-1 min-w-0">
-                      <div class="text-[13px] font-medium text-[#222]">{{ p.first_name }} {{ p.last_name }}</div>
-                      <div class="text-[11px] text-[#999] mt-0.5">
-                        <span v-if="p.hotel_name">{{ p.hotel_name }}</span>
-                        <span v-if="p.hotel_name && p.note" class="mx-1 text-[#ddd]">·</span>
-                        <span v-if="p.note">{{ p.note }}</span>
+                    class="flex items-start md:items-center gap-3 px-4 py-3 bg-[#f8f9fa] rounded-lg border border-[#e8e8e8] transition-colors">
+                    <div class="w-6 h-6 rounded-full bg-[#ECFEFF] text-[#0891B2] text-[11px] font-bold flex items-center justify-center shrink-0">{{ i + 1 }}</div>
+                    <div class="flex-1 min-w-0 flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
+                      <div class="md:w-[34%] min-w-0 flex items-center gap-1.5 text-[13px] font-semibold text-[#111]">
+                        <svg class="w-3.5 h-3.5 text-[#0891B2] shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        <span class="truncate">{{ p.hotel_name || '-' }}</span>
+                      </div>
+                      <div class="md:w-[22%] min-w-0 flex items-center gap-1.5 text-[13px] text-[#555]">
+                        <svg class="w-3.5 h-3.5 text-[#bbb] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        <span class="truncate">{{ p.first_name }} {{ p.last_name }}</span>
+                      </div>
+                      <div class="flex-1 min-w-0 flex items-center gap-1.5 text-[12px] text-[#777]">
+                        <template v-if="p.note">
+                          <svg class="w-3.5 h-3.5 text-[#bbb] shrink-0 md:hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                          <span class="truncate" :title="p.note"><span class="font-semibold text-[#aaa] md:hidden">Note: </span>{{ p.note }}</span>
+                        </template>
+                        <span v-else class="hidden md:inline text-[#ddd]">—</span>
                       </div>
                     </div>
-                    <span v-if="p.pickup_time" class="text-[12px] font-bold text-[#1976d2] bg-[#e3f2fd] px-2 py-0.5 rounded-md whitespace-nowrap shrink-0">{{ formatPickupTime(p.pickup_time) }}</span>
+                    <span v-if="p.pickup_time" class="w-14 text-center text-[12px] font-bold text-[#0891B2] bg-[#ECFEFF] px-2 py-0.5 rounded-md whitespace-nowrap shrink-0">{{ formatPickupTime(p.pickup_time) }}</span>
                   </div>
                   <p v-if="!job.job_passengers?.length" class="text-[13px] text-[#bbb] px-1">No passengers added</p>
                 </template>
@@ -525,22 +540,38 @@
             <!-- Tour Schedule -->
             <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
               <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
-                <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                <span class="text-[13px] font-bold text-[#444] tracking-wide">Tour Schedule</span>
+                <span class="w-8 h-8 rounded-full bg-[#f3e5f5] flex items-center justify-center shrink-0"><svg class="w-4 h-4 text-[#7b1fa2]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+                <span class="text-[14px] font-bold text-[#111]">Tour Schedule</span>
               </div>
               <div class="px-4 py-4 flex flex-col gap-2">
                 <template v-if="!editing">
+                  <div v-if="job.job_itineraries?.length" class="hidden md:flex items-center gap-4 pl-[52px] pr-4 pb-1 text-[11px] text-[#bbb] uppercase tracking-wide font-medium">
+                    <span class="md:w-[34%]">Place</span>
+                    <span class="md:w-[22%]">Date</span>
+                    <span class="flex-1">Note</span>
+                    <span class="w-[104px] text-right">Time</span>
+                  </div>
                   <div v-for="(item, i) in job.job_itineraries" :key="i"
-                    class="flex items-center px-4 py-3 bg-[#f8f9fa] rounded-lg border border-[#e8e8e8] transition-colors">
-                    <div class="w-6 h-6 rounded-full bg-[#f3e5f5] text-[#7b1fa2] text-[11px] font-bold flex items-center justify-center shrink-0 mr-3">{{ i + 1 }}</div>
-                    <div class="min-w-0" style="flex: 3">
-                      <div class="text-[13px] font-medium text-[#222]">{{ item.place_name }}</div>
-                      <div v-if="item.note" class="text-[11px] text-[#999] mt-0.5">{{ item.note }}</div>
+                    class="flex items-start md:items-center gap-3 px-4 py-3 bg-[#f8f9fa] rounded-lg border border-[#e8e8e8] transition-colors">
+                    <div class="w-6 h-6 rounded-full bg-[#f3e5f5] text-[#7b1fa2] text-[11px] font-bold flex items-center justify-center shrink-0">{{ i + 1 }}</div>
+                    <div class="flex-1 min-w-0 flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
+                      <div class="md:w-[34%] min-w-0 flex items-center gap-1.5 text-[13px] font-semibold text-[#111]">
+                        <svg class="w-3.5 h-3.5 text-[#7b1fa2] shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        <span class="truncate">{{ item.place_name }}</span>
+                      </div>
+                      <div class="md:w-[22%] min-w-0 flex items-center gap-1.5 text-[13px] text-[#555]">
+                        <svg class="w-3.5 h-3.5 text-[#bbb] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 7v5l3 2"/></svg>
+                        <span>{{ item.itinerary_date ? formatDate(item.itinerary_date) : '-' }}</span>
+                      </div>
+                      <div class="flex-1 min-w-0 flex items-center gap-1.5 text-[12px] text-[#777]">
+                        <template v-if="item.note">
+                          <svg class="w-3.5 h-3.5 text-[#bbb] shrink-0 md:hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                          <span class="truncate" :title="item.note"><span class="font-semibold text-[#aaa] md:hidden">Note: </span>{{ item.note }}</span>
+                        </template>
+                        <span v-else class="hidden md:inline text-[#ddd]">—</span>
+                      </div>
                     </div>
-                    <div class="flex justify-center" style="flex: 2">
-                      <span v-if="item.start_time || item.end_time" class="text-[12px] font-bold text-[#7b1fa2] bg-[#f3e5f5] px-2 py-0.5 rounded-md whitespace-nowrap">{{ item.start_time }} - {{ item.end_time }}</span>
-                    </div>
-                    <span v-if="item.itinerary_date" class="text-[12px] text-[#aaa] whitespace-nowrap shrink-0 w-20 text-left">{{ formatDate(item.itinerary_date) }}</span>
+                    <span v-if="item.start_time || item.end_time" class="w-[104px] text-center text-[12px] font-bold text-[#7b1fa2] bg-[#f3e5f5] px-2 py-0.5 rounded-md whitespace-nowrap shrink-0">{{ item.start_time }} - {{ item.end_time }}</span>
                   </div>
                   <p v-if="!job.job_itineraries?.length" class="text-[13px] text-[#bbb] px-1">No stops added</p>
                 </template>
