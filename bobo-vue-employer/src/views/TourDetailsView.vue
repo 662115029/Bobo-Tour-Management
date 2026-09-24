@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-    <div class="px-5 pb-8">
+    <div class="px-5 pb-24">
 
       <!-- Top bar: Back only -->
       <div class="flex items-center justify-between flex-wrap gap-2 py-3 mb-5">
@@ -167,8 +167,8 @@
             <!-- Assigned Driver -->
             <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
               <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
-                <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                <span class="text-[13px] font-bold text-[#444] tracking-wide">Assigned Driver</span>
+                <span class="w-8 h-8 rounded-full bg-[#FEF2F2] flex items-center justify-center shrink-0"><svg class="w-4 h-4 text-[#DC2626]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg></span>
+                <span class="text-[14px] font-bold text-[#111]">Assigned Driver</span>
               </div>
               <div class="px-4 py-4">
                 <div v-if="job.driver_name" class="flex items-center gap-2.5">
@@ -201,8 +201,8 @@
             <!-- Area Required -->
             <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm hover:shadow-md transition-shadow">
               <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
-                <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                <span class="text-[13px] font-bold text-[#444] tracking-wide">Tour Area</span>
+                <span class="w-8 h-8 rounded-full bg-[#ECFEFF] flex items-center justify-center shrink-0"><svg class="w-4 h-4 text-[#0891B2]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg></span>
+                <span class="text-[14px] font-bold text-[#111]">Tour Area</span>
               </div>
 
               <!-- View mode -->
@@ -223,8 +223,8 @@
             <!-- Languages Required -->
             <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm hover:shadow-md transition-shadow">
               <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
-                <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
-                <span class="text-[13px] font-bold text-[#444] tracking-wide">Languages Required</span>
+                <span class="w-8 h-8 rounded-full bg-[#EEF2FF] flex items-center justify-center shrink-0"><svg class="w-4 h-4 text-[#4F46E5]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg></span>
+                <span class="text-[14px] font-bold text-[#111]">Languages Required</span>
               </div>
 
               <!-- View mode -->
@@ -276,8 +276,8 @@
             <!-- Timeline -->
             <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
               <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
-                <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                <span class="text-[13px] font-bold text-[#444] tracking-wide">Timeline</span>
+                <span class="w-8 h-8 rounded-full bg-[#F1F5F9] flex items-center justify-center shrink-0"><svg class="w-4 h-4 text-[#475569]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+                <span class="text-[14px] font-bold text-[#111]">Timeline</span>
               </div>
               <div class="px-4 py-3 flex flex-col gap-3">
                 <div class="flex items-center gap-2.5">
@@ -300,8 +300,8 @@
             <!-- Expenses -->
             <div v-if="editing || job.job_expenses?.length" class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
               <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
-                <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path stroke-linecap="round" stroke-linejoin="round" d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-                <span class="text-[13px] font-bold text-[#444] tracking-wide">Expenses</span>
+                <span class="w-8 h-8 rounded-full bg-[#F0FDF4] flex items-center justify-center shrink-0"><svg class="w-4 h-4 text-[#16A34A]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path stroke-linecap="round" stroke-linejoin="round" d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></span>
+                <span class="text-[14px] font-bold text-[#111]">Expenses</span>
               </div>
               <div class="px-4 py-4">
                 <template v-if="!editing">
@@ -332,8 +332,8 @@
             <!-- Payment -->
             <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
               <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
-                <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                <span class="text-[13px] font-bold text-[#444] tracking-wide">Payment</span>
+                <span class="w-8 h-8 rounded-full bg-[#FFFBEB] flex items-center justify-center shrink-0"><svg class="w-4 h-4 text-[#D97706]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>
+                <span class="text-[14px] font-bold text-[#111]">Payment</span>
               </div>
               <div class="px-4 py-4 flex flex-col gap-3">
 
@@ -443,8 +443,8 @@
             <!-- Review from employer to freelancer -->
             <div v-if="jobReview" class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
               <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
-                <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
-                <span class="text-[13px] font-bold text-[#444] tracking-wide">Your Review</span>
+                <span class="w-8 h-8 rounded-full bg-[#FFFBEB] flex items-center justify-center shrink-0"><svg class="w-4 h-4 text-[#F59E0B]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg></span>
+                <span class="text-[14px] font-bold text-[#111]">Your Review</span>
                 <div class="ml-auto flex items-center gap-0.5">
                   <span v-for="s in 5" :key="s" class="text-[13px]" :class="s <= jobReview.rating ? 'text-[#f9a825]' : 'text-[#e0e0e0]'">★</span>
                 </div>
@@ -460,8 +460,8 @@
             <!-- Review from freelancer to employer -->
             <div v-if="emReview" class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
               <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
-                <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
-                <span class="text-[13px] font-bold text-[#444] tracking-wide">Freelancer Review</span>
+                <span class="w-8 h-8 rounded-full bg-[#FFFBEB] flex items-center justify-center shrink-0"><svg class="w-4 h-4 text-[#F59E0B]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg></span>
+                <span class="text-[14px] font-bold text-[#111]">Freelancer Review</span>
               </div>
               <div class="p-4">
                 <div class="flex items-center justify-between mb-1.5">
