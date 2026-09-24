@@ -91,7 +91,7 @@ def get_jobs(
         params += [limit, offset]
         cursor.execute(
             f"""
-            SELECT j.job_id, j.em_id, em.em_name AS company,
+            SELECT j.job_id, j.em_id, em.em_name AS company, em.em_profile_image_url, em.em_verify_status,
                    j.job_title, j.job_description,
                    j.job_start_date, j.job_end_date,
                    j.job_required_vehicle_type, j.job_required_seat,
@@ -444,7 +444,7 @@ def get_job_applications(limit: int = 50, offset: int = 0, job_id: str = None, e
                    j.job_start_date, j.job_end_date,
                    j.job_required_vehicle_type, j.job_required_seat,
                    j.job_price, j.job_status,
-                   em.em_name AS company,
+                   em.em_name AS company, em.em_profile_image_url, em.em_verify_status,
                    a.area_name,
                    ja.fl_id, f.fl_name AS driver_name,
                    ja.application_status, ja.applied_at, ja.updated_at
