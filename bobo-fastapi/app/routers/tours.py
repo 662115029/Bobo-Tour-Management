@@ -50,10 +50,12 @@ def get_employer_tours(em_id: str, limit: int = 50, offset: int = 0):
                    j.job_required_vehicle_type, j.job_required_seat,
                    j.job_price, j.job_status,
                    j.selected_fl_id, f.fl_name AS selected_driver,
+                   ar.area_name,
                    j.job_created_at, j.job_updated_at
             FROM jobs j
             JOIN employers em ON j.em_id = em.em_id
             LEFT JOIN freelancers f ON j.selected_fl_id = f.fl_id
+            LEFT JOIN areas ar ON j.area_id = ar.area_id
             WHERE j.em_id = %s
             ORDER BY j.job_created_at DESC
             LIMIT %s OFFSET %s
