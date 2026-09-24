@@ -9,21 +9,22 @@
         </button>
       </div>
 
-      <div class="grid gap-4 grid-cols-1 lg:grid-cols-[260px_1fr] items-start">
+      <div class="grid gap-4 grid-cols-1 lg:grid-cols-[320px_1fr] items-start">
 
         <!-- LEFT -->
         <div class="flex flex-col gap-3">
 
           <!-- Profile Hero -->
           <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm p-5 flex flex-col items-center text-center hover:shadow-md transition-shadow">
-            <div class="w-20 h-20 rounded-full bg-[#fef2f2] overflow-hidden flex items-center justify-center mb-3 cursor-pointer group relative" @click="avatarModal = true">
-              <img v-if="form.em_profile_url" :src="form.em_profile_url" class="w-full h-full object-cover" @error="form.em_profile_url = ''" />
-              <svg v-else class="w-9 h-9 text-[#dc2626]" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
-              </svg>
-              <div class="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            <!-- Avatar (same style as freelancer) -->
+            <div class="relative mb-3 cursor-pointer" @click="avatarModal = true">
+              <div class="w-24 h-24 rounded-full bg-[#F1F5F9] ring-4 ring-[#FEF2F2] overflow-hidden flex items-center justify-center">
+                <img v-if="form.em_profile_url" :src="form.em_profile_url" class="w-full h-full object-cover" @error="form.em_profile_url = ''" />
+                <svg v-else class="w-10 h-10 text-[#94A3B8]" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path stroke-linecap="round" d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg>
               </div>
+              <span class="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[#DC2626] border-2 border-white shadow flex items-center justify-center">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              </span>
             </div>
             <div class="text-body font-bold text-[#111] mb-1">{{ form.em_name || 'Your Name' }}</div>
             <div class="text-caption text-[#999] mb-2">@{{ form.em_username }}</div>
@@ -40,8 +41,8 @@
           <!-- Stats -->
           <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
             <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
-              <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-              <span class="text-caption font-bold text-[#444] uppercase tracking-wide">Stats</span>
+              <span class="w-8 h-8 rounded-full bg-[#FFFBEB] flex items-center justify-center shrink-0"><svg class="w-4 h-4 text-[#D97706]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg></span>
+              <span class="text-[14px] font-bold text-[#111]">Stats</span>
             </div>
             <div class="px-4 py-3 grid grid-cols-3 gap-2 text-center">
               <div>
@@ -65,8 +66,8 @@
           <!-- Change Password -->
           <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
             <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
-              <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              <span class="text-caption font-bold text-[#444] uppercase tracking-wide">Information</span>
+              <span class="w-8 h-8 rounded-full bg-[#F1F5F9] flex items-center justify-center shrink-0"><svg class="w-4 h-4 text-[#475569]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+              <span class="text-[14px] font-bold text-[#111]">Information</span>
             </div>
             <div class="px-4 py-3 flex flex-col gap-3">
               <div class="flex items-center gap-2.5">
@@ -89,8 +90,8 @@
           <!-- Change Password -->
           <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
             <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
-              <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-              <span class="text-caption font-bold text-[#444] uppercase tracking-wide">Change Password</span>
+              <span class="w-8 h-8 rounded-full bg-[#FEF2F2] flex items-center justify-center shrink-0"><svg class="w-4 h-4 text-[#DC2626]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg></span>
+              <span class="text-[14px] font-bold text-[#111]">Change Password</span>
             </div>
             <div class="px-4 py-4">
               <div v-if="!pwOpen">
@@ -131,8 +132,8 @@
           <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
             <div class="px-5 py-3 border-b border-[#f0f0f0] flex items-center justify-between">
               <div class="flex items-center gap-2">
-                <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                <span class="text-caption font-bold text-[#444] uppercase tracking-wide">Profile</span>
+                <span class="w-8 h-8 rounded-full bg-[#EFF6FF] flex items-center justify-center shrink-0"><svg class="w-4 h-4 text-[#2563EB]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></span>
+                <span class="text-[14px] font-bold text-[#111]">Profile</span>
               </div>
               <div class="flex items-center gap-2">
                 <button v-if="!isEditing" @click="startEditing" class="flex items-center gap-1.5 px-3.5 py-1.5 text-caption font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700 transition shadow-sm">
@@ -192,8 +193,8 @@
           <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
             <div class="px-5 py-3 border-b border-[#f0f0f0] flex items-center justify-between">
               <div class="flex items-center gap-2">
-                <svg class="w-4 h-4 text-[#888]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                <span class="text-caption font-bold text-[#444] uppercase tracking-wide">Verification</span>
+                <span class="w-8 h-8 rounded-full bg-[#F0FDF4] flex items-center justify-center shrink-0"><svg class="w-4 h-4 text-[#16A34A]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg></span>
+                <span class="text-[14px] font-bold text-[#111]">Verification</span>
               </div>
               <button @click="docEditMode = !docEditMode"
                 class="flex items-center gap-1.5 px-3.5 py-1.5 text-caption font-semibold rounded-lg transition shadow-sm"
