@@ -16,7 +16,7 @@
       </div>
 
       <!-- Floating Matching / Applications toolbar - fixed top-right -->
-      <div v-if="job" class="fixed top-20 right-6 z-40 flex items-center gap-2">
+      <div v-if="job && !job.selected_fl_id" class="fixed top-20 right-6 z-40 flex items-center gap-2">
         <button
           class="group flex items-center justify-center gap-2 w-[150px] px-3 py-2 rounded-full text-[13px] font-bold bg-white border-2 border-violet-500 text-violet-700 hover:bg-violet-50 shadow-md transition-colors cursor-pointer"
           @click="showMatchingModal = true">
@@ -164,11 +164,45 @@
           <!-- LEFT -->
           <div class="flex flex-col gap-3">
 
+            <!-- Assigned Driver -->
+            <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+              <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
+                <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                <span class="text-[13px] font-bold text-[#444] tracking-wide">Assigned Driver</span>
+              </div>
+              <div class="px-4 py-4">
+                <div v-if="job.driver_name" class="flex items-center gap-2.5">
+                  <div class="w-8 h-8 rounded-full text-sm font-bold flex items-center justify-center shrink-0" :style="avatarStyle(job.selected_fl_id, job.driver_name)">{{ initials2(job.driver_name) }}</div>
+                  <div>
+                    <div class="text-[14px] font-medium text-[#222]">{{ job.driver_name }}</div>
+                    <div v-if="job.driver_phone" class="text-[12px] text-[#999]">{{ job.driver_phone }}</div>
+                  </div>
+                </div>
+                <span v-else class="text-[13px] text-[#bbb]">Not assigned</span>
+
+                <!-- Driver service areas -->
+                <div v-if="job.driver_name && pickups.length" class="mt-3">
+                  <div class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium mb-1.5">Service Areas</div>
+                  <div class="flex flex-wrap gap-1.5">
+                    <span v-for="p in pickups" :key="p.area_id" class="info-tag area">{{ p.area_name }}</span>
+                  </div>
+                </div>
+
+                <!-- View vehicle button -->
+                <button v-if="job.driver_name"
+                  class="mt-3 w-full flex items-center justify-center gap-1.5 text-[13px] font-semibold text-[#DC2626] border border-[#DC2626] rounded-lg py-2 hover:bg-[#FEF2F2] transition"
+                  @click="showVehicleModal = true">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="6" width="15" height="11" rx="2"/><path d="M16 9h4l3 3v5h-7z"/><circle cx="5.5" cy="18.5" r="1.5"/><circle cx="18.5" cy="18.5" r="1.5"/></svg>
+                  View Vehicle
+                </button>
+              </div>
+            </div>
+
             <!-- Area Required -->
             <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm hover:shadow-md transition-shadow">
               <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
                 <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                <span class="text-[13px] font-bold text-[#444] tracking-wide">Pickup Area</span>
+                <span class="text-[13px] font-bold text-[#444] tracking-wide">Tour Area</span>
               </div>
 
               <!-- View mode -->
@@ -236,35 +270,6 @@
                     {{ lang }}<button type="button" @click="toggleLanguage(lang)" class="hover:opacity-70 ml-0.5">✕</button>
                   </span>
                 </div>
-              </div>
-            </div>
-
-            <!-- Pickup Areas -->
-            <div v-if="pickups.length" class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-              <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
-                <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                <span class="text-[13px] font-bold text-[#444] tracking-wide">Pickup Areas</span>
-              </div>
-              <div class="px-4 py-4 flex flex-wrap gap-1.5">
-                <span v-for="p in pickups" :key="p.area_id" class="info-tag area">{{ p.area_name }}</span>
-              </div>
-            </div>
-
-            <!-- Assigned Driver -->
-            <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-              <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
-                <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                <span class="text-[13px] font-bold text-[#444] tracking-wide">Assigned Driver</span>
-              </div>
-              <div class="px-4 py-4">
-                <div v-if="job.driver_name" class="flex items-center gap-2.5">
-                  <div class="w-8 h-8 rounded-full text-sm font-bold flex items-center justify-center shrink-0" :style="avatarStyle(job.selected_fl_id, job.driver_name)">{{ initials2(job.driver_name) }}</div>
-                  <div>
-                    <div class="text-[14px] font-medium text-[#222]">{{ job.driver_name }}</div>
-                    <div v-if="job.driver_phone" class="text-[12px] text-[#999]">{{ job.driver_phone }}</div>
-                  </div>
-                </div>
-                <span v-else class="text-[13px] text-[#bbb]">Not assigned</span>
               </div>
             </div>
 
@@ -477,46 +482,6 @@
           <!-- RIGHT -->
           <div class="flex flex-col gap-3">
 
-            <!-- Tour Schedule -->
-            <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-              <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
-                <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                <span class="text-[13px] font-bold text-[#444] tracking-wide">Tour Schedule</span>
-              </div>
-              <div class="px-4 py-4 flex flex-col gap-2">
-                <template v-if="!editing">
-                  <div v-for="(item, i) in job.job_itineraries" :key="i"
-                    class="flex items-center px-4 py-3 bg-[#f8f9fa] rounded-lg border border-[#e8e8e8] transition-colors">
-                    <div class="w-6 h-6 rounded-full bg-[#f3e5f5] text-[#7b1fa2] text-[11px] font-bold flex items-center justify-center shrink-0 mr-3">{{ i + 1 }}</div>
-                    <div class="min-w-0" style="flex: 3">
-                      <div class="text-[13px] font-medium text-[#222]">{{ item.place_name }}</div>
-                      <div v-if="item.note" class="text-[11px] text-[#999] mt-0.5">{{ item.note }}</div>
-                    </div>
-                    <div class="flex justify-center" style="flex: 2">
-                      <span v-if="item.start_time || item.end_time" class="text-[12px] font-bold text-[#7b1fa2] bg-[#f3e5f5] px-2 py-0.5 rounded-md whitespace-nowrap">{{ item.start_time }} - {{ item.end_time }}</span>
-                    </div>
-                    <span v-if="item.itinerary_date" class="text-[12px] text-[#aaa] whitespace-nowrap shrink-0 w-20 text-left">{{ formatDate(item.itinerary_date) }}</span>
-                  </div>
-                  <p v-if="!job.job_itineraries?.length" class="text-[13px] text-[#bbb] px-1">No stops added</p>
-                </template>
-                <template v-else>
-                  <div v-for="(item, idx) in form.job_itineraries" :key="idx"
-                    class="grid items-end gap-2 mb-2"
-                    style="grid-template-columns: 2fr 1fr 1fr 1fr auto">
-                    <div><label class="field-label">Stop / Activity</label><input v-model="item.place_name" type="text" class="field-input" /></div>
-                    <div><label class="field-label">Start</label><input v-model="item.start_time" type="time" class="field-input" /></div>
-                    <div><label class="field-label">End</label><input v-model="item.end_time" type="time" class="field-input" /></div>
-                    <div><label class="field-label">Date</label><input v-model="item.itinerary_date" type="date" class="field-input" /></div>
-                    <button type="button" @click="form.job_itineraries.splice(idx, 1)"
-                      class="mb-0.5 p-2 bg-red-50 text-red-400 rounded-lg hover:bg-red-100 transition">✕</button>
-                    <div class="col-span-full"><label class="field-label">Note</label><input v-model="item.note" type="text" class="field-input" placeholder="Optional note" /></div>
-                  </div>
-                  <button type="button" @click="form.job_itineraries.push({ place_name: '', itinerary_date: '', start_time: '', end_time: '', note: '' })"
-                    class="w-full px-4 py-2 bg-[#f5f5f5] text-[#555] rounded-lg text-sm hover:bg-[#ebebeb] transition mt-1">+ Add Stop</button>
-                </template>
-              </div>
-            </div>
-
             <!-- Pick Up Points -->
             <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
               <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
@@ -557,17 +522,100 @@
               </div>
             </div>
 
+            <!-- Tour Schedule -->
+            <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+              <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
+                <svg class="w-4 h-4 text-[#888] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <span class="text-[13px] font-bold text-[#444] tracking-wide">Tour Schedule</span>
+              </div>
+              <div class="px-4 py-4 flex flex-col gap-2">
+                <template v-if="!editing">
+                  <div v-for="(item, i) in job.job_itineraries" :key="i"
+                    class="flex items-center px-4 py-3 bg-[#f8f9fa] rounded-lg border border-[#e8e8e8] transition-colors">
+                    <div class="w-6 h-6 rounded-full bg-[#f3e5f5] text-[#7b1fa2] text-[11px] font-bold flex items-center justify-center shrink-0 mr-3">{{ i + 1 }}</div>
+                    <div class="min-w-0" style="flex: 3">
+                      <div class="text-[13px] font-medium text-[#222]">{{ item.place_name }}</div>
+                      <div v-if="item.note" class="text-[11px] text-[#999] mt-0.5">{{ item.note }}</div>
+                    </div>
+                    <div class="flex justify-center" style="flex: 2">
+                      <span v-if="item.start_time || item.end_time" class="text-[12px] font-bold text-[#7b1fa2] bg-[#f3e5f5] px-2 py-0.5 rounded-md whitespace-nowrap">{{ item.start_time }} - {{ item.end_time }}</span>
+                    </div>
+                    <span v-if="item.itinerary_date" class="text-[12px] text-[#aaa] whitespace-nowrap shrink-0 w-20 text-left">{{ formatDate(item.itinerary_date) }}</span>
+                  </div>
+                  <p v-if="!job.job_itineraries?.length" class="text-[13px] text-[#bbb] px-1">No stops added</p>
+                </template>
+                <template v-else>
+                  <div v-for="(item, idx) in form.job_itineraries" :key="idx"
+                    class="grid items-end gap-2 mb-2"
+                    style="grid-template-columns: 2fr 1fr 1fr 1fr auto">
+                    <div><label class="field-label">Stop / Activity</label><input v-model="item.place_name" type="text" class="field-input" /></div>
+                    <div><label class="field-label">Start</label><input v-model="item.start_time" type="time" class="field-input" /></div>
+                    <div><label class="field-label">End</label><input v-model="item.end_time" type="time" class="field-input" /></div>
+                    <div><label class="field-label">Date</label><input v-model="item.itinerary_date" type="date" class="field-input" /></div>
+                    <button type="button" @click="form.job_itineraries.splice(idx, 1)"
+                      class="mb-0.5 p-2 bg-red-50 text-red-400 rounded-lg hover:bg-red-100 transition">✕</button>
+                    <div class="col-span-full"><label class="field-label">Note</label><input v-model="item.note" type="text" class="field-input" placeholder="Optional note" /></div>
+                  </div>
+                  <button type="button" @click="form.job_itineraries.push({ place_name: '', itinerary_date: '', start_time: '', end_time: '', note: '' })"
+                    class="w-full px-4 py-2 bg-[#f5f5f5] text-[#555] rounded-lg text-sm hover:bg-[#ebebeb] transition mt-1">+ Add Stop</button>
+                </template>
+              </div>
+            </div>
+
           </div>
         </div>
 
       </template>
     </div>
 
+    <!-- Vehicle Modal -->
+    <div v-if="showVehicleModal" class="fixed inset-0 z-40 flex items-center justify-center bg-black/50" @click.self="showVehicleModal = false">
+      <div class="bg-white rounded-2xl shadow-2xl overflow-hidden max-w-lg w-full mx-4 flex flex-col" style="max-height:90vh" @click.stop>
+        <div class="flex items-center justify-between px-5 py-3.5 border-b border-[#eee] shrink-0">
+          <div>
+            <div class="text-[15px] font-semibold text-[#111]">Vehicle</div>
+            <div class="text-[12px] text-[#999]">{{ job?.driver_name }}</div>
+          </div>
+          <button class="text-[#999] hover:text-[#333] transition" @click="showVehicleModal = false">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="p-5 overflow-y-auto">
+          <template v-if="driverVehicle">
+            <div class="flex items-start justify-between gap-3 mb-4">
+              <div>
+                <div class="text-[16px] font-semibold text-[#222]">
+                  {{ [driverVehicle.fl_vehicle_brand, driverVehicle.fl_vehicle_model].filter(Boolean).join(' ') || '-' }}
+                  <span v-if="driverVehicle.fl_vehicle_year" class="text-[#999] font-normal">({{ driverVehicle.fl_vehicle_year }})</span>
+                </div>
+                <div class="text-[13px] text-[#999]">
+                  {{ [driverVehicle.fl_vehicle_type, driverVehicle.fl_vehicle_seat_capa ? driverVehicle.fl_vehicle_seat_capa + ' seats' : ''].filter(Boolean).join(' · ') }}
+                </div>
+              </div>
+              <span v-if="driverVehicle.fl_vehicle_license_plate"
+                class="text-[13px] font-bold text-[#111] bg-white border-2 border-[#333] rounded-md px-2.5 py-1 tracking-wide whitespace-nowrap">
+                {{ driverVehicle.fl_vehicle_license_plate }}
+              </span>
+            </div>
+            <div v-if="vehicleImages.length" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <div v-for="img in vehicleImages" :key="img.fl_vehicle_image_id"
+                class="aspect-[4/3] rounded-lg overflow-hidden border border-[#e0e0e0] bg-[#f5f5f5] cursor-pointer hover:opacity-90 transition-opacity"
+                @click="slipModalUrl = img.fl_vehicle_image_url">
+                <img :src="img.fl_vehicle_image_url" alt="Vehicle" class="w-full h-full object-cover" />
+              </div>
+            </div>
+            <p v-else class="text-[13px] text-[#bbb] text-center py-6">No vehicle photos</p>
+          </template>
+          <p v-else class="text-[13px] text-[#bbb] text-center py-6">No vehicle information</p>
+        </div>
+      </div>
+    </div>
+
     <!-- Slip Image Modal -->
     <div v-if="slipModalUrl" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70" @click.self="slipModalUrl = null">
       <div class="bg-white rounded-2xl shadow-2xl overflow-hidden max-w-xl w-full mx-4 flex flex-col" style="max-height:90vh" @click.stop>
         <div class="flex items-center justify-between px-5 py-3.5 border-b border-[#eee] shrink-0">
-          <span class="text-[15px] font-semibold text-[#111]">Payment Slip</span>
+          <span class="text-[15px] font-semibold text-[#111]">{{ vehicleImages.some(v => v.fl_vehicle_image_url === slipModalUrl) ? 'Vehicle Photo' : 'Payment Slip' }}</span>
           <button class="text-[#999] hover:text-[#333] transition" @click="slipModalUrl = null">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
@@ -759,6 +807,9 @@ const matchesLoading = ref(false)
 const matchesError = ref('')
 // Pickup areas (from assigned freelancer)
 const pickups = ref([])
+const driverVehicle = ref(null)
+const showVehicleModal = ref(false)
+const vehicleImages = ref([])
 const jobReview = ref(null)
 const emReview = ref(null)
 
@@ -853,6 +904,22 @@ const form = reactive({
 })
 
 // Fetch tour
+const fetchDriverVehicle = async (flId) => {
+  if (!flId) { driverVehicle.value = null; vehicleImages.value = []; return }
+  try {
+    const [vRes, imgRes] = await Promise.all([
+      fetch(`${API_BASE}/fl-vehicle?fl_id=${flId}&limit=1`),
+      fetch(`${API_BASE}/fl-vehicle-images?fl_id=${flId}&limit=12`),
+    ])
+    const [vData, imgData] = await Promise.all([vRes.json(), imgRes.json()])
+    driverVehicle.value = (vData.items || [])[0] || null
+    vehicleImages.value = imgData.items || []
+  } catch {
+    driverVehicle.value = null
+    vehicleImages.value = []
+  }
+}
+
 const fetchJob = async () => {
   loading.value = true
   error.value = ''
@@ -902,6 +969,7 @@ const fetchJob = async () => {
         const pickupData = await pickupRes.json()
         pickups.value = pickupData.items || []
       } catch { pickups.value = [] }
+      fetchDriverVehicle(jobData.selected_fl_id)
     }
 
   } catch (e) {
@@ -1059,6 +1127,7 @@ const handleAccept = async (app) => {
       app.application_status = 'ACCEPTED'
       job.value.job_status = 'MATCHED'
       job.value.selected_fl_id = app.fl_id
+      fetchDriverVehicle(app.fl_id)
       job.value.driver_name = app.driver_name
 
       // get driver_phone from freelancer
