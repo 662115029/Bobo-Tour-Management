@@ -23,29 +23,39 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-5 items-start">
+      <div class="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-5 items-start">
 
         <!-- LEFT -->
         <div>
           <!-- Step bar -->
-          <div class="flex items-start justify-center flex-wrap gap-y-2 gap-0 mb-5">
-            <div v-for="(s, i) in steps" :key="i" class="flex items-center">
-              <div class="flex flex-col items-center gap-0.5" @click="currentStep = i + 1" style="cursor:pointer">
-                <div class="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold transition-colors shrink-0"
-                  :class="currentStep > i + 1 ? 'bg-red-600 text-white' : currentStep === i + 1 ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-400'">
-                  <svg v-if="currentStep > i + 1" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                  <span v-else>{{ i + 1 }}</span>
-                </div>
-                <span class="text-[10px] font-medium text-center leading-tight max-w-[60px]"
-                  :class="currentStep === i + 1 ? 'text-red-600' : 'text-gray-400'">{{ s }}</span>
-              </div>
-              <div v-if="i < steps.length - 1" class="h-px w-4 mx-1 mt-3" :class="currentStep > i + 1 ? 'bg-red-600' : 'bg-gray-200'"></div>
+          <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm px-6 py-4 mb-4">
+            <div class="flex items-center">
+              <template v-for="(s, i) in steps" :key="i">
+                <button type="button" class="flex items-center gap-2.5 shrink-0 group" @click="currentStep = i + 1">
+                  <span class="w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-bold transition-all"
+                    :class="currentStep > i + 1
+                      ? 'bg-[#DC2626] text-white'
+                      : currentStep === i + 1
+                        ? 'bg-[#DC2626] text-white ring-4 ring-[#FEF2F2]'
+                        : 'bg-[#F1F5F9] text-[#94A3B8] group-hover:bg-[#E2E8F0]'">
+                    <svg v-if="currentStep > i + 1" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    <span v-else>{{ i + 1 }}</span>
+                  </span>
+                  <span class="hidden sm:block text-left leading-tight">
+                    <span class="block text-[11px] text-[#94A3B8] font-medium">Step {{ i + 1 }}</span>
+                    <span class="block text-[13px] font-semibold whitespace-nowrap"
+                      :class="currentStep >= i + 1 ? 'text-[#111]' : 'text-[#94A3B8]'">{{ s }}</span>
+                  </span>
+                </button>
+                <div v-if="i < steps.length - 1" class="flex-1 h-0.5 mx-3 rounded-full min-w-[16px]"
+                  :class="currentStep > i + 1 ? 'bg-[#DC2626]' : 'bg-[#E2E8F0]'"></div>
+              </template>
             </div>
           </div>
 
           <!-- STEP 1: General Info -->
           <div v-if="currentStep === 1" class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm p-5 flex flex-col gap-4">
-            <h2 class="text-[14px] font-bold text-[#333] border-b border-[#f0f0f0] pb-2.5">General Information</h2>
+            <div class="flex items-center gap-3 border-b border-[#f0f0f0] pb-3"><span class="w-9 h-9 rounded-full bg-[#FEF2F2] flex items-center justify-center shrink-0"><svg class="w-[18px] h-[18px] text-[#DC2626]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></span><div><h2 class="text-[15px] font-bold text-[#111] leading-tight">General Information</h2><p class="text-[12px] text-[#999]">Basic details of your tour</p></div></div>
             <div>
               <label class="field-label">Tour Title <span class="text-red-500">*</span></label>
               <input v-model="form.job_title" type="text" class="field-input" placeholder="e.g. Chiang Mai Full Day Temple Tour" />
@@ -113,7 +123,7 @@
 
           <!-- STEP 2: Vehicle -->
           <div v-if="currentStep === 2" class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm p-5 flex flex-col gap-4">
-            <h2 class="text-[14px] font-bold text-[#333] border-b border-[#f0f0f0] pb-2.5">Vehicle</h2>
+            <div class="flex items-center gap-3 border-b border-[#f0f0f0] pb-3"><span class="w-9 h-9 rounded-full bg-[#EFF6FF] flex items-center justify-center shrink-0"><svg class="w-[18px] h-[18px] text-[#2563EB]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="6" width="15" height="11" rx="2"/><path d="M16 9h4l3 3v5h-7z"/><circle cx="5.5" cy="18.5" r="1.5"/><circle cx="18.5" cy="18.5" r="1.5"/></svg></span><div><h2 class="text-[15px] font-bold text-[#111] leading-tight">Vehicle</h2><p class="text-[12px] text-[#999]">Vehicle type and number of seats needed</p></div></div>
             <div>
               <label class="field-label">Vehicle Type</label>
               <div class="flex items-center gap-2 px-3 py-2.5 border border-[#e0e0e0] rounded-lg bg-[#f8f9fa] text-[13px] text-[#666]">
@@ -136,12 +146,12 @@
 
           <!-- STEP 3: Tour Schedule -->
           <div v-if="currentStep === 3" class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm p-5 flex flex-col gap-3">
-            <h2 class="text-[14px] font-bold text-[#333] border-b border-[#f0f0f0] pb-2.5">Tour Schedule</h2>
+            <div class="flex items-center gap-3 border-b border-[#f0f0f0] pb-3"><span class="w-9 h-9 rounded-full bg-[#f3e5f5] flex items-center justify-center shrink-0"><svg class="w-[18px] h-[18px] text-[#7b1fa2]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span><div><h2 class="text-[15px] font-bold text-[#111] leading-tight">Tour Schedule</h2><p class="text-[12px] text-[#999]">Places to visit, in order</p></div></div>
             <div class="flex flex-col gap-2">
               <div v-for="(itin, idx) in form.job_itineraries" :key="idx"
                 class="bg-[#f8f9fa] rounded-xl border border-[#e8e8e8] px-3 py-2.5 flex flex-col gap-2">
                 <div class="flex items-center gap-2">
-                  <span class="text-[10px] font-bold text-[#bbb] uppercase w-10 shrink-0">{{ idx + 1 }}</span>
+                  <span class="w-10 shrink-0"><span class="w-6 h-6 rounded-full bg-[#f3e5f5] text-[#7b1fa2] text-[11px] font-bold flex items-center justify-center">{{ idx + 1 }}</span></span>
                   <input v-model="itin.place_name" type="text" placeholder="Place name *"
                     class="flex-1 min-w-0 px-2.5 py-1.5 border border-[#e0e0e0] rounded-lg text-[13px] focus:outline-none focus:border-red-400 bg-white" />
                   <input v-model="itin.itinerary_date" type="date"
@@ -160,7 +170,7 @@
               </div>
             </div>
             <button type="button" @click="addItinerary"
-              class="w-full py-2 border-2 border-dashed border-[#e0e0e0] rounded-xl text-[13px] text-[#999] hover:border-red-300 hover:text-red-400 transition">
+              class="w-full py-2.5 border-2 border-dashed border-[#e0e0e0] rounded-xl text-[13px] font-semibold text-[#7b1fa2] hover:border-[#7b1fa2] hover:bg-[#f3e5f5] transition">
               + Add Stop
             </button>
           </div>
@@ -170,12 +180,12 @@
 
             <!-- Pick Up Points table -->
             <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm p-5 flex flex-col gap-3">
-              <h2 class="text-[14px] font-bold text-[#333] border-b border-[#f0f0f0] pb-2.5">Pick Up Points</h2>
+              <div class="flex items-center gap-3 border-b border-[#f0f0f0] pb-3"><span class="w-9 h-9 rounded-full bg-[#ECFEFF] flex items-center justify-center shrink-0"><svg class="w-[18px] h-[18px] text-[#0891B2]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg></span><div><h2 class="text-[15px] font-bold text-[#111] leading-tight">Pick Up Points</h2><p class="text-[12px] text-[#999]">Where the driver picks up each passenger</p></div></div>
               <div class="flex flex-col gap-2">
                 <div v-for="(p, idx) in form.job_passengers" :key="idx"
                   class="bg-[#f8f9fa] rounded-xl border border-[#e8e8e8] px-3 py-2.5 flex flex-col gap-2">
                   <div class="flex items-center gap-2">
-                    <span class="text-[10px] font-bold text-[#bbb] uppercase w-10 shrink-0">{{ idx + 1 }}</span>
+                    <span class="w-10 shrink-0"><span class="w-6 h-6 rounded-full bg-[#ECFEFF] text-[#0891B2] text-[11px] font-bold flex items-center justify-center">{{ idx + 1 }}</span></span>
                     <input v-model="p.first_name" type="text" placeholder="First name *"
                       class="flex-1 min-w-0 px-2.5 py-1.5 border border-[#e0e0e0] rounded-lg text-[13px] focus:outline-none focus:border-red-400 bg-white" />
                     <input v-model="p.last_name" type="text" placeholder="Last name"
@@ -193,18 +203,18 @@
                 </div>
               </div>
               <button type="button" @click="addPassenger"
-                class="w-full py-2 border-2 border-dashed border-[#e0e0e0] rounded-xl text-[13px] text-[#999] hover:border-red-300 hover:text-red-400 transition">
+                class="w-full py-2.5 border-2 border-dashed border-[#e0e0e0] rounded-xl text-[13px] font-semibold text-[#0891B2] hover:border-[#0891B2] hover:bg-[#ECFEFF] transition">
                 + Add Pick Up Point
               </button>
             </div>
 
             <!-- Expenses table -->
             <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm p-5 flex flex-col gap-3">
-              <h2 class="text-[14px] font-bold text-[#333] border-b border-[#f0f0f0] pb-2.5">Expenses</h2>
+              <div class="flex items-center gap-3 border-b border-[#f0f0f0] pb-3"><span class="w-9 h-9 rounded-full bg-[#F0FDF4] flex items-center justify-center shrink-0"><svg class="w-[18px] h-[18px] text-[#16A34A]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span><div><h2 class="text-[15px] font-bold text-[#111] leading-tight">Expenses</h2><p class="text-[12px] text-[#999]">Extra costs covered by the tour</p></div></div>
               <div class="flex flex-col gap-2">
                 <div v-for="(exp, idx) in form.job_expenses" :key="idx"
                   class="flex items-center gap-2">
-                  <span class="text-[12px] text-[#bbb] font-medium w-4 shrink-0">{{ idx + 1 }}</span>
+                  <span class="w-6 shrink-0"><span class="w-6 h-6 rounded-full bg-[#F0FDF4] text-[#16A34A] text-[11px] font-bold flex items-center justify-center">{{ idx + 1 }}</span></span>
                   <input v-model="exp.item_name" type="text" placeholder="e.g. Entrance fee"
                     class="flex-1 min-w-0 px-3 py-2 border border-[#e0e0e0] rounded-lg text-[13px] focus:outline-none focus:border-red-400" />
                   <div class="flex items-center border border-[#e0e0e0] rounded-lg overflow-hidden shrink-0">
@@ -218,7 +228,7 @@
                 </div>
               </div>
               <button type="button" @click="addExpense"
-                class="w-full py-2 border-2 border-dashed border-[#e0e0e0] rounded-xl text-[13px] text-[#999] hover:border-red-300 hover:text-red-400 transition">
+                class="w-full py-2.5 border-2 border-dashed border-[#e0e0e0] rounded-xl text-[13px] font-semibold text-[#16A34A] hover:border-[#16A34A] hover:bg-[#F0FDF4] transition">
                 + Add Expense
               </button>
             </div>
@@ -229,14 +239,14 @@
             <div class="flex gap-2">
               <button v-if="currentStep > 1" type="button" @click="currentStep--"
                 class="px-5 py-2.5 border border-[#e0e0e0] text-[#666] rounded-lg text-[13px] font-medium hover:bg-[#f5f5f5] transition">
-                ← Prev
+                Prev
               </button>
               <button v-if="currentStep < steps.length" type="button" @click="nextStep"
-                class="px-6 py-2.5 bg-red-600 text-white rounded-lg text-[13px] font-semibold hover:bg-red-700 transition">
-                Next →
+                class="px-6 py-2.5 bg-[#DC2626] text-white rounded-lg text-[13px] font-semibold hover:bg-[#B91C1C] transition shadow-sm">
+                Next
               </button>
               <button v-else type="button" @click="submitJob" :disabled="submitting || !isVerified"
-                class="px-6 py-2.5 bg-red-600 text-white rounded-lg text-[13px] font-semibold hover:bg-red-700 transition disabled:opacity-50">
+                class="px-6 py-2.5 bg-[#DC2626] text-white rounded-lg text-[13px] font-semibold hover:bg-[#B91C1C] transition shadow-sm disabled:bg-[#F1F5F9] disabled:text-[#94A3B8] disabled:shadow-none disabled:cursor-not-allowed">
                 {{ submitting ? 'Creating…' : 'Create Tour' }}
               </button>
             </div>
@@ -249,8 +259,11 @@
           <!-- Templates -->
           <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden">
             <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center justify-between">
-              <span class="text-[12px] font-bold text-[#444] uppercase tracking-wide">Templates</span>
-              <button type="button" @click="saveAsTemplate" class="text-[11px] text-red-600 hover:text-red-700 font-medium">+ Save</button>
+              <span class="flex items-center gap-2">
+                <span class="w-8 h-8 rounded-full bg-[#FFFBEB] flex items-center justify-center shrink-0"><svg class="w-4 h-4 text-[#D97706]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg></span>
+                <span class="text-[14px] font-bold text-[#111]">Templates</span>
+              </span>
+              <button type="button" @click="saveAsTemplate" class="text-[12px] text-[#DC2626] hover:text-[#B91C1C] font-semibold px-2.5 py-1 rounded-lg hover:bg-[#FEF2F2] transition">+ Save</button>
             </div>
             <div class="px-4 py-3 flex flex-col gap-1.5 max-h-40 overflow-y-auto">
               <p v-if="templates.length === 0" class="text-[12px] text-[#bbb] text-center py-2">No templates yet</p>
@@ -270,8 +283,9 @@
 
           <!-- Live Summary -->
           <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden">
-            <div class="px-4 py-3 border-b border-[#f0f0f0]">
-              <span class="text-[12px] font-bold text-[#444] uppercase tracking-wide">Summary</span>
+            <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
+              <span class="w-8 h-8 rounded-full bg-[#EFF6FF] flex items-center justify-center shrink-0"><svg class="w-4 h-4 text-[#2563EB]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg></span>
+              <span class="text-[14px] font-bold text-[#111]">Summary</span>
             </div>
             <div class="px-4 py-3 flex flex-col gap-2 text-[13px]">
               <div class="flex justify-between gap-2">
@@ -287,7 +301,7 @@
               </div>
               <div class="flex justify-between gap-2">
                 <span class="text-[#999] shrink-0">Price</span>
-                <span class="text-[#222] font-medium">{{ form.job_price ? '฿' + Number(form.job_price).toLocaleString() : '—' }}</span>
+                <span class="text-[#111] font-bold text-[15px]">{{ form.job_price ? '฿' + Number(form.job_price).toLocaleString() : '—' }}</span>
               </div>
               <div class="flex justify-between gap-2">
                 <span class="text-[#999] shrink-0">Vehicle</span>
