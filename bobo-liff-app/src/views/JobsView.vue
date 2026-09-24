@@ -69,17 +69,22 @@
       </div>
     </div>
 
-    <!-- Bottom Nav -->
-    <div class="flex bg-white border-t border-[#e0e0e0] flex-shrink-0">
-      <button v-for="tab in tabs" :key="tab.key"
-        class="flex-1 flex flex-col items-center gap-1 py-2.5 transition-colors"
-        :class="activeTab === tab.key ? 'text-red-600' : 'text-[#aaa]'"
-        @click="switchTab(tab.key)">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" :stroke="activeTab === tab.key ? '#dc2626' : '#ccc'" stroke-width="1.8">
-          <path :d="tab.icon"/>
-        </svg>
-        <span class="text-meta font-semibold leading-tight text-center whitespace-pre-line">{{ tab.label }}</span>
-      </button>
+    <!-- Bottom Nav (floating) -->
+    <div class="flex-shrink-0 px-3 pt-2" style="padding-bottom: max(env(safe-area-inset-bottom), 10px);">
+      <nav class="flex bg-white rounded-3xl border border-[#EEF2F6] shadow-[0_8px_24px_rgba(15,23,42,0.10)] px-1 py-2.5">
+        <button v-for="tab in tabs" :key="tab.key"
+          class="flex-1 flex flex-col items-center gap-1 active:scale-95 transition"
+          @click="switchTab(tab.key)">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+            :stroke="activeTab === tab.key ? '#DC2626' : '#94A3B8'"
+            :stroke-width="activeTab === tab.key ? 2.1 : 1.7"
+            stroke-linecap="round" stroke-linejoin="round" class="transition-colors">
+            <path :d="tab.icon"/>
+          </svg>
+          <span class="text-meta leading-tight text-center whitespace-nowrap transition-colors"
+            :class="activeTab === tab.key ? 'text-[#0F172A] font-bold' : 'text-[#94A3B8] font-medium'">{{ tab.label }}</span>
+        </button>
+      </nav>
     </div>
 
   </div>
@@ -105,9 +110,9 @@ const HEADERS = { 'ngrok-skip-browser-warning': 'true' }
 
 const tabs = [
   { key: 'my-job',      label: 'My Job',       icon: 'M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2' },
-  { key: 'job-offer',   label: 'Job Offer',    icon: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z' },
-  { key: 'my-request',  label: 'Job Applied',  icon: 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 0 0 1.946-.806 3.42 3.42 0 0 1 4.438 0 3.42 3.42 0 0 0 1.946.806 3.42 3.42 0 0 1 3.138 3.138 3.42 3.42 0 0 0 .806 1.946 3.42 3.42 0 0 1 0 4.438 3.42 3.42 0 0 0-.806 1.946 3.42 3.42 0 0 1-3.138 3.138 3.42 3.42 0 0 0-1.946.806 3.42 3.42 0 0 1-4.438 0 3.42 3.42 0 0 0-1.946-.806 3.42 3.42 0 0 1-3.138-3.138 3.42 3.42 0 0 0-.806-1.946 3.42 3.42 0 0 1 0-4.438 3.42 3.42 0 0 0 .806-1.946 3.42 3.42 0 0 1 3.138-3.138z' },
-  { key: 'job-opening', label: 'Job Openings', icon: 'M21 13.255A23.931 23.931 0 0 1 12 15c-3.183 0-6.22-.62-9-1.745M16 6l2 2-2 2M8 6l-2 2 2 2' },
+  { key: 'job-offer',   label: 'Job Offer',    icon: 'M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zM3 6l9 7 9-7' },
+  { key: 'my-request',  label: 'Job Applied',  icon: 'M9 12l2 2 4-4M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z' },
+  { key: 'job-opening', label: 'Job Openings', icon: 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.35-4.35' },
 ]
 
 const currentTab = computed(() => tabs.find(t => t.key === activeTab.value) || tabs[0])
