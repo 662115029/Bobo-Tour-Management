@@ -61,34 +61,58 @@
 
       <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div v-for="job in filteredJobs" :key="job.job_id"
-          class="relative bg-white rounded-xl border border-[#e0e0e0] shadow-sm hover:shadow-md hover:border-[#ccc] transition-all cursor-pointer overflow-hidden flex flex-col"
+          class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm hover:shadow-md hover:border-[#ccc] transition-all cursor-pointer overflow-hidden flex flex-col"
+          :class="['COMPLETED','CANCELLED'].includes(job.job_status) ? 'opacity-70 hover:opacity-100' : ''"
           @click="viewJob(job.job_id, job.job_title)">
-          <div v-if="appliedCount(job.job_id) > 0"
-            class="absolute top-3 right-3 z-10 min-w-[20px] h-5 px-1.5 bg-red-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center shadow">
-            {{ appliedCount(job.job_id) }}
-          </div>
           <div class="p-5 flex flex-col gap-2.5 flex-1">
-            <h3 class="text-[14px] font-semibold text-[#111] leading-snug line-clamp-2 pr-6 min-h-[40px]">{{ job.job_title }}</h3>
-            <div class="h-px bg-[#f0f0f0]"></div>
+
+            <!-- Title + status -->
+            <div class="flex items-start justify-between gap-3">
+              <h3 class="text-[15px] font-semibold text-[#111] leading-snug line-clamp-2 min-h-[42px]">{{ job.job_title }}</h3>
+              <span class="badge shrink-0" :class="job.job_status?.toLowerCase()">{{ statusLabel(job.job_status) }}</span>
+            </div>
+
+            <!-- Area -->
+            <div v-if="job.area_name"><span class="info-tag area">{{ job.area_name }}</span></div>
+
+            <!-- Dates -->
             <div class="flex items-center gap-2 text-[13px] text-[#666]">
               <svg class="w-3.5 h-3.5 text-[#bbb] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
               <span>{{ formatDate(job.job_start_date) }}</span>
               <span class="text-[#ddd]">→</span>
               <span>{{ formatDate(job.job_end_date) || '—' }}</span>
             </div>
-            <div class="flex items-center gap-2 text-[13px]">
-              <svg class="w-3.5 h-3.5 text-[#bbb] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-              <span class="font-semibold text-[#222]">฿{{ Number(job.job_price || 0).toLocaleString() }}</span>
+
+            <!-- Driver -->
+            <div v-if="job.selected_driver" class="flex items-center gap-2 text-[13px] text-[#666]">
+              <svg class="w-3.5 h-3.5 text-[#bbb] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+              <span class="truncate">{{ job.selected_driver }}</span>
+            </div>
+
+            <!-- Created -->
+            <div class="flex items-center gap-2 text-[12px] text-[#999]">
+              <svg class="w-3.5 h-3.5 text-[#ccc] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 7v5l3 2"/></svg>
+              <span>Created {{ formatDate(job.job_created_at) }}</span>
+            </div>
+
+            <!-- Rate -->
+            <div class="mt-auto pt-3 border-t border-[#f0f0f0] flex items-end justify-between">
+              <span class="text-[11px] text-[#bbb] uppercase tracking-wide font-medium">Rate (THB)</span>
+              <span class="text-[22px] font-bold text-[#111] leading-none">฿{{ Number(job.job_price || 0).toLocaleString() }}</span>
             </div>
           </div>
-          <div class="border-t border-[#f0f0f0] grid grid-cols-2 divide-x divide-[#f0f0f0]">
-            <div class="px-4 py-2.5 flex items-center justify-center">
-              <span class="badge" :class="job.job_status?.toLowerCase()">{{ statusLabel(job.job_status) }}</span>
-            </div>
-            <div class="px-4 py-2.5 text-center">
-              <p class="text-[10px] text-[#bbb] uppercase tracking-wide font-medium">Created</p>
-              <p class="text-[12px] text-[#666]">{{ formatDate(job.job_created_at) }}</p>
-            </div>
+
+          <!-- Footer -->
+          <div class="border-t border-[#f0f0f0] px-5 py-2.5 flex items-center justify-between">
+            <span v-if="appliedCount(job.job_id) > 0" class="flex items-center gap-1.5 text-[12px] font-semibold text-[#DC2626]">
+              <span class="w-1.5 h-1.5 rounded-full bg-[#DC2626]"></span>
+              {{ appliedCount(job.job_id) }} applicant{{ appliedCount(job.job_id) > 1 ? 's' : '' }}
+            </span>
+            <span v-else></span>
+            <span class="flex items-center gap-1 text-[13px] font-semibold text-[#DC2626]">
+              View Detail
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+            </span>
           </div>
         </div>
       </div>
