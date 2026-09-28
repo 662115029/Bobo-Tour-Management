@@ -42,7 +42,7 @@ def handle_message(event):
     api = get_messaging_api()
     text = event.message.text.strip().lower()
 
-    if text in ['งาน', 'job', 'jobs', 'หางาน']:
+    if text in ['job', 'jobs']:
         send_job_list_message(api, event.reply_token)
     else:
         api.reply_message(
@@ -50,7 +50,7 @@ def handle_message(event):
                 reply_token=event.reply_token,
                 messages=[
                     TextMessage(
-                        text="พิมพ์ 'งาน' เพื่อดูงานที่มีอยู่ครับ 😊"
+                        text="Type 'jobs' to see available tour jobs 😊"
                     )
                 ]
             )
@@ -73,7 +73,7 @@ def send_job_list_message(api, reply_token):
                 },
                 {
                     "type": "text",
-                    "text": "งานที่มีอยู่",
+                    "text": "Available Jobs",
                     "color": "#ffffff",
                     "size": "xl",
                     "weight": "bold"
@@ -88,13 +88,13 @@ def send_job_list_message(api, reply_token):
             "contents": [
                 {
                     "type": "text",
-                    "text": "มีงานรอคุณอยู่!",
+                    "text": "Tour jobs are waiting for you!",
                     "size": "md",
                     "color": "#333333"
                 },
                 {
                     "type": "text",
-                    "text": "กดปุ่มด้านล่างเพื่อดูรายละเอียดงานทั้งหมด",
+                    "text": "Tap the button below to see all job details.",
                     "size": "sm",
                     "color": "#888888",
                     "wrap": True,
@@ -111,7 +111,7 @@ def send_job_list_message(api, reply_token):
                     "type": "button",
                     "action": {
                         "type": "uri",
-                        "label": "ดูงานทั้งหมด",
+                        "label": "View all jobs",
                         "uri": LIFF_URL
                     },
                     "style": "primary",
@@ -127,7 +127,7 @@ def send_job_list_message(api, reply_token):
             reply_token=reply_token,
             messages=[
                 FlexMessage(
-                    alt_text="งานที่มีอยู่ใน Bobo Tour",
+                    alt_text="Available jobs on Bobo Tour",
                     contents=FlexContainer.from_dict(flex_content)
                 )
             ]
