@@ -14,6 +14,12 @@ from .utils import (
 import bcrypt
 import os
 import requests
+from notification import (
+    notify_registered,
+    notify_verified,
+    notify_verify_pending,
+    notify_not_verified,
+)
 
 router = APIRouter(tags=["freelancers"])
 
@@ -173,6 +179,11 @@ def register_freelancer(body: FreelancerRegisterRequest):
 
         conn.commit()
         link_rich_menu_to_user(body.line_user_id)
+        if body.line_user_id:
+            try:
+                notify_registered(body.line_user_id, body.fl_name)
+            except Exception as notify_err:
+                print(f"[WARN] notify_registered failed: {notify_err}")
         return {"success": True, "fl_id": fl_id}
 
     except HTTPException:
@@ -988,8 +999,12 @@ def resubmit_verification(fl_id: int):
     try:
         conn = get_connection()
         cursor = get_cursor(conn)
-        cursor.execute("SELECT fl_id FROM freelancers WHERE fl_id = %s", (fl_id,))
-        if not cursor.fetchone():
+        cursor.execute(
+            "SELECT fl_id, fl_name, line_user_id, fl_verify_status FROM freelancers WHERE fl_id = %s",
+            (fl_id,)
+        )
+        fl_row = cursor.fetchone()
+        if not fl_row:
             raise HTTPException(status_code=404, detail="Freelancer not found")
         cursor.execute(
             "UPDATE fl_verification SET is_latest = FALSE WHERE fl_id = %s",
@@ -1007,6 +1022,12 @@ def resubmit_verification(fl_id: int):
             (fl_id,)
         )
         conn.commit()
+        # notify only when status actually changes (e.g. VERIFIED -> PENDING)
+        if fl_row["line_user_id"] and fl_row["fl_verify_status"] != "PENDING":
+            try:
+                notify_verify_pending(fl_row["line_user_id"], fl_row["fl_name"])
+            except Exception as notify_err:
+                print(f"[WARN] notify_verify_pending failed: {notify_err}")
         return {"success": True, "fl_verify_status": "PENDING"}
     except HTTPException:
         raise
@@ -1033,6 +1054,13 @@ def review_fl_document(doc_id: str, body: DocReviewRequest):
         doc = cursor.fetchone()
         if not doc:
             raise HTTPException(status_code=404, detail="Document not found")
+
+        cursor.execute(
+            "SELECT fl_name, line_user_id, fl_verify_status FROM freelancers WHERE fl_id = %s",
+            (doc["fl_id"],)
+        )
+        fl_before = cursor.fetchone() or {}
+        new_status = None
 
         reject_reason = body.reason if body.status == "REJECTED" else None
         cursor.execute(
@@ -1207,7 +1235,33 @@ def review_fl_document(doc_id: str, body: DocReviewRequest):
                     (body.reviewed_by, doc_id, doc_info["fl_name"], doc_label)
                 )
 
+        # collect reject reasons before closing the connection
+        reject_reasons = []
+        if new_status == "NOT_VERIFIED":
+            cursor.execute(
+                """
+                SELECT fl_doc_type, reject_reason FROM fl_documents
+                WHERE fl_id = %s AND fl_doc_status = 'REJECTED' AND file_url IS NOT NULL
+                """,
+                (doc["fl_id"],)
+            )
+            for r in cursor.fetchall():
+                label = (r["fl_doc_type"] or "").replace('_', ' ').title()
+                reject_reasons.append(f"{label}: {r['reject_reason']}" if r["reject_reason"] else label)
+
         conn.commit()
+
+        # notify only when the account status actually changes
+        line_id = fl_before.get("line_user_id")
+        if line_id and new_status and new_status != fl_before.get("fl_verify_status"):
+            try:
+                if new_status == "VERIFIED":
+                    notify_verified(line_id, fl_before.get("fl_name"))
+                elif new_status == "NOT_VERIFIED":
+                    notify_not_verified(line_id, fl_before.get("fl_name"), reject_reasons)
+            except Exception as notify_err:
+                print(f"[WARN] verify status notify failed: {notify_err}")
+
         return {"status": "updated", "doc_id": doc_id, "new_status": body.status}
     except HTTPException:
         raise

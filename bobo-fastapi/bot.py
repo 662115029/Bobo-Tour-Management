@@ -29,26 +29,11 @@ def get_messaging_api():
 
 
 # when freelancer adds the bot as friend
+# The welcome message is set in LINE OA Manager (Greeting message),
+# so the bot does not reply here to avoid sending it twice.
 @handler.add(FollowEvent)
 def handle_follow(event):
-    api = get_messaging_api()
-    api.reply_message(
-        ReplyMessageRequest(
-            reply_token=event.reply_token,
-            messages=[
-                TextMessage(
-                    text=(
-                        "สวัสดีครับ! ยินดีต้อนรับสู่ Bobo Tour 🚐\n\n"
-                        "คุณสามารถใช้บอทนี้เพื่อ:\n"
-                        "• รับการแจ้งเตือนงานใหม่\n"
-                        "• ดูงานที่มีอยู่\n"
-                        "• ยืนยันหรือปฏิเสธงาน\n\n"
-                        "พิมพ์ 'งาน' เพื่อดูงานที่มีอยู่"
-                    )
-                )
-            ]
-        )
-    )
+    pass
 
 
 # when freelancer sends a message to the bot
@@ -94,7 +79,7 @@ def send_job_list_message(api, reply_token):
                     "weight": "bold"
                 }
             ],
-            "backgroundColor": "#06C755",
+            "backgroundColor": "#DC2626",
             "paddingAll": "20px"
         },
         "body": {
@@ -130,7 +115,7 @@ def send_job_list_message(api, reply_token):
                         "uri": LIFF_URL
                     },
                     "style": "primary",
-                    "color": "#06C755"
+                    "color": "#DC2626"
                 }
             ],
             "paddingAll": "12px"

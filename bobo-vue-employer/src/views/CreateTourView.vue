@@ -253,7 +253,7 @@
           </div>
         </div>
 
-        <!-- RIGHT — Summary -->
+        <!-- RIGHT - Summary -->
         <div class="flex flex-col gap-3 lg:sticky lg:top-4 order-first lg:order-last">
 
           <!-- Templates -->
@@ -290,18 +290,18 @@
             <div class="px-4 py-3 flex flex-col gap-2 text-[13px]">
               <div class="flex justify-between gap-2">
                 <span class="text-[#999] shrink-0">Title</span>
-                <span class="text-[#222] font-medium text-right truncate">{{ form.job_title || '—' }}</span>
+                <span class="text-[#222] font-medium text-right truncate">{{ form.job_title || '-' }}</span>
               </div>
               <div class="flex justify-between gap-2">
                 <span class="text-[#999] shrink-0">Date</span>
                 <span class="text-[#222] font-medium text-right text-[12px]">
-                  {{ form.job_start_date ? formatDate(form.job_start_date) : '—' }}
+                  {{ form.job_start_date ? formatDate(form.job_start_date) : '-' }}
                   <span v-if="form.job_end_date && form.job_end_date !== form.job_start_date"> → {{ formatDate(form.job_end_date) }}</span>
                 </span>
               </div>
               <div class="flex justify-between gap-2">
                 <span class="text-[#999] shrink-0">Price</span>
-                <span class="text-[#111] font-bold text-[15px]">{{ form.job_price ? '฿' + Number(form.job_price).toLocaleString() : '—' }}</span>
+                <span class="text-[#111] font-bold text-[15px]">{{ form.job_price ? '฿' + Number(form.job_price).toLocaleString() : '-' }}</span>
               </div>
               <div class="flex justify-between gap-2">
                 <span class="text-[#999] shrink-0">Vehicle</span>
@@ -329,11 +329,11 @@
                     <tbody>
                       <tr v-for="(itin, i) in form.job_itineraries" :key="i" class="border-b border-[#f8f8f8]">
                         <td class="py-1 pr-2 text-[#bbb]">{{ i + 1 }}</td>
-                        <td class="py-1 pr-2 text-[#222] font-medium max-w-[80px] truncate">{{ itin.place_name || '—' }}</td>
-                        <td class="py-1 pr-2 text-[#666]">{{ itin.itinerary_date ? formatDate(itin.itinerary_date) : '—' }}</td>
-                        <td class="py-1 pr-2 text-[#666]">{{ itin.start_time || '—' }}</td>
-                        <td class="py-1 pr-2 text-[#666]">{{ itin.end_time || '—' }}</td>
-                        <td class="py-1 text-[#bbb] max-w-[60px] truncate">{{ itin.note || '—' }}</td>
+                        <td class="py-1 pr-2 text-[#222] font-medium max-w-[80px] truncate">{{ itin.place_name || '-' }}</td>
+                        <td class="py-1 pr-2 text-[#666]">{{ itin.itinerary_date ? formatDate(itin.itinerary_date) : '-' }}</td>
+                        <td class="py-1 pr-2 text-[#666]">{{ itin.start_time || '-' }}</td>
+                        <td class="py-1 pr-2 text-[#666]">{{ itin.end_time || '-' }}</td>
+                        <td class="py-1 text-[#bbb] max-w-[60px] truncate">{{ itin.note || '-' }}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -348,7 +348,7 @@
               <div class="flex justify-between gap-2">
                 <span class="text-[#999]">Expenses</span>
                 <span class="text-[#222] font-medium">
-                  {{ form.job_expenses.length > 0 ? '฿' + form.job_expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0).toLocaleString() : '—' }}
+                  {{ form.job_expenses.length > 0 ? '฿' + form.job_expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0).toLocaleString() : '-' }}
                 </span>
               </div>
             </div>
@@ -534,7 +534,7 @@ const DEFAULT_TEMPLATES = [
         { place_name: 'Doi Suthep Temple', itinerary_date: '', start_time: '08:00', end_time: '10:00', note: '', sequence: 1 },
         { place_name: 'Pha Lat Temple', itinerary_date: '', start_time: '10:30', end_time: '12:00', note: '', sequence: 2 },
       ],
-      job_passengers: [], job_expenses: [{ item_name: 'Entrance fee — Doi Suthep', amount: 30, sequence: 1 }],
+      job_passengers: [], job_expenses: [{ item_name: 'Entrance fee - Doi Suthep', amount: 30, sequence: 1 }],
     },
   },
   {
@@ -642,7 +642,7 @@ const addExpense = () => { saveHistory(); form.job_expenses.push({ item_name: ''
 const removeExpense = (idx) => { saveHistory(); form.job_expenses.splice(idx, 1) }
 
 const formatDate = (d) => {
-  if (!d) return '—'
+  if (!d) return '-'
   return new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
