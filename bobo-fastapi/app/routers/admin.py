@@ -1,3 +1,7 @@
+import boto3
+import json
+import os
+
 from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 from typing import Optional
@@ -468,3 +472,25 @@ def update_matching_config(data: dict):
     finally:
         if conn:
             conn.close()
+
+
+LAMBDA_FUNCTION_NAME = "bobo-matching-processor"
+@router.post("/trigger-matching")
+def trigger_matching():
+    """Manually invokes the matching Lambda immediately, instead of waiting for the hourly schedule."""
+    try:
+        client = boto3.client(
+            "lambda",
+            region_name=os.environ.get("AWS_REGION", "ap-southeast-7"),
+            aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+            aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
+        )
+        response = client.invoke(
+            FunctionName=LAMBDA_FUNCTION_NAME,
+            InvocationType="RequestResponse",  # wait for it to finish, return the result
+        )
+        payload = json.loads(response["Payload"].read())
+        body = json.loads(payload.get("body", "{}"))
+        return {"success": True, "result": body}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
