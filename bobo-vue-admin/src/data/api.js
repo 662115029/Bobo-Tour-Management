@@ -1,5 +1,9 @@
-export const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000'
-
+export const API_BASE =
+  import.meta.env.VITE_API_BASE ||
+  (import.meta.env.PROD
+    ? 'https://bobo-tour-management-15eu.onrender.com'
+    : 'http://localhost:8000')
+    
 export async function fetchStats() {
   const res = await fetch(`${API_BASE}/admin/stats`)
   if (!res.ok) throw new Error('Failed to fetch stats')
