@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from app.db.connection import get_connection, get_cursor
+from .errors import db_error
 from .utils import format_time, is_tour_cancellable
 from notification import notify_invited
 
@@ -154,7 +155,7 @@ def get_tour(job_id: str, em_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -252,7 +253,7 @@ def create_tour(data: dict):
     except Exception as e:
         if conn:
             conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))  # Fixed: return proper error status
+        raise db_error(e)  # Fixed: return proper error status
     finally:
         if conn:
             conn.close()
@@ -355,7 +356,7 @@ def update_tour(job_id: str, data: dict):
     except Exception as e:
         if conn:
             conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))  # Fixed: return proper error status
+        raise db_error(e)  # Fixed: return proper error status
     finally:
         if conn:
             conn.close()
@@ -391,7 +392,7 @@ def cancel_tour(job_id: str, em_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -450,7 +451,7 @@ def get_tour_applications(job_id: str, em_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -619,7 +620,7 @@ def get_tour_matches(job_id: str, em_id: str, limit: int = 10):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -702,7 +703,7 @@ def invite_freelancer(job_id: str, data: dict):
     except Exception as e:
         if conn:
             conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()

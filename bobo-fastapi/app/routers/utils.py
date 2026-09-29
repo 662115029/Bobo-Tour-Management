@@ -345,3 +345,23 @@ def validate_freelancer_register_fields(
     if pin_err:
         return pin_err
     return None
+
+
+# ---------------------------------------------------------------------------
+# UTC-17  validate_vehicle_fields   [Feature 2 — Profile Management]
+# ---------------------------------------------------------------------------
+
+def validate_vehicle_fields(seat_capa: int, year: int, current_year: int) -> Optional[str]:
+    """
+    Return an error message string if vehicle fields are invalid, or None if valid.
+    Rules: seats must be 9-13 (matches DB CHECK constraint);
+           year must be between 1990 and current_year + 1.
+    current_year is passed in (not read from the clock) so tests are deterministic.
+
+    Used by: freelancers.py (create_fl_vehicle, update_fl_vehicle)
+    """
+    if not 9 <= seat_capa <= 13:
+        return "Seats must be between 9 and 13."
+    if not 1990 <= year <= current_year + 1:
+        return "Please enter a valid vehicle year."
+    return None

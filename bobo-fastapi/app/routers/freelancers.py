@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 from typing import Optional
 from app.db.connection import get_connection, get_cursor
+from .errors import db_error, safe_msg
 from .utils import (
     validate_doc_review_status,
     determine_verify_status,
@@ -10,8 +11,10 @@ from .utils import (
     validate_freelancer_register_fields,
     validate_profile_update_fields,
     validate_pin,
+    validate_vehicle_fields,
 )
 import bcrypt
+from datetime import date
 import os
 import requests
 from notification import (
@@ -192,7 +195,7 @@ def register_freelancer(body: FreelancerRegisterRequest):
     except Exception as e:
         if conn:
             conn.rollback()
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": safe_msg(e)}
     finally:
         if conn:
             conn.close()
@@ -255,7 +258,7 @@ def freelancer_login(body: FreelancerLoginRequest):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -273,7 +276,7 @@ def check_freelancer_by_line(line_user_id: str):
         freelancer = cursor.fetchone()
         return {"exists": freelancer is not None}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -315,7 +318,7 @@ def get_freelancers(limit: int = 10, offset: int = 0, search: str = "", status: 
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset, "search": search, "status": status}
     except Exception as e:
-        return {"error": str(e), "items": []}
+        return {"error": safe_msg(e), "items": []}
     finally:
         if conn:
             conn.close()
@@ -344,7 +347,7 @@ def get_freelancer(fl_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": safe_msg(e)}
     finally:
         if conn:
             conn.close()
@@ -395,7 +398,7 @@ def update_freelancer(fl_id: str, body: FreelancerProfileUpdateRequest):
     except Exception as e:
         if conn:
             conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -431,7 +434,7 @@ def change_freelancer_pin(fl_id: str, body: ChangePinRequest):
     except Exception as e:
         if conn:
             conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -461,7 +464,7 @@ def get_fl_bank_accounts(limit: int = 10, offset: int = 0, fl_id: Optional[int] 
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
-        return {"error": str(e), "items": []}
+        return {"error": safe_msg(e), "items": []}
     finally:
         if conn:
             conn.close()
@@ -491,7 +494,7 @@ def get_fl_vehicle(limit: int = 10, offset: int = 0, fl_id: Optional[int] = None
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
-        return {"error": str(e), "items": []}
+        return {"error": safe_msg(e), "items": []}
     finally:
         if conn:
             conn.close()
@@ -499,6 +502,9 @@ def get_fl_vehicle(limit: int = 10, offset: int = 0, fl_id: Optional[int] = None
 
 @router.post("/fl-vehicle")
 def create_fl_vehicle(fl_id: int, body: VehicleRequest):
+    err = validate_vehicle_fields(body.fl_vehicle_seat_capa, body.fl_vehicle_year, date.today().year)
+    if err:
+        raise HTTPException(status_code=400, detail=err)
     conn = None
     try:
         conn = get_connection()
@@ -528,7 +534,7 @@ def create_fl_vehicle(fl_id: int, body: VehicleRequest):
     except Exception as e:
         if conn:
             conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -536,6 +542,9 @@ def create_fl_vehicle(fl_id: int, body: VehicleRequest):
 
 @router.put("/fl-vehicle/{vehicle_id}")
 def update_fl_vehicle(vehicle_id: str, body: VehicleRequest):
+    err = validate_vehicle_fields(body.fl_vehicle_seat_capa, body.fl_vehicle_year, date.today().year)
+    if err:
+        raise HTTPException(status_code=400, detail=err)
     conn = None
     try:
         conn = get_connection()
@@ -562,7 +571,7 @@ def update_fl_vehicle(vehicle_id: str, body: VehicleRequest):
     except Exception as e:
         if conn:
             conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -588,7 +597,7 @@ def delete_fl_vehicle_image(vehicle_id: str, image_id: str):
     except Exception as e:
         if conn:
             conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -620,7 +629,7 @@ def get_fl_vehicle_images(limit: int = 10, offset: int = 0, fl_id: Optional[int]
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
-        return {"error": str(e), "items": []}
+        return {"error": safe_msg(e), "items": []}
     finally:
         if conn:
             conn.close()
@@ -648,7 +657,7 @@ def get_fl_languages(limit: int = 10, offset: int = 0, fl_id: Optional[int] = No
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
-        return {"error": str(e), "items": []}
+        return {"error": safe_msg(e), "items": []}
     finally:
         if conn:
             conn.close()
@@ -692,7 +701,7 @@ def add_fl_language(data: dict):
     except Exception as e:
         if conn:
             conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -713,7 +722,7 @@ def remove_fl_language(fl_id: str, language_id: str):
     except Exception as e:
         if conn:
             conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -743,7 +752,7 @@ def get_fl_pickup_areas(limit: int = 10, offset: int = 0, fl_id: Optional[int] =
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
-        return {"error": str(e), "items": []}
+        return {"error": safe_msg(e), "items": []}
     finally:
         if conn:
             conn.close()
@@ -787,7 +796,7 @@ def add_fl_pickup_area(data: dict):
     except Exception as e:
         if conn:
             conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -808,7 +817,7 @@ def remove_fl_pickup_area(fl_id: str, area_id: str):
     except Exception as e:
         if conn:
             conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -838,7 +847,7 @@ def get_fl_availability(limit: int = 10, offset: int = 0, fl_id: Optional[int] =
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
-        return {"error": str(e), "items": []}
+        return {"error": safe_msg(e), "items": []}
     finally:
         if conn:
             conn.close()
@@ -900,7 +909,7 @@ def save_fl_availability(body: AvailabilityRequest):
     except Exception as e:
         if conn:
             conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -947,7 +956,7 @@ def get_fl_documents(limit: int = 10, offset: int = 0, status: str = "", fl_id: 
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
-        return {"error": str(e), "items": []}
+        return {"error": safe_msg(e), "items": []}
     finally:
         if conn:
             conn.close()
@@ -989,7 +998,7 @@ def get_fl_verification(limit: int = 10, offset: int = 0, status: str = "PENDING
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
-        return {"error": str(e), "items": []}
+        return {"error": safe_msg(e), "items": []}
     finally:
         if conn:
             conn.close()
@@ -1039,7 +1048,7 @@ def resubmit_verification(fl_id: int, doc_type: Optional[str] = None):
     except Exception as e:
         if conn:
             conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -1269,7 +1278,7 @@ def review_fl_document(doc_id: str, body: DocReviewRequest):
         print(f"[ERROR] review_fl_document: {e}")
         if conn:
             conn.rollback()
-        return {"error": str(e)}
+        return {"error": safe_msg(e)}
     finally:
         if conn:
             conn.close()
@@ -1303,7 +1312,7 @@ def ban_freelancer(fl_id: str, body: BanRequest):
     except HTTPException:
         raise
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": safe_msg(e)}
     finally:
         if conn:
             conn.close()
@@ -1373,7 +1382,7 @@ def delete_freelancer(fl_id: str, x_admin_id: Optional[str] = Header(None, alias
     except Exception as e:
         if conn:
             conn.rollback()
-        raise HTTPException(status_code=500, detail=f"Failed to delete freelancer: {str(e)}")
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -1387,7 +1396,7 @@ def get_languages():
         cursor.execute("SELECT language_id, language_name FROM languages ORDER BY language_name ASC")
         return cursor.fetchall()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -1402,7 +1411,7 @@ def get_areas():
         cursor.execute("SELECT area_id, area_name FROM areas ORDER BY area_name ASC")
         return cursor.fetchall()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -1434,7 +1443,7 @@ def create_or_get_language(data: dict):
     except Exception as e:
         if conn:
             conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()

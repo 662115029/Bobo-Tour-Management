@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 from typing import Optional
 from app.db.connection import get_connection, get_cursor
+from .errors import db_error, safe_msg
 from .utils import (
     validate_password,
     normalize_admin_login_identifier,
@@ -58,7 +59,7 @@ def admin_db_ping():
         row = cursor.fetchone()
         return {"db": "mysql", "connected": True, "ok": row["ok"]}
     except Exception as e:
-        return {"db": "mysql", "connected": False, "error": str(e)}
+        return {"db": "mysql", "connected": False, "error": safe_msg(e)}
     finally:
         if conn:
             conn.close()
@@ -98,7 +99,7 @@ def admin_stats():
             "pendingFreelancers": pending_freelancers,
         }
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": safe_msg(e)}
     finally:
         if conn:
             conn.close()
@@ -122,7 +123,7 @@ def admin_admins(limit: int = 50, offset: int = 0):
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
-        return {"error": str(e), "items": []}
+        return {"error": safe_msg(e), "items": []}
     finally:
         if conn:
             conn.close()
@@ -146,7 +147,7 @@ def create_admin_log(body: LogRequest):
         conn.commit()
         return {"status": "logged"}
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": safe_msg(e)}
     finally:
         if conn:
             conn.close()
@@ -195,7 +196,7 @@ def admin_login(request: LoginRequest):
             except Exception as verify_err:
                 return {
                     "success": False,
-                    "error": f"Password could not be verified ({str(verify_err)}). Please try again or contact support.",
+                    "error": "Password could not be verified. Please try again or contact support.",
                 }
 
             if match:
@@ -216,7 +217,7 @@ def admin_login(request: LoginRequest):
         else:
             return {"success": False, "error": "No admin account matches that username or email." + _RETRY}
     except Exception as e:
-        return {"success": False, "error": f"Server or database error: {str(e)}. Please try again later."}
+        return {"success": False, "error": safe_msg(e)}
     finally:
         if conn:
             conn.close()
@@ -248,7 +249,7 @@ def admin_me(x_admin_id: str = Header(None, alias="X-Admin-ID")):
             }
         return {"error": "Admin not found"}
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": safe_msg(e)}
     finally:
         if conn:
             conn.close()
@@ -282,7 +283,7 @@ def update_admin(admin_id: str, body: AdminUpdateRequest):
         row = cursor.fetchone()
         return {"status": "updated", "updated_at": row["updated_at"] if row else None}
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": safe_msg(e)}
     finally:
         if conn:
             conn.close()
@@ -318,7 +319,7 @@ def change_admin_password(admin_id: str, body: ChangePasswordRequest):
         conn.commit()
         return {"success": True, "message": "Password changed successfully."}
     except Exception as e:
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": safe_msg(e)}
     finally:
         if conn:
             conn.close()
@@ -367,7 +368,7 @@ def admin_logs(limit: int = 50, offset: int = 0,
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
-        return {"error": str(e), "items": []}
+        return {"error": safe_msg(e), "items": []}
     finally:
         if conn:
             conn.close()
@@ -395,7 +396,7 @@ def get_matching_config():
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -468,7 +469,7 @@ def update_matching_config(data: dict):
             conn.rollback()
         # if the DB-level CHECK constraint somehow catches something the
         # application check above missed, it surfaces here as a normal error
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -493,4 +494,4 @@ def trigger_matching():
         body = json.loads(payload.get("body", "{}"))
         return {"success": True, "result": body}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=safe_msg(e))

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Header, Body
 from typing import Optional
 from app.db.connection import get_connection, get_cursor
+from .errors import db_error, safe_msg
 from .utils import validate_job_payment_review, sanitize_sort_params
 from notification import (
     notify_applied,
@@ -112,7 +113,7 @@ def get_jobs(
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
-        return {"error": str(e), "items": []}
+        return {"error": safe_msg(e), "items": []}
     finally:
         if conn:
             conn.close()
@@ -147,7 +148,7 @@ def get_job(job_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": safe_msg(e)}
     finally:
         if conn:
             conn.close()
@@ -228,7 +229,7 @@ def create_job(data: dict):
     except Exception as e:
         if conn:
             conn.rollback()
-        return {"error": str(e)}
+        return {"error": safe_msg(e)}
     finally:
         if conn:
             conn.close()
@@ -267,7 +268,7 @@ def get_job_required_languages(limit: int = 50, offset: int = 0, job_id: str = N
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
-        return {"error": str(e), "items": []}
+        return {"error": safe_msg(e), "items": []}
     finally:
         if conn:
             conn.close()
@@ -295,7 +296,7 @@ def get_job_pickups(limit: int = 50, offset: int = 0, job_id: str = None):
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
-        return {"error": str(e), "items": []}
+        return {"error": safe_msg(e), "items": []}
     finally:
         if conn:
             conn.close()
@@ -333,7 +334,7 @@ def get_job_itineraries(limit: int = 50, offset: int = 0, job_id: str = None, em
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
-        return {"error": str(e), "items": []}
+        return {"error": safe_msg(e), "items": []}
     finally:
         if conn:
             conn.close()
@@ -372,7 +373,7 @@ def get_job_passengers(limit: int = 50, offset: int = 0, job_id: str = None, em_
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
-        return {"error": str(e), "items": []}
+        return {"error": safe_msg(e), "items": []}
     finally:
         if conn:
             conn.close()
@@ -409,7 +410,7 @@ def get_job_expenses(limit: int = 50, offset: int = 0, job_id: str = None, em_id
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
-        return {"error": str(e), "items": []}
+        return {"error": safe_msg(e), "items": []}
     finally:
         if conn:
             conn.close()
@@ -462,7 +463,7 @@ def get_job_applications(limit: int = 50, offset: int = 0, job_id: str = None, e
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
-        return {"error": str(e), "items": []}
+        return {"error": safe_msg(e), "items": []}
     finally:
         if conn:
             conn.close()
@@ -524,7 +525,7 @@ def create_job_application(body: dict):
     except Exception as e:
         if conn:
             conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -569,7 +570,7 @@ def cancel_job_application(application_id: int, fl_id: Optional[int] = None):
     except Exception as e:
         if conn:
             conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -607,7 +608,7 @@ def get_job_payments(limit: int = 50, offset: int = 0, job_id: int = None):
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
-        return {"error": str(e), "items": []}
+        return {"error": safe_msg(e), "items": []}
     finally:
         if conn:
             conn.close()
@@ -639,7 +640,7 @@ def get_job_payment_history(job_id: int):
         rows = cursor.fetchall()
         return {"job_id": job_id, "history": rows}
     except Exception as e:
-        return {"error": str(e), "history": []}
+        return {"error": safe_msg(e), "history": []}
     finally:
         if conn:
             conn.close()
@@ -683,7 +684,7 @@ def create_job_payment(data: dict):
     except Exception as e:
         if conn:
             conn.rollback()
-        return {"error": str(e)}
+        return {"error": safe_msg(e)}
     finally:
         if conn:
             conn.close()
@@ -732,7 +733,7 @@ def reupload_job_payment(job_id: int, data: dict):
     except Exception as e:
         if conn:
             conn.rollback()
-        return {"error": str(e)}
+        return {"error": safe_msg(e)}
     finally:
         if conn:
             conn.close()
@@ -799,7 +800,7 @@ def review_job_payment(job_id: int, data: dict):
     except Exception as e:
         if conn:
             conn.rollback()
-        return {"error": str(e)}
+        return {"error": safe_msg(e)}
     finally:
         if conn:
             conn.close()
@@ -878,7 +879,7 @@ def accept_application(application_id: int, data: Optional[dict] = Body(default=
         raise
     except Exception as e:
         if conn: conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn: conn.close()
 
@@ -920,7 +921,7 @@ def reject_application(application_id: int, data: Optional[dict] = Body(default=
         raise
     except Exception as e:
         if conn: conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn: conn.close()
 
@@ -979,7 +980,7 @@ def delete_job(job_id: str, x_admin_id: Optional[str] = Header(None, alias="X-Ad
     except Exception as e:
         if conn:
             conn.rollback()
-        raise HTTPException(status_code=500, detail=f"Failed to delete job: {str(e)}")
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -1029,7 +1030,7 @@ def get_suggested_freelancers(job_id: int):
     except HTTPException:
         raise
     except Exception as e:
-        return {"error": str(e), "suggestions": []}
+        return {"error": safe_msg(e), "suggestions": []}
     finally:
         if conn:
             conn.close()

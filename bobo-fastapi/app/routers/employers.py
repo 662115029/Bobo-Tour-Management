@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 from typing import Optional
 from app.db.connection import get_connection, get_cursor
+from .errors import db_error, safe_msg
 from .utils import (
     validate_password,
     validate_doc_review_status,
@@ -91,7 +92,7 @@ def update_employer(em_id: str, body: ProfileUpdateRequest):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -132,7 +133,7 @@ def get_employers(limit: int = 10, offset: int = 0, search: str = "", status: st
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset, "search": search, "status": status}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -161,7 +162,7 @@ def get_employer(em_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": safe_msg(e)}
     finally:
         if conn:
             conn.close()
@@ -189,7 +190,7 @@ def verify_employer_password(em_id: int, data: dict):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -230,7 +231,7 @@ def resubmit_verification(em_id: int):
     except Exception as e:
         if conn:
             conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -271,7 +272,7 @@ def change_employer_password(em_id: int, data: dict):
     except Exception as e:
         if conn:
             conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -301,7 +302,7 @@ def get_em_bank_accounts(limit: int = 10, offset: int = 0, em_id: Optional[int] 
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -348,7 +349,7 @@ def get_em_documents(limit: int = 10, offset: int = 0, status: str = "", em_id: 
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -391,7 +392,7 @@ def get_em_verification(limit: int = 10, offset: int = 0, status: str = "", em_i
         rows = cursor.fetchall()
         return {"items": rows, "limit": limit, "offset": offset}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -585,7 +586,7 @@ def review_em_document(doc_id: str, body: DocReviewRequest):
         print(f"[ERROR] review_em_document: {e}")
         if conn:
             conn.rollback()
-        return {"error": str(e)}
+        return {"error": safe_msg(e)}
     finally:
         if conn:
             conn.close()
@@ -619,7 +620,7 @@ def ban_employer(em_id: str, body: BanRequest):
     except HTTPException:
         raise
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": safe_msg(e)}
     finally:
         if conn:
             conn.close()
@@ -686,7 +687,7 @@ def delete_employer(em_id: str, x_admin_id: Optional[str] = Header(None, alias="
     except Exception as e:
         if conn:
             conn.rollback()
-        raise HTTPException(status_code=500, detail=f"Failed to delete employer: {str(e)}")
+        raise db_error(e)
     finally:
         if conn:
             conn.close()

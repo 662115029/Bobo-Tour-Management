@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from app.db.connection import get_connection, get_cursor
+from .errors import db_error
 from app.db.storage_service import upload_image_to_supabase
 
 router = APIRouter(tags=["uploads"])
@@ -16,7 +17,7 @@ async def upload_image(file: UploadFile = File(...)):
         url = await upload_image_to_supabase(file, folder="uploads/profiles/employers")
         return {"url": url}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
 
 
 @router.post("/upload/employer-profile")
@@ -27,7 +28,7 @@ async def upload_employer_profile(file: UploadFile = File(...)):
         url = await upload_image_to_supabase(file, folder="uploads/profiles/employers")
         return {"url": url}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
 
 
 @router.post("/upload/freelancer-profile")
@@ -38,7 +39,7 @@ async def upload_freelancer_profile(file: UploadFile = File(...)):
         url = await upload_image_to_supabase(file, folder="uploads/profiles/freelancers")
         return {"url": url}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
 
 
 @router.post("/upload/payment-slip")
@@ -49,7 +50,7 @@ async def upload_payment_slip(file: UploadFile = File(...)):
         url = await upload_image_to_supabase(file, folder="uploads/payment")
         return {"url": url}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
 
 
 @router.post("/fl-vehicle/{vehicle_id}/images")
@@ -73,7 +74,7 @@ async def upload_vehicle_image(vehicle_id: str, file: UploadFile = File(...)):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -111,7 +112,7 @@ async def upload_fl_document(fl_id: str, doc_type: str, file: UploadFile = File(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -153,7 +154,7 @@ async def upload_em_document(em_id: str, doc_type: str, file: UploadFile = File(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise db_error(e)
     finally:
         if conn:
             conn.close()

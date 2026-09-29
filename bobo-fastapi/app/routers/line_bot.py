@@ -6,6 +6,7 @@ from linebot.models import MessageEvent, TextMessage, TextSendMessage, FlexSendM
 from pydantic import BaseModel
 from notification import notify_invited, notify_application_accepted, notify_application_rejected
 from app.db.connection import get_connection, get_cursor
+from .errors import safe_msg
 
 router = APIRouter(tags=["line_bot"])
 
@@ -80,7 +81,7 @@ def test_notify_match(request: NotifyRequest):
             return {"status": "notification sent", "job": job}
         return {"status": "no jobs found"}
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": safe_msg(e)}
 
     finally:
         if conn:
@@ -104,7 +105,7 @@ def accept_job(job_id: str, request: JobResponseRequest):
             notify_application_accepted(request.line_user_id, job)
         return {"status": "accepted", "job": job if job else None}
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": safe_msg(e)}
 
     finally:
         if conn:
@@ -128,7 +129,7 @@ def decline_job(job_id: str, request: JobResponseRequest):
             notify_application_rejected(request.line_user_id, job)
         return {"status": "declined", "job": job if job else None}
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": safe_msg(e)}
     finally:
         if conn:
             conn.close()
