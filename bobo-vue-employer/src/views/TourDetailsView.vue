@@ -976,6 +976,7 @@ const fetchJob = async () => {
     if (!jobRes.ok) throw new Error(jobData.detail || jobData.message || 'Failed to load tour.')
 
     job.value = jobData
+    if (jobData.job_title) document.title = `${jobData.job_title} | Bobo Tour`
     job.value.job_required_languages = (langData.items || []).map(l => l.language_name)
     job.value.job_itineraries = (itinData.items || []).sort((a, b) => (a.sequence ?? 0) - (b.sequence ?? 0))
     job.value.job_passengers = passData.items || []

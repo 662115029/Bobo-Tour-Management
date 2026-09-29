@@ -56,7 +56,21 @@ router.beforeEach((to, from, next) => {
   }
 })
 
+// Browser tab title per page
+const PAGE_TITLES = {
+  'login': 'Login',
+  'register': 'Register',
+  'my-tours': 'My Tours',
+  'create-tour': 'Create Tour',
+  'tour-detail': 'Tour Detail',
+  'profile': 'Profile',
+}
+
+router.afterEach((to) => {
+  const title = PAGE_TITLES[to.name]
+  document.title = title ? `${title} | Bobo Tour` : 'Bobo Tour'
+})
+
 const app = createApp(App)
 app.use(router)
 app.mount('#app')
-
