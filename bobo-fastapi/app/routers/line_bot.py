@@ -53,42 +53,62 @@ def reset_menu_if_unregistered(line_user_id: str):
             conn.close()
 
 
+LIFF_URL = "https://liff.line.me/2010988299-KhiGZeLc"
+
+JOBS_FLEX = {
+    "type": "bubble",
+    "header": {
+        "type": "box",
+        "layout": "vertical",
+        "backgroundColor": "#DC2626",
+        "paddingAll": "16px",
+        "spacing": "xs",
+        "contents": [
+            {"type": "text", "text": "BOBO TOUR", "color": "#FFFFFF", "size": "xxs", "weight": "bold"},
+            {"type": "text", "text": "Available Jobs", "color": "#FFFFFF", "size": "lg", "weight": "bold"},
+        ],
+    },
+    "body": {
+        "type": "box",
+        "layout": "vertical",
+        "paddingAll": "20px",
+        "spacing": "sm",
+        "contents": [
+            {"type": "text", "text": "Tour jobs are waiting for you!", "size": "md", "weight": "bold", "color": "#0F172A"},
+            {"type": "text", "text": "Tap the button below to see all open tours.", "size": "sm", "color": "#64748B", "wrap": True},
+        ],
+    },
+    "footer": {
+        "type": "box",
+        "layout": "vertical",
+        "paddingAll": "12px",
+        "contents": [
+            {
+                "type": "button",
+                "style": "primary",
+                "color": "#DC2626",
+                "height": "sm",
+                "action": {"type": "uri", "label": "View all jobs", "uri": f"{LIFF_URL}?target=jobs&tab=job-opening"},
+            }
+        ],
+    },
+}
+
+
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     reset_menu_if_unregistered(event.source.user_id)
-    if event.message.text.lower() == "jobs":
-        flex_message = FlexSendMessage(
-            alt_text="View available jobs",
-            contents={
-                "type": "bubble",
-                "body": {
-                    "type": "box",
-                    "layout": "vertical",
-                    "contents": [
-                        {"type": "text", "text": "Bobo Tour Management", "weight": "bold", "size": "xl"},
-                        {"type": "text", "text": "Click to view available job listings", "wrap": True}
-                    ]
-                },
-                "footer": {
-                    "type": "box",
-                    "layout": "vertical",
-                    "contents": [
-                        {
-                            "type": "button",
-                            "action": {
-                                "type": "uri",
-                                "label": "View Jobs",
-                                "uri": "https://662115029.github.io/Bobo-Tour-Management/"
-                            },
-                            "style": "primary"
-                        }
-                    ]
-                }
-            }
+    text = event.message.text.strip().lower()
+    if text in ("job", "jobs"):
+        line_bot_api.reply_message(
+            event.reply_token,
+            FlexSendMessage(alt_text="Available jobs on Bobo Tour", contents=JOBS_FLEX),
         )
-        line_bot_api.reply_message(event.reply_token, flex_message)
     else:
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=event.message.text))
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text="Type 'jobs' to see available tour jobs, or use the menu below."),
+        )
 
 
 @router.post("/test/notify-match")
