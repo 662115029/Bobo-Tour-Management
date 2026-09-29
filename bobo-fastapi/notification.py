@@ -191,7 +191,7 @@ def _push_flex(line_user_id: str, alt_text: str, bubble: dict):
 # ---------------------------------------------------------------------------
 def notify_applied(line_user_id: str, job: dict):
     bubble = _build_job_flex(
-        "📨 Application sent", "brand", job,
+        "Application sent", "brand", job,
         button_label="View application status", button_target="jobs", button_tab="my-request",
     )
     _push_flex(line_user_id, f"You've applied for {job.get('job_title', '')}", bubble)
@@ -202,7 +202,7 @@ def notify_applied(line_user_id: str, job: dict):
 # ---------------------------------------------------------------------------
 def notify_application_accepted(line_user_id: str, job: dict):
     bubble = _build_job_flex(
-        "✅ Application accepted", "success", job,
+        "Application accepted", "success", job,
         button_label="View my jobs", button_target="jobs", button_tab="my-job",
     )
     _push_flex(line_user_id, f"Your application for {job.get('job_title', '')} was accepted", bubble)
@@ -223,7 +223,7 @@ def notify_application_cancelled(line_user_id: str, job: dict):
 # ---------------------------------------------------------------------------
 def notify_invited(line_user_id: str, job: dict):
     bubble = _build_job_flex(
-        "🚐 New job invite", "brand", job,
+        "New job invite", "brand", job,
         button_label="View invite", button_target="jobs", button_tab="job-offer",
     )
     _push_flex(line_user_id, f"You've been invited to {job.get('job_title', '')}", bubble)
@@ -234,7 +234,7 @@ def notify_invited(line_user_id: str, job: dict):
 # ---------------------------------------------------------------------------
 def notify_invite_accepted(line_user_id: str, job: dict):
     bubble = _build_job_flex(
-        "✅ Job confirmed", "success", job,
+        "Job confirmed", "success", job,
         button_label="View my jobs", button_target="jobs", button_tab="my-job",
     )
     _push_flex(line_user_id, f"You've taken {job.get('job_title', '')}", bubble)
@@ -301,26 +301,26 @@ def _account_card(headline: str, tone: str, body: list, button_label: str = None
 
 def notify_registered(line_user_id: str, full_name: str):
     name = _first_name(full_name)
-    bubble = _account_card("🎉 Welcome to the Bobo crew!", "success", [
-        _text(f"Yay, you're in, {name}! 🐻", bold=True, size="md"),
+    bubble = _account_card("Welcome to the Bobo crew!", "success", [
+        _text(f"Yay, you're in, {name}!", bold=True, size="md"),
         _text("Next, go to your Profile to:", color=TEXT_2),
-        _text("🚐 Add your vehicle details\n📄 Upload your documents for verification"),
+        _text("• Add your vehicle details\n• Upload your documents for verification"),
         _note_box("Once our team verifies your account, you'll be able to apply for tour jobs "
-                  "and get matched with tours from tour companies.", "#F8FAFC", TEXT_2, "⏳ After verification"),
+                  "and get matched with tours from tour companies.", "#F8FAFC", TEXT_2, "After verification"),
         _note_box("Don't forget to set your free dates in Availability, so tour companies "
-                  "can find you and invite you to work!", "#FFFBEB", "#B45309", "📅 Availability"),
+                  "can find you and invite you to work!", "#FFFBEB", "#B45309", "Availability"),
     ], "Go to Profile", "target=profile")
     _push_flex(line_user_id, "Welcome to the Bobo crew! Next, complete your profile.", bubble)
 
 
 def notify_verified(line_user_id: str, full_name: str):
     name = _first_name(full_name)
-    bubble = _account_card("✅ Account verified", "success", [
-        _text(f"Great news, {name}! 🐻", bold=True, size="md"),
-        _text("You can now apply for tour jobs and get matched with tours from tour companies 🚐",
+    bubble = _account_card("Account verified", "success", [
+        _text(f"Great news, {name}!", bold=True, size="md"),
+        _text("You can now apply for tour jobs and get matched with tours from tour companies.",
               color=TEXT_2),
         _note_box("Keep your free dates up to date in Availability so I can match you with more jobs!",
-                  "#FFFBEB", "#B45309", "📅 Availability"),
+                  "#FFFBEB", "#B45309", "Availability"),
     ], "Browse open tours", "target=jobs&tab=job-opening")
     _push_flex(line_user_id, "Your account is now verified. You can apply for tour jobs!", bubble)
 
@@ -329,33 +329,33 @@ def notify_document_received(line_user_id: str, full_name: str, doc_type: str, s
     name = _first_name(full_name)
     label = doc_label(doc_type)
     body = [
-        _text(f"Thanks, {name}! 🐻", bold=True, size="md"),
-        _text(f"We've received your {label}. Our team will review it soon ⏳", color=TEXT_2),
+        _text(f"Thanks, {name}!", bold=True, size="md"),
+        _text(f"We've received your {label}. Our team will review it soon.", color=TEXT_2),
     ]
     if status_changed:
         body.append(_note_box("While it's under review, you can't apply for new tour jobs or get matched. "
                               "I'll let you know as soon as it's done.",
                               "#FFFBEB", "#B45309", "Account pending review"))
-    bubble = _account_card(f"📄 {label} received", "warning", body, "View my documents", "target=profile")
+    bubble = _account_card(f"{label} received", "warning", body, "View my documents", "target=profile")
     _push_flex(line_user_id, f"We've received your {label}. It's now pending review.", bubble)
 
 
 def notify_document_rejected(line_user_id: str, full_name: str, doc_type: str, reason: str = None):
     name = _first_name(full_name)
     label = doc_label(doc_type)
-    body = [_text(f"Hi {name} 🐻 Your {label} didn't pass verification.")]
+    body = [_text(f"Hi {name}, your {label} didn't pass verification.")]
     if reason:
         body.append(_note_box(reason, "#FEF2F2", "#B91C1C", "Reason"))
-    body.append(_text("Please re-upload this document in your Profile 📄", color=TEXT_2))
-    bubble = _account_card(f"📄 {label} rejected", "danger", body, "Go to Profile", "target=profile")
+    body.append(_text("Please re-upload this document in your Profile.", color=TEXT_2))
+    bubble = _account_card(f"{label} rejected", "danger", body, "Go to Profile", "target=profile")
     _push_flex(line_user_id, f"Your {label} was rejected. Please re-upload it in Profile.", bubble)
 
 
 def notify_not_verified(line_user_id: str, full_name: str):
     name = _first_name(full_name)
-    bubble = _account_card("❌ Account not verified", "danger", [
-        _text(f"Hi {name} 🐻", bold=True, size="md"),
+    bubble = _account_card("Account not verified", "danger", [
+        _text(f"Hi {name},", bold=True, size="md"),
         _text("Your documents didn't pass verification, so your account is now not verified.", color=TEXT_2),
-        _text("Please check your documents in Profile and re-upload them 📄", color=TEXT_2),
+        _text("Please check your documents in Profile and re-upload them.", color=TEXT_2),
     ], "Go to Profile", "target=profile")
     _push_flex(line_user_id, "Your account is not verified. Please check your documents in Profile.", bubble)

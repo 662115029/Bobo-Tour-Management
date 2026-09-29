@@ -50,7 +50,7 @@ def handle_message(event):
                 reply_token=event.reply_token,
                 messages=[
                     TextMessage(
-                        text="Type 'jobs' to see available tour jobs 😊"
+                        text="Type 'jobs' to see available tour jobs"
                     )
                 ]
             )
@@ -67,7 +67,7 @@ def send_job_list_message(api, reply_token):
             "contents": [
                 {
                     "type": "text",
-                    "text": "🚐 Bobo Tour",
+                    "text": "Bobo Tour",
                     "color": "#ffffff",
                     "size": "sm"
                 },
