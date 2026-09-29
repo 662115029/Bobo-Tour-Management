@@ -47,6 +47,7 @@ TONES = {
     "success": ("#16A34A", "#FFFFFF"),
     "danger":  ("#FEF2F2", "#B91C1C"),
     "neutral": ("#F1F5F9", "#475569"),
+    "warning": ("#FFFBEB", "#B45309"),
 }
 
 
@@ -245,62 +246,116 @@ def notify_invite_rejected(line_user_id: str, job: dict):
 
 
 # ---------------------------------------------------------------------------
-# 5. Account messages (plain chat text, Bobo's voice)
+# 5. Account messages (cards, Bobo's voice)
 # ---------------------------------------------------------------------------
-def _push_text(line_user_id: str, text: str):
-    api = get_messaging_api()
-    api.push_message(
-        PushMessageRequest(to=line_user_id, messages=[TextMessage(text=text[:5000])])
-    )
+DOC_LABELS = {
+    "PERSONAL_ID": "ID Card",
+    "DRIVER_LICENSE": "Driver License",
+    "PUBLIC_DRIVER_LICENSE": "Public Driver License",
+    "VEHICLE_REGISTRATION": "Vehicle Registration",
+    "VEHICLE_INSPECTION": "Vehicle Inspection",
+}
+
+
+def doc_label(doc_type: str) -> str:
+    return DOC_LABELS.get(doc_type or "", (doc_type or "Document").replace("_", " ").title())
 
 
 def _first_name(full_name: str) -> str:
-    return (full_name or "").strip().split(" ")[0] or "there"
+    first = (full_name or "").strip().split(" ")[0]
+    return first.capitalize() if first else "there"
+
+
+def _text(text: str, color: str = TEXT, size: str = "sm", bold: bool = False):
+    t = {"type": "text", "text": text, "size": size, "color": color, "wrap": True}
+    if bold:
+        t["weight"] = "bold"
+    return t
+
+
+def _note_box(text: str, bg: str, color: str, title: str = None):
+    contents = []
+    if title:
+        contents.append({"type": "text", "text": title, "size": "xs", "color": color, "weight": "bold"})
+    contents.append({"type": "text", "text": text, "size": "sm", "color": color, "wrap": True})
+    return {"type": "box", "layout": "vertical", "backgroundColor": bg, "cornerRadius": "8px",
+            "paddingAll": "12px", "spacing": "xs", "contents": contents}
+
+
+def _account_card(headline: str, tone: str, body: list, button_label: str = None, button_query: str = None):
+    bubble = {
+        "type": "bubble",
+        "header": _header(headline, tone),
+        "body": {"type": "box", "layout": "vertical", "paddingAll": "20px", "spacing": "md", "contents": body},
+    }
+    if button_label and button_query:
+        bubble["footer"] = {
+            "type": "box", "layout": "vertical", "paddingAll": "12px",
+            "contents": [{
+                "type": "button", "style": "primary", "color": BRAND, "height": "sm",
+                "action": {"type": "uri", "label": button_label, "uri": f"{LIFF_URL}?{button_query}"},
+            }],
+        }
+    return bubble
 
 
 def notify_registered(line_user_id: str, full_name: str):
     name = _first_name(full_name)
-    _push_text(line_user_id, (
-        "Yay, you're in! 🎉🐻\n"
-        f"Welcome to the Bobo crew, {name}!\n\n"
-        "Next, tap \"Profile\" in the menu below to:\n"
-        "🚐 Add your vehicle details\n"
-        "📄 Upload your documents for verification\n\n"
-        "⏳ Once our team verifies your account, you'll be able to apply for tour jobs "
-        "and get matched with tours from tour companies.\n\n"
-        "📅 Don't forget to set your free dates in Availability, so tour companies "
-        "can find you and invite you to work!"
-    ))
+    bubble = _account_card("🎉 Welcome to the Bobo crew!", "success", [
+        _text(f"Yay, you're in, {name}! 🐻", bold=True, size="md"),
+        _text("Next, go to your Profile to:", color=TEXT_2),
+        _text("🚐 Add your vehicle details\n📄 Upload your documents for verification"),
+        _note_box("Once our team verifies your account, you'll be able to apply for tour jobs "
+                  "and get matched with tours from tour companies.", "#F8FAFC", TEXT_2, "⏳ After verification"),
+        _note_box("Don't forget to set your free dates in Availability, so tour companies "
+                  "can find you and invite you to work!", "#FFFBEB", "#B45309", "📅 Availability"),
+    ], "Go to Profile", "target=profile")
+    _push_flex(line_user_id, "Welcome to the Bobo crew! Next, complete your profile.", bubble)
 
 
 def notify_verified(line_user_id: str, full_name: str):
     name = _first_name(full_name)
-    _push_text(line_user_id, (
-        f"Great news, {name}! ✅🐻\n"
-        "Your account is now verified.\n\n"
-        "You can now apply for tour jobs and get matched with tours from tour companies 🚐\n\n"
-        "📅 Keep your free dates up to date in Availability so I can match you with more jobs!"
-    ))
+    bubble = _account_card("✅ Account verified", "success", [
+        _text(f"Great news, {name}! 🐻", bold=True, size="md"),
+        _text("You can now apply for tour jobs and get matched with tours from tour companies 🚐",
+              color=TEXT_2),
+        _note_box("Keep your free dates up to date in Availability so I can match you with more jobs!",
+                  "#FFFBEB", "#B45309", "📅 Availability"),
+    ], "Browse open tours", "target=jobs&tab=job-opening")
+    _push_flex(line_user_id, "Your account is now verified. You can apply for tour jobs!", bubble)
 
 
-def notify_verify_pending(line_user_id: str, full_name: str):
+def notify_document_received(line_user_id: str, full_name: str, doc_type: str, status_changed: bool = False):
     name = _first_name(full_name)
-    _push_text(line_user_id, (
-        f"Hi {name}! 📄🐻\n"
-        "We've received your updated documents, so your account is now pending review.\n\n"
-        "While it's under review, you can't apply for new tour jobs or get matched. "
-        "I'll let you know as soon as it's done ⏳"
-    ))
+    label = doc_label(doc_type)
+    body = [
+        _text(f"Thanks, {name}! 🐻", bold=True, size="md"),
+        _text(f"We've received your {label}. Our team will review it soon ⏳", color=TEXT_2),
+    ]
+    if status_changed:
+        body.append(_note_box("While it's under review, you can't apply for new tour jobs or get matched. "
+                              "I'll let you know as soon as it's done.",
+                              "#FFFBEB", "#B45309", "Account pending review"))
+    bubble = _account_card(f"📄 {label} received", "warning", body, "View my documents", "target=profile")
+    _push_flex(line_user_id, f"We've received your {label}. It's now pending review.", bubble)
 
 
-def notify_not_verified(line_user_id: str, full_name: str, reasons: list = None):
+def notify_document_rejected(line_user_id: str, full_name: str, doc_type: str, reason: str = None):
     name = _first_name(full_name)
-    text = (
-        f"Hi {name} 🐻\n"
-        "Some of your documents didn't pass verification, so your account is now not verified ❌"
-    )
-    reasons = [r for r in (reasons or []) if r]
-    if reasons:
-        text += "\n\nReason:\n" + "\n".join(f"• {r}" for r in reasons)
-    text += "\n\nTap \"Profile\" in the menu below to check and re-upload your documents 📄"
-    _push_text(line_user_id, text)
+    label = doc_label(doc_type)
+    body = [_text(f"Hi {name} 🐻 Your {label} didn't pass verification.")]
+    if reason:
+        body.append(_note_box(reason, "#FEF2F2", "#B91C1C", "Reason"))
+    body.append(_text("Please re-upload this document in your Profile 📄", color=TEXT_2))
+    bubble = _account_card(f"📄 {label} rejected", "danger", body, "Go to Profile", "target=profile")
+    _push_flex(line_user_id, f"Your {label} was rejected. Please re-upload it in Profile.", bubble)
+
+
+def notify_not_verified(line_user_id: str, full_name: str):
+    name = _first_name(full_name)
+    bubble = _account_card("❌ Account not verified", "danger", [
+        _text(f"Hi {name} 🐻", bold=True, size="md"),
+        _text("Your documents didn't pass verification, so your account is now not verified.", color=TEXT_2),
+        _text("Please check your documents in Profile and re-upload them 📄", color=TEXT_2),
+    ], "Go to Profile", "target=profile")
+    _push_flex(line_user_id, "Your account is not verified. Please check your documents in Profile.", bubble)

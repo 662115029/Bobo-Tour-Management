@@ -17,8 +17,9 @@ import requests
 from notification import (
     notify_registered,
     notify_verified,
-    notify_verify_pending,
+    notify_document_received,
     notify_not_verified,
+    notify_document_rejected,
 )
 
 router = APIRouter(tags=["freelancers"])
@@ -994,7 +995,7 @@ def get_fl_verification(limit: int = 10, offset: int = 0, status: str = "PENDING
             conn.close()
 
 @router.post("/freelancers/{fl_id}/resubmit-verification")
-def resubmit_verification(fl_id: int):
+def resubmit_verification(fl_id: int, doc_type: Optional[str] = None):
     conn = None
     try:
         conn = get_connection()
@@ -1022,12 +1023,16 @@ def resubmit_verification(fl_id: int):
             (fl_id,)
         )
         conn.commit()
-        # notify only when status actually changes (e.g. VERIFIED -> PENDING)
-        if fl_row["line_user_id"] and fl_row["fl_verify_status"] != "PENDING":
+        print(f"[notify] resubmit fl={fl_id} doc={doc_type} old={fl_row['fl_verify_status']} "
+              f"line={'yes' if fl_row['line_user_id'] else 'no'}")
+        if fl_row["line_user_id"]:
             try:
-                notify_verify_pending(fl_row["line_user_id"], fl_row["fl_name"])
+                notify_document_received(
+                    fl_row["line_user_id"], fl_row["fl_name"], doc_type,
+                    status_changed=fl_row["fl_verify_status"] != "PENDING",
+                )
             except Exception as notify_err:
-                print(f"[WARN] notify_verify_pending failed: {notify_err}")
+                print(f"[WARN] notify_document_received failed: {notify_err}")
         return {"success": True, "fl_verify_status": "PENDING"}
     except HTTPException:
         raise
@@ -1235,32 +1240,27 @@ def review_fl_document(doc_id: str, body: DocReviewRequest):
                     (body.reviewed_by, doc_id, doc_info["fl_name"], doc_label)
                 )
 
-        # collect reject reasons before closing the connection
-        reject_reasons = []
-        if new_status == "NOT_VERIFIED":
-            cursor.execute(
-                """
-                SELECT fl_doc_type, reject_reason FROM fl_documents
-                WHERE fl_id = %s AND fl_doc_status = 'REJECTED' AND file_url IS NOT NULL
-                """,
-                (doc["fl_id"],)
-            )
-            for r in cursor.fetchall():
-                label = (r["fl_doc_type"] or "").replace('_', ' ').title()
-                reject_reasons.append(f"{label}: {r['reject_reason']}" if r["reject_reason"] else label)
-
         conn.commit()
 
-        # notify only when the account status actually changes
+        # LINE notifications (after commit, never block the review)
         line_id = fl_before.get("line_user_id")
-        if line_id and new_status and new_status != fl_before.get("fl_verify_status"):
+        old_status = fl_before.get("fl_verify_status")
+        print(f"[notify] review doc={doc_id} action={body.status} old={old_status} "
+              f"new={new_status} line={'yes' if line_id else 'no'}")
+        if line_id:
             try:
-                if new_status == "VERIFIED":
+                if new_status == "VERIFIED" and old_status != "VERIFIED":
                     notify_verified(line_id, fl_before.get("fl_name"))
-                elif new_status == "NOT_VERIFIED":
-                    notify_not_verified(line_id, fl_before.get("fl_name"), reject_reasons)
+                elif new_status == "NOT_VERIFIED" and old_status != "NOT_VERIFIED":
+                    notify_not_verified(line_id, fl_before.get("fl_name"))
+                elif body.status == "REJECTED":
+                    notify_document_rejected(
+                        line_id, fl_before.get("fl_name"),
+                        doc_info["fl_doc_type"] if doc_info else None,
+                        reject_reason,
+                    )
             except Exception as notify_err:
-                print(f"[WARN] verify status notify failed: {notify_err}")
+                print(f"[WARN] document review notify failed: {notify_err}")
 
         return {"status": "updated", "doc_id": doc_id, "new_status": body.status}
     except HTTPException:
