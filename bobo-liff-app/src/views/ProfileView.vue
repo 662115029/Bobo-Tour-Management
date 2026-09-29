@@ -701,7 +701,7 @@ async function uploadDocument(e, doc) {
     const data = await res.json()
     documents.value[idx] = { ...documents.value[idx], file_url: data.file_url, fl_doc_status: 'PENDING', fl_uploaded_at: new Date().toISOString(), uploading: false }
     // Reset verification status to PENDING
-    await fetch(`${API_BASE}/freelancers/${props.user.fl_id}/resubmit-verification`, { method: 'POST', headers: HEADERS })
+    await fetch(`${API_BASE}/freelancers/${props.user.fl_id}/resubmit-verification?doc_type=${doc.fl_doc_type}`, { method: 'POST', headers: HEADERS })
     // Refetch profile to update verify status badge
     const profileRes = await fetch(`${API_BASE}/freelancers/${props.user.fl_id}`, { headers: HEADERS })
     if (profileRes.ok) {
