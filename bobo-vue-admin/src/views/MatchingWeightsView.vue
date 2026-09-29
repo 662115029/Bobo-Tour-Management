@@ -131,6 +131,10 @@
             class="px-5 py-2 text-caption font-semibold rounded-lg bg-[#1a1a2e] text-white hover:bg-[#111122] transition disabled:opacity-40 disabled:cursor-not-allowed">
             {{ saving ? 'Saving…' : 'Save Weights' }}
           </button>
+          <button @click="triggerNow" :disabled="triggering"
+            class="px-5 py-2 text-[13px] font-semibold rounded-lg bg-green-600 text-white hover:bg-green-700 transition disabled:opacity-40 disabled:cursor-not-allowed">
+            {{ triggering ? 'Running…' : 'Trigger Matching Now' }}
+          </button>
         </div>
       </div>
 
@@ -254,6 +258,7 @@ const weights = reactive({ ...DEFAULT_WEIGHTS })
 const savedWeights = ref({ ...DEFAULT_WEIGHTS })
 const lastSavedAt = ref(null)
 const saving = ref(false)
+const triggering = ref(false)
 
 const locks = reactive({ pickupArea: false, availability: false, verification: false, language: false })
 const MAX_LOCKS = 2 // always leave at least 2 factors free to redistribute between
@@ -342,6 +347,26 @@ const save = async () => {
     showToast('Failed to save weights. Please try again.', 'error')
   } finally {
     saving.value = false
+  }
+}
+
+// Manually invokes the matching Lambda right now, instead of waiting for the
+// hourly EventBridge schedule — useful right after saving new weights so the
+// effect is visible immediately (e.g. during a demo).
+const triggerNow = async () => {
+  triggering.value = true
+  try {
+    const res = await fetch(`${API_BASE}/admin/trigger-matching`, { method: 'POST' })
+    const data = await res.json()
+    if (!res.ok || !data.success) {
+      showToast(data.detail || 'Failed to trigger matching', 'error')
+      return
+    }
+    showToast(`Matching recomputed — ${data.result.total_matches_written} matches written`)
+  } catch (err) {
+    showToast('Could not reach the server', 'error')
+  } finally {
+    triggering.value = false
   }
 }
 
