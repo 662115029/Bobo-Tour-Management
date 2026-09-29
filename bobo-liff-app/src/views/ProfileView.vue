@@ -138,22 +138,33 @@
                     :class="isEditing ? 'border-[#E2E8F0] bg-white text-[#0F172A] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/15' : 'border-[#E2E8F0] bg-[#F8FAFC] text-[#475569] cursor-default'" />
                 </div>
               </div>
-              <div class="grid grid-cols-2 gap-3">
-                <div>
-                  <label class="block text-caption font-medium text-[#475569] mb-1">Phone <span class="text-[#DC2626]">*</span></label>
-                  <input v-model="form.fl_phone" type="tel" :disabled="!isEditing" placeholder="0812345678"
-                    class="w-full border rounded-xl px-3 py-2.5 text-body font-medium transition placeholder:text-[#94A3B8]"
-                    :class="isEditing ? 'border-[#E2E8F0] bg-white text-[#0F172A] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/15' : 'border-[#E2E8F0] bg-[#F8FAFC] text-[#475569] cursor-default'" />
+              <div>
+                <label class="block text-caption font-medium text-[#475569] mb-1">Phone <span class="text-[#DC2626]">*</span></label>
+                <input v-model="form.fl_phone" type="tel" :disabled="!isEditing" placeholder="0812345678"
+                  class="w-full border rounded-xl px-3 py-2.5 text-body font-medium transition placeholder:text-[#94A3B8]"
+                  :class="isEditing ? 'border-[#E2E8F0] bg-white text-[#0F172A] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/15' : 'border-[#E2E8F0] bg-[#F8FAFC] text-[#475569] cursor-default'" />
+              </div>
+              <div>
+                <label class="block text-caption font-medium text-[#475569] mb-1">Date of Birth</label>
+                <!-- Edit: day / month / year selects (always Gregorian, same look on every phone) -->
+                <div v-if="isEditing" class="grid grid-cols-[1fr_1.4fr_1.3fr] gap-2">
+                  <select v-model="dobDay" class="h-[46px] w-full min-w-0 appearance-none border border-[#E2E8F0] rounded-xl pl-3 pr-7 text-body font-medium bg-white focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/15" :class="dobDay ? 'text-[#0F172A]' : 'text-[#94A3B8]'" style="background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2394A3B8%22 stroke-width=%222.5%22><path d=%22M6 9l6 6 6-6%22/></svg>');background-repeat:no-repeat;background-position:right 10px center">
+                    <option value="">Day</option>
+                    <option v-for="d in 31" :key="d" :value="String(d).padStart(2, '0')">{{ d }}</option>
+                  </select>
+                  <select v-model="dobMonth" class="h-[46px] w-full min-w-0 appearance-none border border-[#E2E8F0] rounded-xl pl-3 pr-7 text-body font-medium bg-white focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/15" :class="dobMonth ? 'text-[#0F172A]' : 'text-[#94A3B8]'" style="background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2394A3B8%22 stroke-width=%222.5%22><path d=%22M6 9l6 6 6-6%22/></svg>');background-repeat:no-repeat;background-position:right 10px center">
+                    <option value="">Month</option>
+                    <option v-for="(m, i) in MONTHS" :key="m" :value="String(i + 1).padStart(2, '0')">{{ m }}</option>
+                  </select>
+                  <select v-model="dobYear" class="h-[46px] w-full min-w-0 appearance-none border border-[#E2E8F0] rounded-xl pl-3 pr-7 text-body font-medium bg-white focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/15" :class="dobYear ? 'text-[#0F172A]' : 'text-[#94A3B8]'" style="background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2394A3B8%22 stroke-width=%222.5%22><path d=%22M6 9l6 6 6-6%22/></svg>');background-repeat:no-repeat;background-position:right 10px center">
+                    <option value="">Year</option>
+                    <option v-for="y in DOB_YEARS" :key="y" :value="String(y)">{{ y }}</option>
+                  </select>
                 </div>
-                <div>
-                  <label class="block text-caption font-medium text-[#475569] mb-1">Date of Birth</label>
-                  <input v-if="isEditing" v-model="form.fl_date_of_birth" type="date"
-                    class="block w-full h-[46px] min-w-0 appearance-none border border-[#E2E8F0] rounded-xl px-3 text-body font-medium bg-white text-[#0F172A] text-left focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/15" />
-                  <div v-else
-                    class="w-full h-[46px] flex items-center border border-[#E2E8F0] rounded-xl px-3 bg-[#F8FAFC] text-body font-medium"
-                    :class="form.fl_date_of_birth ? 'text-[#475569]' : 'text-[#94A3B8]'">
-                    {{ form.fl_date_of_birth ? formatDate(form.fl_date_of_birth) : 'Not set' }}
-                  </div>
+                <div v-else
+                  class="w-full h-[46px] flex items-center border border-[#E2E8F0] rounded-xl px-3 bg-[#F8FAFC] text-body font-medium"
+                  :class="form.fl_date_of_birth ? 'text-[#475569]' : 'text-[#94A3B8]'">
+                  {{ form.fl_date_of_birth ? formatDate(form.fl_date_of_birth) : 'Not set' }}
                 </div>
               </div>
               <div>
@@ -490,7 +501,7 @@
 
 <script setup>
 import LoadingView from './LoadingView.vue'
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { getVerifyStatusClass, formatVerifyStatus, getDocStatusClass, BADGE_BASE } from '@/utils/statusClasses.js'
 import { useConfirm } from '@/components/useConfirm.js'
 import { useToast } from '@/components/useToast.js'
@@ -548,6 +559,21 @@ const API_BASE = import.meta.env.VITE_FASTAPI_URL || 'http://localhost:8000'
 const HEADERS = { 'ngrok-skip-browser-warning': 'true' }
 
 const form = reactive({ first_name: '', last_name: '', fl_name: '', fl_email: '', fl_phone: '', fl_address: '', fl_bio: '', fl_date_of_birth: '', fl_profile_image_url: '' })
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+const DOB_YEARS = Array.from({ length: new Date().getFullYear() - 1939 }, (_, i) => new Date().getFullYear() - i)
+const dobParts = reactive({ y: '', m: '', d: '' })
+function syncDobParts() {
+  const [y = '', m = '', d = ''] = (form.fl_date_of_birth || '').split('-')
+  Object.assign(dobParts, { y, m, d })
+}
+function setDob(part, v) {
+  dobParts[part] = v
+  const { y, m, d } = dobParts
+  form.fl_date_of_birth = y && m && d ? `${y}-${m}-${d}` : ''
+}
+const dobDay   = computed({ get: () => dobParts.d, set: v => setDob('d', v) })
+const dobMonth = computed({ get: () => dobParts.m, set: v => setDob('m', v) })
+const dobYear  = computed({ get: () => dobParts.y, set: v => setDob('y', v) })
 const formSnapshot = reactive({})
 
 const { confirmDialog } = useConfirm()
@@ -597,6 +623,7 @@ onMounted(async () => {
     form.fl_address = profileData.fl_address || ''
     form.fl_bio = profileData.fl_bio || ''
     form.fl_date_of_birth = profileData.fl_date_of_birth ? profileData.fl_date_of_birth.split('T')[0] : ''
+    syncDobParts()
     form.fl_profile_image_url = profileData.fl_profile_image_url || ''
     Object.assign(formSnapshot, { ...form })
     vehicle.value       = vehicleData.items?.[0]   || null
@@ -614,10 +641,16 @@ onMounted(async () => {
   finally { loading.value = false }
 })
 
-function cancelEdit() { Object.assign(form, formSnapshot); isEditing.value = false; saveError.value = '' }
+function cancelEdit() { Object.assign(form, formSnapshot); syncDobParts(); isEditing.value = false; saveError.value = '' }
 
 async function saveProfile() {
   if (!form.first_name.trim()) { saveError.value = 'Firstname is required.'; return }
+  const dobFilled = [dobParts.d, dobParts.m, dobParts.y].filter(Boolean).length
+  if (dobFilled && dobFilled < 3) { saveError.value = 'Please select day, month and year of birth.'; return }
+  if (form.fl_date_of_birth) {
+    const dt = new Date(`${form.fl_date_of_birth}T00:00:00`)
+    if (dt.getDate() !== Number(dobParts.d)) { saveError.value = 'Date of birth is not a valid date.'; return }
+  }
   form.fl_name = `${form.first_name.trim()} ${form.last_name.trim()}`.trim()
   saving.value = true; saveError.value = ''; saveSuccess.value = false
   try {
