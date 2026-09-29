@@ -124,11 +124,19 @@
                   <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-medium text-[#64748B] bg-[#F1F5F9] px-2 py-0.5 rounded-md uppercase tracking-wide">Fixed</span>
                 </div>
               </div>
-              <div>
-                <label class="block text-caption font-medium text-[#475569] mb-1">Full Name <span class="text-[#DC2626]">*</span></label>
-                <input v-model="form.fl_name" type="text" :disabled="!isEditing" placeholder="e.g. Somchai Jaidee"
-                  class="w-full border rounded-xl px-3 py-2.5 text-body font-medium transition placeholder:text-[#94A3B8]"
-                  :class="isEditing ? 'border-[#E2E8F0] bg-white text-[#0F172A] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/15' : 'border-[#E2E8F0] bg-[#F8FAFC] text-[#475569] cursor-default'" />
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-caption font-medium text-[#475569] mb-1">Firstname <span class="text-[#DC2626]">*</span></label>
+                  <input v-model="form.first_name" type="text" :disabled="!isEditing" placeholder="e.g. Somchai"
+                    class="w-full border rounded-xl px-3 py-2.5 text-body font-medium transition placeholder:text-[#94A3B8]"
+                    :class="isEditing ? 'border-[#E2E8F0] bg-white text-[#0F172A] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/15' : 'border-[#E2E8F0] bg-[#F8FAFC] text-[#475569] cursor-default'" />
+                </div>
+                <div>
+                  <label class="block text-caption font-medium text-[#475569] mb-1">Surname</label>
+                  <input v-model="form.last_name" type="text" :disabled="!isEditing" placeholder="e.g. Jaidee"
+                    class="w-full border rounded-xl px-3 py-2.5 text-body font-medium transition placeholder:text-[#94A3B8]"
+                    :class="isEditing ? 'border-[#E2E8F0] bg-white text-[#0F172A] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/15' : 'border-[#E2E8F0] bg-[#F8FAFC] text-[#475569] cursor-default'" />
+                </div>
               </div>
               <div class="grid grid-cols-2 gap-3">
                 <div>
@@ -139,9 +147,13 @@
                 </div>
                 <div>
                   <label class="block text-caption font-medium text-[#475569] mb-1">Date of Birth</label>
-                  <input v-model="form.fl_date_of_birth" type="date" :disabled="!isEditing"
-                    class="w-full border rounded-xl px-3 py-2.5 text-body font-medium transition placeholder:text-[#94A3B8]"
-                    :class="isEditing ? 'border-[#E2E8F0] bg-white text-[#0F172A] focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/15' : 'border-[#E2E8F0] bg-[#F8FAFC] text-[#475569] cursor-default'" />
+                  <input v-if="isEditing" v-model="form.fl_date_of_birth" type="date"
+                    class="block w-full h-[46px] min-w-0 appearance-none border border-[#E2E8F0] rounded-xl px-3 text-body font-medium bg-white text-[#0F172A] text-left focus:outline-none focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]/15" />
+                  <div v-else
+                    class="w-full h-[46px] flex items-center border border-[#E2E8F0] rounded-xl px-3 bg-[#F8FAFC] text-body font-medium"
+                    :class="form.fl_date_of_birth ? 'text-[#475569]' : 'text-[#94A3B8]'">
+                    {{ form.fl_date_of_birth ? formatDate(form.fl_date_of_birth) : 'Not set' }}
+                  </div>
                 </div>
               </div>
               <div>
@@ -535,7 +547,7 @@ const vehicleImageInput = ref(null)
 const API_BASE = import.meta.env.VITE_FASTAPI_URL || 'http://localhost:8000'
 const HEADERS = { 'ngrok-skip-browser-warning': 'true' }
 
-const form = reactive({ fl_name: '', fl_email: '', fl_phone: '', fl_address: '', fl_bio: '', fl_date_of_birth: '', fl_profile_image_url: '' })
+const form = reactive({ first_name: '', last_name: '', fl_name: '', fl_email: '', fl_phone: '', fl_address: '', fl_bio: '', fl_date_of_birth: '', fl_profile_image_url: '' })
 const formSnapshot = reactive({})
 
 const { confirmDialog } = useConfirm()
@@ -577,6 +589,9 @@ onMounted(async () => {
     ])
     profile.value = profileData
     form.fl_name = profileData.fl_name || ''
+    const [first, ...rest] = form.fl_name.trim().split(/\s+/)
+    form.first_name = first || ''
+    form.last_name = rest.join(' ')
     form.fl_email = profileData.fl_email || ''
     form.fl_phone = profileData.fl_phone || ''
     form.fl_address = profileData.fl_address || ''
@@ -602,6 +617,8 @@ onMounted(async () => {
 function cancelEdit() { Object.assign(form, formSnapshot); isEditing.value = false; saveError.value = '' }
 
 async function saveProfile() {
+  if (!form.first_name.trim()) { saveError.value = 'Firstname is required.'; return }
+  form.fl_name = `${form.first_name.trim()} ${form.last_name.trim()}`.trim()
   saving.value = true; saveError.value = ''; saveSuccess.value = false
   try {
     const res = await fetch(`${API_BASE}/freelancers/${props.user.fl_id}`, {
