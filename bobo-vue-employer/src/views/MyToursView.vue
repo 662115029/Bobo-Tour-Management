@@ -3,7 +3,6 @@
     <div class="px-5 pb-10">
 
       <div class="py-4">
-        <h1 class="text-[24px] font-bold text-[#dc2626] text-center mb-4">My Tours</h1>
 
         <!-- Filter bar -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
