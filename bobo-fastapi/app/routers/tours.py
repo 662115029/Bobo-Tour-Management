@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from app.db.connection import get_connection, get_cursor
 from .errors import db_error
 from .utils import format_time, is_tour_cancellable
-from notification import notify_invited
+from notification import notify_invited, notify_job_cancelled
 
 router = APIRouter(tags=["tours"])
 
@@ -388,6 +388,29 @@ def cancel_tour(job_id: str, em_id: str):
             (job_id,)
         )
         conn.commit()
+
+        # Notify every freelancer involved in this job (invited, applied, or accepted)
+        cursor.execute(
+            """
+            SELECT DISTINCT f.line_user_id
+            FROM job_applications ja
+            JOIN freelancers f ON f.fl_id = ja.fl_id
+            WHERE ja.job_id = %s
+              AND ja.application_status IN ('PENDING', 'APPLIED', 'ACCEPTED')
+              AND f.line_user_id IS NOT NULL AND f.line_user_id <> ''
+            """,
+            (job_id,)
+        )
+        line_user_ids = [row["line_user_id"] for row in cursor.fetchall()]
+        if line_user_ids:
+            job_info = _get_job_notify_info(cursor, job_id)
+            if job_info:
+                for line_user_id in line_user_ids:
+                    try:
+                        notify_job_cancelled(line_user_id, job_info)
+                    except Exception as notify_err:
+                        print(f"[WARN] notify_job_cancelled failed: {notify_err}")
+
         return {"status": "cancelled", "job_id": job_id}
     except HTTPException:
         raise

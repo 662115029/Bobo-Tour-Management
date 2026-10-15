@@ -246,6 +246,14 @@ def notify_invite_rejected(line_user_id: str, job: dict):
 
 
 # ---------------------------------------------------------------------------
+# 4b. Employer cancels the job
+# ---------------------------------------------------------------------------
+def notify_job_cancelled(line_user_id: str, job: dict):
+    bubble = _build_job_flex("Job cancelled", "danger", job)
+    _push_flex(line_user_id, f"{job.get('job_title', '')} was cancelled by the employer", bubble)
+
+
+# ---------------------------------------------------------------------------
 # 5. Account messages (cards, Bobo's voice)
 # ---------------------------------------------------------------------------
 DOC_LABELS = {
@@ -359,3 +367,15 @@ def notify_not_verified(line_user_id: str, full_name: str):
         _text("Please check your documents in Profile and re-upload them.", color=TEXT_2),
     ], "Go to Profile", "target=profile")
     _push_flex(line_user_id, "Your account is not verified. Please check your documents in Profile.", bubble)
+
+
+
+# ---------------------------------------------------------------------------
+# 6. Employer submits payment for a completed job
+# ---------------------------------------------------------------------------
+def notify_payment_submitted(line_user_id: str, job: dict):
+    bubble = _build_job_flex(
+        "Payment submitted", "success", job,
+        button_label="View my jobs", button_target="jobs", button_tab="my-job",
+    )
+    _push_flex(line_user_id, f"Payment for {job.get('job_title', '')} has been submitted", bubble)
