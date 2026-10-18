@@ -387,29 +387,40 @@ def cancel_tour(job_id: str, em_id: str):
             "UPDATE jobs SET job_status = 'CANCELLED' WHERE job_id = %s",
             (job_id,)
         )
-        conn.commit()
 
-        # Notify every freelancer involved in this job (invited, applied, or accepted)
+        # find who to notify BEFORE rejecting: selected freelancer + pending application/invite
         cursor.execute(
             """
             SELECT DISTINCT f.line_user_id
-            FROM job_applications ja
-            JOIN freelancers f ON f.fl_id = ja.fl_id
-            WHERE ja.job_id = %s
-              AND ja.application_status IN ('PENDING', 'APPLIED', 'ACCEPTED')
-              AND f.line_user_id IS NOT NULL AND f.line_user_id <> ''
+            FROM freelancers f
+            WHERE f.line_user_id IS NOT NULL
+              AND (
+                f.fl_id = (SELECT selected_fl_id FROM jobs WHERE job_id = %s)
+                OR f.fl_id IN (
+                    SELECT fl_id FROM job_applications
+                    WHERE job_id = %s
+                      AND application_status NOT IN ('ACCEPTED', 'REJECTED')
+                )
+              )
             """,
+            (job_id, job_id),
+        )
+        line_ids = [r["line_user_id"] for r in cursor.fetchall()]
+
+        # reject pending applications/invites so the cancelled job can't be accepted
+        cursor.execute(
+            "UPDATE job_applications SET application_status = 'REJECTED', updated_at = NOW() "
+            "WHERE job_id = %s AND application_status NOT IN ('ACCEPTED', 'REJECTED')",
             (job_id,)
         )
-        line_user_ids = [row["line_user_id"] for row in cursor.fetchall()]
-        if line_user_ids:
-            job_info = _get_job_notify_info(cursor, job_id)
-            if job_info:
-                for line_user_id in line_user_ids:
-                    try:
-                        notify_job_cancelled(line_user_id, job_info)
-                    except Exception as notify_err:
-                        print(f"[WARN] notify_job_cancelled failed: {notify_err}")
+        conn.commit()
+
+        job_info = _get_job_notify_info(cursor, job_id) if line_ids else None
+        for line_id in line_ids:
+            try:
+                notify_job_cancelled(line_id, job_info)
+            except Exception as notify_err:
+                print(f"[WARN] notify_job_cancelled failed: {notify_err}")
 
         return {"status": "cancelled", "job_id": job_id}
     except HTTPException:

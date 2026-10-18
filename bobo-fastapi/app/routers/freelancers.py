@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 from typing import Optional
 from app.db.connection import get_connection, get_cursor
@@ -1260,14 +1260,15 @@ def review_fl_document(doc_id: str, body: DocReviewRequest):
             try:
                 if new_status == "VERIFIED" and old_status != "VERIFIED":
                     notify_verified(line_id, fl_before.get("fl_name"))
-                elif new_status == "NOT_VERIFIED" and old_status != "NOT_VERIFIED":
-                    notify_not_verified(line_id, fl_before.get("fl_name"))
-                elif body.status == "REJECTED":
-                    notify_document_rejected(
-                        line_id, fl_before.get("fl_name"),
-                        doc_info["fl_doc_type"] if doc_info else None,
-                        reject_reason,
-                    )
+                else:
+                    if body.status == "REJECTED":
+                        notify_document_rejected(
+                            line_id, fl_before.get("fl_name"),
+                            doc_info["fl_doc_type"] if doc_info else None,
+                            reject_reason,
+                        )
+                    if new_status == "NOT_VERIFIED" and old_status != "NOT_VERIFIED":
+                        notify_not_verified(line_id, fl_before.get("fl_name"))
             except Exception as notify_err:
                 print(f"[WARN] document review notify failed: {notify_err}")
 
@@ -1317,6 +1318,75 @@ def ban_freelancer(fl_id: str, body: BanRequest):
         if conn:
             conn.close()
 
+
+@router.delete("/freelancers/{fl_id}")
+def delete_freelancer(fl_id: str, x_admin_id: Optional[str] = Header(None, alias="X-Admin-ID")):
+    admin_id = x_admin_id
+    conn = None
+    try:
+        conn = get_connection()
+        cursor = get_cursor(conn)
+        cursor.execute("SELECT fl_id, fl_name, line_user_id FROM freelancers WHERE fl_id = %s", (fl_id,))
+        fl = cursor.fetchone()
+        if not fl:
+            raise HTTPException(status_code=404, detail="Freelancer not found")
+        name = fl["fl_name"] or fl_id
+
+        # job-related rows
+        cursor.execute("DELETE FROM fl_reviews WHERE fl_id = %s", (fl_id,))
+        cursor.execute("DELETE FROM em_reviews WHERE fl_id = %s", (fl_id,))
+        cursor.execute("DELETE FROM job_payments WHERE fl_id = %s", (fl_id,))
+        cursor.execute("DELETE FROM job_applications WHERE fl_id = %s", (fl_id,))
+        cursor.execute("DELETE FROM job_fl_matches WHERE fl_id = %s", (fl_id,))
+        cursor.execute("UPDATE jobs SET selected_fl_id = NULL WHERE selected_fl_id = %s", (fl_id,))
+
+        # profile rows
+        cursor.execute(
+            "DELETE FROM fl_vehicle_images WHERE fl_vehicle_id IN (SELECT fl_vehicle_id FROM fl_vehicle WHERE fl_id = %s)",
+            (fl_id,),
+        )
+        cursor.execute("DELETE FROM fl_vehicle WHERE fl_id = %s", (fl_id,))
+        cursor.execute("DELETE FROM fl_languages WHERE fl_id = %s", (fl_id,))
+        cursor.execute("DELETE FROM fl_pickup_areas WHERE fl_id = %s", (fl_id,))
+        cursor.execute("DELETE FROM fl_availability WHERE fl_id = %s", (fl_id,))
+        cursor.execute("DELETE FROM fl_documents WHERE fl_id = %s", (fl_id,))
+        cursor.execute("DELETE FROM fl_bank_accounts WHERE fl_id = %s", (fl_id,))
+        cursor.execute("DELETE FROM fl_verification WHERE fl_id = %s", (fl_id,))
+        cursor.execute("DELETE FROM freelancers WHERE fl_id = %s", (fl_id,))
+
+        conn.commit()
+        unlink_rich_menu_from_user(fl["line_user_id"])
+
+        if admin_id:
+            log_conn = None
+            try:
+                log_conn = get_connection()
+                log_cursor = get_cursor(log_conn)
+                log_cursor.execute(
+                    """
+                    INSERT INTO admin_logs
+                        (admin_id, action_type, target_type, target_id, target_name, note)
+                    VALUES (%s, 'DELETE_USER', 'FREELANCER', %s, %s, NULL)
+                    """,
+                    (admin_id, fl_id, name),
+                )
+                log_conn.commit()
+            except Exception as log_error:
+                print(f"ERROR inserting log: {str(log_error)}")
+            finally:
+                if log_conn:
+                    log_conn.close()
+
+        return {"status": "deleted", "fl_id": fl_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        raise db_error(e)
+    finally:
+        if conn:
+            conn.close()
 
 @router.get("/languages")
 def get_languages():
