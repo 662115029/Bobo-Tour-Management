@@ -330,7 +330,7 @@
             </div>
 
             <!-- Payment -->
-            <div class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+            <div v-if="payment || canSubmitPayment" class="bg-white rounded-xl border border-[#e0e0e0] shadow-sm overflow-hidden hover:shadow-md transition-shadow">
               <div class="px-4 py-3 border-b border-[#f0f0f0] flex items-center gap-2">
                 <span class="w-8 h-8 rounded-full bg-[#FFFBEB] flex items-center justify-center shrink-0"><svg class="w-4 h-4 text-[#D97706]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>
                 <span class="text-[14px] font-bold text-[#111]">Payment</span>
@@ -348,8 +348,9 @@
                       <span class="payment-badge" :class="payment.payment_status?.toLowerCase()">{{ payment.payment_status }}</span>
                     </div>
                     <div v-if="payment.paid_at || payment.confirmed_at || payment.reject_reason" class="px-4 pb-3 flex flex-col gap-1">
-                      <div v-if="payment.paid_at" class="text-[11px] text-[#888]">Paid: {{ formatDateTime(payment.paid_at) }}</div>
-                      <div v-if="payment.confirmed_at" class="text-[11px] text-[#888]">Confirmed: {{ formatDateTime(payment.confirmed_at) }}</div>
+                      <div v-if="payment.paid_at" class="text-[11px] text-[#888]">Submitted: {{ formatDateTime(payment.paid_at) }}</div>
+                      <div v-if="payment.payment_status === 'CONFIRMED' && payment.confirmed_at" class="text-[11px] text-[#888]">Confirmed: {{ formatDateTime(payment.confirmed_at) }}</div>
+                      <div v-if="payment.payment_status === 'REJECTED' && payment.updated_at" class="text-[11px] text-[#888]">Rejected: {{ formatDateTime(payment.updated_at) }}</div>
                       <div v-if="payment.reject_reason" class="text-[11px] text-red-600">Reason: {{ payment.reject_reason }}</div>
                     </div>
                     <div v-if="payment.slip_url" class="border-t border-[#eee]">
@@ -366,7 +367,7 @@
                       <p class="text-[12px] font-semibold text-red-600 mb-2">Re-upload Slip</p>
                       <div class="border-2 border-dashed border-red-200 rounded-xl p-4 text-center hover:border-red-400 transition-colors cursor-pointer relative"
                         @click="$refs.reuploadInput.click()" @dragover.prevent @drop.prevent="onReuploadDrop">
-                        <input ref="reuploadInput" type="file" accept="image/*" class="hidden" @change="onReuploadFileChange" />
+                        <input ref="reuploadInput" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" class="hidden" @change="onReuploadFileChange" />
                         <div v-if="!reuploadPreview">
                           <svg class="w-7 h-7 text-red-300 mx-auto mb-1.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4-4 4 4 4-8 4 8"/><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
                           <p class="text-[13px] text-[#999]">Click to select a new slip</p>
@@ -376,6 +377,7 @@
                           <button type="button" @click.stop="clearReupload" class="absolute top-1 right-1 w-6 h-6 bg-red-600 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-700">✕</button>
                         </div>
                       </div>
+                      <p v-if="slipError" class="mt-2 text-[12px] text-red-600">{{ slipError }}</p>
                       <button v-if="reuploadPreview" @click="submitReupload" :disabled="paymentSubmitting"
                         class="mt-2 w-full py-2 bg-red-600 text-white text-[13px] font-semibold rounded-lg hover:bg-red-700 transition disabled:opacity-50">
                         {{ paymentSubmitting ? 'Uploading…' : 'Submit New Slip' }}
@@ -384,22 +386,23 @@
                   </template>
                 </template>
 
-                <!-- No payment yet -->
-                <template v-else>
+                <!-- No payment yet (SRS-119: IN_PROGRESS + end date reached) -->
+                <template v-else-if="canSubmitPayment">
                   <p class="text-[13px] text-[#bbb]">No payment submitted yet.</p>
                   <div class="border-2 border-dashed border-[#e0e0e0] rounded-xl p-4 text-center hover:border-red-300 transition-colors cursor-pointer relative"
                     @click="$refs.slipInput.click()" @dragover.prevent @drop.prevent="onSlipDrop">
-                    <input ref="slipInput" type="file" accept="image/*" class="hidden" @change="onSlipFileChange" />
+                    <input ref="slipInput" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" class="hidden" @change="onSlipFileChange" />
                     <div v-if="!slipPreview">
                       <svg class="w-8 h-8 text-[#ccc] mx-auto mb-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4-4 4 4 4-8 4 8"/><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
                       <p class="text-[13px] text-[#999]">Click or drag & drop file here</p>
-                      <p class="text-[11px] text-[#ccc] mt-1">JPEG, PNG, WebP</p>
+                      <p class="text-[11px] text-[#ccc] mt-1">JPG, JPEG, PNG (max 5 MB)</p>
                     </div>
                     <div v-else class="relative">
                       <img :src="slipPreview" class="max-h-40 mx-auto rounded-lg object-contain" />
                       <button type="button" @click.stop="clearSlip" class="absolute top-1 right-1 w-6 h-6 bg-red-600 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-700">✕</button>
                     </div>
                   </div>
+                  <p v-if="slipError" class="text-[12px] text-red-600">{{ slipError }}</p>
                   <button v-if="slipPreview" @click="submitPayment" :disabled="paymentSubmitting"
                     class="w-full py-2 bg-red-600 text-white text-[13px] font-semibold rounded-lg hover:bg-red-700 transition disabled:opacity-50">
                     {{ paymentSubmitting ? 'Uploading…' : 'Submit Payment Slip' }}
@@ -424,7 +427,7 @@
                         <span class="payment-badge" :class="pay.payment_status?.toLowerCase()">{{ pay.payment_status }}</span>
                       </div>
                       <div class="px-4 pb-2.5 flex flex-col gap-0.5">
-                        <div v-if="pay.paid_at" class="text-[10px] text-[#aaa]">Paid: {{ formatDateTime(pay.paid_at) }}</div>
+                        <div v-if="pay.paid_at" class="text-[10px] text-[#aaa]">Submitted: {{ formatDateTime(pay.paid_at) }}</div>
                         <div v-if="pay.reject_reason" class="text-[10px] text-red-400">Reason: {{ pay.reject_reason }}</div>
                       </div>
                       <div v-if="pay.slip_url" class="border-t border-[#f5e0e0]">
@@ -853,6 +856,7 @@ const slipFile = ref(null)
 const reuploadPreview = ref(null)
 const reuploadFile = ref(null)
 const slipModalUrl = ref(null)
+const slipError = ref('')
 
 // Language DB fetch + search
 const languages = ref([])
@@ -1062,62 +1066,57 @@ const uploadSlipToStorage = async (file) => {
   return data.url
 }
 
-const onSlipFileChange = (e) => {
-  const file = e.target.files[0]
-  if (!file) return
-  slipFile.value = file
-  slipPreview.value = URL.createObjectURL(file)
+// SRS-121 / SRS-122: .jpg/.jpeg/.png only, max 5 MB
+const SLIP_MAX_SIZE = 5 * 1024 * 1024
+const validateSlip = (file) => {
+  const ext = file.name.split('.').pop().toLowerCase()
+  if (!['jpg', 'jpeg', 'png'].includes(ext) || !['image/jpeg', 'image/png'].includes(file.type)) {
+    return 'File must be in .jpg, .jpeg, or .png format only.'
+  }
+  if (file.size > SLIP_MAX_SIZE) return 'File size must not exceed 5 MB.'
+  return ''
 }
-const onSlipDrop = (e) => {
-  const file = e.dataTransfer.files[0]
-  if (!file) return
-  slipFile.value = file
-  slipPreview.value = URL.createObjectURL(file)
-}
-const clearSlip = () => { slipFile.value = null; slipPreview.value = null }
 
-const onReuploadFileChange = (e) => {
-  const file = e.target.files[0]
+const pickSlip = (file, fileRef, previewRef) => {
   if (!file) return
-  reuploadFile.value = file
-  reuploadPreview.value = URL.createObjectURL(file)
-}
-const onReuploadDrop = (e) => {
-  const file = e.dataTransfer.files[0]
-  if (!file) return
-  reuploadFile.value = file
-  reuploadPreview.value = URL.createObjectURL(file)
-}
-const clearReupload = () => { reuploadFile.value = null; reuploadPreview.value = null }
-
-const submitPayment = async () => {
-  if (!slipFile.value) return
-  if (!job.value?.selected_fl_id) {
-    alert('Cannot submit payment: no freelancer has been assigned to this tour yet.')
+  slipError.value = validateSlip(file)
+  if (slipError.value) {
+    fileRef.value = null
+    previewRef.value = null
     return
   }
+  fileRef.value = file
+  previewRef.value = URL.createObjectURL(file)
+}
+
+const onSlipFileChange = (e) => { pickSlip(e.target.files[0], slipFile, slipPreview); e.target.value = '' }
+const onSlipDrop = (e) => pickSlip(e.dataTransfer.files[0], slipFile, slipPreview)
+const clearSlip = () => { slipFile.value = null; slipPreview.value = null; slipError.value = '' }
+
+const onReuploadFileChange = (e) => { pickSlip(e.target.files[0], reuploadFile, reuploadPreview); e.target.value = '' }
+const onReuploadDrop = (e) => pickSlip(e.dataTransfer.files[0], reuploadFile, reuploadPreview)
+const clearReupload = () => { reuploadFile.value = null; reuploadPreview.value = null; slipError.value = '' }
+
+// UC-021 Submit Payment Slip
+const submitPayment = async () => {
+  if (!slipFile.value || !canSubmitPayment.value) return
+  // SRS-124
+  const ok = await confirmDialog('Please make sure the payment slip is correct. Do you want to continue?', 'Submit Payment Slip')
+  if (!ok) return
   paymentSubmitting.value = true
   try {
     const slip_url = await uploadSlipToStorage(slipFile.value)
     const res = await fetch(`${API_BASE}/job-payments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        job_id: route.params.id,
-        em_id: emId,
-        fl_id: job.value?.selected_fl_id || null,
-        slip_url,
-      }),
+      body: JSON.stringify({ job_id: route.params.id, em_id: emId, slip_url }),
     })
-    const data = await res.json()
-    if (res.ok) {
-      clearSlip()
-      await fetchPayment()
-    } else {
-      alert(data.detail || data.error || 'Failed to submit payment.')
-    }
-  } catch (e) {
-    alert('Error: ' + e.message)
+    if (!res.ok) throw new Error()
+    clearSlip()
+    await fetchPayment()
+    showToast('Payment slip uploaded successfully.') // SRS-130
+  } catch {
+    showToast('Failed to upload payment slip. Please try again.', 'error') // SRS-131
   } finally {
     paymentSubmitting.value = false
   }
@@ -1275,10 +1274,18 @@ const saveJob = async () => {
 const sortedExpenses = computed(() =>
   [...(job.value?.job_expenses ?? [])].sort((a, b) => (a.sequence ?? 0) - (b.sequence ?? 0))
 )
+const toLocalYmd = (d) => {
+  const x = new Date(d)
+  return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`
+}
+const tourEndReached = computed(() =>
+  !!job.value?.job_end_date && toLocalYmd(job.value.job_end_date) <= toLocalYmd(new Date())
+)
+const canSubmitPayment = computed(() =>
+  job.value?.job_status === 'IN_PROGRESS' && tourEndReached.value && !payment.value
+)
 const canEdit = computed(() => job.value?.job_status === 'OPEN')
 const canCancel = computed(() => ['OPEN', 'PENDING', 'MATCHED'].includes(job.value?.job_status))
-const canMatch = computed(() => ['OPEN', 'PENDING'].includes(job.value?.job_status))
-
 // Matching
 const suggestedMatches = computed(() => matches.value)
 const inviting = ref(false)
@@ -1414,4 +1421,4 @@ const confirmCancel = async () => {
     cancelling.value = false
   }
 }
-</script>
+</script>

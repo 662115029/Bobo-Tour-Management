@@ -4,7 +4,6 @@ from linebot.v3.messaging import (
     PushMessageRequest,
     FlexMessage,
     FlexContainer,
-    TextMessage,
 )
 from bot import configuration
 
@@ -243,11 +242,6 @@ def notify_invite_accepted(line_user_id: str, job: dict):
 def notify_invite_rejected(line_user_id: str, job: dict):
     bubble = _build_job_flex("Invite declined", "neutral", job)
     _push_flex(line_user_id, f"You've declined the invite for {job.get('job_title', '')}", bubble)
-
-
-def notify_job_cancelled(line_user_id: str, job: dict):
-    bubble = _build_job_flex("Job cancelled", "danger", job)
-    _push_flex(line_user_id, f"{job.get('job_title', '')} has been cancelled by the employer", bubble)
 
 
 # ---------------------------------------------------------------------------
