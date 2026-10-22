@@ -485,7 +485,9 @@ def trigger_matching():
             InvocationType="RequestResponse",  # wait for it to finish, return the result
         )
         payload = json.loads(response["Payload"].read())
-        body = json.loads(payload.get("body", "{}"))
+        if response.get("FunctionError") or "body" not in payload:
+            raise RuntimeError(f"Lambda failed: {payload}")
+        body = json.loads(payload["body"])
         return {"success": True, "result": body}
     except Exception as e:
         raise HTTPException(status_code=500, detail=safe_msg(e))

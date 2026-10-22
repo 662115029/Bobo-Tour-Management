@@ -1255,14 +1255,15 @@ def review_fl_document(doc_id: str, body: DocReviewRequest):
             try:
                 if new_status == "VERIFIED" and old_status != "VERIFIED":
                     notify_verified(line_id, fl_before.get("fl_name"))
-                elif new_status == "NOT_VERIFIED" and old_status != "NOT_VERIFIED":
-                    notify_not_verified(line_id, fl_before.get("fl_name"))
-                elif body.status == "REJECTED":
-                    notify_document_rejected(
-                        line_id, fl_before.get("fl_name"),
-                        doc_info["fl_doc_type"] if doc_info else None,
-                        reject_reason,
-                    )
+                else:
+                    if body.status == "REJECTED":
+                        notify_document_rejected(
+                            line_id, fl_before.get("fl_name"),
+                            doc_info["fl_doc_type"] if doc_info else None,
+                            reject_reason,
+                        )
+                    if new_status == "NOT_VERIFIED" and old_status != "NOT_VERIFIED":
+                        notify_not_verified(line_id, fl_before.get("fl_name"))
             except Exception as notify_err:
                 print(f"[WARN] document review notify failed: {notify_err}")
 

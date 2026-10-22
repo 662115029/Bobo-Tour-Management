@@ -244,6 +244,11 @@ def notify_invite_rejected(line_user_id: str, job: dict):
     _push_flex(line_user_id, f"You've declined the invite for {job.get('job_title', '')}", bubble)
 
 
+def notify_job_cancelled(line_user_id: str, job: dict):
+    bubble = _build_job_flex("Job cancelled", "danger", job)
+    _push_flex(line_user_id, f"{job.get('job_title', '')} has been cancelled by the employer", bubble)
+
+
 # ---------------------------------------------------------------------------
 # 5. Account messages (cards, Bobo's voice)
 # ---------------------------------------------------------------------------
