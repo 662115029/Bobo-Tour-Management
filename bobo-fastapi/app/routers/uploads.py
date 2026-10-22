@@ -42,10 +42,22 @@ async def upload_freelancer_profile(file: UploadFile = File(...)):
         raise db_error(e)
 
 
+SLIP_TYPE_ERROR = "File must be in .jpg, .jpeg, or .png format only."
+SLIP_SIZE_ERROR = "File size must not exceed 5 MB."
+MAX_SLIP_SIZE = 5 * 1024 * 1024
+
+
 @router.post("/upload/payment-slip")
 async def upload_payment_slip(file: UploadFile = File(...)):
-    if file.content_type not in ALLOWED_TYPES:
-        raise HTTPException(status_code=400, detail="Invalid file type.")
+    # SRS-121: only .jpg / .jpeg / .png
+    ext = (file.filename or "").rsplit(".", 1)[-1].lower()
+    if file.content_type not in ALLOWED_DOC_TYPES or ext not in {"jpg", "jpeg", "png"}:
+        raise HTTPException(status_code=400, detail=SLIP_TYPE_ERROR)
+    # SRS-122: max 5 MB
+    contents = await file.read()
+    if len(contents) > MAX_SLIP_SIZE:
+        raise HTTPException(status_code=400, detail=SLIP_SIZE_ERROR)
+    await file.seek(0)
     try:
         url = await upload_image_to_supabase(file, folder="uploads/payment")
         return {"url": url}
@@ -90,7 +102,7 @@ async def upload_fl_document(fl_id: str, doc_type: str, file: UploadFile = File(
     await file.seek(0)
     valid_doc_types = {"PERSONAL_ID", "DRIVER_LICENSE", "PUBLIC_DRIVER_LICENSE", "VEHICLE_REGISTRATION", "VEHICLE_INSPECTION"}
     if doc_type not in valid_doc_types:
-        raise HTTPException(status_code=400, detail=f"Invalid doc_type.")
+        raise HTTPException(status_code=400, detail="Invalid doc_type.")
     conn = None
     try:
         conn = get_connection()
@@ -128,7 +140,7 @@ async def upload_em_document(em_id: str, doc_type: str, file: UploadFile = File(
     await file.seek(0)
     valid_doc_types = {"COMPANY_REGISTRATION", "BUSINESS_LICENSE", "TOURISM_LICENSE", "TAX_ID_DOCUMENT", "AUTHORIZED_PERSON_ID"}
     if doc_type not in valid_doc_types:
-        raise HTTPException(status_code=400, detail=f"Invalid doc_type.")
+        raise HTTPException(status_code=400, detail="Invalid doc_type.")
     conn = None
     try:
         conn = get_connection()
@@ -157,4 +169,4 @@ async def upload_em_document(em_id: str, doc_type: str, file: UploadFile = File(
         raise db_error(e)
     finally:
         if conn:
-            conn.close()
+            conn.close()

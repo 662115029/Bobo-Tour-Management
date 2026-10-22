@@ -123,11 +123,6 @@ class AvailabilityRequest(BaseModel):
     fl_available_end_date: str
 
 
-class JobApplicationRequest(BaseModel):
-    job_id: int
-    fl_id: int
-
-
 @router.post("/freelancers/register")
 def register_freelancer(body: FreelancerRegisterRequest):
     conn = None
@@ -1260,15 +1255,14 @@ def review_fl_document(doc_id: str, body: DocReviewRequest):
             try:
                 if new_status == "VERIFIED" and old_status != "VERIFIED":
                     notify_verified(line_id, fl_before.get("fl_name"))
-                else:
-                    if body.status == "REJECTED":
-                        notify_document_rejected(
-                            line_id, fl_before.get("fl_name"),
-                            doc_info["fl_doc_type"] if doc_info else None,
-                            reject_reason,
-                        )
-                    if new_status == "NOT_VERIFIED" and old_status != "NOT_VERIFIED":
-                        notify_not_verified(line_id, fl_before.get("fl_name"))
+                elif new_status == "NOT_VERIFIED" and old_status != "NOT_VERIFIED":
+                    notify_not_verified(line_id, fl_before.get("fl_name"))
+                elif body.status == "REJECTED":
+                    notify_document_rejected(
+                        line_id, fl_before.get("fl_name"),
+                        doc_info["fl_doc_type"] if doc_info else None,
+                        reject_reason,
+                    )
             except Exception as notify_err:
                 print(f"[WARN] document review notify failed: {notify_err}")
 

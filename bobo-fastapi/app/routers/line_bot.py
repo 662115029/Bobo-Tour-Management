@@ -2,9 +2,9 @@ import os
 from fastapi import APIRouter, Request, HTTPException
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
-from linebot.models import MessageEvent, TextMessage, TextSendMessage, FlexSendMessage
+from linebot.models import MessageEvent, TextMessage
 from pydantic import BaseModel
-from notification import notify_invited, notify_application_accepted, notify_application_rejected
+from notification import notify_application_accepted, notify_application_rejected
 from app.db.connection import get_connection, get_cursor
 from .errors import safe_msg
 
@@ -12,10 +12,6 @@ router = APIRouter(tags=["line_bot"])
 
 line_bot_api = LineBotApi(os.getenv("LINE_CHANNEL_ACCESS_TOKEN"))
 handler = WebhookHandler(os.getenv("LINE_CHANNEL_SECRET"))
-
-
-class NotifyRequest(BaseModel):
-    line_user_id: str
 
 
 class JobResponseRequest(BaseModel):
@@ -60,32 +56,6 @@ def handle_message(event):
     reset_menu_if_unregistered(event.source.user_id)
 
 
-@router.post("/test/notify-match")
-def test_notify_match(request: NotifyRequest):
-    conn = None
-    try:
-        conn = get_connection()
-        cursor = get_cursor(conn)
-        cursor.execute(
-            """
-            SELECT j.job_id, j.job_title, em.em_name, j.job_start_date, j.job_price
-            FROM jobs j
-            JOIN employers em ON j.em_id = em.em_id
-            ORDER BY j.job_created_at DESC
-            LIMIT 1
-            """
-        )
-        job = cursor.fetchone()
-        if job:
-            notify_invited(request.line_user_id, job)
-            return {"status": "notification sent", "job": job}
-        return {"status": "no jobs found"}
-    except Exception as e:
-        return {"error": safe_msg(e)}
-
-    finally:
-        if conn:
-            conn.close()
 @router.post("/jobs/{job_id}/accept")
 def accept_job(job_id: str, request: JobResponseRequest):
     conn = None

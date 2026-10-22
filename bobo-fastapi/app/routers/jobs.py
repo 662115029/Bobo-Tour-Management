@@ -10,6 +10,7 @@ from notification import (
     notify_application_cancelled,
     notify_invite_accepted,
     notify_invite_rejected,
+    notify_payment_submitted,
 )
 
 
@@ -648,27 +649,51 @@ def get_job_payment_history(job_id: int):
 
 @router.post("/job-payments")
 def create_job_payment(data: dict):
+    """UC-021 Submit Payment Slip (Employer)."""
     conn = None
     try:
+        job_id = data.get("job_id")
+        em_id = data.get("em_id")
+        slip_url = data.get("slip_url")
+        if not job_id or not em_id or not slip_url:
+            raise HTTPException(status_code=400, detail="job_id, em_id and slip_url are required.")
+
         conn = get_connection()
         cursor = get_cursor(conn)
 
-        job_id = data.get("job_id")
-        em_id = data.get("em_id")
-        fl_id = data.get("fl_id")
-        slip_url = data.get("slip_url")
+        # Job must belong to this employer
+        cursor.execute(
+            """
+            SELECT job_id, job_status, selected_fl_id,
+                   (job_end_date <= CURDATE()) AS end_reached
+            FROM jobs
+            WHERE job_id = %s AND em_id = %s
+            """,
+            (job_id, em_id),
+        )
+        job = cursor.fetchone()
+        if not job:
+            raise HTTPException(status_code=404, detail="Tour not found.")
 
+        # SRS-120: only IN_PROGRESS and end date reached
+        if job["job_status"] != "IN_PROGRESS" or not job["end_reached"]:
+            raise HTTPException(
+                status_code=400,
+                detail="Payment slip can only be submitted when the tour is in progress and its end date has been reached.",
+            )
+        fl_id = job["selected_fl_id"]
+        if not fl_id:
+            raise HTTPException(status_code=400, detail="No freelancer is assigned to this tour.")
+
+        # SRS-128: block while latest payment is PENDING / CONFIRMED (REJECTED -> use reupload)
         cursor.execute(
             "SELECT payment_id, payment_status FROM job_payments WHERE job_id = %s AND is_latest = TRUE",
             (job_id,),
         )
-        existing = cursor.fetchone()
-        if existing:
-            raise HTTPException(
-                status_code=409,
-                detail=f"Payment already exists (payment_id={existing['payment_id']}, status={existing['payment_status']}). Use PATCH to reupload after REJECTED.",
-            )
+        if cursor.fetchone():
+            raise HTTPException(status_code=409, detail="A payment slip has already been submitted for this tour.")
 
+        # SRS-125: create PENDING payment record
         cursor.execute(
             """
             INSERT INTO job_payments
@@ -677,14 +702,25 @@ def create_job_payment(data: dict):
             """,
             (job_id, em_id, fl_id, slip_url),
         )
+        payment_id = cursor.lastrowid
         conn.commit()
-        return {"success": True, "payment_id": cursor.lastrowid}
+
+        # SRS-129: notify assigned freelancer (failure must not break the submission)
+        try:
+            line_user_id = _get_freelancer_line_id(cursor, fl_id)
+            job_info = _get_job_notify_info(cursor, job_id)
+            if line_user_id and job_info:
+                notify_payment_submitted(line_user_id, job_info)
+        except Exception as notify_err:
+            print(f"[WARN] notify_payment_submitted failed: {notify_err}")
+
+        return {"success": True, "payment_id": payment_id}
     except HTTPException:
         raise
     except Exception as e:
         if conn:
             conn.rollback()
-        return {"error": safe_msg(e)}
+        raise db_error(e)
     finally:
         if conn:
             conn.close()
@@ -972,7 +1008,7 @@ def delete_job(job_id: str, x_admin_id: Optional[str] = Header(None, alias="X-Ad
                 if log_conn:
                     log_conn.close()
         else:
-            print(f"Skipping log insert: admin_id is None or empty")
+            print("Skipping log insert: admin_id is None or empty")
 
         return {"status": "deleted", "job_id": job_id}
     except HTTPException:
@@ -1033,4 +1069,4 @@ def get_suggested_freelancers(job_id: int):
         return {"error": safe_msg(e), "suggestions": []}
     finally:
         if conn:
-            conn.close()
+            conn.close()

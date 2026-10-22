@@ -11,6 +11,7 @@ from .utils import (
     validate_password,
     normalize_admin_login_identifier,
     validate_profile_update_fields,
+    _RETRY,
 )
 import bcrypt
 
@@ -35,13 +36,6 @@ class AdminUpdateRequest(BaseModel):
     name: Optional[str] = None
     email: Optional[str] = None
     status: Optional[str] = None
-
-
-class AdminRegisterRequest(BaseModel):
-    username: str
-    email: str
-    name: str
-    password: str
 
 
 class ChangePasswordRequest(BaseModel):
@@ -193,7 +187,7 @@ def admin_login(request: LoginRequest):
                     "success": False,
                     "error": "The stored password for this account is not configured correctly (invalid hash). An administrator must update password_hash in the database.",
                 }
-            except Exception as verify_err:
+            except Exception:
                 return {
                     "success": False,
                     "error": "Password could not be verified. Please try again or contact support.",
